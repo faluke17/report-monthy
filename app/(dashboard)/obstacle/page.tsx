@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function ObstaclePage({
   searchParams,
 }: {
-  searchParams: { branch_id?: string; category?: string; closed?: string }
+  searchParams: Promise<{ branch_id?: string; category?: string; closed?: string }>
 }) {
   const supabase = await createClient()
   const session = await getPwaSession()
@@ -26,11 +26,12 @@ export default async function ObstaclePage({
   const matchedBranch = branches.find((b) => b.name_th === session?.branch_name)
   const isBranchUser = !!matchedBranch
 
+  const { branch_id, category, closed } = await searchParams
   const filterBranchId = isBranchUser
     ? matchedBranch.id
-    : (searchParams.branch_id ?? '')
-  const filterCategory = searchParams.category ?? ''
-  const showClosed = searchParams.closed === '1'
+    : (branch_id ?? '')
+  const filterCategory = category ?? ''
+  const showClosed = closed === '1'
 
   let query = supabase
     .from('obstacles')

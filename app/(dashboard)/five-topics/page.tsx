@@ -4,7 +4,7 @@ import { getPwaSession } from '@/lib/pwa-auth'
 import { Branch, FiveTopicsReport } from '@/lib/types'
 import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
 import { BranchFilterBar } from '@/components/shared/BranchFilterBar'
-import { Plus, CheckCircle2, Circle } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Eye } from 'lucide-react'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import { deleteFiveTopicsReport } from '@/app/actions/five-topics'
 
@@ -23,7 +23,7 @@ function topicFilled(r: FiveTopicsReport): boolean[] {
 export default async function FiveTopicsPage({
   searchParams,
 }: {
-  searchParams: { branch_id?: string; year?: string; month?: string }
+  searchParams: Promise<{ branch_id?: string; year?: string; month?: string }>
 }) {
   const supabase = await createClient()
   const session = await getPwaSession()
@@ -40,11 +40,12 @@ export default async function FiveTopicsPage({
   const isRegionUser = !isBranchUser
   const showBranchFilter = isRegionUser
 
-  const filterYear  = parseInt(searchParams.year  ?? '') || now.getFullYear()
-  const filterMonth = parseInt(searchParams.month ?? '') || now.getMonth() + 1
+  const { branch_id, year, month } = await searchParams
+  const filterYear  = parseInt(year  ?? '') || now.getFullYear()
+  const filterMonth = parseInt(month ?? '') || now.getMonth() + 1
   const filterBranchId = isBranchUser
     ? matchedBranch.id
-    : (searchParams.branch_id ?? '')
+    : (branch_id ?? '')
 
   let query = supabase
     .from('five_topics_reports')
@@ -108,6 +109,7 @@ export default async function FiveTopicsPage({
                 <th className="px-4 py-3 text-center font-medium">ข้อ 4</th>
                 <th className="px-4 py-3 text-center font-medium">ข้อ 5</th>
                 <th className="px-4 py-3 text-center font-medium">สถานะ</th>
+                <th className="px-4 py-3 text-center font-medium">รายละเอียด</th>
                 {isRegionUser && <th className="px-4 py-3 text-center font-medium">จัดการ</th>}
               </tr>
             </thead>
@@ -117,8 +119,10 @@ export default async function FiveTopicsPage({
                 const filledCount = filled.filter(Boolean).length
                 return (
                   <tr key={r.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                    <td className="px-4 py-3 text-white font-medium">
-                      {r.branches?.name_th ?? '—'}
+                    <td className="px-4 py-3">
+                      <Link href={`/five-topics/${r.id}`} className="font-medium text-white hover:text-cyan-300 transition-colors">
+                        {r.branches?.name_th ?? '—'}
+                      </Link>
                       <span className="ml-1.5 text-[11px] text-white/35">{r.branches?.code}</span>
                     </td>
                     <td className="px-4 py-3 text-white/70 num">
@@ -141,6 +145,15 @@ export default async function FiveTopicsPage({
                           แบบร่าง
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Link
+                        href={`/five-topics/${r.id}`}
+                        className="inline-flex items-center gap-1.5 text-xs text-cyan-400/70 hover:text-cyan-300 border border-cyan-500/20 hover:border-cyan-400/40 px-2.5 py-1 rounded-lg transition-colors"
+                      >
+                        <Eye size={12} />
+                        ดูรายละเอียด
+                      </Link>
                     </td>
                     {isRegionUser && (
                       <td className="px-4 py-3 text-center">

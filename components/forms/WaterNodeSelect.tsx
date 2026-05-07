@@ -10,7 +10,8 @@ const LABEL = 'block text-xs text-white/50 mb-1'
 interface Props {
   branchId: string
   initialMmNodes: WaterNodeOption[]
-  onChange: (label: string) => void
+  // code = most specific selected node code (SUB > DMA > MM), empty string if none
+  onChange: (label: string, code: string) => void
   value?: string
 }
 
@@ -39,11 +40,12 @@ export function WaterNodeSelect({ branchId, initialMmNodes, onChange, value }: P
   }, [branchId])
 
   function emitLabel(mm: WaterNodeOption | undefined, dma: WaterNodeOption | undefined, sub: WaterNodeOption | undefined) {
-    if (!mm) { onChange(''); return }
+    if (!mm) { onChange('', ''); return }
     const parts = [nodeLabel(mm)]
     if (dma) parts.push(nodeLabel(dma))
     if (sub) parts.push(nodeLabel(sub))
-    onChange(parts.join(' / '))
+    const code = sub?.code ?? dma?.code ?? mm.code
+    onChange(parts.join(' / '), code)
   }
 
   function handleMmChange(mmId: string) {

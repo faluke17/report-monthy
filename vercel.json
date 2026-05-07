@@ -1,10 +1,21 @@
 {
   "framework": "nextjs",
   "regions": ["sin1"],
+  "crons": [
+    {
+      "path": "/api/dmama/sync",
+      "schedule": "0 2 16 * *"
+    }
+  ],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key"
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "DMAMA_USERNAME": "@dmama_username",
+    "DMAMA_PASSWORD": "@dmama_password",
+    "DMAMA_SECTOR_ID": "@dmama_sector_id",
+    "DMAMA_DISTRICT_ID": "@dmama_district_id",
+    "DMAMA_SYNC_SECRET": "@dmama_sync_secret"
   },
   "headers": [
     {

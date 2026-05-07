@@ -34,19 +34,28 @@ export async function submitFiveTopicsReport(formData: FormData): Promise<Action
   const str = (key: string) => (formData.get(key) as string) || null
 
   const supabase = await createClient()
+  // Parse t1_areas JSON
+  const t1AreasRaw = formData.get('t1_areas') as string
+  let t1Areas: Array<{ area_name: string; conducted_date: string }> | null = null
+  try { t1Areas = t1AreasRaw ? JSON.parse(t1AreasRaw) : null } catch { t1Areas = null }
+  const t1FirstDate = t1Areas?.find((a) => a.conducted_date)?.conducted_date ?? null
+
   const { error } = await supabase
     .from('five_topics_reports')
     .upsert({
       branch_id, report_year, report_month,
-      t1_dma_count:       num('t1_dma_count'),
-      t1_conducted_date:  str('t1_conducted_date'),
+      t1_dma_count:       t1Areas ? t1Areas.length : num('t1_dma_count'),
+      t1_conducted_date:  t1FirstDate ?? str('t1_conducted_date'),
+      t1_areas:           t1Areas,
       t1_notes:           str('t1_notes'),
-      t2_frequency:       num('t2_frequency'),
-      t2_leak_points:     num('t2_leak_points'),
-      t2_water_loss_m3h:  dec('t2_water_loss_m3h'),
-      t2_notes:           str('t2_notes'),
+      t2_frequency:        num('t2_frequency'),
+      t2_leak_points:      num('t2_leak_points'),
+      t2_repaired_points:  num('t2_repaired_points'),
+      t2_water_loss_m3h:   dec('t2_water_loss_m3h'),
+      t2_notes:            str('t2_notes'),
       t3_dma_pm_count:    num('t3_dma_pm_count'),
       t3_prv_pm_count:    num('t3_prv_pm_count'),
+      t3_p3_pm_count:     num('t3_p3_pm_count'),
       t3_notes:           str('t3_notes'),
       t4_flush_points:    num('t4_flush_points'),
       t4_volume_m3:       dec('t4_volume_m3'),

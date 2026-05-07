@@ -370,13 +370,16 @@ export interface FiveTopicsReport {
   report_month: number
   t1_dma_count: number | null
   t1_conducted_date: string | null
+  t1_areas: Array<{ area_name: string; conducted_date: string }> | null
   t1_notes: string | null
   t2_frequency: number | null
   t2_leak_points: number | null
+  t2_repaired_points: number | null
   t2_water_loss_m3h: number | null
   t2_notes: string | null
   t3_dma_pm_count: number | null
   t3_prv_pm_count: number | null
+  t3_p3_pm_count: number | null
   t3_notes: string | null
   t4_flush_points: number | null
   t4_volume_m3: number | null

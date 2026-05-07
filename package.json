@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "sync:dmama": "node --env-file=.env.local scripts/sync-dmama.mjs",
+    "sync:rats": "node --env-file=.env.local scripts/sync-rats.mjs",
+    "backfill:dmama": "node --env-file=.env.local scripts/backfill-dmama.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

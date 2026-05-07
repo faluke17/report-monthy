@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
-import { Branch, UserProfile } from '@/lib/types'
+import { Branch, UserProfile, WaterNodeOption } from '@/lib/types'
 import { FiveTopicsForm } from '@/components/forms/FiveTopicsForm'
 import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
 import Link from 'next/link'
@@ -12,14 +12,28 @@ export default async function NewFiveTopicsPage() {
   const supabase = await createClient()
   const session = await getPwaSession()
 
-  const { data: branchData } = await supabase
-    .from('branches')
-    .select('id, code, name_th, province_th')
-    .eq('is_active', true)
-    .order('name_th')
+  const [{ data: branchData }, { data: nodeData }] = await Promise.all([
+    supabase
+      .from('branches')
+      .select('id, code, name_th, province_th')
+      .eq('is_active', true)
+      .order('name_th'),
+    supabase
+      .from('water_nodes')
+      .select('id, branch_id, code, name_th, node_type, user_count')
+      .in('node_type', ['MM', 'DMA'])
+      .eq('is_active', true)
+      .order('code'),
+  ])
 
   const branches = sortByPwaBranches((branchData ?? []) as Branch[])
   const matchedBranch = branches.find((b) => b.name_th === session?.branch_name)
+
+  const nodesByBranch: Record<string, WaterNodeOption[]> = {}
+  for (const node of (nodeData ?? []) as WaterNodeOption[]) {
+    if (!nodesByBranch[node.branch_id]) nodesByBranch[node.branch_id] = []
+    nodesByBranch[node.branch_id].push(node)
+  }
 
   const profile = {
     branch_id: matchedBranch?.id ?? null,
@@ -47,7 +61,7 @@ export default async function NewFiveTopicsPage() {
         </p>
       </div>
 
-      <FiveTopicsForm branches={branches} profile={profile} />
+      <FiveTopicsForm branches={branches} profile={profile} nodesByBranch={nodesByBranch} />
     </div>
   )
 }

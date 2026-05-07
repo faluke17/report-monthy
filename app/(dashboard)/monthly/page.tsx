@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export default async function MonthlyPage({
   searchParams,
 }: {
-  searchParams: { branch_id?: string; year?: string; month?: string }
+  searchParams: Promise<{ branch_id?: string; year?: string; month?: string }>
 }) {
   const supabase = await createClient()
   const session = await getPwaSession()
@@ -30,16 +30,17 @@ export default async function MonthlyPage({
   const isBranchUser = !!matchedBranch
   const showBranchFilter = !isBranchUser // district admin or region admin
 
-  const filterYear  = parseInt(searchParams.year  ?? '') || now.getFullYear()
-  const filterMonth = parseInt(searchParams.month ?? '') || now.getMonth() + 1
+  const { branch_id, year, month } = await searchParams
+  const filterYear  = parseInt(year  ?? '') || now.getFullYear()
+  const filterMonth = parseInt(month ?? '') || now.getMonth() + 1
   const filterBranchId = isBranchUser
     ? matchedBranch.id
-    : (searchParams.branch_id ?? '')
+    : (branch_id ?? '')
 
   // fetch area reports
   let query = supabase
     .from('area_monthly_reports')
-    .select('*, branches(name_th, code), area_obstacles(obstacle_type, obstacle_detail, resolution_plan, impact, region_support_needed, priority_order)')
+    .select('*, branches(name_th, code), step_test_results(step_no, estimated_loss, leaks_found, repair_status), area_obstacles(obstacle_type, obstacle_detail, resolution_plan, impact, region_support_needed, priority_order)')
     .eq('report_year', filterYear)
     .eq('report_month', filterMonth)
     .order('created_at', { ascending: false })

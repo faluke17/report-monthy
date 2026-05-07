@@ -1,38 +1,43 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Obstacle, ActionItem, KmCase, MonthlyReport, Branch } from '@/lib/types'
+import type { Obstacle, ActionItem, KmCase, Branch } from '@/lib/types'
 import { formatThaiDate, formatThaiMonthYearShort, isOverdue } from '@/lib/utils/date-th'
 import { cn } from '@/lib/utils'
 import { TrendingDown } from 'lucide-react'
+import { MonthYearPicker } from '@/components/shared/MonthYearPicker'
+import { SummaryCards } from '@/components/dashboard/SummaryCards'
 
 export const dynamic = 'force-dynamic'
 
-export default async function SummaryPage() {
+export default async function SummaryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string }>
+}) {
   const supabase = await createClient()
   const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
+  const { year: yearParam, month: monthParam } = await searchParams
+  const year  = parseInt(yearParam  ?? '') || now.getFullYear()
+  const month = parseInt(monthParam ?? '') || now.getMonth() + 1
   const todayStr = now.toISOString().split('T')[0]
 
-  const [reportsRes, obstaclesRes, actionsRes, kmRes, branchesRes] = await Promise.all([
+  const [reportsRes, obstaclesRes, actionsRes, kmRes, branchesRes, fiveTopicsRes] = await Promise.all([
     supabase
-      .from('monthly_reports')
-      .select('*, branches(*)')
+      .from('area_monthly_reports')
+      .select('branch_id, branches(name_th, code)')
       .eq('report_year', year)
       .eq('report_month', month)
-      .order('nrw_pct', { ascending: false }),
+      .eq('status', 'submitted'),
     supabase
       .from('obstacles')
       .select('*, branches(*)')
-      .not('status', 'eq', 'ปิดประเด็น')
       .in('status', ['ล่าช้า', 'เกินกำหนด', 'รอสนับสนุน'])
       .order('priority_order', { ascending: true, nullsFirst: false }),
     supabase
       .from('action_items')
       .select('*, branches(*)')
-      .not('status', 'in', '("แล้วเสร็จ","ยกเลิก")')
+      .not('status', 'in', '(แล้วเสร็จ,ยกเลิก)')
       .lte('due_date', todayStr)
-      .order('due_date', { ascending: true })
-      .limit(8),
+      .order('due_date', { ascending: true }),
     supabase
       .from('km_cases')
       .select('*, branches(*)')
@@ -40,24 +45,39 @@ export default async function SummaryPage() {
       .limit(3),
     supabase
       .from('branches')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true),
+      .select('id, name_th, code')
+      .eq('is_active', true)
+      .order('name_th'),
+    supabase
+      .from('five_topics_reports')
+      .select('id, branch_id, t1_dma_count, t2_leak_points, t3_dma_pm_count, t4_flush_points, t5_meters_replaced, branches(name_th, code)')
+      .eq('report_year', year)
+      .eq('report_month', month)
+      .eq('status', 'submitted'),
   ])
 
-  const reports = (reportsRes.data ?? []) as (MonthlyReport & { branches?: Branch })[]
+  // Deduplicate area_monthly_reports by branch_id → one entry per branch that submitted
+  type AreaRow = { branch_id: string; branches?: { name_th: string; code: string } | null }
+  const areaRows = (reportsRes.data ?? []) as unknown as AreaRow[]
+  const seenBranchIds = new Set<string>()
+  const reports = areaRows
+    .filter(r => { if (seenBranchIds.has(r.branch_id)) return false; seenBranchIds.add(r.branch_id); return true })
+    .map(r => ({ branch_id: r.branch_id, nrw_pct: null as number | null, leaks_pending: 0, branches: r.branches ?? undefined }))
+
   const obstacles = (obstaclesRes.data ?? []) as (Obstacle & { branches?: Branch })[]
   const overdueActions = (actionsRes.data ?? []) as (ActionItem & { branches?: Branch })[]
   const kmCases = (kmRes.data ?? []) as (KmCase & { branches?: Branch })[]
-  const totalBranches = branchesRes.count ?? 26
+  const allBranches = (branchesRes.data ?? []) as { id: string; name_th: string; code: string }[]
+  const totalBranches = allBranches.length || 26
+  const fiveTopics = (fiveTopicsRes.data ?? []) as any[]
 
-  const reportsWithNrw = reports.filter(r => r.nrw_pct !== null)
-  const avgNrw =
-    reportsWithNrw.length > 0
-      ? reportsWithNrw.reduce((s, r) => s + (r.nrw_pct ?? 0), 0) / reportsWithNrw.length
-      : null
+  // NRW data not available from area_monthly_reports (no pre-computed nrw_pct)
+  const reportsWithNrw: typeof reports = []
+  const avgNrw = null as number | null
 
   const notSubmitted = totalBranches - reports.length
-  const totalLeaksPending = reports.reduce((s, r) => s + (r.leaks_pending ?? 0), 0)
+
+  const totalLeaksPending = 0
   const confirmedKm = kmCases.find(k => k.verification_status === 'ยืนยันแล้ว')
 
   const monthLabel = formatThaiMonthYearShort(year, month)
@@ -73,32 +93,21 @@ export default async function SummaryPage() {
             รายงานสรุปสำหรับผู้บริหาร — ประชุม WSC-R {monthLabel} · กปภ. เขต 10
           </p>
         </div>
-        <span className="text-xs text-white/30 border border-white/12 px-3 py-1.5 rounded-lg shrink-0">
-          {monthLabel}
-        </span>
       </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="NRW เฉลี่ยเขต" accent="cyan">
-          <p className="num text-2xl font-bold text-cyan-400">
-            {avgNrw !== null ? avgNrw.toFixed(1) + '%' : '—'}
-          </p>
-          <p className="text-[11px] text-white/30 mt-0.5">จาก {reportsWithNrw.length} สาขา</p>
-        </KpiCard>
-        <KpiCard label="ยังไม่ส่งผล" accent="red">
-          <p className="num text-2xl font-bold text-red-400">{notSubmitted}</p>
-          <p className="text-[11px] text-white/30 mt-0.5">จาก {totalBranches} สาขา</p>
-        </KpiCard>
-        <KpiCard label="อุปสรรคเร่งด่วน" accent="amber">
-          <p className="num text-2xl font-bold text-amber-400">{obstacles.length}</p>
-          <p className="text-[11px] text-white/30 mt-0.5">ล่าช้า / รอสนับสนุน</p>
-        </KpiCard>
-        <KpiCard label="Action เกินกำหนด" accent="red">
-          <p className="num text-2xl font-bold text-red-400">{overdueActions.length}</p>
-          <p className="text-[11px] text-white/30 mt-0.5">รายการ</p>
-        </KpiCard>
-      </div>
+      <MonthYearPicker activeYear={year} activeMonth={month} />
+
+      <SummaryCards
+        avgNrw={avgNrw}
+        reportsWithNrwCount={reportsWithNrw.length}
+        allBranches={allBranches}
+        reports={reports}
+        fiveTopics={fiveTopics}
+        obstacles={obstacles}
+        overdueActions={overdueActions}
+        year={year}
+        month={month}
+      />
 
       {isEmpty && (
         <div className="glass-card p-12 text-center text-white/30 text-sm">
@@ -242,7 +251,7 @@ export default async function SummaryPage() {
         <ExecSection title="สาขาที่เขตควรขอความอนุเคราะห์ให้เร่งรัดเป็นพิเศษ" color="amber">
           <div className="space-y-1.5">
             {reportsWithNrw.slice(0, 3).map(r => (
-              <div key={r.id} className="flex items-center gap-3">
+              <div key={r.branch_id} className="flex items-center gap-3">
                 <b className="text-white/80 text-sm">{r.branches?.name_th}</b>
                 <span className="num text-red-400 text-xs font-bold">{r.nrw_pct?.toFixed(1)}%</span>
                 {r.leaks_pending > 0 && (
@@ -257,28 +266,6 @@ export default async function SummaryPage() {
   )
 }
 
-function KpiCard({
-  label,
-  accent,
-  children,
-}: {
-  label: string
-  accent: 'cyan' | 'amber' | 'red' | 'green'
-  children: React.ReactNode
-}) {
-  const topBorder: Record<string, string> = {
-    cyan: 'border-t-cyan-500/70',
-    amber: 'border-t-amber-500/70',
-    red: 'border-t-red-500/70',
-    green: 'border-t-green-500/70',
-  }
-  return (
-    <div className={cn('glass-card-sm p-4 border-t-2', topBorder[accent])}>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">{label}</p>
-      <div className="mt-1">{children}</div>
-    </div>
-  )
-}
 
 function ExecSection({
   title,

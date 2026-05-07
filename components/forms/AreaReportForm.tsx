@@ -24,6 +24,14 @@ const OBSTACLE_TYPES = [
 const REPAIR_STATUS = ['รอซ่อม', 'ซ่อมแล้ว', 'ซ่อมไม่ได้'] as const
 type RepairStatus = (typeof REPAIR_STATUS)[number]
 
+export interface NrwAreaLookup {
+  area_name: string
+  outbound: number | null
+  distribute_all: number | null
+  report_year: number
+  report_month: number
+}
+
 interface StepRow {
   step_no: number
   estimated_loss: string
@@ -45,6 +53,9 @@ interface AreaSet {
   key: string
   expanded: boolean
   area_name: string
+  area_code: string
+  nrw_data_month: { year: number; month: number } | null
+  manual_input: boolean
   water_dist_before: string
   water_sold_before: string
   mnf_before: string
@@ -52,6 +63,8 @@ interface AreaSet {
   water_dist_after: string
   water_sold_after: string
   mnf_after: string
+  leaks_repaired: string
+  leaks_pending: string
   pdca_do: string
   pdca_act: string
   has_obstacle: boolean
@@ -63,6 +76,9 @@ function newArea(index: number): AreaSet {
     key: `a_${Date.now()}_${index}`,
     expanded: true,
     area_name: '',
+    area_code: '',
+    nrw_data_month: null,
+    manual_input: false,
     water_dist_before: '',
     water_sold_before: '',
     mnf_before: '',
@@ -70,6 +86,8 @@ function newArea(index: number): AreaSet {
     water_dist_after: '',
     water_sold_after: '',
     mnf_after: '',
+    leaks_repaired: '',
+    leaks_pending: '',
     pdca_do: '',
     pdca_act: '',
     has_obstacle: false,
@@ -89,18 +107,38 @@ function fmt(n: number | null, dec = 2) {
   return n.toLocaleString('th-TH', { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
+function lookupNrwStat(
+  nrwStatsByBranchId: Record<number, NrwAreaLookup[]>,
+  dmamabranchId: number | undefined,
+  code: string,
+): NrwAreaLookup | undefined {
+  if (!dmamabranchId || !code) return undefined
+  const stats = nrwStatsByBranchId[dmamabranchId] ?? []
+  return stats.find((s) => s.area_name.startsWith(code + '-') || s.area_name === code)
+}
+
 const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
 const SELECT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer'
 const LABEL = 'block text-xs font-semibold text-white/40 uppercase tracking-wide mb-2'
+const CALC_BOX = 'w-full bg-white/3 border border-dashed border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white/50 min-h-[46px] flex items-center'
 
 interface Props {
   branches: Branch[]
   userBranchId?: string
   isAdmin: boolean
   mmNodesByBranch: Record<string, WaterNodeOption[]>
+  nrwStatsByBranchId: Record<number, NrwAreaLookup[]>
+  branchUuidToDmamaId: Record<string, number>
 }
 
-export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranch }: Props) {
+export function AreaReportForm({
+  branches,
+  userBranchId,
+  isAdmin,
+  mmNodesByBranch,
+  nrwStatsByBranchId,
+  branchUuidToDmamaId,
+}: Props) {
   const router = useRouter()
   const now = new Date()
 
@@ -112,6 +150,47 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
 
   function patchArea(key: string, patch: Partial<AreaSet>) {
     setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...patch } : a)))
+  }
+
+  function handleAreaSelect(areaKey: string, label: string, code: string) {
+    const area = areas.find((a) => a.key === areaKey)
+    if (area?.manual_input) {
+      patchArea(areaKey, { area_name: label, area_code: code })
+      return
+    }
+    const dmamabranchId = branchUuidToDmamaId[branchId]
+    const stat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code)
+    patchArea(areaKey, {
+      area_name: label,
+      area_code: code,
+      nrw_data_month: stat ? { year: stat.report_year, month: stat.report_month } : null,
+      water_dist_before: stat?.outbound != null ? String(stat.outbound) : '',
+      water_sold_before: stat?.distribute_all != null ? String(stat.distribute_all) : '',
+    })
+  }
+
+  function toggleManualInput(areaKey: string, checked: boolean) {
+    const area = areas.find((a) => a.key === areaKey)
+    if (!area) return
+    if (checked) {
+      // switch to manual: clear auto-filled values and badge
+      patchArea(areaKey, {
+        manual_input: true,
+        nrw_data_month: null,
+        water_dist_before: '',
+        water_sold_before: '',
+      })
+    } else {
+      // switch back to auto: re-fill from dmama if area is already selected
+      const dmamabranchId = branchUuidToDmamaId[branchId]
+      const stat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code)
+      patchArea(areaKey, {
+        manual_input: false,
+        nrw_data_month: stat ? { year: stat.report_year, month: stat.report_month } : null,
+        water_dist_before: stat?.outbound != null ? String(stat.outbound) : '',
+        water_sold_before: stat?.distribute_all != null ? String(stat.distribute_all) : '',
+      })
+    }
   }
 
   function addStep(key: string) {
@@ -197,6 +276,8 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
       water_dist_after: parseFloat(a.water_dist_after) || null,
       water_sold_after: parseFloat(a.water_sold_after) || null,
       mnf_after: parseFloat(a.mnf_after) || null,
+      leaks_repaired: parseInt(a.leaks_repaired) || null,
+      leaks_pending: parseInt(a.leaks_pending) || null,
       pdca_do: a.pdca_do || null,
       pdca_act: a.pdca_act || null,
       step_tests: a.step_tests.map((s) => ({
@@ -234,7 +315,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
     <div className="space-y-4">
       {/* ─── Header: branch / year / month ─── */}
       <div className="glass-card overflow-hidden">
-        {/* accent bar */}
         <div className="h-0.5 bg-gradient-to-r from-cyan-500 via-blue-500/60 to-transparent" />
 
         <div className="p-6 space-y-5">
@@ -282,7 +362,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
             </div>
           </div>
 
-          {/* summary pill */}
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
             <span className="text-sm text-cyan-300/90">
@@ -348,15 +427,52 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                     branchId={branchId}
                     initialMmNodes={mmNodesByBranch[branchId] ?? []}
                     value={area.area_name}
-                    onChange={(label) => patchArea(area.key, { area_name: label })}
+                    onChange={(label, code) => handleAreaSelect(area.key, label, code)}
                   />
                 </section>
 
                 {/* Part 2 ─ ก่อนดำเนินการ */}
                 <section>
-                  <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest mb-2">
-                    ส่วนที่ 2 — ก่อนดำเนินการ
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest">
+                      ส่วนที่ 2 — ก่อนดำเนินการ
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {area.nrw_data_month && !area.manual_input && (
+                        <span className="text-[10px] text-cyan-400/50">
+                          ดึงจาก dmama:{' '}
+                          {getThaiMonthName(area.nrw_data_month.month)}{' '}
+                          {toThaiYear(area.nrw_data_month.year)}
+                        </span>
+                      )}
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none group">
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                          area.manual_input
+                            ? 'bg-amber-500 border-amber-500'
+                            : 'bg-transparent border-white/25 group-hover:border-white/50'
+                        }`}>
+                          {area.manual_input && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={area.manual_input}
+                          onChange={(e) => toggleManualInput(area.key, e.target.checked)}
+                        />
+                        <span className={`text-[10px] font-medium transition-colors ${
+                          area.manual_input ? 'text-amber-400' : 'text-white/30 group-hover:text-white/50'
+                        }`}>
+                          กรอกเอง
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Row 1: inputs */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
@@ -389,20 +505,32 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                       />
                     </div>
                   </div>
-                  {before && (
-                    <div className="mt-2 flex gap-5 text-xs bg-white/5 rounded-lg px-3 py-2">
-                      <span className="text-white/50">
-                        น้ำสูญเสีย:{' '}
-                        <strong className="text-white/80 num">{fmt(before.loss, 0)} ลบ.ม.</strong>
-                      </span>
-                      <span className="text-white/50">
-                        NRW:{' '}
-                        <strong className={`num ${before.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
-                          {fmt(before.pct)}%
-                        </strong>
-                      </span>
+
+                  {/* Row 2: calculated display */}
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
+                      <div className={CALC_BOX}>
+                        {before ? (
+                          <span className="text-white/80 num">{fmt(before.loss, 2)}</span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </div>
                     </div>
-                  )}
+                    <div>
+                      <label className={LABEL}>อัตราน้ำสูญเสีย (%)</label>
+                      <div className={CALC_BOX}>
+                        {before ? (
+                          <span className={`num font-semibold ${before.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
+                            {fmt(before.pct)}%
+                          </span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </section>
 
                 {/* Part 3 ─ Step Test */}
@@ -420,7 +548,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                     </button>
                   </div>
 
-                  {/* Column headers */}
                   <div className="grid grid-cols-[36px_1fr_72px_116px_28px] gap-2 text-[10px] text-white/35 px-1 mb-1">
                     <span className="text-center">สเต็ป</span>
                     <span>สูญเสียคาดการณ์ (m³/hr)</span>
@@ -477,9 +604,11 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
 
                 {/* Part 4 ─ หลังดำเนินการ */}
                 <section>
-                  <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest mb-2">
+                  <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest mb-3">
                     ส่วนที่ 4 — หลังดำเนินการ
                   </p>
+
+                  {/* Row 1: inputs */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
@@ -512,37 +641,70 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                       />
                     </div>
                   </div>
-                  {after && (
-                    <div className="mt-2 flex flex-wrap gap-5 text-xs bg-white/5 rounded-lg px-3 py-2">
-                      <span className="text-white/50">
-                        น้ำสูญเสีย:{' '}
-                        <strong className="text-white/80 num">{fmt(after.loss, 0)} ลบ.ม.</strong>
-                      </span>
-                      <span className="text-white/50">
-                        NRW:{' '}
-                        <strong className={`num ${after.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
-                          {fmt(after.pct)}%
-                        </strong>
-                      </span>
-                      {before && (
-                        <span className="text-white/50">
-                          ผลต่าง:{' '}
-                          <strong
-                            className={`num ${after.pct < before.pct ? 'text-green-400' : 'text-red-400'}`}
-                          >
-                            {after.pct < before.pct ? '▼' : '▲'} {fmt(Math.abs(before.pct - after.pct))}%
-                          </strong>
-                        </span>
-                      )}
+
+                  {/* Row 2: calculated display */}
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
+                      <div className={CALC_BOX}>
+                        {after ? (
+                          <span className="text-white/80 num">{fmt(after.loss, 2)}</span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </div>
                     </div>
-                  )}
+                    <div>
+                      <label className={LABEL}>อัตราน้ำสูญเสีย (%)</label>
+                      <div className={CALC_BOX}>
+                        {after ? (
+                          <span className={`num font-semibold ${after.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
+                            {fmt(after.pct)}%
+                            {before && (
+                              <span className={`ml-2 text-xs ${after.pct < before.pct ? 'text-green-400' : 'text-red-400'}`}>
+                                ({after.pct < before.pct ? '▼' : '▲'} {fmt(Math.abs(before.pct - after.pct))}%)
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </section>
 
                 {/* Part 5 ─ Do / Act */}
                 <section>
-                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest mb-2">
+                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest mb-3">
                     ส่วนที่ 5 — Do / Act
                   </p>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className={LABEL}>ซ่อมแล้ว (จุด)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={area.leaks_repaired}
+                        onChange={(e) => patchArea(area.key, { leaks_repaired: e.target.value })}
+                        placeholder="0"
+                        className={INPUT}
+                      />
+                    </div>
+                    <div>
+                      <label className={LABEL}>ค้างซ่อม (จุด)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={area.leaks_pending}
+                        onChange={(e) => patchArea(area.key, { leaks_pending: e.target.value })}
+                        placeholder="0"
+                        className={INPUT}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
                     <div>
                       <label className={LABEL}>D (Do) — สิ่งที่ดำเนินการ</label>
@@ -594,7 +756,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                     <div className="space-y-3">
                       {area.obstacles.map((obs, oi) => (
                         <div key={oi} className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 space-y-3">
-                          {/* header row */}
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-orange-400/60 font-bold">อุปสรรคที่ {oi + 1}</span>
                             {area.obstacles.length > 1 && (
@@ -607,7 +768,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             )}
                           </div>
 
-                          {/* ประเภท */}
                           <div>
                             <label className={LABEL}>อุปสรรคเรื่อง</label>
                             <select
@@ -622,7 +782,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             </select>
                           </div>
 
-                          {/* ระดับความเร่งด่วน */}
                           <div>
                             <label className={LABEL}>ระดับความเร่งด่วน</label>
                             <div className="flex gap-2">
@@ -658,7 +817,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             </div>
                           )}
 
-                          {/* รายละเอียดอุปสรรค */}
                           <div>
                             <label className={LABEL}>รายละเอียดอุปสรรค</label>
                             <textarea
@@ -670,7 +828,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             />
                           </div>
 
-                          {/* แนวทางการแก้ไข */}
                           <div>
                             <label className={LABEL}>แนวทางการแก้ไข</label>
                             <textarea
@@ -682,7 +839,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             />
                           </div>
 
-                          {/* ผลกระทบที่ได้รับ */}
                           <div>
                             <label className={LABEL}>ผลกระทบที่ได้รับ</label>
                             <textarea
@@ -694,7 +850,6 @@ export function AreaReportForm({ branches, userBranchId, isAdmin, mmNodesByBranc
                             />
                           </div>
 
-                          {/* สิ่งที่ต้องการจากเขต */}
                           <div>
                             <label className={LABEL}>สิ่งที่ต้องการความช่วยเหลือจากเขต</label>
                             <textarea

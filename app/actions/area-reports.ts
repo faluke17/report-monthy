@@ -34,6 +34,8 @@ export type AreaReportInput = {
   water_dist_after?: number | null
   water_sold_after?: number | null
   mnf_after?: number | null
+  leaks_repaired?: number | null
+  leaks_pending?: number | null
   pdca_do?: string | null
   pdca_act?: string | null
   step_tests: StepTestInput[]
@@ -86,6 +88,8 @@ export async function submitAreaReports(reports: AreaReportInput[]): Promise<Act
           water_dist_after: report.water_dist_after ?? null,
           water_sold_after: report.water_sold_after ?? null,
           mnf_after: report.mnf_after ?? null,
+          leaks_repaired: report.leaks_repaired ?? null,
+          leaks_pending: report.leaks_pending ?? null,
           pdca_do: report.pdca_do || null,
           pdca_act: report.pdca_act || null,
           status: 'submitted',

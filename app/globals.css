@@ -64,6 +64,21 @@
     min-height: 100vh;
   }
 
+  /* ── Select: force dark bg so options are readable on all browsers ── */
+  select {
+    background-color: #0b1d3a;
+    color: #f3f7ff;
+    color-scheme: dark;
+  }
+  select option {
+    background-color: #0b1d3a;
+    color: #f3f7ff;
+  }
+  select option:disabled,
+  select option[value=""] {
+    color: rgba(243,247,255,.4);
+  }
+
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: #0b1d3a; }
   ::-webkit-scrollbar-thumb {
