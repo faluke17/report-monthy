@@ -21,9 +21,6 @@ const OBSTACLE_TYPES = [
   'อื่น',
 ]
 
-const REPAIR_STATUS = ['รอซ่อม', 'ซ่อมแล้ว', 'ซ่อมไม่ได้'] as const
-type RepairStatus = (typeof REPAIR_STATUS)[number]
-
 export interface NrwAreaLookup {
   area_name: string
   outbound: number | null
@@ -36,7 +33,7 @@ interface StepRow {
   step_no: number
   estimated_loss: string
   leaks_found: string
-  repair_status: RepairStatus
+  leaks_repaired: string
 }
 
 interface ObstacleRow {
@@ -63,8 +60,6 @@ interface AreaSet {
   water_dist_after: string
   water_sold_after: string
   mnf_after: string
-  leaks_repaired: string
-  leaks_pending: string
   pdca_do: string
   pdca_act: string
   has_obstacle: boolean
@@ -82,12 +77,10 @@ function newArea(index: number): AreaSet {
     water_dist_before: '',
     water_sold_before: '',
     mnf_before: '',
-    step_tests: [{ step_no: 1, estimated_loss: '', leaks_found: '0', repair_status: 'รอซ่อม' }],
+    step_tests: [{ step_no: 1, estimated_loss: '', leaks_found: '0', leaks_repaired: '0' }],
     water_dist_after: '',
     water_sold_after: '',
     mnf_after: '',
-    leaks_repaired: '',
-    leaks_pending: '',
     pdca_do: '',
     pdca_act: '',
     has_obstacle: false,
@@ -201,7 +194,7 @@ export function AreaReportForm({
           ...a,
           step_tests: [
             ...a.step_tests,
-            { step_no: a.step_tests.length + 1, estimated_loss: '', leaks_found: '0', repair_status: 'รอซ่อม' },
+            { step_no: a.step_tests.length + 1, estimated_loss: '', leaks_found: '0', leaks_repaired: '0' },
           ],
         }
       })
@@ -276,15 +269,13 @@ export function AreaReportForm({
       water_dist_after: parseFloat(a.water_dist_after) || null,
       water_sold_after: parseFloat(a.water_sold_after) || null,
       mnf_after: parseFloat(a.mnf_after) || null,
-      leaks_repaired: parseInt(a.leaks_repaired) || null,
-      leaks_pending: parseInt(a.leaks_pending) || null,
       pdca_do: a.pdca_do || null,
       pdca_act: a.pdca_act || null,
       step_tests: a.step_tests.map((s) => ({
         step_no: s.step_no,
         estimated_loss: parseFloat(s.estimated_loss) || null,
         leaks_found: parseInt(s.leaks_found) || 0,
-        repair_status: s.repair_status,
+        leaks_repaired: parseInt(s.leaks_repaired) || null,
       })),
       obstacles: a.has_obstacle
         ? a.obstacles
@@ -548,57 +539,62 @@ export function AreaReportForm({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-[36px_1fr_72px_116px_28px] gap-2 text-[10px] text-white/35 px-1 mb-1">
+                  <div className="grid grid-cols-[36px_1fr_72px_72px_72px_28px] gap-2 text-[10px] text-white/35 px-1 mb-1">
                     <span className="text-center">สเต็ป</span>
                     <span>สูญเสียคาดการณ์ (m³/hr)</span>
                     <span>จุดรั่ว</span>
-                    <span>สถานะ</span>
+                    <span>ซ่อมแล้ว</span>
+                    <span>ค้างซ่อม</span>
                     <span />
                   </div>
 
                   <div className="space-y-2">
-                    {area.step_tests.map((step, si) => (
-                      <div
-                        key={si}
-                        className="grid grid-cols-[36px_1fr_72px_116px_28px] gap-2 items-center"
-                      >
-                        <div className="text-xs text-white/40 font-mono text-center">{step.step_no}</div>
-                        <input
-                          type="number"
-                          value={step.estimated_loss}
-                          onChange={(e) => patchStep(area.key, si, { estimated_loss: e.target.value })}
-                          placeholder="0.000"
-                          className={INPUT}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          value={step.leaks_found}
-                          onChange={(e) => patchStep(area.key, si, { leaks_found: e.target.value })}
-                          className={INPUT}
-                        />
-                        <select
-                          value={step.repair_status}
-                          onChange={(e) =>
-                            patchStep(area.key, si, { repair_status: e.target.value as RepairStatus })
-                          }
-                          className={SELECT}
+                    {area.step_tests.map((step, si) => {
+                      const found = parseInt(step.leaks_found) || 0
+                      const repaired = parseInt(step.leaks_repaired) || 0
+                      const pending = Math.max(0, found - repaired)
+                      return (
+                        <div
+                          key={si}
+                          className="grid grid-cols-[36px_1fr_72px_72px_72px_28px] gap-2 items-center"
                         >
-                          {REPAIR_STATUS.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => removeStep(area.key, si)}
-                          disabled={area.step_tests.length === 1}
-                          className="text-red-400/40 hover:text-red-400 disabled:opacity-20 transition-colors flex items-center justify-center"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="text-xs text-white/40 font-mono text-center">{step.step_no}</div>
+                          <input
+                            type="number"
+                            value={step.estimated_loss}
+                            onChange={(e) => patchStep(area.key, si, { estimated_loss: e.target.value })}
+                            placeholder="0.000"
+                            className={INPUT}
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            value={step.leaks_found}
+                            onChange={(e) => patchStep(area.key, si, { leaks_found: e.target.value })}
+                            className={INPUT}
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            value={step.leaks_repaired}
+                            onChange={(e) => patchStep(area.key, si, { leaks_repaired: e.target.value })}
+                            className={INPUT}
+                          />
+                          <div className={CALC_BOX}>
+                            <span className={`num text-xs ${pending > 0 ? 'text-amber-400' : 'text-white/40'}`}>
+                              {found > 0 || repaired > 0 ? pending : '—'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => removeStep(area.key, si)}
+                            disabled={area.step_tests.length === 1}
+                            className="text-red-400/40 hover:text-red-400 disabled:opacity-20 transition-colors flex items-center justify-center"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 </section>
 
@@ -679,31 +675,6 @@ export function AreaReportForm({
                   <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest mb-3">
                     ส่วนที่ 5 — Do / Act
                   </p>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label className={LABEL}>ซ่อมแล้ว (จุด)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={area.leaks_repaired}
-                        onChange={(e) => patchArea(area.key, { leaks_repaired: e.target.value })}
-                        placeholder="0"
-                        className={INPUT}
-                      />
-                    </div>
-                    <div>
-                      <label className={LABEL}>ค้างซ่อม (จุด)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={area.leaks_pending}
-                        onChange={(e) => patchArea(area.key, { leaks_pending: e.target.value })}
-                        placeholder="0"
-                        className={INPUT}
-                      />
-                    </div>
-                  </div>
 
                   <div className="space-y-3">
                     <div>

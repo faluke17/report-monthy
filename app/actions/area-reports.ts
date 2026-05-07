@@ -10,7 +10,7 @@ export type StepTestInput = {
   step_no: number
   estimated_loss: number | null
   leaks_found: number
-  repair_status: 'รอซ่อม' | 'ซ่อมแล้ว' | 'ซ่อมไม่ได้'
+  leaks_repaired: number | null
 }
 
 export type AreaObstacleInput = {
@@ -113,7 +113,7 @@ export async function submitAreaReports(reports: AreaReportInput[]): Promise<Act
           step_no: s.step_no,
           estimated_loss: s.estimated_loss,
           leaks_found: s.leaks_found,
-          repair_status: s.repair_status,
+          leaks_repaired: s.leaks_repaired,
         }))
       )
       if (stepError) return { success: false, error: stepError.message }
