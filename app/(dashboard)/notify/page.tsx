@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
-import { Meeting, MeetingAcknowledgment } from '@/lib/types'
+import { Meeting, MeetingAcknowledgment, ResolutionNotification } from '@/lib/types'
 import { formatThaiDate, daysUntil } from '@/lib/utils/date-th'
-import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen } from 'lucide-react'
+import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
+import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen, Bell } from 'lucide-react'
 import { AckButton } from '@/components/shared/AckButton'
+import { NotificationAckButton } from '@/components/shared/NotificationAckButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +14,9 @@ export default async function NotifyPage() {
   const session = await getPwaSession()
   const today = new Date().toISOString().split('T')[0]
 
+  const branchCostcenter = session?.costcenter ?? null
+
+  // Upcoming meetings
   const { data } = await supabase
     .from('meetings')
     .select('*')
@@ -21,7 +26,6 @@ export default async function NotifyPage() {
 
   const meetings = (data ?? []) as Meeting[]
 
-  // ดึง acknowledgments ของสาขานี้ทั้งหมด
   let myAcks: MeetingAcknowledgment[] = []
   if (session?.branch_name && meetings.length > 0) {
     const meetingIds = meetings.map((m) => m.id)
@@ -35,13 +39,94 @@ export default async function NotifyPage() {
 
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
+  // Resolution notifications for this branch
+  let resolutionNotifs: ResolutionNotification[] = []
+  if (branchCostcenter) {
+    const { data: notifData } = await supabase
+      .from('resolution_notifications')
+      .select('*')
+      .eq('branch_costcenter', branchCostcenter)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    resolutionNotifs = (notifData ?? []) as ResolutionNotification[]
+  }
+
+  const unreadCount = resolutionNotifs.filter(n => !n.is_read).length
+  const branchLabel = branchCostcenter
+    ? (PWA_BRANCHES.find(b => b.costcenter === branchCostcenter)?.name_th ?? branchCostcenter)
+    : null
+
   return (
     <div className="space-y-6 max-w-2xl animate-fadein">
       <div>
         <h1 className="text-xl font-bold text-white">การแจ้งเตือน</h1>
-        <p className="text-sm text-white/40 mt-0.5">ข้อมูลการประชุมและสิ่งที่ต้องเตรียม</p>
+        <p className="text-sm text-white/40 mt-0.5">ข้อมูลการประชุมและข้อสั่งการ</p>
       </div>
 
+      {/* Resolution notifications (branch only) */}
+      {branchCostcenter && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ข้อสั่งการสำหรับสาขา</h2>
+            {unreadCount > 0 && (
+              <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full font-semibold">
+                {unreadCount} ใหม่
+              </span>
+            )}
+          </div>
+
+          {resolutionNotifs.length === 0 ? (
+            <div className="glass-card-sm p-6 text-center text-white/30 text-sm">
+              ยังไม่มีข้อสั่งการสำหรับ{branchLabel ? `สาขา${branchLabel}` : 'สาขาของคุณ'}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {resolutionNotifs.map(n => (
+                <div
+                  key={n.id}
+                  className={`glass-card-sm p-4 border-l-4 transition-opacity ${
+                    n.is_read ? 'border-white/15 opacity-60' : 'border-cyan-500'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Bell size={12} className={n.is_read ? 'text-white/25' : 'text-cyan-400'} />
+                        <span className={`text-xs font-semibold ${n.is_read ? 'text-white/50' : 'text-white'}`}>
+                          {n.title}
+                        </span>
+                        {!n.is_read && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                        )}
+                      </div>
+                      {n.detail && (
+                        <p className="text-xs text-white/45 leading-relaxed pl-5 line-clamp-3">{n.detail}</p>
+                      )}
+                      <p className="text-[10px] text-white/25 pl-5">
+                        {new Date(n.created_at).toLocaleDateString('th-TH', {
+                          day: 'numeric', month: 'long', year: 'numeric',
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    {!n.is_read && (
+                      <NotificationAckButton notificationId={n.id} />
+                    )}
+                    {n.is_read && (
+                      <div className="flex items-center gap-1 text-[10px] text-white/25 shrink-0">
+                        <CheckCircle size={11} />
+                        รับทราบแล้ว
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Upcoming meetings */}
       <div className="space-y-3">
         <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">การประชุมที่จะถึง</h2>
         {meetings.length === 0 ? (
@@ -93,7 +178,6 @@ export default async function NotifyPage() {
                     )}
                   </div>
 
-                  {/* ปุ่มรับทราบ – แสดงเฉพาะผู้ใช้สาขา */}
                   {session?.branch_name && (
                     <div className="shrink-0 mt-0.5">
                       {isAcked ? (

@@ -177,6 +177,17 @@ export interface MeetingResolution {
   status: string
   notes: string | null
   action_item_id: string | null
+  source: string | null
+  priority: 'สูง' | 'กลาง' | null
+  detail: string | null
+  responsible_branch: string | null
+  responsible_dept: string | null
+  admin_notes: string | null
+  tracking_notes: string | null
+  progress_pct: number
+  progress_note: string | null
+  progress_updated_at: string | null
+  progress_updated_by: string | null
   created_at: string
   updated_at: string
 }
@@ -401,3 +412,60 @@ export interface FiveTopicsReport {
 export type ActionResult<T = void> =
   | { success: true; data?: T }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> }
+
+// ============================================================
+// Meeting Agenda Types
+// ============================================================
+
+export interface MeetingAgendaHeader {
+  id: string
+  meeting_id: string
+  start_time: '09:00' | '13:00'
+  agenda1_detail: string | null
+  agenda1_resolution: 'รับทราบ' | 'อื่นๆ'
+  agenda1_resolution_detail: string | null
+  agenda2_meeting_no: string | null
+  agenda2_resolution: 'รับทราบ' | 'อื่นๆ'
+  agenda2_resolution_detail: string | null
+  agenda4_type: 'เรื่องสืบเนื่อง' | 'เรื่องติดตามผลการดำเนินการ'
+  created_at: string
+  updated_at: string
+}
+
+export interface MeetingAgendaSubItem {
+  id?: string
+  meeting_id: string
+  agenda_no: number
+  item_no: number
+  title: string
+  detail: string | null
+  detail_table: { headers: string[]; colWidths?: number[]; rows: string[][] } | null
+  resolution: 'รับทราบ' | 'อื่นๆ'
+  resolution_detail: string | null
+  sort_order: number
+}
+
+export interface ResolutionNotification {
+  id: string
+  resolution_id: string
+  meeting_id: string
+  branch_costcenter: string
+  title: string
+  detail: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export interface MeetingResolutionFormData {
+  meeting_id: string
+  source: string
+  priority: 'สูง' | 'กลาง'
+  title: string
+  detail?: string
+  responsible_branch: string
+  responsible_dept: string
+  due_days: 7 | 15 | 30 | 45 | 60
+  admin_notes?: string
+  tracking_notes?: string
+  notify_branch: boolean
+}

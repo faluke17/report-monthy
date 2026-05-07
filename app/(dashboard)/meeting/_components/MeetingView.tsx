@@ -3,15 +3,18 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { Meeting, MeetingAcknowledgment, MeetingResolution, MonthlyReport, Branch } from '@/lib/types'
+import type { Meeting, MeetingAcknowledgment, MeetingResolution, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
+import { MeetingAgendaForm } from '@/components/forms/MeetingAgendaForm'
+import { MeetingResolutionForm } from '@/components/forms/MeetingResolutionForm'
+import { ResolutionCard } from './ResolutionCard'
 import { StatusPill } from '@/components/shared/StatusPill'
 import { CodeBadge } from '@/components/shared/CodeBadge'
 import { AckButton } from '@/components/shared/AckButton'
 import { MeetingAckSummary } from '@/components/dashboard/MeetingAckSummary'
-import { formatThaiDate, formatThaiMonthYearShort, isOverdue, daysUntil } from '@/lib/utils/date-th'
+import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
-  Plus, AlertTriangle, Calendar, MapPin, Link2, Users, FileText, CheckCircle,
+  Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle,
 } from 'lucide-react'
 
 type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup'
@@ -142,16 +145,14 @@ interface Props {
   prevMeeting: Meeting | null
   latestResolutions: MeetingResolution[]
   prevResolutions: MeetingResolution[]
-  nrwReports: (MonthlyReport & { branches?: Branch })[]
-  totalBranches: number
-  currentYear: number
-  currentMonth: number
   upcomingMeetings: Meeting[]
   pastMeetings: Meeting[]
   acksByMeeting: Record<string, MeetingAcknowledgment[]>
   myAcks: MeetingAcknowledgment[]
   isAdmin: boolean
   branchName: string | null
+  agendaHeader: MeetingAgendaHeader | null
+  agendaSubitems: MeetingAgendaSubItem[]
 }
 
 export function MeetingView({
@@ -159,18 +160,17 @@ export function MeetingView({
   prevMeeting,
   latestResolutions,
   prevResolutions,
-  nrwReports,
-  totalBranches,
-  currentYear,
-  currentMonth,
   upcomingMeetings,
   pastMeetings,
   acksByMeeting,
   myAcks,
   isAdmin,
   branchName,
+  agendaHeader,
+  agendaSubitems,
 }: Props) {
   const [tab, setTab] = useState<Tab>('schedule')
+  const [showResolutionForm, setShowResolutionForm] = useState(false)
 
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
@@ -180,19 +180,6 @@ export function MeetingView({
     { key: 'resolution', label: 'มติ / ข้อสั่งการ',   count: latestResolutions.length },
     { key: 'followup',   label: 'ติดตามมติเดือนก่อน', count: prevResolutions.length },
   ]
-
-  const monthLabel = formatThaiMonthYearShort(currentYear, currentMonth)
-  const submitted = nrwReports.length
-  const notSubmitted = totalBranches - submitted
-  const avgNrw =
-    nrwReports.length > 0
-      ? nrwReports.reduce((s, r) => s + (r.nrw_pct ?? 0), 0) / nrwReports.length
-      : null
-  const highNrwBranches = nrwReports
-    .filter(r => r.nrw_pct !== null && r.nrw_pct > 35)
-    .sort((a, b) => (b.nrw_pct ?? 0) - (a.nrw_pct ?? 0))
-    .slice(0, 5)
-  const totalLeaksPending = nrwReports.reduce((s, r) => s + (r.leaks_pending ?? 0), 0)
 
   return (
     <div className="space-y-5 animate-fadein">
@@ -319,81 +306,12 @@ export function MeetingView({
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {notSubmitted > 0 && (
-              <div className="flex items-center gap-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl px-4 py-3">
-                <AlertTriangle size={15} className="text-amber-400 shrink-0" />
-                <p className="text-sm text-amber-400">
-                  <b>{notSubmitted} สาขา</b>ยังไม่ส่งผลรายเดือน {monthLabel} — ควรแจ้งเตือนก่อนประชุม
-                </p>
-              </div>
-            )}
-
-            <div className="glass-card p-5 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-teal-400 inline-block shrink-0" />
-                วาระที่ 1 — สถานการณ์ NRW เขต ({monthLabel})
-              </h3>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { label: 'NRW เฉลี่ย',     value: avgNrw !== null ? avgNrw.toFixed(1) + '%' : '—', color: 'text-cyan-400' },
-                  { label: 'สาขาส่งผล',      value: `${submitted}/${totalBranches}`,                  color: 'text-teal-400' },
-                  { label: 'ยังไม่ส่ง',       value: String(notSubmitted),                             color: 'text-red-400'  },
-                  { label: 'ค้างซ่อม (จุด)', value: String(totalLeaksPending),                        color: 'text-amber-400' },
-                ].map(item => (
-                  <div key={item.label} className="bg-white/4 rounded-xl p-3 border border-white/8">
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider">{item.label}</p>
-                    <p className={cn('num text-lg font-bold mt-1', item.color)}>{item.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {highNrwBranches.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold text-amber-400/80 uppercase tracking-wider mb-2">
-                    วาระที่ 2 — สาขาต้องรายงานต่อที่ประชุม (NRW &gt;35%)
-                  </h4>
-                  <div className="overflow-x-auto rounded-xl border border-white/10">
-                    <table className="w-full min-w-[500px]">
-                      <thead>
-                        <tr className="border-b border-white/10 bg-white/3">
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-4 py-2">สาขา</th>
-                          <th className="text-right text-[10px] text-white/30 uppercase tracking-wider px-4 py-2">NRW</th>
-                          <th className="text-right text-[10px] text-white/30 uppercase tracking-wider px-4 py-2">MNF</th>
-                          <th className="text-right text-[10px] text-white/30 uppercase tracking-wider px-4 py-2">ค้างซ่อม</th>
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-4 py-2">สิ่งที่ต้องนำเสนอ</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/6">
-                        {highNrwBranches.map(r => (
-                          <tr key={r.id} className="hover:bg-white/3 transition-colors">
-                            <td className="px-4 py-2.5 font-semibold text-sm text-white">{r.branches?.name_th}</td>
-                            <td className="px-4 py-2.5 text-right num text-sm text-red-400 font-bold">{r.nrw_pct?.toFixed(1)}%</td>
-                            <td className="px-4 py-2.5 text-right num text-sm text-white/50">{r.mnf_latest ?? '—'}</td>
-                            <td className="px-4 py-2.5 text-right text-sm">
-                              {r.leaks_pending > 0 ? (
-                                <span className="text-amber-400">{r.leaks_pending} จุด</span>
-                              ) : (
-                                <span className="text-green-400 text-xs">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2.5 text-xs text-white/40">Root Cause + แนวทางแก้ไข</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {nrwReports.length === 0 && (
-                <p className="text-sm text-white/30 text-center py-4">
-                  ยังไม่มีข้อมูลรายเดือน {monthLabel}
-                </p>
-              )}
-            </div>
-          </div>
+          <MeetingAgendaForm
+            meeting={latestMeeting}
+            initialHeader={agendaHeader}
+            initialSubitems={agendaSubitems}
+            isAdmin={isAdmin}
+          />
         )
       )}
 
@@ -405,72 +323,69 @@ export function MeetingView({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Header row */}
+            <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-white/40">
-                ข้อสั่งการจากการประชุม{' '}
+                ข้อสั่งการจาก{' '}
                 <b className="text-white/60">{latestMeeting.title}</b>
+                {latestResolutions.length > 0 && (
+                  <span className="ml-2 text-white/25">({latestResolutions.length} ข้อ)</span>
+                )}
               </p>
-              <Link
-                href="/action/new"
-                className="flex items-center gap-1.5 text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1.5 rounded-lg hover:bg-cyan-500/30 transition-colors"
-              >
-                <Plus size={13} />
-                เพิ่มข้อสั่งการ
-              </Link>
-            </div>
-
-            {latestResolutions.length === 0 ? (
-              <div className="glass-card p-12 text-center">
-                <p className="text-white/30 mb-3 text-sm">ยังไม่มีข้อสั่งการสำหรับการประชุมนี้</p>
-                <Link
-                  href="/action/new"
-                  className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
+              {isAdmin && (
+                <button
+                  onClick={() => setShowResolutionForm(v => !v)}
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all',
+                    showResolutionForm
+                      ? 'bg-white/8 text-white/50 border-white/15 hover:bg-white/12'
+                      : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/25'
+                  )}
                 >
                   <Plus size={13} />
-                  สร้างข้อสั่งการแรก
-                </Link>
-              </div>
-            ) : (
-              <div className="glass-card overflow-hidden">
-                {latestResolutions.map((r, i) => {
-                  const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
-                  const overdue = isOverdue(r.due_date) && !done
-                  return (
-                    <div
-                      key={r.id}
-                      className={cn(
-                        'flex items-center gap-3 px-5 py-3.5',
-                        i < latestResolutions.length - 1 ? 'border-b border-white/8' : '',
-                        overdue ? 'bg-red-500/5' : done ? 'bg-green-500/5 opacity-70' : ''
-                      )}
-                    >
-                      <span className="num text-xs font-bold text-cyan-400 w-8 shrink-0 text-right">
-                        #{r.sequence_no}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
-                        {(r.responsible_party || r.notes) && (
-                          <p className="text-xs text-white/40 mt-0.5">
-                            {r.responsible_party}
-                            {r.notes && ` · ${r.notes}`}
-                          </p>
-                        )}
-                      </div>
-                      {r.due_date && (
-                        <span className={cn('num text-xs shrink-0', overdue ? 'text-red-400' : 'text-white/35')}>
-                          {formatThaiDate(r.due_date, true)}
-                        </span>
-                      )}
-                      <StatusPill status={r.status} />
-                    </div>
-                  )
-                })}
+                  {showResolutionForm ? 'ยกเลิก' : 'เพิ่มข้อสั่งการ'}
+                </button>
+              )}
+            </div>
+
+            {/* Add form (collapsed by default) */}
+            {isAdmin && showResolutionForm && (
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/3 p-4 space-y-3">
+                <p className="text-xs font-semibold text-cyan-400/80">เพิ่มข้อสั่งการใหม่</p>
+                <MeetingResolutionForm
+                  meeting={latestMeeting}
+                  sequenceStart={latestResolutions.length + 1}
+                  onSaved={() => setShowResolutionForm(false)}
+                />
               </div>
             )}
 
-            <div className="flex items-center gap-2 bg-cyan-500/6 border border-cyan-500/20 rounded-xl px-4 py-3 text-xs text-cyan-400/80">
-              ข้อสั่งการที่บันทึกในหน้า Action Tracker จะแสดงที่นี่โดยอัตโนมัติ เมื่อผูกกับการประชุมนี้
-            </div>
+            {/* Resolution list */}
+            {latestResolutions.length === 0 ? (
+              <div className="glass-card p-10 text-center">
+                <p className="text-white/30 text-sm">ยังไม่มีข้อสั่งการสำหรับการประชุมนี้</p>
+                {isAdmin && !showResolutionForm && (
+                  <button
+                    onClick={() => setShowResolutionForm(true)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <Plus size={12} />
+                    สร้างข้อสั่งการแรก
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {latestResolutions.map(r => (
+                  <ResolutionCard
+                    key={r.id}
+                    r={r}
+                    isAdmin={isAdmin}
+                    branchName={branchName}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )
       )}

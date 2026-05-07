@@ -19,6 +19,7 @@ interface SidebarStats {
 
 interface SidebarProps {
   stats?: SidebarStats
+  notifyCount?: number
 }
 
 const NAV_GROUPS = [
@@ -56,7 +57,7 @@ const NAV_GROUPS = [
   },
 ]
 
-export function Sidebar({ stats }: SidebarProps) {
+export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useAppStore()
 
@@ -130,7 +131,7 @@ export function Sidebar({ stats }: SidebarProps) {
                   href={item.href}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={cn(
-                    'flex items-center gap-2.5 mx-2 px-3 py-2 rounded-xl mb-0.5 transition-all text-[13px]',
+                    'relative flex items-center gap-2.5 mx-2 px-3 py-2 rounded-xl mb-0.5 transition-all text-[13px]',
                     isActive
                       ? 'bg-[rgba(216,180,90,.14)] text-[#ffe4a3] border border-[rgba(216,180,90,.3)]'
                       : 'text-white/45 hover:text-white hover:bg-white/5 border border-transparent'
@@ -142,6 +143,14 @@ export function Sidebar({ stats }: SidebarProps) {
                   )}
                   {!sidebarCollapsed && 'badge' in item && item.badge === 'new' && (
                     <span className="nav-badge-new">ใหม่</span>
+                  )}
+                  {item.href === '/notify' && notifyCount > 0 && (
+                    <span className={cn(
+                      'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/25 text-red-400 border border-red-500/30',
+                      sidebarCollapsed ? 'absolute -top-1 -right-1' : ''
+                    )}>
+                      {notifyCount}
+                    </span>
                   )}
                 </Link>
               )

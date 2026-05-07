@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
-import type { Meeting, MeetingAcknowledgment, MeetingResolution, MonthlyReport, Branch } from '@/lib/types'
+import type { Meeting, MeetingAcknowledgment, MeetingResolution, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
 import { MeetingView } from './_components/MeetingView'
 
 export const dynamic = 'force-dynamic'
@@ -9,8 +9,6 @@ export default async function MeetingPage() {
   const supabase = await createClient()
   const session = await getPwaSession()
   const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
   const today = now.toISOString().split('T')[0]
   const isAdmin = !session?.branch_name
 
@@ -46,19 +44,22 @@ export default async function MeetingPage() {
     prevResolutions = (data ?? []) as MeetingResolution[]
   }
 
-  const { data: nrwData } = await supabase
-    .from('monthly_reports')
-    .select('*, branches(*)')
-    .eq('report_year', year)
-    .eq('report_month', month)
-    .order('nrw_pct', { ascending: false })
+  let agendaHeader: MeetingAgendaHeader | null = null
+  let agendaSubitems: MeetingAgendaSubItem[] = []
 
-  const nrwReports = (nrwData ?? []) as (MonthlyReport & { branches?: Branch })[]
-
-  const { count: totalBranches } = await supabase
-    .from('branches')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_active', true)
+  if (latest) {
+    const [hRes, sRes] = await Promise.all([
+      supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', latest.id).maybeSingle(),
+      supabase
+        .from('meeting_agenda_subitems')
+        .select('*')
+        .eq('meeting_id', latest.id)
+        .order('agenda_no')
+        .order('sort_order'),
+    ])
+    agendaHeader = hRes.data ?? null
+    agendaSubitems = (sRes.data ?? []) as MeetingAgendaSubItem[]
+  }
 
   // Schedule tab: upcoming and past meetings + acks
   const [upcomingRes, pastRes] = await Promise.all([
@@ -110,16 +111,14 @@ export default async function MeetingPage() {
       prevMeeting={prev}
       latestResolutions={latestResolutions}
       prevResolutions={prevResolutions}
-      nrwReports={nrwReports}
-      totalBranches={totalBranches ?? 26}
-      currentYear={year}
-      currentMonth={month}
       upcomingMeetings={upcomingMeetings}
       pastMeetings={pastMeetings}
       acksByMeeting={acksByMeeting}
       myAcks={myAcks}
       isAdmin={isAdmin}
       branchName={session?.branch_name ?? null}
+      agendaHeader={agendaHeader}
+      agendaSubitems={agendaSubitems}
     />
   )
 }
