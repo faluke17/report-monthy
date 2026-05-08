@@ -89,27 +89,108 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
         )}
       </div>
 
-      {/* Side Stats */}
-      {!sidebarCollapsed && (
-        <div className="px-4 py-3 border-b border-white/10 space-y-1.5 shrink-0">
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] text-white/40">สาขาทั้งหมด</span>
-            <span className="num text-[13px] font-semibold text-white">{stats?.totalBranches ?? 26}</span>
+      {/* Side Stats — health card */}
+      {!sidebarCollapsed && (() => {
+        const total      = stats?.totalBranches ?? 26
+        const submitted  = stats?.submitted     ?? 0
+        const pending    = stats?.pending       ?? 0
+        const obstacles  = stats?.openObstacles ?? 0
+        const pct        = total > 0 ? Math.round((submitted / total) * 100) : 0
+        const arcColor   = pct === 100 ? '#4ade80' : pct >= 50 ? '#2dd4bf' : '#fb7185'
+        const r          = 20
+        const circ       = 2 * Math.PI * r
+        const dash       = (pct / 100) * circ
+
+        return (
+          <div className="mx-3 my-2.5 shrink-0 rounded-2xl border border-white/8 overflow-hidden"
+            style={{ background: 'linear-gradient(145deg,rgba(11,29,58,0.95) 0%,rgba(6,16,36,0.98) 100%)' }}>
+
+            {/* Arc meter row */}
+            <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+              <div className="relative shrink-0">
+                <svg width="50" height="50" className="-rotate-90">
+                  <circle cx="25" cy="25" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+                  <circle
+                    cx="25" cy="25" r={r} fill="none"
+                    stroke={arcColor}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${dash} ${circ}`}
+                    style={{ filter: `drop-shadow(0 0 5px ${arcColor}99)`, transition: 'stroke-dasharray .7s ease' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="num text-[12px] font-bold leading-none" style={{ color: arcColor }}>
+                    {pct}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-widest text-white/25 mb-0.5">สาขาที่ส่ง</p>
+                <p className="num text-[13px] font-bold text-white leading-tight">{submitted}
+                  <span className="text-[11px] font-normal text-white/35"> / {total}</span>
+                </p>
+                <p className="text-[9px] text-white/25 mt-0.5">สาขาประจำเดือนนี้</p>
+              </div>
+            </div>
+
+            {/* Gradient progress bar */}
+            <div className="px-3 pb-2.5">
+              <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${pct}%`,
+                    background: `linear-gradient(90deg, ${arcColor}99, ${arcColor})`,
+                    boxShadow: `0 0 8px ${arcColor}66`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="mx-3 h-px bg-white/6" />
+
+            {/* Stats rows */}
+            <div className="px-3 py-2.5 space-y-2">
+              {/* ยังไม่ส่ง */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{
+                      background: '#fb7185',
+                      boxShadow: pending > 0 ? '0 0 6px #fb718599' : 'none',
+                      animation: pending > 0 ? 'pulse 2s cubic-bezier(0.4,0,0.6,1) infinite' : 'none',
+                    }}
+                  />
+                  <span className="text-[11px] text-white/40">ยังไม่ส่ง</span>
+                </div>
+                <span className="num text-[12px] font-semibold text-red-400">
+                  {pending}{pending > 0 && <span className="ml-0.5 text-[9px] opacity-50">⚠</span>}
+                </span>
+              </div>
+
+              {/* อุปสรรค */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{
+                      background: '#f6c453',
+                      boxShadow: obstacles > 0 ? '0 0 6px #f6c45399' : 'none',
+                      animation: obstacles > 0 ? 'pulse 2s cubic-bezier(0.4,0,0.6,1) infinite' : 'none',
+                    }}
+                  />
+                  <span className="text-[11px] text-white/40">อุปสรรคเปิดอยู่</span>
+                </div>
+                <span className="num text-[12px] font-semibold text-amber-400">{obstacles}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] text-white/40">ส่งผลแล้ว</span>
-            <span className="num text-[13px] font-semibold text-teal-400">{stats?.submitted ?? '—'}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] text-white/40">ยังไม่ส่ง ⚠</span>
-            <span className="num text-[13px] font-semibold text-red-400">{stats?.pending ?? '—'}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] text-white/40">อุปสรรคเปิดอยู่</span>
-            <span className="num text-[13px] font-semibold text-amber-400">{stats?.openObstacles ?? '—'}</span>
-          </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Navigation */}
       <nav className="flex-1 py-3 overflow-y-auto">
