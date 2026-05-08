@@ -26,8 +26,13 @@ export async function getPwaSession(): Promise<PwaSession | null> {
     const store = await cookies()
     const raw = store.get(PWA_SESSION_COOKIE)?.value
     if (!raw) return null
-    return JSON.parse(raw) as PwaSession
-  } catch {
+    const parsed = JSON.parse(raw) as PwaSession
+    if (!parsed || typeof parsed !== 'object' || typeof parsed.username !== 'string' || !parsed.username) {
+      return null
+    }
+    return parsed
+  } catch (e) {
+    console.error('[getPwaSession]', e)
     return null
   }
 }

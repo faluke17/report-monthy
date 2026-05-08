@@ -25,7 +25,7 @@ export function useRealtimeMonthlyReports(year: number, month: number) {
     fetch()
     const supabase = createClient()
     const channel = supabase
-      .channel('monthly-reports-realtime')
+      .channel(`monthly-reports-${year}-${month}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'monthly_reports' },
@@ -61,7 +61,7 @@ export function useRealtimeActionItems(branchId?: string | null) {
     fetch()
     const supabase = createClient()
     const channel = supabase
-      .channel('action-items-realtime')
+      .channel(`action-items-${branchId ?? 'all'}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'action_items' },
@@ -72,6 +72,49 @@ export function useRealtimeActionItems(branchId?: string | null) {
   }, [fetch])
 
   return { data, loading, refetch: fetch }
+}
+
+// ─── RATS Branch Read Stats (Dashboard realtime) ─────────────
+interface BranchReadStat {
+  ba: number
+  read_count: number
+  cust_count: number
+  target: number
+}
+
+export function useRealtimeBranchReadStats(yearBe: number, month: number) {
+  const [data, setData] = useState<BranchReadStat[]>([])
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+
+  const fetchFromDB = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/rats/stats?year_be=${yearBe}&month=${month}`)
+      if (res.ok) {
+        const json = await res.json()
+        setData(json.rows ?? [])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [yearBe, month])
+
+  const triggerSync = useCallback(async () => {
+    setSyncing(true)
+    try {
+      await fetch('/api/rats/refresh', { method: 'POST' })
+    } finally {
+      setSyncing(false)
+      fetchFromDB()
+    }
+  }, [fetchFromDB])
+
+  useEffect(() => {
+    fetchFromDB()
+    triggerSync()
+  }, [fetchFromDB, triggerSync])
+
+  return { data, loading, syncing, refetch: fetchFromDB }
 }
 
 // ─── Meetings (Banner realtime) ───────────────────────────────
@@ -85,7 +128,7 @@ export function useRealtimeMeetings() {
       .from('meetings')
       .select('*')
       .eq('status', 'กำหนดแล้ว')
-      .gte('scheduled_date', new Date().toISOString().split('T')[0])
+      .gte('scheduled_date', new Date(Date.now() + 7 * 3600 * 1000).toISOString().split('T')[0])
       .order('scheduled_date', { ascending: true })
     setData((rows as Meeting[]) ?? [])
     setLoading(false)

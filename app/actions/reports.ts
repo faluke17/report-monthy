@@ -7,6 +7,7 @@ import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { ActionResult } from '@/lib/types'
 
 function isRegionSession(branchName: string) {
+  if (!branchName) return false
   return !PWA_BRANCHES.some((b) => b.name_th === branchName)
 }
 
@@ -21,7 +22,8 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   const plan_id       = formData.get('plan_id') as string || null
   const volume_distributed = parseFloat(formData.get('volume_distributed') as string) || null
   const volume_sold        = parseFloat(formData.get('volume_sold') as string) || null
-  const days_in_month      = parseInt(formData.get('days_in_month') as string) || 30
+  const _daysRaw           = parseInt(formData.get('days_in_month') as string)
+  const days_in_month      = !isNaN(_daysRaw) && _daysRaw > 0 ? _daysRaw : 30
   const mnf_latest         = parseFloat(formData.get('mnf_latest') as string) || null
   const mnf_measured_date  = formData.get('mnf_measured_date') as string || null
   const daily_supply       = parseFloat(formData.get('daily_supply') as string) || null
@@ -52,7 +54,7 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/dashboard')
-  revalidatePath('/monthly')
+  revalidatePath('/')
   revalidatePath('/ranking')
   return { success: true }
 }
@@ -66,7 +68,7 @@ export async function deleteAreaReport(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('area_monthly_reports').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/monthly')
+  revalidatePath('/')
   revalidatePath('/dashboard')
   return { success: true }
 }

@@ -17,7 +17,8 @@ export async function submitKmCase(formData: KmFormData): Promise<ActionResult<{
     .eq('id', formData.branch_id)
     .single()
 
-  const branchCode = branch?.code ?? 'R10'
+  if (!branch) return { success: false, error: 'ไม่พบสาขา' }
+  const branchCode = branch.code
   const code = await generateRunningCode('KM', branchCode, supabase)
 
   const { data, error } = await supabase

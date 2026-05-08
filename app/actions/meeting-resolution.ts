@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
+import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
+import { generateRunningCode } from '@/lib/utils/code-gen'
 import type { ActionResult, MeetingResolution, MeetingResolutionFormData } from '@/lib/types'
 
 export async function createMeetingResolution(
@@ -56,10 +58,38 @@ export async function createMeetingResolution(
       title: data.title,
       detail: data.detail ?? null,
     })
+
+    // Auto-create linked ActionItem in Action Tracker
+    const pwaB = PWA_BRANCHES.find(b => b.costcenter === data.responsible_branch)
+    if (pwaB) {
+      const { data: branch } = await supabase
+        .from('branches')
+        .select('id, code')
+        .eq('name_th', pwaB.name_th)
+        .maybeSingle()
+
+      if (branch) {
+        const code = await generateRunningCode('ORD', branch.code, supabase)
+        await supabase.from('action_items').insert({
+          code,
+          branch_id: branch.id,
+          meeting_id: data.meeting_id,
+          resolution_id: row.id,
+          title: `[มติสั่งการ] ${data.title}`,
+          detail: data.detail ?? null,
+          owner: data.responsible_dept,
+          due_date,
+          status: 'รอดำเนินการ',
+          notes: data.admin_notes ?? null,
+          created_by: session.username,
+        })
+      }
+    }
   }
 
   revalidatePath('/meeting')
   revalidatePath('/notify')
+  revalidatePath('/action')
   return { success: true, data: row as MeetingResolution }
 }
 

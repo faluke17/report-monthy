@@ -124,6 +124,7 @@ export interface ActionItem {
   plan_id: string | null
   obstacle_id: string | null
   meeting_id: string | null
+  resolution_id: string | null
   title: string
   detail: string | null
   owner: string
@@ -468,4 +469,76 @@ export interface MeetingResolutionFormData {
   admin_notes?: string
   tracking_notes?: string
   notify_branch: boolean
+}
+
+// ============================================================
+// Directive Tracking System Types
+// ============================================================
+
+export interface ResolutionProgressLog {
+  id: string
+  resolution_id: string
+  action_item_id: string | null
+  branch_costcenter: string
+  branch_name: string
+  progress_pct: number
+  note: string | null
+  updated_by: string
+  created_at: string
+}
+
+export interface ResolutionStep {
+  id: string
+  resolution_id: string
+  step_no: number
+  title: string
+  description: string | null
+  is_complete: boolean
+  completed_at: string | null
+  completed_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DirectiveBranchStatus {
+  branch_costcenter: string
+  branch_name: string
+  action_item_id: string | null
+  action_status: ActionItem['status'] | null
+  progress_pct: number
+  last_updated_at: string | null
+  last_updated_by: string | null
+  days_overdue: number | null
+  traffic_light: TrafficLight
+}
+
+export interface DirectiveSummary {
+  resolution: MeetingResolution
+  branch_statuses: DirectiveBranchStatus[]
+  latest_log: ResolutionProgressLog | null
+  steps: ResolutionStep[]
+}
+
+export interface DirectiveKpis {
+  total: number
+  on_track: number
+  delayed: number
+  completed: number
+  unresponsive: number
+}
+
+export interface DirectiveProgressFormData {
+  resolution_id: string
+  action_item_id?: string
+  branch_costcenter: string
+  branch_name: string
+  progress_pct: number
+  note?: string
+}
+
+export interface ResolutionStepFormData {
+  resolution_id: string
+  step_no: number
+  title: string
+  description?: string
 }

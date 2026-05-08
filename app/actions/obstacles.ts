@@ -8,6 +8,7 @@ import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { ActionResult } from '@/lib/types'
 
 function isRegionSession(branchName: string) {
+  if (!branchName) return false
   return !PWA_BRANCHES.some((b) => b.name_th === branchName)
 }
 
@@ -66,6 +67,20 @@ export async function updateObstacleProgress(
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
 
   const supabase = await createClient()
+
+  if (!isRegionSession(session.branch_name)) {
+    const { data: obs } = await supabase
+      .from('obstacles')
+      .select('branches!inner(name_th)')
+      .eq('id', id)
+      .single()
+    if (!obs) return { success: false, error: 'ไม่พบรายการ' }
+    const ownerBranch = (obs.branches as unknown as { name_th: string }).name_th
+    if (ownerBranch !== session.branch_name) {
+      return { success: false, error: 'ไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น' }
+    }
+  }
+
   const { error } = await supabase
     .from('obstacles')
     .update({ progress_pct, status, resolution_plan, region_support_needed })

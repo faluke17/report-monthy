@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
-  CheckSquare, Calendar, Bell, BookOpen, Download, ChevronLeft, ChevronRight,
-  Droplets, ListChecks, FileText,
+  Calendar, Bell, BookOpen, Download, ChevronLeft, ChevronRight,
+  Droplets, ListChecks, FileText, Crosshair,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
@@ -34,7 +34,7 @@ const NAV_GROUPS = [
     label: 'ประชุม WSC-R',
     items: [
       { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
-      { href: '/action',           label: 'Action Tracker',       icon: CheckSquare },
+      { href: '/action',  label: 'Action Tracker',       icon: Crosshair },
       { href: '/summary',          label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
       { href: '/notify',           label: 'การแจ้งเตือน',          icon: Bell },
     ],

@@ -29,7 +29,6 @@ export default async function DashboardPage() {
     meetingResult,
     overdueActionsResult,
     obstaclesResult,
-    ratsResult,
     pdcaSubmittedResult,
   ] = await Promise.all([
     supabase.from('branches').select('*').eq('is_active', true).order('province_th'),
@@ -56,11 +55,6 @@ export default async function DashboardPage() {
       .select('id, status, category')
       .not('status', 'eq', 'ปิดประเด็น'),
     supabase
-      .from('branch_read_stats')
-      .select('ba, read_count, cust_count, target')
-      .eq('year_be', yearBe)
-      .eq('month', month),
-    supabase
       .from('area_monthly_reports')
       .select('branch_id')
       .eq('report_year', year)
@@ -72,8 +66,6 @@ export default async function DashboardPage() {
   const meeting = meetingResult.data as Meeting | null
   const overdueCount = overdueActionsResult.count ?? 0
   const obstacles = (obstaclesResult.data ?? []) as Pick<Obstacle, 'id' | 'status' | 'category'>[]
-  const ratsStats = ratsResult.data ?? []
-
   // PDCA submission tracking
   const pdcaSubmittedIds = new Set((pdcaSubmittedResult.data ?? []).map((r) => r.branch_id as string))
   const pdcaNonSubmittedBranches = branches.filter((b) => !pdcaSubmittedIds.has(b.id))
@@ -161,9 +153,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* RATS Reading Stats */}
-      {ratsStats.length > 0 && (
-        <RatsReadingPanel stats={ratsStats} yearBe={yearBe} month={month} />
-      )}
+      <RatsReadingPanel yearBe={yearBe} month={month} />
 
       {/* Main content */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

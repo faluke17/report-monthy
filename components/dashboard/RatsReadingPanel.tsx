@@ -1,15 +1,10 @@
+'use client'
+
 import { cn } from '@/lib/utils'
 import { getBranchByCostcenter } from '@/lib/utils/pwa-branches'
-
-interface BranchReadStat {
-  ba: number
-  read_count: number
-  cust_count: number
-  target: number
-}
+import { useRealtimeBranchReadStats } from '@/hooks/useRealtimeData'
 
 interface RatsReadingPanelProps {
-  stats: BranchReadStat[]
   yearBe: number
   month: number
 }
@@ -28,7 +23,8 @@ const RANK_COLORS = [
   { ring: 'ring-white/10',  badge: 'bg-white/8 text-white/50',        bar: 'bg-[#7dd3fc]' },
 ]
 
-export function RatsReadingPanel({ stats, yearBe, month }: RatsReadingPanelProps) {
+export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
+  const { data: stats, loading, syncing } = useRealtimeBranchReadStats(yearBe, month)
   const label = `${THAI_MONTH_SHORT[month]} ${yearBe}`
 
   const started    = stats.filter((s) => s.read_count > 0)
@@ -42,6 +38,24 @@ export function RatsReadingPanel({ stats, yearBe, month }: RatsReadingPanelProps
 
   const maxRead = top5[0]?.read_count ?? 1
 
+  if (loading || (stats.length === 0 && syncing)) {
+    return <div className="glass-card p-5 pt-6 h-48 animate-pulse accent-bar-purple" />
+  }
+
+  if (stats.length === 0) {
+    return (
+      <div className="glass-card p-5 pt-6 relative overflow-hidden accent-bar-purple">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40">การจดมาตร RATS2</p>
+            <p className="text-base font-semibold text-white/80 mt-0.5">เดือน {label}</p>
+          </div>
+        </div>
+        <p className="text-sm text-white/30 mt-4">ยังไม่มีข้อมูลจาก RATS สำหรับเดือนนี้</p>
+      </div>
+    )
+  }
+
   return (
     <div className="glass-card p-5 pt-6 relative overflow-hidden accent-bar-purple">
       {/* Header */}
@@ -52,9 +66,17 @@ export function RatsReadingPanel({ stats, yearBe, month }: RatsReadingPanelProps
           </p>
           <p className="text-base font-semibold text-white/80 mt-0.5">เดือน {label}</p>
         </div>
-        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#a5b4fc]/10 text-[#a5b4fc] ring-1 ring-[#a5b4fc]/25">
-          {total} สาขา
-        </span>
+        <div className="flex items-center gap-2">
+          {syncing && (
+            <span className="text-[10px] text-white/30 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#a5b4fc]/60 animate-pulse" />
+              กำลังอัปเดต
+            </span>
+          )}
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#a5b4fc]/10 text-[#a5b4fc] ring-1 ring-[#a5b4fc]/25">
+            {total} สาขา
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

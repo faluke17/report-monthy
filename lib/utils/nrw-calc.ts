@@ -1,7 +1,7 @@
 // NRW and MNF calculation utilities
 
 export function calcNRW(distributed: number, sold: number): number {
-  if (!distributed || distributed === 0) return 0
+  if (!distributed) return 0
   return Number(((distributed - sold) / distributed * 100).toFixed(2))
 }
 

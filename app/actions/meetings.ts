@@ -21,7 +21,7 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult> {
   const prep_required       = formData.get('prep_required') as string || null
   const notification_message = formData.get('notification_message') as string || null
 
-  if (!title || !scheduled_date || !scheduled_time) {
+  if (!title || !meeting_type || !scheduled_date || !scheduled_time) {
     return { success: false, error: 'กรุณากรอกข้อมูลให้ครบ' }
   }
 
