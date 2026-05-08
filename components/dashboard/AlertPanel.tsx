@@ -1,12 +1,15 @@
 import Link from 'next/link'
-import { AlertTriangle, Clock, ArrowRight } from 'lucide-react'
+import { AlertTriangle, Clock, ArrowRight, Droplets } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 
 export async function AlertPanel() {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
+  const branchMap = new Map(PWA_BRANCHES.map(b => [b.dmama_branch_id, b.name_th]))
 
-  const [obstaclesResult, actionsResult] = await Promise.all([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [obstaclesResult, actionsResult, mnfRedResult] = await Promise.all([
     supabase
       .from('obstacles')
       .select('id, code, obstacle_type, status, branch_id, branches(name_th)')
@@ -21,10 +24,17 @@ export async function AlertPanel() {
       .not('status', 'in', '("แล้วเสร็จ","ยกเลิก")')
       .order('due_date', { ascending: true })
       .limit(5),
+    (supabase as any)
+      .from('mnf_ema_latest')
+      .select('dmama_branch_id, logger_id, node_label, alert_status, diff_percent, consecutive_count')
+      .in('alert_status', ['red_spike', 'red_accumulated'])
+      .order('diff_percent', { ascending: false })
+      .limit(5),
   ])
 
   const obstacles = obstaclesResult.data ?? []
   const overdueActions = actionsResult.data ?? []
+  const mnfRedNodes = (mnfRedResult as any)?.data ?? []
 
   return (
     <div className="glass-card p-5 space-y-5">
@@ -72,7 +82,35 @@ export async function AlertPanel() {
         </div>
       )}
 
-      {obstacles.length === 0 && overdueActions.length === 0 && (
+      {/* MNF EMA red alerts */}
+      {mnfRedNodes.length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 text-red-400 text-xs font-medium mb-2">
+            <Droplets size={12} />
+            MNF Alert ({mnfRedNodes.length} node)
+          </div>
+          <div className="space-y-1.5">
+            {mnfRedNodes.map((n: any) => {
+              const branchName = branchMap.get(n.dmama_branch_id) ?? String(n.dmama_branch_id)
+              const diffSign = n.diff_percent > 0 ? '+' : ''
+              return (
+                <div key={`${n.dmama_branch_id}-${n.logger_id}`} className="text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  <p className="text-white font-medium truncate">{branchName} · {n.node_label}</p>
+                  <p className="text-red-400/70 mt-0.5">
+                    {n.alert_status === 'red_spike' ? 'ฉุกเฉิน' : 'สะสม'}
+                    {' · '}Diff {diffSign}{Number(n.diff_percent).toFixed(1)}%
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+          <Link href="/mnf-monitor" className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 mt-2">
+            ดูรายละเอียด <ArrowRight size={11} />
+          </Link>
+        </div>
+      )}
+
+      {obstacles.length === 0 && overdueActions.length === 0 && mnfRedNodes.length === 0 && (
         <p className="text-xs text-white/30 text-center py-4">ไม่มีการแจ้งเตือน</p>
       )}
     </div>

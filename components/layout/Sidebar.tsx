@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
   Calendar, Bell, BookOpen, Download, ChevronLeft, ChevronRight,
-  Droplets, ListChecks, FileText, Crosshair,
+  Droplets, ListChecks, FileText, Crosshair, Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
@@ -26,8 +26,9 @@ const NAV_GROUPS = [
   {
     label: 'ภาพรวม',
     items: [
-      { href: '/dashboard', label: 'Dashboard เขต',    icon: LayoutDashboard },
-      { href: '/ranking',   label: 'Ranking สาขา',     icon: BarChart3 },
+      { href: '/dashboard',    label: 'Dashboard เขต',  icon: LayoutDashboard },
+      { href: '/ranking',      label: 'Ranking สาขา',   icon: BarChart3 },
+      { href: '/mnf-monitor',  label: 'MNF Monitor',    icon: Activity },
     ],
   },
   {

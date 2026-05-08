@@ -15,7 +15,18 @@
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\\\(dashboard\\)\\\\directive\")",
       "Bash(Out-Null)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s -X POST http://localhost:3000/api/dmama/mnf-sync -H \"x-sync-secret: dmama-sync-secret-key\" -H \"Content-Type: application/json\" -d '{\"year\":2026,\"month\":5}')",
+      "Bash(curl -v -X POST http://localhost:3000/api/dmama/mnf-sync -H \"x-sync-secret: dmama-sync-secret-key\" -H \"Content-Type: application/json\" -d '{\"year\":2026,\"month\":5}')",
+      "Bash(git log *)",
+      "Bash(git ls-files *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/dmama/mnf-sync -H \"x-sync-secret: dmama-sync-secret-key\" -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(Sort-Object)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(xargs grep -l \"alert\\\\|notification\\\\|Alert\\\\|Notification\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\api\\\\dmama\\\\mnf-ema\")",
+      "Bash(Write-Output \"done\")"
     ]
   }
 }

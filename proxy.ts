@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { PWA_SESSION_COOKIE } from '@/lib/pwa-auth'
 
-const PUBLIC_PATHS = ['/login', '/auth', '/api/auth']
+const PUBLIC_PATHS = ['/login', '/auth', '/api/auth', '/api/dmama', '/api/rats', '/api/nrw', '/api/export']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

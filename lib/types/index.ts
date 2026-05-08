@@ -227,6 +227,30 @@ export type NRWStatus = 'good' | 'warn' | 'bad'
 export type TrafficLight = 'green' | 'yellow' | 'red' | 'grey'
 export type NRWTrend = 'up' | 'down' | 'stable' | 'no_data'
 
+// ============================================================
+// MNF EMA Alert System Types
+// ============================================================
+
+export type MnfAlertStatus = 'green' | 'yellow' | 'red_spike' | 'red_accumulated'
+
+export interface MnfEmaDaily {
+  id: string
+  dmama_branch_id: number
+  logger_id: number
+  node_label: string
+  record_date: string
+  mnf_flow: number | null
+  ema_value: number
+  diff_percent: number
+  consecutive_count: number
+  alert_status: MnfAlertStatus
+  computed_at: string
+}
+
+export interface MnfEmaLatest extends Omit<MnfEmaDaily, 'id'> {
+  branch_name_th?: string   // enriched client-side from PWA_BRANCHES
+}
+
 export interface BranchSummary {
   branch: Branch
   latest_report: MonthlyReport | null
