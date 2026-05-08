@@ -5,12 +5,19 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DirectiveKpiHeader } from './DirectiveKpiHeader'
 import { DirectiveCard } from './DirectiveCard'
-import { Search } from 'lucide-react'
+import { Search, Calendar, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatThaiDate } from '@/lib/utils/date-th'
 import type { DirectiveSummary, DirectiveKpis, Meeting } from '@/lib/types'
 
 type StatusFilter = 'all' | 'ระหว่างดำเนินการ' | 'ล่าช้า' | 'แล้วเสร็จ'
 type PriorityFilter = 'all' | 'สูง' | 'กลาง'
+
+const MEETING_TYPE_COLOR: Record<string, string> = {
+  'WSC-R/NRW Monthly':    'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+  'ประชุมเร่งรัดอุปสรรค': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  'KM Practice':           'bg-violet-500/20 text-violet-300 border-violet-500/30',
+}
 
 interface Props {
   initialSummaries: DirectiveSummary[]
@@ -19,7 +26,7 @@ interface Props {
   branchCostcenter: string | null
   branchName: string | null
   meetings: Meeting[]
-  filterMeetingId?: string | null
+  defaultMeetingId?: string | null
 }
 
 export function DirectiveCommandCenter({
@@ -29,23 +36,21 @@ export function DirectiveCommandCenter({
   branchCostcenter,
   branchName,
   meetings,
-  filterMeetingId: externalMeetingFilter,
+  defaultMeetingId,
 }: Props) {
   const router = useRouter()
   const [summaries, setSummaries] = useState(initialSummaries)
   const [kpis, setKpis] = useState(initialKpis)
-  const [filterMeeting, setFilterMeeting] = useState<string>(externalMeetingFilter ?? 'all')
+  const [filterMeeting, setFilterMeeting] = useState<string>(defaultMeetingId ?? 'all')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
   const [filterPriority, setFilterPriority] = useState<PriorityFilter>('all')
   const [search, setSearch] = useState('')
 
-  // Sync initial data when props change (after router.refresh)
   useEffect(() => {
     setSummaries(initialSummaries)
     setKpis(initialKpis)
   }, [initialSummaries, initialKpis])
 
-  // Realtime subscription — triggers router.refresh() which re-fetches server data
   const setupRealtime = useCallback(() => {
     const supabase = createClient()
     const channel = supabase
@@ -68,7 +73,10 @@ export function DirectiveCommandCenter({
     return cleanup
   }, [setupRealtime])
 
-  // Filtering
+  const activeMeeting = filterMeeting !== 'all'
+    ? meetings.find(m => m.id === filterMeeting) ?? null
+    : null
+
   const filtered = summaries.filter(s => {
     const r = s.resolution
 
@@ -101,21 +109,55 @@ export function DirectiveCommandCenter({
   })
 
   const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-    { key: 'all', label: 'ทั้งหมด' },
+    { key: 'all',              label: 'ทั้งหมด' },
     { key: 'ระหว่างดำเนินการ', label: 'กำลังดำเนินการ' },
-    { key: 'ล่าช้า', label: 'ล่าช้า' },
-    { key: 'แล้วเสร็จ', label: 'แล้วเสร็จ' },
+    { key: 'ล่าช้า',           label: 'ล่าช้า' },
+    { key: 'แล้วเสร็จ',        label: 'แล้วเสร็จ' },
   ]
 
   return (
     <div className="space-y-5">
+
+      {/* Meeting context banner — shown when a specific meeting is selected */}
+      {activeMeeting && (
+        <div className="glass-card-sm px-4 py-3 border-l-4 border-cyan-500/50 space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            {activeMeeting.meeting_type && (
+              <span className={cn(
+                'text-[10px] px-2 py-0.5 rounded-full border',
+                MEETING_TYPE_COLOR[activeMeeting.meeting_type] ?? 'bg-white/10 text-white/50 border-white/15'
+              )}>
+                {activeMeeting.meeting_type}
+              </span>
+            )}
+            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/40 border-white/12">
+              {activeMeeting.status}
+            </span>
+          </div>
+          <p className="font-semibold text-white text-sm leading-snug">{activeMeeting.title}</p>
+          <div className="flex items-center gap-4 text-xs text-white/40">
+            <span className="flex items-center gap-1.5">
+              <Calendar size={10} className="text-white/25" />
+              {formatThaiDate(activeMeeting.scheduled_date)} · {activeMeeting.scheduled_time.slice(0, 5)} น.
+            </span>
+            {activeMeeting.location && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={10} className="text-white/25" />
+                {activeMeeting.location}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* KPI header */}
       <DirectiveKpiHeader kpis={kpis} />
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Meeting filter */}
-        {meetings.length > 0 && !externalMeetingFilter && (
+
+        {/* Meeting selector */}
+        {meetings.length > 0 && (
           <select
             value={filterMeeting}
             onChange={e => setFilterMeeting(e.target.value)}
@@ -128,7 +170,7 @@ export function DirectiveCommandCenter({
           </select>
         )}
 
-        {/* Status filter pills */}
+        {/* Status pills */}
         <div className="flex gap-1">
           {STATUS_FILTERS.map(f => (
             <button
@@ -150,7 +192,7 @@ export function DirectiveCommandCenter({
           ))}
         </div>
 
-        {/* Priority filter */}
+        {/* Priority pills */}
         <div className="flex gap-1">
           {(['all', 'สูง', 'กลาง'] as PriorityFilter[]).map(p => (
             <button

@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import type { Meeting, MeetingAcknowledgment, MeetingResolution, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
 import { MeetingView } from './_components/MeetingView'
-import { getDirectiveSummaries, getDirectiveKpis } from '@/app/actions/directive'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,12 +60,6 @@ export default async function MeetingPage() {
     agendaHeader = hRes.data ?? null
     agendaSubitems = (sRes.data ?? []) as MeetingAgendaSubItem[]
   }
-
-  // Directive data for Command Center tab
-  const [directiveSummaries, directiveKpis] = await Promise.all([
-    getDirectiveSummaries(latest?.id),
-    getDirectiveKpis(),
-  ])
 
   // Schedule tab: upcoming and past meetings + acks
   const [upcomingRes, pastRes] = await Promise.all([
@@ -127,8 +120,6 @@ export default async function MeetingPage() {
       branchCostcenter={session?.costcenter ?? null}
       agendaHeader={agendaHeader}
       agendaSubitems={agendaSubitems}
-      directiveSummaries={directiveSummaries}
-      directiveKpis={directiveKpis}
     />
   )
 }

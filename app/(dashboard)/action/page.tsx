@@ -20,6 +20,8 @@ export default async function ActionPage() {
     .order('scheduled_date', { ascending: false })
     .limit(12)
 
+  const meetingsList = (meetings ?? []) as Meeting[]
+
   const [summaries, kpis] = await Promise.all([
     getDirectiveSummaries(),
     getDirectiveKpis(),
@@ -37,7 +39,8 @@ export default async function ActionPage() {
         isAdmin={isAdmin}
         branchCostcenter={session?.costcenter ?? null}
         branchName={session?.branch_name ?? null}
-        meetings={(meetings ?? []) as Meeting[]}
+        meetings={meetingsList}
+        defaultMeetingId={meetingsList[0]?.id ?? null}
       />
     </div>
   )

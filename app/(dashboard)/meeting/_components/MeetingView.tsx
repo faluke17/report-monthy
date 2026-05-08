@@ -16,9 +16,8 @@ import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
   Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle,
 } from 'lucide-react'
-import { DirectiveCommandCenter } from '@/components/dashboard/DirectiveCommandCenter'
 
-type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup' | 'directive'
+type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup'
 
 const TYPE_COLOR: Record<string, string> = {
   'WSC-R/NRW Monthly':    'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
@@ -155,8 +154,6 @@ interface Props {
   branchCostcenter: string | null
   agendaHeader: MeetingAgendaHeader | null
   agendaSubitems: MeetingAgendaSubItem[]
-  directiveSummaries?: import('@/lib/types').DirectiveSummary[]
-  directiveKpis?: import('@/lib/types').DirectiveKpis
 }
 
 export function MeetingView({
@@ -173,8 +170,6 @@ export function MeetingView({
   branchCostcenter,
   agendaHeader,
   agendaSubitems,
-  directiveSummaries = [],
-  directiveKpis = { total: 0, on_track: 0, delayed: 0, completed: 0, unresponsive: 0 },
 }: Props) {
   const [tab, setTab] = useState<Tab>('schedule')
   const [showResolutionForm, setShowResolutionForm] = useState(false)
@@ -186,7 +181,6 @@ export function MeetingView({
     { key: 'agenda',     label: 'วาระการประชุม' },
     { key: 'resolution', label: 'มติ / ข้อสั่งการ',   count: latestResolutions.length },
     { key: 'followup',   label: 'ติดตามมติเดือนก่อน', count: prevResolutions.length },
-    { key: 'directive',  label: 'Command Center',      count: directiveKpis.total > 0 ? directiveKpis.total : undefined },
   ]
 
   return (
@@ -391,19 +385,6 @@ export function MeetingView({
             )}
           </div>
         )
-      )}
-
-      {/* ══ Tab 4: Command Center ══ */}
-      {tab === 'directive' && (
-        <DirectiveCommandCenter
-          initialSummaries={directiveSummaries}
-          initialKpis={directiveKpis}
-          isAdmin={isAdmin}
-          branchCostcenter={branchCostcenter}
-          branchName={branchName}
-          meetings={[...(latestMeeting ? [latestMeeting] : []), ...(prevMeeting ? [prevMeeting] : [])]}
-          filterMeetingId={latestMeeting?.id ?? null}
-        />
       )}
 
       {/* ══ Tab 3: ติดตามมติเดือนก่อน ══ */}
