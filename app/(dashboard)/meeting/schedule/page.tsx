@@ -142,6 +142,19 @@ export default async function MeetingSchedulePage() {
                 )}
               </div>
             )}
+
+            {/* Admin: preview link */}
+            {isAdmin && (
+              <div className="pt-1">
+                <Link
+                  href={`/meeting/${m.id}/preview`}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-cyan-400/70 hover:text-cyan-400 transition-colors"
+                >
+                  <FileText size={10} />
+                  ดูตัวอย่างวาระ
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Right: ack status */}

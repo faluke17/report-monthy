@@ -748,9 +748,10 @@ interface Props {
   initialHeader: MeetingAgendaHeader | null
   initialSubitems: MeetingAgendaSubItem[]
   isAdmin: boolean
+  onSaved?: (meetingId: string) => void
 }
 
-export function MeetingAgendaForm({ meeting, initialHeader, initialSubitems, isAdmin }: Props) {
+export function MeetingAgendaForm({ meeting, initialHeader, initialSubitems, isAdmin, onSaved }: Props) {
   const [state, setState] = useState<FormState>(() => initState(initialHeader, initialSubitems))
   const [mode, setMode] = useState<ViewMode>(() => (initialHeader ? 'view' : 'edit'))
   const [isPending, startTransition] = useTransition()
@@ -792,7 +793,11 @@ export function MeetingAgendaForm({ meeting, initialHeader, initialSubitems, isA
       const res = await saveAgenda(meeting.id, header, subitems)
       if (res.success) {
         toast.success('บันทึกวาระการประชุมเรียบร้อย')
-        setMode('view')
+        if (onSaved) {
+          onSaved(meeting.id)
+        } else {
+          setMode('view')
+        }
       } else {
         toast.error(res.error)
       }

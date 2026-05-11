@@ -26,7 +26,18 @@
       "Bash(Select-Object Name, FullName)",
       "Bash(xargs grep -l \"alert\\\\|notification\\\\|Alert\\\\|Notification\")",
       "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\api\\\\dmama\\\\mnf-ema\")",
-      "Bash(Write-Output \"done\")"
+      "Bash(Write-Output \"done\")",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(head *)",
+      "Bash(git checkout *)",
+      "Bash(Remove-Item -Recurse -Force \"app\\\\\\(dashboard\\)\\\\water-loss\")",
+      "Bash(Remove-Item -Force \"components\\\\dashboard\\\\WaterLossCumulativeChart.tsx\")",
+      "Bash(Remove-Item -Force \"supabase\\\\migrations\\\\20260511_add_water_loss_fields.sql\")",
+      "Bash(Select-String '\"next\"')",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Recurse \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\\\(dashboard\\)\\\\meeting\" | ForEach-Object { $_.FullName })"
     ]
   }
 }

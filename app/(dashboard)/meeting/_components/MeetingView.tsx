@@ -14,7 +14,7 @@ import { MeetingAckSummary } from '@/components/dashboard/MeetingAckSummary'
 import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
-  Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle,
+  Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle, Pencil, Eye,
 } from 'lucide-react'
 
 type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup'
@@ -104,6 +104,25 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
               {m.notification_message && (
                 <p className="text-xs text-white/40">{m.notification_message}</p>
               )}
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="flex items-center gap-3 pt-1 border-t border-white/8">
+              <Link
+                href={`/meeting/${m.id}/agenda`}
+                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-cyan-400 transition-colors"
+              >
+                <Pencil size={10} />
+                กรอกวาระ
+              </Link>
+              <Link
+                href={`/meeting/${m.id}/preview`}
+                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-emerald-400 transition-colors"
+              >
+                <Eye size={10} />
+                ดูตัวอย่าง
+              </Link>
             </div>
           )}
         </div>

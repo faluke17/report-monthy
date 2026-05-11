@@ -63,8 +63,9 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
     Object.entries(form).forEach(([k, v]) => fd.append(k, v))
     const result = await submitMeeting(fd)
     if (result.success) {
-      toast.success('สร้างการประชุมและส่งการแจ้งเตือนสำเร็จ')
-      router.push(backHref)
+      toast.success('สร้างการประชุมเรียบร้อย — กรอกวาระได้เลย')
+      const id = result.data
+      router.push(id ? `/meeting/${id}/agenda` : backHref)
     } else {
       toast.error(result.error ?? 'เกิดข้อผิดพลาด')
     }

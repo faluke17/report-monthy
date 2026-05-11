@@ -6,7 +6,7 @@ import { getPwaSession } from '@/lib/pwa-auth'
 import { generateRunningCode } from '@/lib/utils/code-gen'
 import { ActionResult } from '@/lib/types'
 
-export async function submitMeeting(formData: FormData): Promise<ActionResult> {
+export async function submitMeeting(formData: FormData): Promise<ActionResult<string>> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
   const supabase = await createClient()
@@ -27,19 +27,23 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult> {
 
   const code = await generateRunningCode('MIT', 'R10', supabase)
 
-  const { error } = await supabase.from('meetings').insert({
-    code, title, meeting_type, scheduled_date, scheduled_time,
-    location, meeting_link, target_audience, prep_required, notification_message,
-    status: 'กำหนดแล้ว',
-    created_by: session.username,
-  })
+  const { data: created, error } = await supabase
+    .from('meetings')
+    .insert({
+      code, title, meeting_type, scheduled_date, scheduled_time,
+      location, meeting_link, target_audience, prep_required, notification_message,
+      status: 'กำหนดแล้ว',
+      created_by: session.username,
+    })
+    .select('id')
+    .single()
 
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/meeting')
   revalidatePath('/notify')
   revalidatePath('/dashboard')
-  return { success: true }
+  return { success: true, data: created?.id }
 }
 
 export async function acknowledgeMeeting(meetingId: string): Promise<ActionResult> {
