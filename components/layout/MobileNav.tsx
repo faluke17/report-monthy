@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, ClipboardList, CheckSquare, Bell,
+  LayoutDashboard, BarChart3, ClipboardList, Calendar, Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -11,7 +11,7 @@ const MOBILE_NAV = [
   { href: '/dashboard', label: 'ภาพรวม',  icon: LayoutDashboard },
   { href: '/ranking',   label: 'อันดับ',   icon: BarChart3 },
   { href: '/monthly',   label: 'รายงาน',   icon: ClipboardList },
-  { href: '/action',    label: 'Actions',  icon: CheckSquare },
+  { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
   { href: '/notify',    label: 'แจ้งเตือน', icon: Bell },
 ]
 

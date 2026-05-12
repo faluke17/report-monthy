@@ -29,6 +29,7 @@ const NAV_GROUPS = [
       { href: '/dashboard',    label: 'Dashboard เขต',  icon: LayoutDashboard },
       { href: '/ranking',      label: 'Ranking สาขา',   icon: BarChart3 },
       { href: '/mnf-monitor',  label: 'MNF Monitor',    icon: Activity },
+      { href: '/report-nrw',   label: 'Report NRW',     icon: Droplets },
     ],
   },
   {

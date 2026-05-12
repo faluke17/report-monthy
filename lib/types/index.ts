@@ -431,6 +431,48 @@ export interface FiveTopicsReport {
 }
 
 // ============================================================
+// NRW Branch Monthly Report Types
+// ============================================================
+
+export interface NrwBranchMonthly {
+  id: string
+  branch_name: string
+  fiscal_year: number
+  month: number
+  water_produced: number | null
+  water_sold: number | null
+  water_free: number | null
+  blow_off: number | null
+  created_at: string
+  updated_at: string
+  // computed in app
+  water_loss?: number | null
+  nrw_rate?: number | null
+  // joined from nrw_branch_target
+  target_nrw?: number | null
+}
+
+export interface NrwBranchTarget {
+  id: string
+  branch_name: string
+  fiscal_year: number
+  target_nrw: number | null
+  updated_at: string
+}
+
+export interface NrwYoyRow {
+  branch_name: string
+  curr_loss: number | null
+  curr_rate: number | null
+  curr_produced: number | null
+  prev_loss: number | null
+  prev_rate: number | null
+  prev_produced: number | null
+  loss_delta: number | null
+  rate_delta: number | null
+}
+
+// ============================================================
 // Server Action Return Types
 // ============================================================
 

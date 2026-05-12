@@ -9,12 +9,80 @@ import type {
   MeetingAgendaSubItem,
   MeetingResolution,
   Obstacle,
+  NrwYoyRow,
 } from '@/lib/types'
-import { formatThaiDate } from '@/lib/utils/date-th'
+import { formatThaiDate, getThaiMonthName } from '@/lib/utils/date-th'
+import { NrwYoyTable } from '@/components/dashboard/NrwYoyTable'
+import { NrwYoyChart } from '@/components/dashboard/NrwYoyChart'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { StatusPill } from '@/components/shared/StatusPill'
 import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 
+const BRANCH_ORDER = [
+  'นครสวรรค์', 'ท่าตะโก', 'ลาดยาว', 'พยุหะคีรี',
+  'ชัยนาท', 'อุทัยธานี', 'กำแพงเพชร', 'ขาณุวรลักษบุรี',
+  'ตาก', 'แม่สอด', 'สุโขทัย', 'ทุ่งเสลี่ยม',
+  'ศรีสำโรง', 'สวรรคโลก', 'ศรีสัชนาลัย', 'อุตรดิตถ์',
+  'พิษณุโลก', 'นครไทย', 'พิจิตร', 'บางมูลนาก',
+  'ตะพานหิน', 'เพชรบูรณ์', 'หล่มสัก', 'ชนแดน',
+  'หนองไผ่', 'วิเชียรบุรี',
+]
+
+function monthToCount(m: number): number {
+  return m >= 10 ? m - 9 : m + 3
+}
+function monthCountToTarget(n: number): number {
+  return n <= 3 ? 9 + n : n - 3
+}
+function getFiscalMonths(targetMonth: number): number[] {
+  if (targetMonth >= 10) return Array.from({ length: targetMonth - 10 + 1 }, (_, i) => i + 10)
+  return [...[10, 11, 12], ...Array.from({ length: targetMonth }, (_, i) => i + 1)]
+}
+function aggregateNrw(rows: any[], months: Set<number>) {
+  const map = new Map<string, { produced: number; loss: number }>()
+  for (const row of rows) {
+    if (!months.has(row.month)) continue
+    const loss = Math.max(
+      0,
+      (row.water_produced ?? 0) - (row.water_sold ?? 0) -
+      (row.water_free ?? 0) - (row.blow_off ?? 0)
+    )
+    const prev = map.get(row.branch_name) ?? { produced: 0, loss: 0 }
+    map.set(row.branch_name, {
+      produced: prev.produced + (row.water_produced ?? 0),
+      loss: prev.loss + loss,
+    })
+  }
+  return map
+}
+function computeYoyRows(currRaw: any[], prevRaw: any[], monthCount: number): NrwYoyRow[] {
+  const target = monthCountToTarget(monthCount)
+  const months = new Set(getFiscalMonths(target))
+  const curr = aggregateNrw(currRaw, months)
+  const prev = aggregateNrw(prevRaw, months)
+  return BRANCH_ORDER.map((name) => {
+    const c = curr.get(name)
+    const p = prev.get(name)
+    const curr_rate = c && c.produced > 0 ? (c.loss / c.produced) * 100 : null
+    const prev_rate = p && p.produced > 0 ? (p.loss / p.produced) * 100 : null
+    return {
+      branch_name: name,
+      curr_loss: c?.loss ?? null,
+      curr_rate,
+      curr_produced: c?.produced ?? null,
+      prev_loss: p?.loss ?? null,
+      prev_rate,
+      prev_produced: p?.produced ?? null,
+      loss_delta: c && p ? c.loss - p.loss : null,
+      rate_delta: curr_rate !== null && prev_rate !== null ? curr_rate - prev_rate : null,
+    }
+  }).sort((a, b) => {
+    if (a.rate_delta === null && b.rate_delta === null) return 0
+    if (a.rate_delta === null) return 1
+    if (b.rate_delta === null) return -1
+    return a.rate_delta - b.rate_delta
+  })
+}
 type AgendaTab = 1 | 2 | 3 | 4 | 5 | 6
 
 const OBSTACLE_STATUS_COLOR: Record<string, string> = {
@@ -172,6 +240,10 @@ interface Props {
   prevMeeting: Meeting | null
   prevResolutions: MeetingResolution[]
   obstacles: Obstacle[]
+  nrwCurrRaw: any[]
+  nrwPrevRaw: any[]
+  nrwFiscalYear: number
+  nrwMonth: number
 }
 
 export function MeetingPreviewClient({
@@ -181,9 +253,14 @@ export function MeetingPreviewClient({
   prevMeeting,
   prevResolutions,
   obstacles,
+  nrwCurrRaw,
+  nrwPrevRaw,
+  nrwFiscalYear,
+  nrwMonth,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
   const [selectedBranch, setSelectedBranch] = useState<string>('') // '' = all
+  const [selectedMonths, setSelectedMonths] = useState(() => monthToCount(nrwMonth))
 
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
   const hasAgenda6 = agenda4Label === 'เรื่องสืบเนื่อง'
@@ -214,6 +291,11 @@ export function MeetingPreviewClient({
 
   const items = (no: number) => agendaSubitems.filter((s) => s.agenda_no === no)
 
+  const nrwYoyRows = useMemo(
+    () => computeYoyRows(nrwCurrRaw, nrwPrevRaw, selectedMonths),
+    [nrwCurrRaw, nrwPrevRaw, selectedMonths]
+  )
+
   const TABS: { key: AgendaTab; label: string }[] = [
     { key: 1, label: 'วาระ 1' },
     { key: 2, label: 'วาระ 2' },
@@ -224,7 +306,7 @@ export function MeetingPreviewClient({
   ]
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5 animate-fadein">
+    <div className="space-y-5 animate-fadein">
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-3">
@@ -240,61 +322,65 @@ export function MeetingPreviewClient({
       </div>
 
       {/* Meeting Header */}
-      <div className="glass-card p-5 space-y-4 accent-bar-cyan">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <p className="page-kicker">ดูตัวอย่างวาระการประชุม</p>
-            <h1 className="text-lg font-bold text-white leading-snug">{meeting.title}</h1>
-          </div>
-          <StatusPill status={meeting.status} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
-          <div className="flex items-center gap-2 text-white/50">
-            <Calendar size={12} className="text-white/30" />
-            {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time.slice(0, 5)} น.
-          </div>
-          {meeting.location && (
-            <div className="flex items-center gap-2 text-white/50">
-              <MapPin size={12} className="text-white/30" />
-              {meeting.location}
+      <div className="glass-card p-5 sm:p-6 accent-bar-cyan">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+          {/* Left: title + meta */}
+          <div className="flex-1 min-w-0 space-y-3">
+            <div>
+              <p className="page-kicker mb-1">ดูตัวอย่างวาระการประชุม</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white leading-snug">{meeting.title}</h1>
             </div>
-          )}
-          {meeting.meeting_link && (
-            <a
-              href={meeting.meeting_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 col-span-2 truncate"
+            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-white/50">
+              <div className="flex items-center gap-2">
+                <Calendar size={13} className="text-white/30" />
+                {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time.slice(0, 5)} น.
+              </div>
+              {meeting.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin size={13} className="text-white/30" />
+                  {meeting.location}
+                </div>
+              )}
+              {meeting.meeting_link && (
+                <a
+                  href={meeting.meeting_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 max-w-xs truncate"
+                >
+                  <Link2 size={13} />
+                  {meeting.meeting_link}
+                </a>
+              )}
+            </div>
+          </div>
+          {/* Right: status + action */}
+          <div className="flex lg:flex-col items-center lg:items-end gap-3 shrink-0">
+            <StatusPill status={meeting.status} />
+            <Link
+              href={`/meeting/${meeting.id}/agenda`}
+              className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all"
             >
-              <Link2 size={12} />
-              {meeting.meeting_link}
-            </a>
-          )}
+              <FileText size={13} />
+              แก้ไขวาระ
+            </Link>
+          </div>
         </div>
-
-        <div className="flex items-center justify-between pt-1 border-t border-white/8">
+        <div className="mt-4 pt-3 border-t border-white/8">
           <p className="text-xs text-white/30">
             {agendaHeader ? `${TABS.length} วาระ · กรอกข้อมูลแล้ว` : 'ยังไม่ได้กรอกวาระ'}
           </p>
-          <Link
-            href={`/meeting`}
-            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-          >
-            <FileText size={11} />
-            แก้ไขวาระ
-          </Link>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 border-b border-white/10 pb-3 overflow-x-auto">
+      <div className="flex gap-1.5 border-b border-white/10 pb-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={cn(
-              'px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap',
+              'shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap',
               activeTab === t.key
                 ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
                 : 'text-white/40 hover:text-white/70 border border-transparent'
@@ -329,7 +415,7 @@ export function MeetingPreviewClient({
               </div>
             </div>
           ) : (
-            <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่ได้กรอกรายละเอียดวาระที่ 1
             </div>
           )}
@@ -363,11 +449,11 @@ export function MeetingPreviewClient({
               </div>
 
               {prevResolutions.length === 0 ? (
-                <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+                <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
                   ไม่มีมติบันทึกไว้จากการประชุมครั้งก่อน
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {prevResolutions.map((r) => {
                     const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
                     return (
@@ -418,7 +504,7 @@ export function MeetingPreviewClient({
               )}
             </div>
           ) : (
-            <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ไม่พบรายงานการประชุมครั้งก่อน
             </div>
           )}
@@ -437,14 +523,137 @@ export function MeetingPreviewClient({
           </div>
 
           {items(3).length === 0 ? (
-            <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่มีรายการเรื่องเพื่อทราบ
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {items(3).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
             </div>
           )}
+
+          {/* NRW YoY Comparison */}
+          {(() => {
+            const hasAnyData = nrwCurrRaw.length > 0 || nrwPrevRaw.length > 0
+            if (!hasAnyData) return null
+
+            const prevYear = nrwFiscalYear - 1
+            const targetMonth = monthCountToTarget(selectedMonths)
+            const startMonthLabel = `${getThaiMonthName(10, true)}${prevYear % 100}`
+            const endMonthLabel = `${getThaiMonthName(targetMonth, true)}${targetMonth >= 10 ? prevYear % 100 : nrwFiscalYear % 100}`
+
+            // District-level averages from computed rows
+            const totCurrLoss = nrwYoyRows.reduce((s, r) => s + (r.curr_loss ?? 0), 0)
+            const totPrevLoss = nrwYoyRows.reduce((s, r) => s + (r.prev_loss ?? 0), 0)
+            const totCurrProd = nrwYoyRows.reduce((s, r) => s + (r.curr_produced ?? 0), 0)
+            const totPrevProd = nrwYoyRows.reduce((s, r) => s + (r.prev_produced ?? 0), 0)
+            const distCurrRate = totCurrProd > 0 ? (totCurrLoss / totCurrProd) * 100 : null
+            const distPrevRate = totPrevProd > 0 ? (totPrevLoss / totPrevProd) * 100 : null
+            const distDelta = distCurrRate !== null && distPrevRate !== null ? distCurrRate - distPrevRate : null
+            const improvedCount = nrwYoyRows.filter((r) => (r.rate_delta ?? 0) < -0.001).length
+            const worsenedCount = nrwYoyRows.filter((r) => (r.rate_delta ?? 0) > 0.001).length
+
+            return (
+              <div className="space-y-5 pt-3 border-t border-white/8">
+                {/* Section header + filter */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-violet-400" style={{ boxShadow: '0 0 8px rgba(167,139,250,0.5)' }} />
+                      <p className="text-sm font-bold text-white">
+                        เปรียบเทียบน้ำสูญเสีย ปีงบ {prevYear} vs {nrwFiscalYear}
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-white/40 px-2.5 py-1 rounded-full border border-white/12 bg-white/4 font-medium">
+                      {startMonthLabel} – {endMonthLabel}
+                    </span>
+                  </div>
+
+                  {/* Month count filter */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] text-white/30 shrink-0">สะสม</span>
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => setSelectedMonths(n)}
+                          className={cn(
+                            'num text-[11px] w-7 h-6 rounded-md border transition-all font-medium',
+                            selectedMonths === n
+                              ? 'bg-violet-500/25 text-violet-300 border-violet-500/50 shadow-[0_0_6px_rgba(167,139,250,0.2)]'
+                              : 'text-white/30 border-white/10 hover:border-white/25 hover:text-white/60'
+                          )}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/30 shrink-0">เดือน</span>
+                  </div>
+                </div>
+
+                {/* Summary stat cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Prev year rate */}
+                  <div className="glass-card-sm p-4 sm:p-5 space-y-2 border border-blue-500/15">
+                    <p className="text-xs text-blue-400/60 font-medium">NRW% เขต ปีงบ {prevYear}</p>
+                    <p className="num text-3xl sm:text-4xl font-bold text-blue-300 leading-none">
+                      {distPrevRate !== null ? distPrevRate.toFixed(2) : '—'}
+                      <span className="text-base font-normal text-blue-300/50 ml-1">%</span>
+                    </p>
+                  </div>
+                  {/* Curr year rate */}
+                  <div className="glass-card-sm p-4 sm:p-5 space-y-2 border border-orange-500/15">
+                    <p className="text-xs text-orange-400/70 font-medium">NRW% เขต ปีงบ {nrwFiscalYear}</p>
+                    <p className="num text-3xl sm:text-4xl font-bold text-orange-300 leading-none">
+                      {distCurrRate !== null ? distCurrRate.toFixed(2) : '—'}
+                      <span className="text-base font-normal text-orange-300/50 ml-1">%</span>
+                    </p>
+                  </div>
+                  {/* Delta */}
+                  <div className={cn(
+                    'glass-card-sm p-4 sm:p-5 space-y-2',
+                    distDelta !== null && distDelta < 0
+                      ? 'border border-emerald-500/20'
+                      : distDelta !== null && distDelta > 0
+                      ? 'border border-red-500/20'
+                      : 'border border-white/8'
+                  )}>
+                    <p className="text-xs text-white/40 font-medium">เปลี่ยนแปลง NRW%</p>
+                    {distDelta !== null ? (
+                      <p className={cn(
+                        'num text-3xl sm:text-4xl font-bold leading-none',
+                        distDelta < 0 ? 'text-emerald-400' : distDelta > 0 ? 'text-red-400' : 'text-white/50'
+                      )}>
+                        {distDelta < 0 ? '▼' : distDelta > 0 ? '▲' : ''}
+                        {' '}{Math.abs(distDelta).toFixed(2)}
+                        <span className="text-base font-normal ml-1 opacity-60">%</span>
+                      </p>
+                    ) : (
+                      <p className="num text-3xl sm:text-4xl font-bold text-white/20 leading-none">—</p>
+                    )}
+                  </div>
+                  {/* Branch counts */}
+                  <div className="glass-card-sm p-4 sm:p-5 space-y-2 border border-violet-500/15">
+                    <p className="text-xs text-violet-400/60 font-medium">ผลงานรายสาขา</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="num text-3xl sm:text-4xl font-bold text-emerald-400 leading-none">{improvedCount}</span>
+                      <span className="text-xs text-emerald-400/60">ดีขึ้น</span>
+                      <span className="text-white/15 mx-1">/</span>
+                      <span className="num text-3xl sm:text-4xl font-bold text-red-400 leading-none">{worsenedCount}</span>
+                      <span className="text-xs text-red-400/60">แย่ลง</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chart + Table — side by side on large screens */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+                  <NrwYoyChart rows={nrwYoyRows} fiscalYear={nrwFiscalYear} />
+                  <NrwYoyTable rows={nrwYoyRows} fiscalYear={nrwFiscalYear} monthCount={selectedMonths} />
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
 
@@ -519,11 +728,11 @@ export function MeetingPreviewClient({
 
             {/* Obstacles list */}
             {visibleObstacles.length === 0 ? (
-              <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+              <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
                 {selectedBranch ? `สาขา${selectedBranch}ไม่มีอุปสรรคที่เปิดอยู่` : 'ไม่มีอุปสรรคที่เปิดอยู่'}
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {visibleObstacles.map((obs) => (
                   <div key={obs.id} className="space-y-1">
                     {!selectedBranch && obs.branches?.name_th && (
@@ -554,11 +763,11 @@ export function MeetingPreviewClient({
           </div>
 
           {items(5).length === 0 ? (
-            <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่มีรายการในวาระที่ 5
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {items(5).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
             </div>
           )}
@@ -577,11 +786,11 @@ export function MeetingPreviewClient({
           </div>
 
           {items(6).length === 0 ? (
-            <div className="glass-card-sm p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่มีรายการในวาระที่ 6
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {items(6).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
             </div>
           )}

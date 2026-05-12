@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
-import type { Meeting, MeetingAcknowledgment, MeetingResolution, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
+import type { Meeting, MeetingAcknowledgment, MeetingResolution } from '@/lib/types'
 import { MeetingView } from './_components/MeetingView'
 
 export const dynamic = 'force-dynamic'
@@ -12,17 +12,28 @@ export default async function MeetingPage() {
   const today = now.toISOString().split('T')[0]
   const isAdmin = !session?.branch_name
 
-  // Latest meetings for agenda/resolution/followup tabs
-  const { data: meetings } = await supabase
+  // All meetings (newest first)
+  const { data: allMeetingsRaw } = await supabase
     .from('meetings')
     .select('*')
     .order('scheduled_date', { ascending: false })
-    .limit(10)
+    .limit(50)
 
-  const rows = (meetings ?? []) as Meeting[]
-  const latest = rows[0] ?? null
-  const prev = rows[1] ?? null
+  const allMeetings = (allMeetingsRaw ?? []) as Meeting[]
+  const latest = allMeetings[0] ?? null
+  const prev = allMeetings[1] ?? null
 
+  // Which meetings have an agenda filled
+  const allMeetingIds = allMeetings.map((m) => m.id)
+  const { data: filledHeadersRaw } = allMeetingIds.length > 0
+    ? await supabase
+        .from('meeting_agenda_headers')
+        .select('meeting_id')
+        .in('meeting_id', allMeetingIds)
+    : { data: [] }
+  const agendaFilledIds = new Set((filledHeadersRaw ?? []).map((h: any) => h.meeting_id))
+
+  // Resolutions for latest two meetings (resolution/followup tabs)
   let latestResolutions: MeetingResolution[] = []
   let prevResolutions: MeetingResolution[] = []
 
@@ -34,7 +45,6 @@ export default async function MeetingPage() {
       .order('sequence_no')
     latestResolutions = (data ?? []) as MeetingResolution[]
   }
-
   if (prev) {
     const { data } = await supabase
       .from('meeting_resolutions')
@@ -44,52 +54,29 @@ export default async function MeetingPage() {
     prevResolutions = (data ?? []) as MeetingResolution[]
   }
 
-  let agendaHeader: MeetingAgendaHeader | null = null
-  let agendaSubitems: MeetingAgendaSubItem[] = []
+  // Split meetings for schedule tab
+  const upcomingMeetings = allMeetings
+    .filter((m) => m.status === 'กำหนดแล้ว' && m.scheduled_date >= today)
+    .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
 
-  if (latest) {
-    const [hRes, sRes] = await Promise.all([
-      supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', latest.id).maybeSingle(),
-      supabase
-        .from('meeting_agenda_subitems')
-        .select('*')
-        .eq('meeting_id', latest.id)
-        .order('agenda_no')
-        .order('sort_order'),
-    ])
-    agendaHeader = hRes.data ?? null
-    agendaSubitems = (sRes.data ?? []) as MeetingAgendaSubItem[]
-  }
+  const overdueMeetings = allMeetings
+    .filter((m) => m.status === 'กำหนดแล้ว' && m.scheduled_date < today)
+    .sort((a, b) => b.scheduled_date.localeCompare(a.scheduled_date))
 
-  // Schedule tab: upcoming and past meetings + acks
-  const [upcomingRes, pastRes] = await Promise.all([
-    supabase
-      .from('meetings')
-      .select('*')
-      .eq('status', 'กำหนดแล้ว')
-      .gte('scheduled_date', today)
-      .order('scheduled_date', { ascending: true }),
-    supabase
-      .from('meetings')
-      .select('*')
-      .in('status', ['เสร็จสิ้น', 'เลื่อน', 'ยกเลิก'])
-      .order('scheduled_date', { ascending: false })
-      .limit(5),
-  ])
+  const pastMeetings = allMeetings
+    .filter((m) => ['เสร็จสิ้น', 'เลื่อน', 'ยกเลิก'].includes(m.status))
 
-  const upcomingMeetings = (upcomingRes.data ?? []) as Meeting[]
-  const pastMeetings = (pastRes.data ?? []) as Meeting[]
-  const allIds = [...upcomingMeetings, ...pastMeetings].map((m) => m.id)
-
+  // Acks for schedule tab
+  const scheduleIds = [...upcomingMeetings, ...overdueMeetings, ...pastMeetings].map((m) => m.id)
   let acksByMeeting: Record<string, MeetingAcknowledgment[]> = {}
   let myAcks: MeetingAcknowledgment[] = []
 
-  if (allIds.length > 0) {
+  if (scheduleIds.length > 0) {
     if (isAdmin) {
       const { data: ackData } = await supabase
         .from('meeting_acknowledgments')
         .select('*')
-        .in('meeting_id', allIds)
+        .in('meeting_id', scheduleIds)
       const acks = (ackData ?? []) as MeetingAcknowledgment[]
       for (const a of acks) {
         if (!acksByMeeting[a.meeting_id]) acksByMeeting[a.meeting_id] = []
@@ -99,7 +86,7 @@ export default async function MeetingPage() {
       const { data: ackData } = await supabase
         .from('meeting_acknowledgments')
         .select('*')
-        .in('meeting_id', allIds)
+        .in('meeting_id', scheduleIds)
         .eq('branch_name', session.branch_name)
       myAcks = (ackData ?? []) as MeetingAcknowledgment[]
     }
@@ -107,19 +94,20 @@ export default async function MeetingPage() {
 
   return (
     <MeetingView
+      allMeetings={allMeetings}
+      agendaFilledIds={agendaFilledIds}
       latestMeeting={latest}
       prevMeeting={prev}
       latestResolutions={latestResolutions}
       prevResolutions={prevResolutions}
       upcomingMeetings={upcomingMeetings}
+      overdueMeetings={overdueMeetings}
       pastMeetings={pastMeetings}
       acksByMeeting={acksByMeeting}
       myAcks={myAcks}
       isAdmin={isAdmin}
       branchName={session?.branch_name ?? null}
       branchCostcenter={session?.costcenter ?? null}
-      agendaHeader={agendaHeader}
-      agendaSubitems={agendaSubitems}
     />
   )
 }

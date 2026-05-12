@@ -37,7 +37,8 @@
       "Bash(Remove-Item -Force \"supabase\\\\migrations\\\\20260511_add_water_loss_fields.sql\")",
       "Bash(Select-String '\"next\"')",
       "Bash(Select-Object FullName)",
-      "PowerShell(Get-ChildItem -Recurse \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\\\(dashboard\\)\\\\meeting\" | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem -Recurse \"D:\\\\report monthy\\\\report-monthy\\\\app\\\\\\(dashboard\\)\\\\meeting\" | ForEach-Object { $_.FullName })",
+      "PowerShell($content = Get-Content \"D:\\\\report monthy\\\\report-monthy\\\\components\\\\layout\\\\MobileNav.tsx\" -Raw; $content.Substring\\(0, 300\\) | ForEach-Object { $_ -replace \"`r\", \"\\\\r\" -replace \"`n\", \"\\\\n\" })"
     ]
   }
 }

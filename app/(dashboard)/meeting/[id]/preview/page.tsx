@@ -10,6 +10,14 @@ import type {
 } from '@/lib/types'
 import { MeetingPreviewClient } from './_components/MeetingPreviewClient'
 
+function deriveNrwPeriod(scheduledDate: string): { fiscalYear: number; month: number } {
+  const d = new Date(scheduledDate)
+  const month = d.getMonth() + 1
+  const buddhistYear = d.getFullYear() + 543
+  const fiscalYear = month >= 10 ? buddhistYear + 1 : buddhistYear
+  return { fiscalYear, month }
+}
+
 export const dynamic = 'force-dynamic'
 
 export default async function MeetingPreviewPage({
@@ -32,7 +40,9 @@ export default async function MeetingPreviewPage({
   if (!meetingData) notFound()
   const meeting = meetingData as Meeting
 
-  const [headerRes, subitemsRes, prevRes] = await Promise.all([
+  const { fiscalYear: nrwFiscalYear, month: nrwMonth } = deriveNrwPeriod(meeting.scheduled_date)
+
+  const [headerRes, subitemsRes, prevRes, currNrwRes, prevNrwRes] = await Promise.all([
     supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', id).maybeSingle(),
     supabase
       .from('meeting_agenda_subitems')
@@ -47,11 +57,21 @@ export default async function MeetingPreviewPage({
       .order('scheduled_date', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('branch_name, month, water_produced, water_sold, water_free, blow_off')
+      .eq('fiscal_year', nrwFiscalYear),
+    (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('branch_name, month, water_produced, water_sold, water_free, blow_off')
+      .eq('fiscal_year', nrwFiscalYear - 1),
   ])
 
   const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
   const agendaSubitems = (subitemsRes.data ?? []) as MeetingAgendaSubItem[]
   const prevMeeting = (prevRes.data ?? null) as Meeting | null
+  const nrwCurrRaw: any[] = currNrwRes.data ?? []
+  const nrwPrevRaw: any[] = prevNrwRes.data ?? []
 
   let prevResolutions: MeetingResolution[] = []
   if (prevMeeting) {
@@ -80,6 +100,10 @@ export default async function MeetingPreviewPage({
       prevMeeting={prevMeeting}
       prevResolutions={prevResolutions}
       obstacles={obstacles}
+      nrwCurrRaw={nrwCurrRaw}
+      nrwPrevRaw={nrwPrevRaw}
+      nrwFiscalYear={nrwFiscalYear}
+      nrwMonth={nrwMonth}
     />
   )
 }

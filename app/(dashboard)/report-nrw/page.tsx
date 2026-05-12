@@ -1,0 +1,113 @@
+import { createClient } from '@/lib/supabase/server'
+import { getPwaSession } from '@/lib/pwa-auth'
+import { NrwReportTable } from '@/components/dashboard/NrwReportTable'
+import { NrwReportFilterBar } from '@/components/shared/NrwReportFilterBar'
+import { getThaiMonthName } from '@/lib/utils/date-th'
+import type { NrwBranchMonthly, NrwBranchTarget } from '@/lib/types'
+
+const NRW_EDITOR_ID = '18074'
+
+export const dynamic = 'force-dynamic'
+
+interface PageProps {
+  searchParams: Promise<{ year?: string; month?: string }>
+}
+
+function getCurrentFiscalYear(): number {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const gregorianYear = now.getFullYear()
+  return month >= 10 ? gregorianYear + 543 + 1 : gregorianYear + 543
+}
+
+export default async function ReportNrwPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const fiscalYear = parseInt(params.year ?? '') || getCurrentFiscalYear()
+  const month      = parseInt(params.month ?? '') || new Date().getMonth() + 1
+
+  const supabase = await createClient()
+  const session  = await getPwaSession()
+  const canEdit  = session?.username === NRW_EDITOR_ID
+
+  // Fetch monthly data and annual targets in parallel
+  const [monthlyRes, targetRes] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('*')
+      .eq('fiscal_year', fiscalYear)
+      .eq('month', month)
+      .order('branch_name') as Promise<{ data: NrwBranchMonthly[] | null; error: { message: string } | null }>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('nrw_branch_target')
+      .select('*')
+      .eq('fiscal_year', fiscalYear) as Promise<{ data: NrwBranchTarget[] | null; error: unknown }>,
+  ])
+
+  const targetMap = new Map(
+    (targetRes.data ?? []).map((t) => [t.branch_name, t.target_nrw])
+  )
+
+  const rows: NrwBranchMonthly[] = (monthlyRes.data ?? []).map((r) => {
+    const produced = r.water_produced ?? null
+    const waterLoss = produced != null
+      ? Math.max(0, produced - (r.water_sold ?? 0) - (r.water_free ?? 0) - (r.blow_off ?? 0))
+      : null
+    const nrwRate = waterLoss !== null && produced
+      ? (waterLoss / produced) * 100
+      : null
+    return {
+      ...r,
+      water_loss: waterLoss,
+      nrw_rate:   nrwRate,
+      target_nrw: targetMap.get(r.branch_name) ?? null,
+    }
+  })
+
+  const monthName = getThaiMonthName(month)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-white">Report NRW</h1>
+          <p className="text-sm text-white/50 mt-1">
+            ข้อมูลน้ำสูญเสียรายสาขา — ปีงบ {fiscalYear} เดือน{monthName}
+          </p>
+        </div>
+        <div className="shrink-0">
+          <NrwReportFilterBar activeFiscalYear={fiscalYear} activeMonth={month} />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
+          <span className="text-xs text-white/40">สาขาที่กรอกแล้ว</span>
+          <span className="text-lg font-bold text-white">{rows.length} <span className="text-sm font-normal text-white/40">/ 26</span></span>
+        </div>
+        <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
+          <span className="text-xs text-white/40">ยังไม่กรอก</span>
+          <span className="text-lg font-bold text-amber-400">{26 - rows.length}</span>
+        </div>
+        <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
+          <span className="text-xs text-white/40">ตั้งเป้าหมายแล้ว</span>
+          <span className="text-lg font-bold text-cyan-400">{targetMap.size} <span className="text-sm font-normal text-white/40">/ 26</span></span>
+        </div>
+        {monthlyRes.error && (
+          <div className="glass-card px-4 py-3 border-red-500/30">
+            <span className="text-xs text-red-400">ไม่สามารถโหลดข้อมูลได้ — กรุณา apply migration ก่อน</span>
+          </div>
+        )}
+      </div>
+
+      <NrwReportTable
+        rows={rows}
+        fiscalYear={fiscalYear}
+        month={month}
+        targets={Object.fromEntries(targetMap)}
+        canEdit={canEdit}
+      />
+    </div>
+  )
+}

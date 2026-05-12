@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { Meeting, MeetingAcknowledgment, MeetingResolution, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
-import { MeetingAgendaForm } from '@/components/forms/MeetingAgendaForm'
+import type { Meeting, MeetingAcknowledgment, MeetingResolution } from '@/lib/types'
 import { MeetingResolutionForm } from '@/components/forms/MeetingResolutionForm'
 import { ResolutionSummaryCard } from './ResolutionSummaryCard'
 import { StatusPill } from '@/components/shared/StatusPill'
@@ -15,6 +14,7 @@ import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
   Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle, Pencil, Eye,
+  ClipboardList, ChevronRight,
 } from 'lucide-react'
 
 type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup'
@@ -160,44 +160,48 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
 }
 
 interface Props {
+  allMeetings: Meeting[]
+  agendaFilledIds: Set<string>
   latestMeeting: Meeting | null
   prevMeeting: Meeting | null
   latestResolutions: MeetingResolution[]
   prevResolutions: MeetingResolution[]
   upcomingMeetings: Meeting[]
+  overdueMeetings: Meeting[]
   pastMeetings: Meeting[]
   acksByMeeting: Record<string, MeetingAcknowledgment[]>
   myAcks: MeetingAcknowledgment[]
   isAdmin: boolean
   branchName: string | null
   branchCostcenter: string | null
-  agendaHeader: MeetingAgendaHeader | null
-  agendaSubitems: MeetingAgendaSubItem[]
 }
 
 export function MeetingView({
+  allMeetings,
+  agendaFilledIds,
   latestMeeting,
   prevMeeting,
   latestResolutions,
   prevResolutions,
   upcomingMeetings,
+  overdueMeetings,
   pastMeetings,
   acksByMeeting,
   myAcks,
   isAdmin,
   branchName,
   branchCostcenter,
-  agendaHeader,
-  agendaSubitems,
 }: Props) {
   const [tab, setTab] = useState<Tab>('schedule')
   const [showResolutionForm, setShowResolutionForm] = useState(false)
 
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
+  const totalScheduled = upcomingMeetings.length + overdueMeetings.length + pastMeetings.length
+
   const TABS: { key: Tab; label: string; count?: number }[] = [
-    { key: 'schedule',   label: 'ตารางประชุม',        count: upcomingMeetings.length },
-    { key: 'agenda',     label: 'วาระการประชุม' },
+    { key: 'schedule',   label: 'ตารางประชุม',         count: totalScheduled },
+    { key: 'agenda',     label: 'รายงานการประชุม' },
     { key: 'resolution', label: 'มติ / ข้อสั่งการ',   count: latestResolutions.length },
     { key: 'followup',   label: 'ติดตามมติเดือนก่อน', count: prevResolutions.length },
   ]
@@ -271,10 +275,11 @@ export function MeetingView({
             </div>
           )}
 
+          {/* กำหนดการล่วงหน้า */}
           <div className="space-y-3">
-            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">การประชุมที่กำหนดไว้</h2>
+            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">กำหนดการล่วงหน้า</h2>
             {upcomingMeetings.length === 0 ? (
-              <div className="glass-card-sm p-8 text-center text-white/30 text-sm">
+              <div className="glass-card-sm p-6 text-center text-white/25 text-sm">
                 ยังไม่มีการประชุมที่กำหนดไว้
                 {isAdmin && (
                   <div className="mt-3">
@@ -298,9 +303,27 @@ export function MeetingView({
             )}
           </div>
 
+          {/* เลยกำหนดแต่ยังไม่ปิด */}
+          {overdueMeetings.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs font-bold text-amber-400/60 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                ยังไม่อัปเดตสถานะ ({overdueMeetings.length})
+              </h2>
+              {overdueMeetings.map((m) => (
+                <MeetingCard
+                  key={m.id} m={m} showAck
+                  isAdmin={isAdmin} branchName={branchName}
+                  ackedSet={ackedSet} myAcks={myAcks} acksByMeeting={acksByMeeting}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* ประวัติ */}
           {pastMeetings.length > 0 && (
             <div className="space-y-3">
-              <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ประชุมล่าสุด</h2>
+              <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ประวัติการประชุม</h2>
               {pastMeetings.map((m) => (
                 <MeetingCard
                   key={m.id} m={m} showAck={false}
@@ -310,30 +333,113 @@ export function MeetingView({
               ))}
             </div>
           )}
+
+          {totalScheduled === 0 && (
+            <div className="glass-card-sm p-10 text-center text-white/25 text-sm">
+              ยังไม่มีรายการประชุมในระบบ
+            </div>
+          )}
         </div>
       )}
 
-      {/* ══ Tab 1: วาระการประชุม ══ */}
+      {/* ══ Tab 1: รายงานการประชุม ══ */}
       {tab === 'agenda' && (
-        !latestMeeting ? (
-          <div className="glass-card p-12 text-center">
-            <p className="text-white/30 mb-3 text-sm">ยังไม่มีการประชุม</p>
-            <Link
-              href="/meeting/setup"
-              className="inline-flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <Plus size={14} />
-              สร้างการประชุม
-            </Link>
+        <div className="space-y-4 max-w-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-white">รายงานการประชุม</h2>
+              <p className="text-xs text-white/35 mt-0.5">สรุปวาระจากการประชุมแต่ละครั้ง</p>
+            </div>
+            {isAdmin && (
+              <Link
+                href="/meeting/setup"
+                className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-xl text-sm transition-colors shrink-0"
+              >
+                <Plus size={15} />
+                สร้างการประชุม
+              </Link>
+            )}
           </div>
-        ) : (
-          <MeetingAgendaForm
-            meeting={latestMeeting}
-            initialHeader={agendaHeader}
-            initialSubitems={agendaSubitems}
-            isAdmin={isAdmin}
-          />
-        )
+
+          {allMeetings.length === 0 ? (
+            <div className="glass-card p-12 text-center">
+              <ClipboardList size={32} className="text-white/15 mx-auto mb-3" />
+              <p className="text-white/30 text-sm mb-4">ยังไม่มีรายงานการประชุมในระบบ</p>
+              {isAdmin && (
+                <Link
+                  href="/meeting/setup"
+                  className="inline-flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus size={14} />
+                  สร้างการประชุมแรก
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {allMeetings.map((m) => {
+                const filled = agendaFilledIds.has(m.id)
+                return (
+                  <div key={m.id} className="glass-card-sm p-4 flex items-center gap-4">
+                    {/* Status dot */}
+                    <div className={cn(
+                      'shrink-0 w-2 h-2 rounded-full',
+                      filled ? 'bg-emerald-400' : 'bg-white/20'
+                    )} />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <p className="text-sm font-semibold text-white leading-snug truncate">{m.title}</p>
+                      <div className="flex items-center gap-3 text-xs text-white/40 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={10} className="text-white/25" />
+                          {formatThaiDate(m.scheduled_date)}
+                        </span>
+                        {m.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={10} className="text-white/25" />
+                            {m.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Badge + Action */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={cn(
+                        'text-[10px] px-2 py-0.5 rounded-full border font-medium',
+                        filled
+                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
+                          : 'text-white/30 bg-white/5 border-white/10'
+                      )}>
+                        {filled ? 'กรอกแล้ว' : 'ยังไม่กรอก'}
+                      </span>
+
+                      {filled ? (
+                        <Link
+                          href={`/meeting/${m.id}/preview`}
+                          className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 border border-cyan-500/25 hover:border-cyan-500/50 px-3 py-1.5 rounded-lg transition-all"
+                        >
+                          <Eye size={12} />
+                          ดูรายละเอียด
+                          <ChevronRight size={11} className="opacity-50" />
+                        </Link>
+                      ) : isAdmin ? (
+                        <Link
+                          href={`/meeting/${m.id}/agenda`}
+                          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 border border-amber-500/25 hover:border-amber-500/50 px-3 py-1.5 rounded-lg transition-all"
+                        >
+                          <Pencil size={12} />
+                          กรอกวาระ
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ══ Tab 2: มติ / ข้อสั่งการ ══ */}
