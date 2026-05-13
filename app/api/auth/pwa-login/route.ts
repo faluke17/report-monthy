@@ -15,7 +15,10 @@ export async function POST(req: NextRequest) {
   try {
     const res = await fetch(PWA_PROXY, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-proxy-secret': process.env.PWA_PROXY_SECRET ?? '',
+      },
       body: JSON.stringify({ username, password }),
     })
     raw = await res.text()
