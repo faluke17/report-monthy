@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
 
-const bom = /^﻿/
-const clean = (s: string) => s.replace(bom, '').trim()
+// Strip BOM (U+FEFF) that PowerShell/Vercel CLI sometimes prepends to env values
+const clean = (s: string) => s.replace(/﻿/g, '').trim()
 
 function createAdminClient() {
   return createSupabaseClient(
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Upsert profile (handles trigger race condition)
-  await admin.from('users_profile').upsert({
+  const { error: profileError } = await admin.from('users_profile').upsert({
     id: newUser.user.id,
     full_name: `${name} ${surname}`,
     employee_id,
@@ -61,6 +61,10 @@ export async function POST(req: NextRequest) {
     branch_id: branchRow?.id ?? null,
     role: 'branch_staff',
   }, { onConflict: 'id' })
+
+  if (profileError) {
+    console.error('Profile upsert error:', profileError.message)
+  }
 
   const session: PwaSession = {
     username: employee_id,

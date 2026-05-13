@@ -1,8 +1,9 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+﻿import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-const clean = (s: string) => s.replace(/^﻿/, '').trim()
+// Strip BOM (U+FEFF) that PowerShell/Vercel CLI sometimes prepends to env values
+const clean = (s: string) => s.replace(/﻿/g, '').trim()
 
-// Server-side only — uses service role key to bypass RLS.
+// Server-side only -- uses service role key to bypass RLS.
 // Auth is handled at the app layer via PWA session cookie.
 export async function createClient() {
   return createSupabaseClient(

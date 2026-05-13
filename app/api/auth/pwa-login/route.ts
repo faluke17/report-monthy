@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
 
-const bom = /^﻿/
-const clean = (s: string) => s.replace(bom, '').trim()
+// Strip BOM (U+FEFF) that PowerShell/Vercel CLI sometimes prepends to env values
+const clean = (s: string) => s.replace(/﻿/g, '').trim()
 
 function createAnonClient() {
   return createSupabaseClient(
