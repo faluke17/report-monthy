@@ -2,10 +2,13 @@
 
 import { useState, useTransition, useRef } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown, AlertCircle, Brain } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
 import { saveAgenda } from '@/app/actions/meeting-agenda'
+import { formatThaiDate } from '@/lib/utils/date-th'
+import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
+import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from '@/app/(dashboard)/meeting/[id]/agenda/_components/MeetingAgendaFormSetup'
 
 // ─── style constants ──────────────────────────────────────────────────────────
 
@@ -69,7 +72,11 @@ function emptySubItem(): SubItem {
   return { title: '', detail: '', showTable: false, detailTable: emptyTable(), resolution: 'รับทราบ', resolutionDetail: '' }
 }
 
-function initState(header: MeetingAgendaHeader | null, subitems: MeetingAgendaSubItem[]): FormState {
+function initState(
+  header: MeetingAgendaHeader | null,
+  subitems: MeetingAgendaSubItem[],
+  previousMeetings: PreviousMeetingRow[] = [],
+): FormState {
   function itemsFor(agendaNo: number): SubItem[] {
     const matching = subitems.filter(s => s.agenda_no === agendaNo).sort((a, b) => a.sort_order - b.sort_order)
     if (matching.length === 0) return [emptySubItem()]
@@ -93,7 +100,7 @@ function initState(header: MeetingAgendaHeader | null, subitems: MeetingAgendaSu
     agenda1Detail: header?.agenda1_detail ?? '',
     agenda1Resolution: (header?.agenda1_resolution as Resolution) ?? 'รับทราบ',
     agenda1ResolutionDetail: header?.agenda1_resolution_detail ?? '',
-    agenda2MeetingNo: header?.agenda2_meeting_no ?? '',
+    agenda2MeetingNo: header?.agenda2_meeting_no ?? (previousMeetings[0]?.code ?? ''),
     agenda2Resolution: (header?.agenda2_resolution as Resolution) ?? 'รับทราบ',
     agenda2ResolutionDetail: header?.agenda2_resolution_detail ?? '',
     agenda4Type: (header?.agenda4_type as FormState['agenda4Type']) ?? 'เรื่องสืบเนื่อง',
@@ -327,6 +334,143 @@ function SubItemGroup({
         className="flex items-center gap-1.5 text-xs text-cyan-400/60 hover:text-cyan-400 border border-dashed border-white/12 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors">
         <Plus size={12} /> เพิ่ม {agendaNo}.{items.length + 1}
       </button>
+    </div>
+  )
+}
+
+// ─── workflow panels ──────────────────────────────────────────────────────────
+
+const STATUS_COLOR: Record<string, string> = {
+  'รอดำเนินการ':        'text-blue-400 bg-blue-500/10 border-blue-500/25',
+  'ระหว่างดำเนินการ':   'text-amber-400 bg-amber-500/10 border-amber-500/25',
+  'แล้วเสร็จ':          'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+  'ปิดประเด็น':         'text-white/40 bg-white/5 border-white/15',
+}
+
+function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[] }) {
+  const [collapsed, setCollapsed] = useState(false)
+  if (resolutions.length === 0) return null
+
+  return (
+    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setCollapsed(p => !p)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-amber-500/8 transition-colors"
+      >
+        <AlertCircle size={13} className="text-amber-400 shrink-0" />
+        <span className="text-xs font-semibold text-amber-300 flex-1">
+          มติ/ข้อสั่งการที่ยังค้างอยู่ — {resolutions.length} รายการ
+        </span>
+        <ChevronDown size={12} className={cn('text-amber-400/60 transition-transform', collapsed && 'rotate-180')} />
+      </button>
+      {!collapsed && (
+        <div className="border-t border-amber-500/15 px-4 py-3 space-y-2">
+          {resolutions.map(res => {
+            const pct = res.progress_pct ?? 0
+            const barColor = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
+            const statusCls = STATUS_COLOR[res.status] ?? 'text-white/40 bg-white/5 border-white/15'
+            return (
+              <div key={res.id} className="bg-white/3 rounded-lg px-3 py-2.5 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-medium text-white/90 leading-snug flex-1">{res.title}</p>
+                  <span className={cn('shrink-0 text-[10px] px-2 py-0.5 rounded-full border', statusCls)}>
+                    {res.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] text-white/35">
+                  {res.responsible_branch && <span>{res.responsible_branch}</span>}
+                  {res.due_date && <span>กำหนด {formatThaiDate(res.due_date, true)}</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+                    <div className={cn('h-full rounded-full', barColor)} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-[10px] text-white/40 tabular-nums shrink-0">{pct}%</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+
+function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const summaryMap = new Map(summaries.map(s => [s.branch_name, s]))
+  const detail = selected ? summaryMap.get(selected) : null
+
+  return (
+    <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15">
+        <Brain size={13} className="text-violet-400 shrink-0" />
+        <span className="text-xs font-semibold text-violet-300">ผล PDCA รายสาขา</span>
+        {selected && (
+          <button
+            type="button"
+            onClick={() => setSelected(null)}
+            className="ml-auto text-[10px] text-white/30 hover:text-white/60 transition-colors"
+          >
+            <X size={12} />
+          </button>
+        )}
+      </div>
+
+      {/* Branch grid */}
+      <div className="px-4 py-3 flex flex-wrap gap-1.5">
+        {PWA_BRANCHES.map(b => {
+          const has = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
+          const active = selected === b.name_th
+          return (
+            <button
+              key={b.costcenter}
+              type="button"
+              onClick={() => setSelected(active ? null : b.name_th)}
+              className={cn(
+                'text-[10px] px-2 py-0.5 rounded-full border transition-all',
+                active
+                  ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
+                  : has
+                    ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
+                    : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
+              )}
+            >
+              {b.name_th}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Branch PDCA detail */}
+      {selected && (
+        <div className="border-t border-violet-500/15 px-4 py-3 space-y-3">
+          {detail && (detail.pdca_do || detail.pdca_act) ? (
+            <>
+              <p className="text-[10px] text-violet-400/70 font-semibold uppercase tracking-wider">
+                {selected} · {THAI_MONTHS_SHORT[(detail.report_month - 1)]} {detail.report_year + 543}
+              </p>
+              {detail.pdca_do && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">D — Do (ลงมือทำ)</p>
+                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
+                </div>
+              )}
+              {detail.pdca_act && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">A — Act (ปรับปรุง)</p>
+                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -626,7 +770,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
 
 // ─── edit mode layout ─────────────────────────────────────────────────────────
 
-function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, onCancel }: {
+function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, onCancel, previousMeetings, openResolutions, pdcaSummaries }: {
   state: FormState
   setState: React.Dispatch<React.SetStateAction<FormState>>
   meeting: Meeting
@@ -634,6 +778,9 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
   isPending: boolean
   onSave: () => void
   onCancel: () => void
+  previousMeetings?: PreviousMeetingRow[]
+  openResolutions?: OpenResolutionRow[]
+  pdcaSummaries?: PdcaSummaryRow[]
 }) {
   function set<K extends keyof FormState>(key: K, val: FormState[K]) {
     setState(prev => ({ ...prev, [key]: val }))
@@ -670,14 +817,33 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
 
       {/* Agenda 2 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
-          <AgendaNumBadge n={2} />
-          <span>วาระที่ 2 : เรื่องรับรองรายงานการประชุมครั้งที่</span>
-          <input
-            className="w-28 bg-white/5 border border-white/15 rounded-lg px-2 py-1 text-sm text-white font-mono text-center focus:outline-none focus:border-cyan-500/60"
-            placeholder="ครั้งที่..." value={state.agenda2MeetingNo}
-            onChange={e => set('agenda2MeetingNo', e.target.value)} />
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <AgendaNumBadge n={2} /> วาระที่ 2 : เรื่องรับรองรายงานการประชุม
         </h3>
+        <div>
+          <label className={LABEL}>เลือกการประชุมที่รับรอง</label>
+          {previousMeetings && previousMeetings.length > 0 ? (
+            <select
+              className={SELECT}
+              value={state.agenda2MeetingNo}
+              onChange={e => set('agenda2MeetingNo', e.target.value)}
+            >
+              <option value="">— ไม่ระบุ —</option>
+              {previousMeetings.map(m => (
+                <option key={m.id} value={m.code}>
+                  {m.code} · {m.title} ({formatThaiDate(m.scheduled_date, true)})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={SELECT}
+              placeholder="รหัส/ครั้งที่..."
+              value={state.agenda2MeetingNo}
+              onChange={e => set('agenda2MeetingNo', e.target.value)}
+            />
+          )}
+        </div>
         <ResolutionBlock value={state.agenda2Resolution} detail={state.agenda2ResolutionDetail}
           onChange={(v, d) => { set('agenda2Resolution', v); set('agenda2ResolutionDetail', d) }} />
       </div>
@@ -702,6 +868,7 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
             <option value="เรื่องติดตามผลการดำเนินการ">เรื่องติดตามผลการดำเนินการ</option>
           </select>
         </h3>
+        {openResolutions && <OpenResolutionsPanel resolutions={openResolutions} />}
         <SubItemGroup agendaNo={4} label={state.agenda4Type} items={state.items4}
           onChange={items => set('items4', items)} />
       </div>
@@ -711,6 +878,7 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
           <AgendaNumBadge n={5} /> วาระที่ 5 : {agenda5Label}
         </h3>
+        {pdcaSummaries && <PdcaBranchPanel summaries={pdcaSummaries} />}
         <SubItemGroup agendaNo={5} label={agenda5Label} items={state.items5}
           onChange={items => set('items5', items)} />
       </div>
@@ -749,10 +917,16 @@ interface Props {
   initialSubitems: MeetingAgendaSubItem[]
   isAdmin: boolean
   onSaved?: (meetingId: string) => void
+  previousMeetings?: PreviousMeetingRow[]
+  openResolutions?: OpenResolutionRow[]
+  pdcaSummaries?: PdcaSummaryRow[]
 }
 
-export function MeetingAgendaForm({ meeting, initialHeader, initialSubitems, isAdmin, onSaved }: Props) {
-  const [state, setState] = useState<FormState>(() => initState(initialHeader, initialSubitems))
+export function MeetingAgendaForm({
+  meeting, initialHeader, initialSubitems, isAdmin, onSaved,
+  previousMeetings, openResolutions, pdcaSummaries,
+}: Props) {
+  const [state, setState] = useState<FormState>(() => initState(initialHeader, initialSubitems, previousMeetings ?? []))
   const [mode, setMode] = useState<ViewMode>(() => (initialHeader ? 'view' : 'edit'))
   const [isPending, startTransition] = useTransition()
 
@@ -832,6 +1006,9 @@ export function MeetingAgendaForm({ meeting, initialHeader, initialSubitems, isA
       isPending={isPending}
       onSave={handleSave}
       onCancel={() => setMode('view')}
+      previousMeetings={previousMeetings}
+      openResolutions={openResolutions}
+      pdcaSummaries={pdcaSummaries}
     />
   )
 }

@@ -14,8 +14,9 @@ import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
   Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle, Pencil, Eye,
-  ClipboardList, ChevronRight,
+  ClipboardList, ChevronRight, Trash2,
 } from 'lucide-react'
+import { deleteMeeting } from '@/app/actions/meetings'
 
 type Tab = 'schedule' | 'agenda' | 'resolution' | 'followup'
 
@@ -35,9 +36,11 @@ interface MeetingCardProps {
   ackedSet: Set<string>
   myAcks: MeetingAcknowledgment[]
   acksByMeeting: Record<string, MeetingAcknowledgment[]>
+  deletingId: string | null
+  onDelete: (m: Meeting) => void
 }
 
-function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksByMeeting }: MeetingCardProps) {
+function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksByMeeting, deletingId, onDelete }: MeetingCardProps) {
   const days = daysUntil(m.scheduled_date)
   const typeClass = TYPE_COLOR[m.meeting_type] ?? 'bg-white/10 text-white/50 border-white/15'
   const isAcked = ackedSet.has(m.id)
@@ -123,6 +126,14 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
                 <Eye size={10} />
                 ดูตัวอย่าง
               </Link>
+              <button
+                onClick={() => onDelete(m)}
+                disabled={deletingId === m.id}
+                className="flex items-center gap-1 text-[11px] text-red-400/50 hover:text-red-400 transition-colors disabled:opacity-40"
+              >
+                <Trash2 size={10} />
+                {deletingId === m.id ? '...' : 'ลบ'}
+              </button>
             </div>
           )}
         </div>
@@ -194,6 +205,17 @@ export function MeetingView({
 }: Props) {
   const [tab, setTab] = useState<Tab>('schedule')
   const [showResolutionForm, setShowResolutionForm] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function handleDelete(m: Meeting) {
+    if (!confirm(`ยืนยันการลบ "${m.title}" ?\n\nข้อมูลวาระ มติ และการรับทราบทั้งหมดจะถูกลบถาวร`)) return
+    setDeletingId(m.id)
+    const res = await deleteMeeting(m.id)
+    if (!res.success) {
+      alert(`เกิดข้อผิดพลาด: ${res.error}`)
+      setDeletingId(null)
+    }
+  }
 
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
@@ -298,6 +320,7 @@ export function MeetingView({
                   key={m.id} m={m} showAck
                   isAdmin={isAdmin} branchName={branchName}
                   ackedSet={ackedSet} myAcks={myAcks} acksByMeeting={acksByMeeting}
+                  deletingId={deletingId} onDelete={handleDelete}
                 />
               ))
             )}
@@ -315,6 +338,7 @@ export function MeetingView({
                   key={m.id} m={m} showAck
                   isAdmin={isAdmin} branchName={branchName}
                   ackedSet={ackedSet} myAcks={myAcks} acksByMeeting={acksByMeeting}
+                  deletingId={deletingId} onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -329,6 +353,7 @@ export function MeetingView({
                   key={m.id} m={m} showAck={false}
                   isAdmin={isAdmin} branchName={branchName}
                   ackedSet={ackedSet} myAcks={myAcks} acksByMeeting={acksByMeeting}
+                  deletingId={deletingId} onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -433,6 +458,17 @@ export function MeetingView({
                           กรอกวาระ
                         </Link>
                       ) : null}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDelete(m)}
+                          disabled={deletingId === m.id}
+                          className="flex items-center gap-1 text-xs text-red-400/60 hover:text-red-400 border border-red-500/15 hover:border-red-500/40 px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-40"
+                        >
+                          <Trash2 size={12} />
+                          {deletingId === m.id ? '...' : 'ลบ'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

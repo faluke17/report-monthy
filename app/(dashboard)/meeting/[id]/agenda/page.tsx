@@ -6,6 +6,7 @@ import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/t
 import { MeetingAgendaFormSetup } from './_components/MeetingAgendaFormSetup'
 import { Calendar, CheckCircle2, Circle } from 'lucide-react'
 import { formatThaiDate } from '@/lib/utils/date-th'
+import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from './_components/MeetingAgendaFormSetup'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,7 @@ export default async function MeetingAgendaPage({
   if (!meetingData) notFound()
   const meeting = meetingData as Meeting
 
-  const [headerRes, subitemsRes] = await Promise.all([
+  const [headerRes, subitemsRes, prevMeetingsRes, openResRes, monthlyRes] = await Promise.all([
     supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', id).maybeSingle(),
     supabase
       .from('meeting_agenda_subitems')
@@ -37,10 +38,47 @@ export default async function MeetingAgendaPage({
       .eq('meeting_id', id)
       .order('agenda_no')
       .order('sort_order'),
+    supabase
+      .from('meetings')
+      .select('id, code, title, scheduled_date')
+      .eq('status', 'เสร็จสิ้น')
+      .order('scheduled_date', { ascending: false })
+      .limit(20),
+    supabase
+      .from('meeting_resolutions')
+      .select('id, meeting_id, title, responsible_branch, due_date, status, progress_pct, sequence_no')
+      .neq('meeting_id', id)
+      .neq('status', 'แล้วเสร็จ')
+      .neq('status', 'ปิดประเด็น')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(30),
+    supabase
+      .from('monthly_reports')
+      .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th)')
+      .order('report_year', { ascending: false })
+      .order('report_month', { ascending: false })
+      .limit(200),
   ])
 
   const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
   const agendaSubitems = (subitemsRes.data ?? []) as MeetingAgendaSubItem[]
+  const previousMeetings: PreviousMeetingRow[] = (prevMeetingsRes.data ?? []) as PreviousMeetingRow[]
+  const openResolutions: OpenResolutionRow[] = (openResRes.data ?? []) as OpenResolutionRow[]
+
+  // Deduplicate monthly_reports by branch_id → keep latest
+  const branchMap = new Map<string, PdcaSummaryRow>()
+  for (const row of (monthlyRes.data ?? []) as any[]) {
+    if (!branchMap.has(row.branch_id)) {
+      branchMap.set(row.branch_id, {
+        branch_name: row.branches?.name_th ?? '',
+        pdca_do: row.pdca_do ?? null,
+        pdca_act: row.pdca_act ?? null,
+        report_month: row.report_month,
+        report_year: row.report_year,
+      })
+    }
+  }
+  const pdcaSummaries: PdcaSummaryRow[] = Array.from(branchMap.values())
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fadein">
@@ -86,6 +124,9 @@ export default async function MeetingAgendaPage({
         meeting={meeting}
         initialHeader={agendaHeader}
         initialSubitems={agendaSubitems}
+        previousMeetings={previousMeetings}
+        openResolutions={openResolutions}
+        pdcaSummaries={pdcaSummaries}
       />
 
     </div>

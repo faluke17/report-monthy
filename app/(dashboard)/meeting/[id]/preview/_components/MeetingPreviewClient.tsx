@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { closeMeeting, sendMeetingNotification } from '@/app/actions/meetings'
 import { cn } from '@/lib/utils'
 import type {
   Meeting,
@@ -16,7 +19,153 @@ import { NrwYoyTable } from '@/components/dashboard/NrwYoyTable'
 import { NrwYoyChart } from '@/components/dashboard/NrwYoyChart'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { StatusPill } from '@/components/shared/StatusPill'
-import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send } from 'lucide-react'
+
+function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: string; initialNotifiedAt: string | null }) {
+  const [notifiedAt, setNotifiedAt] = useState(initialNotifiedAt)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  function handleSend() {
+    startTransition(async () => {
+      const res = await sendMeetingNotification(meetingId)
+      if (!res.success) { toast.error(res.error); return }
+      if (res.data) setNotifiedAt(res.data.notified_at)
+      setShowConfirm(false)
+      toast.success('ส่งแจ้งเตือนไปยังสาขาเรียบร้อยแล้ว')
+      router.refresh()
+    })
+  }
+
+  if (notifiedAt) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-emerald-400/80 bg-emerald-500/8 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+        <Send size={11} />
+        ส่งแจ้งเตือนแล้ว ·{' '}
+        {new Date(notifiedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setShowConfirm(true)}
+        className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/30 hover:border-cyan-500/60 bg-cyan-500/10 transition-all"
+      >
+        <Send size={13} />
+        ส่งแจ้งเตือนสาขา
+      </button>
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-white/15">
+            <div className="flex items-start gap-3">
+              <Send size={20} className="text-cyan-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-white">ยืนยันส่งแจ้งเตือน?</p>
+                <p className="text-xs text-white/55 leading-relaxed">
+                  สาขาจะเห็นการประชุมนี้ในหน้า <strong className="text-white/80">การแจ้งเตือน</strong> ทันที<br />
+                  และสามารถกดรับทราบได้
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="text-sm text-white/40 hover:text-white/70 px-4 py-2 rounded-lg border border-white/10 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleSend}
+                className="text-sm bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                {isPending ? 'กำลังส่ง...' : 'ยืนยัน ส่งแจ้งเตือน'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function CloseMeetingButton({ meetingId }: { meetingId: string }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  function handleClose() {
+    startTransition(async () => {
+      const res = await closeMeeting(meetingId)
+      if (res.success) {
+        const n = res.data?.pendingCount ?? 0
+        toast.success(
+          n > 0
+            ? `ปิดการประชุมเรียบร้อย · มีมติค้างอยู่ ${n} รายการ จะ carry-over ไปประชุมครั้งถัดไป`
+            : 'ปิดการประชุมเรียบร้อย ไม่มีมติค้างอยู่'
+        )
+        setShowConfirm(false)
+        router.push('/meeting')
+      } else {
+        toast.error(res.error)
+      }
+    })
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setShowConfirm(true)}
+        className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/20 hover:border-emerald-500/40 transition-all"
+      >
+        <CheckCircle2 size={13} />
+        ปิดการประชุม
+      </button>
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-white/15">
+            <div className="flex items-start gap-3">
+              <XCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-white">ยืนยันปิดการประชุม?</p>
+                <p className="text-xs text-white/55 leading-relaxed">
+                  การประชุมจะถูกเปลี่ยนสถานะเป็น <strong className="text-white/80">เสร็จสิ้น</strong><br />
+                  มติ/ข้อสั่งการที่ยังค้างอยู่จะถูก carry-over ไปยังการประชุมครั้งถัดไปโดยอัตโนมัติ
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="text-sm text-white/40 hover:text-white/70 px-4 py-2 rounded-lg border border-white/10 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleClose}
+                className="text-sm bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-[#061327] font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                {isPending ? 'กำลังปิด...' : 'ยืนยัน ปิดการประชุม'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 const BRANCH_ORDER = [
   'นครสวรรค์', 'ท่าตะโก', 'ลาดยาว', 'พยุหะคีรี',
@@ -359,11 +508,17 @@ export function MeetingPreviewClient({
             <StatusPill status={meeting.status} />
             <Link
               href={`/meeting/${meeting.id}/agenda`}
-              className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/20 hover:border-cyan-500/40 transition-all"
+              className="text-sm text-white/50 hover:text-white/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/25 transition-all"
             >
               <FileText size={13} />
               แก้ไขวาระ
             </Link>
+            {meeting.status !== 'เสร็จสิ้น' && meeting.status !== 'ยกเลิก' && (
+              <SendNotificationButton meetingId={meeting.id} initialNotifiedAt={meeting.notified_at} />
+            )}
+            {meeting.status !== 'เสร็จสิ้น' && meeting.status !== 'ยกเลิก' && (
+              <CloseMeetingButton meetingId={meeting.id} />
+            )}
           </div>
         </div>
         <div className="mt-4 pt-3 border-t border-white/8">

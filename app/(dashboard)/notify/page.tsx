@@ -16,12 +16,13 @@ export default async function NotifyPage() {
 
   const branchCostcenter = session?.costcenter ?? null
 
-  // Upcoming meetings
+  // Upcoming meetings — only those where admin has sent notification
   const { data } = await supabase
     .from('meetings')
     .select('*')
     .eq('status', 'กำหนดแล้ว')
     .gte('scheduled_date', today)
+    .not('notified_at', 'is', null)
     .order('scheduled_date', { ascending: true })
 
   const meetings = (data ?? []) as Meeting[]

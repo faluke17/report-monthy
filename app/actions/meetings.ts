@@ -46,6 +46,65 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
   return { success: true, data: created?.id }
 }
 
+export async function sendMeetingNotification(meetingId: string): Promise<ActionResult<{ notified_at: string }>> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+
+  const { error } = await supabase
+    .from('meetings')
+    .update({ notified_at: now, updated_at: now })
+    .eq('id', meetingId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/notify')
+  revalidatePath('/meeting')
+  revalidatePath('/dashboard')
+  return { success: true, data: { notified_at: now } }
+}
+
+export async function closeMeeting(meetingId: string): Promise<ActionResult<{ pendingCount: number }>> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+
+  const { count } = await supabase
+    .from('meeting_resolutions')
+    .select('*', { count: 'exact', head: true })
+    .eq('meeting_id', meetingId)
+    .neq('status', 'แล้วเสร็จ')
+    .neq('status', 'ปิดประเด็น')
+
+  const { error } = await supabase
+    .from('meetings')
+    .update({ status: 'เสร็จสิ้น', updated_at: new Date().toISOString() })
+    .eq('id', meetingId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/meeting')
+  revalidatePath('/dashboard')
+  return { success: true, data: { pendingCount: count ?? 0 } }
+}
+
+export async function deleteMeeting(meetingId: string): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('meetings').delete().eq('id', meetingId)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/meeting')
+  revalidatePath('/notify')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
 export async function acknowledgeMeeting(meetingId: string): Promise<ActionResult> {
   const session = await getPwaSession()
   if (!session || !session.branch_name) {

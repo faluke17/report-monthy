@@ -154,6 +154,7 @@ export interface Meeting {
   prep_required: string | null
   notification_message: string | null
   status: 'กำหนดแล้ว' | 'เสร็จสิ้น' | 'เลื่อน' | 'ยกเลิก'
+  notified_at: string | null
   created_by: string | null
   created_at: string
   updated_at: string
