@@ -20,7 +20,7 @@ export default async function KmNewPage() {
 
   const branches = sortByPwaBranches((branchData ?? []) as Branch[])
   const matchedBranch = branches.find((b) => b.name_th === session?.branch_name)
-  const isRegionAdmin = !session?.branch_name
+  const isRegionAdmin = !session?.costcenter
 
   return (
     <div className="space-y-5 max-w-3xl">

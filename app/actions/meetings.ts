@@ -107,7 +107,7 @@ export async function deleteMeeting(meetingId: string): Promise<ActionResult> {
 
 export async function acknowledgeMeeting(meetingId: string): Promise<ActionResult> {
   const session = await getPwaSession()
-  if (!session || !session.branch_name) {
+  if (!session || !session.costcenter) {
     return { success: false, error: 'เฉพาะผู้ใช้สาขาเท่านั้น' }
   }
   const supabase = await createClient()

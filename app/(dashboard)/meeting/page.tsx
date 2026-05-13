@@ -10,7 +10,7 @@ export default async function MeetingPage() {
   const session = await getPwaSession()
   const now = new Date()
   const today = now.toISOString().split('T')[0]
-  const isAdmin = !session?.branch_name
+  const isAdmin = !session?.costcenter
 
   // All meetings (newest first)
   const { data: allMeetingsRaw } = await supabase

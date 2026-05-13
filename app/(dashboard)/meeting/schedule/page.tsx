@@ -22,7 +22,7 @@ export default async function MeetingSchedulePage() {
   const supabase = await createClient()
   const session = await getPwaSession()
   const today = new Date().toISOString().split('T')[0]
-  const isAdmin = !session?.branch_name
+  const isAdmin = !session?.costcenter
 
   const { data: upcoming } = await supabase
     .from('meetings')
@@ -163,7 +163,7 @@ export default async function MeetingSchedulePage() {
               {isAdmin ? (
                 <MeetingAckSummary acks={acks} allBranches={ALL_BRANCH_NAMES} />
               ) : (
-                session?.branch_name && (
+                session?.costcenter && (
                   isAcked ? (
                     <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-lg">
                       <CheckCircle size={12} />

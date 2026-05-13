@@ -29,7 +29,7 @@ export default async function NotifyPage() {
   const meetings = (data ?? []) as Meeting[]
 
   let myAcks: MeetingAcknowledgment[] = []
-  if (session?.branch_name && meetings.length > 0) {
+  if (session?.costcenter && meetings.length > 0) {
     const meetingIds = meetings.map((m) => m.id)
     const { data: ackData } = await supabase
       .from('meeting_acknowledgments')
@@ -181,7 +181,7 @@ export default async function NotifyPage() {
                     )}
                   </div>
 
-                  {session?.branch_name && (
+                  {session?.costcenter && (
                     <div className="shrink-0 mt-0.5">
                       {isAcked ? (
                         <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1.5 rounded-lg">

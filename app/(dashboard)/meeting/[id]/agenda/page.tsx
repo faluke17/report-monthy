@@ -17,7 +17,7 @@ export default async function MeetingAgendaPage({
 }) {
   const { id } = await params
   const session = await getPwaSession()
-  if (session?.branch_name) notFound()
+  if (session?.costcenter) notFound()
 
   const supabase = await createClient()
 

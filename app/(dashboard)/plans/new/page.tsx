@@ -13,7 +13,7 @@ export default async function NewPlanPage() {
   const matchedBranch = branches.find((b) => b.name_th === session?.branch_name)
   const profile = {
     branch_id: matchedBranch?.id ?? null,
-    role: session?.branch_name ? 'branch_staff' : 'region_admin',
+    role: session?.costcenter ? 'branch_staff' : 'region_admin',
   } as UserProfile
 
   return (
