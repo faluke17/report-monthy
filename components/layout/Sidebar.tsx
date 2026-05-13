@@ -66,28 +66,37 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col h-screen sticky top-0 border-r border-white/10 transition-all duration-300 overflow-y-auto',
+        'hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 overflow-y-auto',
         sidebarCollapsed ? 'w-16' : 'w-60'
       )}
       style={{
-        background: 'linear-gradient(180deg,#09224c 0%,#061a38 52%,#041126 100%)',
+        background: 'linear-gradient(180deg,#050912 0%,#03060d 100%)',
+        borderRight: '1px solid rgba(0,229,255,.12)',
+        boxShadow: '4px 0 24px rgba(0,229,255,.04)',
       }}
     >
       {/* Brand */}
-      <div className="px-4 pt-5 pb-4 border-b border-white/10 shrink-0">
+      <div className="px-4 pt-5 pb-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,229,255,.10)' }}>
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/20 flex items-center justify-center shrink-0">
-            <Droplets size={16} className="text-cyan-400" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-mono font-bold text-sm"
+            style={{
+              background: 'linear-gradient(135deg,rgba(0,229,255,.15),rgba(139,92,246,.18))',
+              border: '1px solid rgba(0,229,255,.4)',
+              color: '#00e5ff',
+              textShadow: '0 0 8px rgba(0,229,255,.6)',
+              boxShadow: '0 0 14px -4px rgba(0,229,255,.4)',
+            }}>
+            ◢
           </div>
           {!sidebarCollapsed && (
             <div>
-              <p className="text-sm font-bold text-white leading-tight">NRW Tracker</p>
-              <p className="text-[10px] text-white/40">กปภ.เขต 10</p>
+              <p className="text-sm font-bold leading-tight" style={{ color: '#dceaff' }}>WSC-R10</p>
+              <p className="text-[10px]" style={{ color: 'rgba(0,229,255,.5)', fontFamily: 'var(--font-mono)', letterSpacing: '.12em' }}>NRW TRACKER</p>
             </div>
           )}
         </div>
         {!sidebarCollapsed && (
-          <div className="brand-badge">PWA10 · NRW V1.0</div>
+          <div className="brand-badge">PWA10 · NRW</div>
         )}
       </div>
 
@@ -216,8 +225,8 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
                   className={cn(
                     'relative flex items-center gap-2.5 mx-2 px-3 py-2 rounded-xl mb-0.5 transition-all text-[13px]',
                     isActive
-                      ? 'bg-[rgba(216,180,90,.14)] text-[#ffe4a3] border border-[rgba(216,180,90,.3)]'
-                      : 'text-white/45 hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-[rgba(0,229,255,.08)] text-[#00e5ff] border border-[rgba(0,229,255,.28)]'
+                      : 'text-white/45 hover:text-white/80 hover:bg-white/5 border border-transparent'
                   )}
                 >
                   <Icon size={17} className="shrink-0" />

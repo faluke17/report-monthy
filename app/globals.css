@@ -2,24 +2,24 @@
 
 @layer base {
   :root {
-    --bg:      #061327;
-    --bg2:     #0b1d3a;
-    --bg3:     #102a52;
-    --surface: rgba(13, 21, 37, 0.85);
-    --line:    rgba(177,203,255,.16);
-    --line2:   rgba(218,229,255,.24);
+    --bg:      #03060d;
+    --bg2:     #07091a;
+    --bg3:     #0b1124;
+    --surface: rgba(8,13,26,.82);
+    --line:    rgba(0,229,255,.14);
+    --line2:   rgba(0,229,255,.26);
 
-    --text:  #f3f7ff;
-    --muted: #a9bbd8;
-    --dim:   #6f84aa;
+    --text:  #dceaff;
+    --muted: #7892b4;
+    --dim:   #3d4d68;
 
-    --cyan:   #7dd3fc;
-    --teal:   #2dd4bf;
-    --amber:  #f6c453;
-    --red:    #fb7185;
-    --green:  #4ade80;
-    --purple: #a5b4fc;
-    --blue:   #60a5fa;
+    --cyan:   #00e5ff;
+    --teal:   #21f3a0;
+    --amber:  #ffb547;
+    --red:    #ff3860;
+    --green:  #21f3a0;
+    --purple: #8b5cf6;
+    --blue:   #0080ff;
     --orange: #fb923c;
     --gold:   #d8b45a;
 
@@ -27,25 +27,25 @@
     --font-mono: 'IBM Plex Mono', monospace;
 
     /* shadcn/ui tokens */
-    --background: 222 71% 9%;
-    --foreground:  215 100% 97%;
-    --card:        220 60% 10%;
-    --card-foreground: 215 100% 97%;
-    --popover:     220 60% 10%;
-    --popover-foreground: 215 100% 97%;
-    --primary:     199 89% 74%;
-    --primary-foreground: 222 71% 9%;
-    --secondary:   220 40% 18%;
-    --secondary-foreground: 215 100% 97%;
-    --muted:       220 40% 18%;
-    --muted-foreground: 215 30% 68%;
-    --accent:      220 40% 22%;
-    --accent-foreground: 215 100% 97%;
-    --destructive: 343 75% 73%;
-    --destructive-foreground: 222 71% 9%;
-    --border:      220 40% 20%;
-    --input:       220 40% 18%;
-    --ring:        199 89% 74%;
+    --background: 222 80% 3%;
+    --foreground:  215 80% 93%;
+    --card:        222 75% 6%;
+    --card-foreground: 215 80% 93%;
+    --popover:     222 75% 6%;
+    --popover-foreground: 215 80% 93%;
+    --primary:     189 100% 50%;
+    --primary-foreground: 222 80% 3%;
+    --secondary:   220 50% 12%;
+    --secondary-foreground: 215 80% 93%;
+    --muted:       220 50% 12%;
+    --muted-foreground: 215 25% 55%;
+    --accent:      220 50% 15%;
+    --accent-foreground: 215 80% 93%;
+    --destructive: 343 100% 60%;
+    --destructive-foreground: 222 80% 3%;
+    --border:      210 60% 14%;
+    --input:       220 50% 12%;
+    --ring:        189 100% 50%;
     --radius: 0.75rem;
   }
 }
@@ -55,12 +55,13 @@
 
   body {
     font-family: 'IBM Plex Sans Thai', sans-serif;
-    color: #f3f7ff;
+    color: #dceaff;
     -webkit-font-smoothing: antialiased;
     background:
-      radial-gradient(circle at 12% -8%, rgba(125,211,252,.15), transparent 34%),
-      radial-gradient(circle at 90% 0%,  rgba(216,180,90,.10), transparent 28%),
-      linear-gradient(135deg, #061327 0%, #081d3e 54%, #041126 100%);
+      radial-gradient(1400px 900px at 18% 25%, rgba(0,128,255,.13), transparent 55%),
+      radial-gradient(1000px 800px at 88% 80%, rgba(139,92,246,.10), transparent 55%),
+      radial-gradient(700px 500px at 68% 8%,  rgba(0,229,255,.06), transparent 55%),
+      linear-gradient(180deg, #03060d 0%, #050912 100%);
     min-height: 100vh;
   }
 
@@ -91,28 +92,31 @@
 @layer utilities {
   /* ── Glass cards ── */
   .glass-card {
-    background: rgba(13,21,37,.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(177,203,255,.16);
-    border-radius: 18px;
-    box-shadow: 0 18px 55px rgba(0,0,0,.28);
+    background: rgba(8,13,26,.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0,229,255,.16);
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 1px rgba(0,229,255,.04) inset,
+      0 20px 60px rgba(0,0,0,.38),
+      0 0 40px -20px rgba(0,229,255,.18);
   }
   .glass-card-sm {
-    background: rgba(13,21,37,.85);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(177,203,255,.12);
+    background: rgba(8,13,26,.78);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,229,255,.12);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    box-shadow: 0 8px 28px rgba(0,0,0,.28), 0 0 20px -10px rgba(0,229,255,.12);
   }
 
   /* ── Accent top-border ── */
-  .accent-bar-cyan   { border-top: 3px solid #7dd3fc; }
-  .accent-bar-teal   { border-top: 3px solid #2dd4bf; }
-  .accent-bar-amber  { border-top: 3px solid #f6c453; }
-  .accent-bar-red    { border-top: 3px solid #fb7185; }
-  .accent-bar-green  { border-top: 3px solid #4ade80; }
-  .accent-bar-purple { border-top: 3px solid #a5b4fc; }
+  .accent-bar-cyan   { border-top: 2px solid #00e5ff; box-shadow: 0 -1px 12px -2px rgba(0,229,255,.5); }
+  .accent-bar-teal   { border-top: 2px solid #21f3a0; box-shadow: 0 -1px 12px -2px rgba(33,243,160,.4); }
+  .accent-bar-amber  { border-top: 2px solid #ffb547; box-shadow: 0 -1px 12px -2px rgba(255,181,71,.4); }
+  .accent-bar-red    { border-top: 2px solid #ff3860; box-shadow: 0 -1px 12px -2px rgba(255,56,96,.4); }
+  .accent-bar-green  { border-top: 2px solid #21f3a0; box-shadow: 0 -1px 12px -2px rgba(33,243,160,.4); }
+  .accent-bar-purple { border-top: 2px solid #8b5cf6; box-shadow: 0 -1px 12px -2px rgba(139,92,246,.4); }
 
   /* ── Mono numbers ── */
   .num { font-family: 'IBM Plex Mono', monospace; }
@@ -124,89 +128,94 @@
     animation: pulse-anim 1.4s ease-in-out infinite;
   }
   @keyframes pulse-anim {
-    0%,100% { opacity:1; }
-    50%      { opacity:.3; }
+    0%,100% { opacity:1; box-shadow: 0 0 6px currentColor; }
+    50%      { opacity:.3; box-shadow: none; }
   }
 
   /* ── Traffic light cells ── */
-  .tl-green  { background: rgba(74,222,128,.1);  border-color: rgba(74,222,128,.3);  }
-  .tl-yellow { background: rgba(246,196,83,.1);  border-color: rgba(246,196,83,.3);  }
-  .tl-red    { background: rgba(251,113,133,.1); border-color: rgba(251,113,133,.3); }
-  .tl-grey   { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1); }
+  .tl-green  { background: rgba(33,243,160,.08);  border-color: rgba(33,243,160,.28);  }
+  .tl-yellow { background: rgba(255,181,71,.08);  border-color: rgba(255,181,71,.28);  }
+  .tl-red    { background: rgba(255,56,96,.08);   border-color: rgba(255,56,96,.28);   }
+  .tl-grey   { background: rgba(255,255,255,.03); border-color: rgba(0,229,255,.1);    }
 
   /* ── Pills ── */
-  .pill-good   { background:rgba(74,222,128,.12);  color:#4ade80; border:1px solid rgba(74,222,128,.28);  }
-  .pill-warn   { background:rgba(246,196,83,.12);  color:#f6c453; border:1px solid rgba(246,196,83,.28);  }
-  .pill-bad    { background:rgba(251,113,133,.12); color:#fb7185; border:1px solid rgba(251,113,133,.28); }
-  .pill-info   { background:rgba(125,211,252,.1);  color:#7dd3fc; border:1px solid rgba(125,211,252,.25); }
-  .pill-purple { background:rgba(165,180,252,.1);  color:#a5b4fc; border:1px solid rgba(165,180,252,.25); }
-  .pill-gray   { background:rgba(255,255,255,.06); color:#a9bbd8; border:1px solid rgba(177,203,255,.16); }
+  .pill-good   { background:rgba(33,243,160,.10);  color:#21f3a0; border:1px solid rgba(33,243,160,.28);  }
+  .pill-warn   { background:rgba(255,181,71,.10);  color:#ffb547; border:1px solid rgba(255,181,71,.28);  }
+  .pill-bad    { background:rgba(255,56,96,.10);   color:#ff3860; border:1px solid rgba(255,56,96,.28);   }
+  .pill-info   { background:rgba(0,229,255,.08);   color:#00e5ff; border:1px solid rgba(0,229,255,.24);   }
+  .pill-purple { background:rgba(139,92,246,.10);  color:#8b5cf6; border:1px solid rgba(139,92,246,.28);  }
+  .pill-gray   { background:rgba(255,255,255,.05); color:#7892b4; border:1px solid rgba(0,229,255,.12);   }
 
-  /* ── Brand badge (gold) ── */
+  /* ── Brand badge ── */
   .brand-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(216,180,90,.12);
-    border: 1px solid rgba(216,180,90,.34);
+    background: rgba(0,229,255,.08);
+    border: 1px solid rgba(0,229,255,.28);
     border-radius: 99px;
     padding: 3px 10px;
-    font-size: 10px; font-weight: 700; letter-spacing: .08em;
-    color: #d8b45a;
+    font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    color: #00e5ff; font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(0,229,255,.5);
   }
 
   /* ── Nav badge ── */
-  .nav-badge-red  { background:#fb7185; color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; }
-  .nav-badge-new  { background:rgba(251,113,133,.85); color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; }
-  .nav-badge-info { background:rgba(125,211,252,.18); color:#7dd3fc; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; }
+  .nav-badge-red  { background:rgba(255,56,96,.25);  color:#ff3860; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; border:1px solid rgba(255,56,96,.35); }
+  .nav-badge-new  { background:rgba(0,229,255,.15);  color:#00e5ff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; border:1px solid rgba(0,229,255,.3); }
+  .nav-badge-info { background:rgba(0,229,255,.10);  color:#00e5ff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; border:1px solid rgba(0,229,255,.22); }
 
   /* ── Page kicker ── */
   .page-kicker {
-    font-size: 10px; font-weight: 700; letter-spacing: .1em;
-    text-transform: uppercase; color: #7dd3fc;
+    font-size: 10px; font-weight: 700; letter-spacing: .28em;
+    text-transform: uppercase; color: #00e5ff;
+    font-family: 'IBM Plex Mono', monospace;
+    text-shadow: 0 0 10px rgba(0,229,255,.5);
   }
 
   /* ── Scope chip ── */
   .scope-chip {
     display: inline-flex; align-items: center; gap: 5px;
-    border: 1px solid rgba(125,211,252,.24);
-    background: rgba(125,211,252,.08);
-    color: #7dd3fc; border-radius: 99px;
-    padding: 3px 10px; font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(0,229,255,.24);
+    background: rgba(0,229,255,.06);
+    color: #00e5ff; border-radius: 99px;
+    padding: 3px 10px; font-size: 11px; font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em;
   }
 
   /* ── Alert boxes ── */
   .alert-warn {
-    border: 1px solid rgba(246,196,83,.25);
-    background: rgba(246,196,83,.07);
-    border-radius: 12px; padding: 10px 14px;
-    font-size: 12px; color: #f6c453;
+    border: 1px solid rgba(255,181,71,.28);
+    background: rgba(255,181,71,.06);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; color: #ffb547;
     display: flex; gap: 8px; align-items: flex-start;
   }
   .alert-danger {
-    border: 1px solid rgba(251,113,133,.25);
-    background: rgba(251,113,133,.07);
-    border-radius: 12px; padding: 10px 14px;
-    font-size: 12px; color: #fb7185;
+    border: 1px solid rgba(255,56,96,.28);
+    background: rgba(255,56,96,.06);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; color: #ff3860;
     display: flex; gap: 8px; align-items: flex-start;
   }
   .alert-info {
-    border: 1px solid rgba(125,211,252,.2);
-    background: rgba(125,211,252,.06);
-    border-radius: 12px; padding: 10px 14px;
-    font-size: 12px; color: #7dd3fc;
+    border: 1px solid rgba(0,229,255,.20);
+    background: rgba(0,229,255,.05);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; color: #00e5ff;
     display: flex; gap: 8px; align-items: flex-start;
   }
 
   /* ── Progress bar ── */
   .prog-bg {
-    flex: 1; height: 5px;
-    background: rgba(255,255,255,.07);
+    flex: 1; height: 4px;
+    background: rgba(0,229,255,.08);
     border-radius: 99px; overflow: hidden;
   }
-  .prog-fill { height: 100%; border-radius: 99px; transition: width .3s; }
-  .prog-good   { background: #4ade80; }
-  .prog-warn   { background: #f6c453; }
-  .prog-bad    { background: #fb7185; }
-  .prog-cyan   { background: #7dd3fc; }
+  .prog-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .prog-good   { background: linear-gradient(90deg, #21f3a099, #21f3a0); box-shadow: 0 0 8px #21f3a066; }
+  .prog-warn   { background: linear-gradient(90deg, #ffb54799, #ffb547); box-shadow: 0 0 8px #ffb54766; }
+  .prog-bad    { background: linear-gradient(90deg, #ff386099, #ff3860); box-shadow: 0 0 8px #ff386066; }
+  .prog-cyan   { background: linear-gradient(90deg, #00e5ff99, #00e5ff); box-shadow: 0 0 8px #00e5ff66; }
 
   /* ── Fade-in animation ── */
   @keyframes fadein {

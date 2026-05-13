@@ -47,7 +47,14 @@ export function Topbar({ session }: TopbarProps) {
   const showSummaryBtn = pathname !== '/summary'
 
   return (
-    <header className="h-16 border-b border-white/10 bg-[#0b1d3a]/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
+    <header
+      className="h-16 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10 backdrop-blur-xl"
+      style={{
+        background: 'rgba(3,6,13,.92)',
+        borderBottom: '1px solid rgba(0,229,255,.18)',
+        boxShadow: '0 1px 24px -4px rgba(0,229,255,.12)',
+      }}
+    >
       <div className="flex flex-col gap-0.5">
         <p className="page-kicker">{meta.kicker}</p>
         <p className="text-[17px] font-bold text-white leading-tight">{meta.title}</p>
@@ -87,7 +94,8 @@ export function Topbar({ session }: TopbarProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="bg-[#0b1d3a] border-white/10 text-white min-w-[210px]"
+            className="bg-[#050912] border-[rgba(0,229,255,.18)] text-white min-w-[210px]"
+            style={{ boxShadow: '0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(0,229,255,.06) inset' }}
           >
             <DropdownMenuLabel className="pb-2">
               <p className="text-sm font-semibold text-white">{fullName}</p>
@@ -99,7 +107,7 @@ export function Topbar({ session }: TopbarProps) {
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/10" />
-            <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-white/10 focus:bg-white/10 text-sm">
+            <DropdownMenuItem className="gap-2 cursor-pointer hover:bg-[rgba(0,229,255,.07)] focus:bg-[rgba(0,229,255,.07)] text-sm">
               <User size={14} />
               โปรไฟล์
             </DropdownMenuItem>
