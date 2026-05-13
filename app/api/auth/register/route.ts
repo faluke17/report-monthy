@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (createError.message.includes('already been registered') || createError.message.includes('already exists')) {
       return NextResponse.json({ error: 'รหัสพนักงานนี้ลงทะเบียนแล้ว' }, { status: 409 })
     }
-    return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการสร้างบัญชี' }, { status: 500 })
+    return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการสร้างบัญชี', detail: createError.message }, { status: 500 })
   }
 
   // Update profile with employee details
