@@ -12,7 +12,7 @@ export default async function ActionPage() {
     createClient(),
   ])
 
-  const isAdmin = !session?.branch_name
+  const isAdmin = !session?.costcenter
 
   const { data: meetings } = await supabase
     .from('meetings')
@@ -37,7 +37,7 @@ export default async function ActionPage() {
         initialSummaries={summaries}
         initialKpis={kpis}
         isAdmin={isAdmin}
-        branchCostcenter={session?.costcenter ?? null}
+        branchCostcenter={session?.costcenter || null}
         branchName={session?.branch_name ?? null}
         meetings={meetingsList}
         defaultMeetingId={meetingsList[0]?.id ?? null}

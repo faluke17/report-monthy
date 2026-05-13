@@ -14,7 +14,8 @@ export default async function NotifyPage() {
   const session = await getPwaSession()
   const today = new Date().toISOString().split('T')[0]
 
-  const branchCostcenter = session?.costcenter ?? null
+  const branchCostcenter = session?.costcenter || null
+  const isRegion = !branchCostcenter
 
   // Upcoming meetings — only those where admin has sent notification
   const { data } = await supabase
@@ -40,22 +41,23 @@ export default async function NotifyPage() {
 
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
-  // Resolution notifications for this branch
+  // Resolution notifications — all branches for region users, own branch for branch users
   let resolutionNotifs: ResolutionNotification[] = []
-  if (branchCostcenter) {
-    const { data: notifData } = await supabase
+  {
+    let q = supabase
       .from('resolution_notifications')
       .select('*')
-      .eq('branch_costcenter', branchCostcenter)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(50)
+    if (!isRegion) q = q.eq('branch_costcenter', branchCostcenter)
+    const { data: notifData } = await q
     resolutionNotifs = (notifData ?? []) as ResolutionNotification[]
   }
 
   const unreadCount = resolutionNotifs.filter(n => !n.is_read).length
-  const branchLabel = branchCostcenter
-    ? (PWA_BRANCHES.find(b => b.costcenter === branchCostcenter)?.name_th ?? branchCostcenter)
-    : null
+  const branchLabel = isRegion
+    ? 'ทุกสาขา'
+    : (PWA_BRANCHES.find(b => b.costcenter === branchCostcenter)?.name_th ?? branchCostcenter)
 
   return (
     <div className="space-y-6 max-w-2xl animate-fadein">
@@ -64,8 +66,8 @@ export default async function NotifyPage() {
         <p className="text-sm text-white/40 mt-0.5">ข้อมูลการประชุมและข้อสั่งการ</p>
       </div>
 
-      {/* Resolution notifications (branch only) */}
-      {branchCostcenter && (
+      {/* Resolution notifications */}
+      {(branchCostcenter || isRegion) && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ข้อสั่งการสำหรับสาขา</h2>
@@ -78,7 +80,7 @@ export default async function NotifyPage() {
 
           {resolutionNotifs.length === 0 ? (
             <div className="glass-card-sm p-6 text-center text-white/30 text-sm">
-              ยังไม่มีข้อสั่งการสำหรับ{branchLabel ? `สาขา${branchLabel}` : 'สาขาของคุณ'}
+              ยังไม่มีข้อสั่งการสำหรับ{isRegion ? 'ทุกสาขา' : `สาขา${branchLabel}`}
             </div>
           ) : (
             <div className="space-y-2">

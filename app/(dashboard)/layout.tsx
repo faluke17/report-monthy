@@ -16,7 +16,8 @@ export default async function DashboardLayout({
   const supabase = await createClient()
   const now = new Date()
 
-  const branchCostcenter = session?.costcenter ?? null
+  const branchCostcenter = session?.costcenter || null
+  const isRegion = !branchCostcenter
 
   const [branchesRes, submittedRes, obstaclesRes, notifRes] = await Promise.all([
     supabase.from('branches').select('id', { count: 'exact', head: true }).eq('is_active', true),
@@ -24,10 +25,10 @@ export default async function DashboardLayout({
       .eq('report_year', now.getFullYear()).eq('report_month', now.getMonth() + 1),
     supabase.from('obstacles').select('id', { count: 'exact', head: true })
       .not('status', 'eq', 'ปิดประเด็น'),
-    branchCostcenter
-      ? supabase.from('resolution_notifications').select('id', { count: 'exact', head: true })
-          .eq('branch_costcenter', branchCostcenter).eq('is_read', false)
-      : Promise.resolve({ count: 0 }),
+    isRegion
+      ? supabase.from('resolution_notifications').select('id', { count: 'exact', head: true }).eq('is_read', false)
+      : supabase.from('resolution_notifications').select('id', { count: 'exact', head: true })
+          .eq('branch_costcenter', branchCostcenter).eq('is_read', false),
   ])
 
   const total     = branchesRes.count ?? 26
