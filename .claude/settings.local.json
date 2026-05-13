@@ -58,7 +58,8 @@
       "PowerShell(wrangler secret *)",
       "PowerShell(vercel env *)",
       "PowerShell(Invoke-RestMethod -Uri \"https://pwa-proxy.taweechai-chairat.workers.dev\" -Method POST -ContentType \"application/json\" -Body '{\"username\":\"test\",\"password\":\"test\"}' 2>&1)",
-      "PowerShell(Invoke-WebRequest -Uri \"https://pwa-proxy.taweechai-chairat.workers.dev\" -Method POST -ContentType \"application/json\" -Body '{\"username\":\"test\",\"password\":\"test\"}' -UseBasicParsing 2>&1 | Select-Object StatusCode, Content)"
+      "PowerShell(Invoke-WebRequest -Uri \"https://pwa-proxy.taweechai-chairat.workers.dev\" -Method POST -ContentType \"application/json\" -Body '{\"username\":\"test\",\"password\":\"test\"}' -UseBasicParsing 2>&1 | Select-Object StatusCode, Content)",
+      "WebFetch(domain:claude.ai)"
     ]
   }
 }
