@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
 import { getBranchName } from '@/lib/utils/pwa-branches'
 
+export const runtime = 'edge'
+
 const PWA_API = 'https://intranet.pwa.co.th/login/webservice_reg10.php'
 
 export async function POST(req: NextRequest) {
@@ -22,8 +24,9 @@ export async function POST(req: NextRequest) {
       },
     })
     raw = await res.text()
-  } catch {
-    return NextResponse.json({ error: 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้' }, { status: 502 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้', detail: msg }, { status: 502 })
   }
 
   // PWA API wraps JSON with 1 leading char and 2 trailing chars
