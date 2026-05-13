@@ -2,18 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
 
+const bom = /^﻿/
+const clean = (s: string) => s.replace(bom, '').trim()
+
 function createAnonClient() {
   return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    clean(process.env.NEXT_PUBLIC_SUPABASE_URL!),
+    clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
     { auth: { persistSession: false } }
   )
 }
 
 function createAdminClient() {
   return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    clean(process.env.NEXT_PUBLIC_SUPABASE_URL!),
+    clean(process.env.SUPABASE_SERVICE_ROLE_KEY!),
     { auth: { persistSession: false } }
   )
 }
