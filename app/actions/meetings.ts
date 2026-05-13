@@ -9,6 +9,7 @@ import { ActionResult } from '@/lib/types'
 export async function submitMeeting(formData: FormData): Promise<ActionResult<string>> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์สร้างการประชุม' }
   const supabase = await createClient()
 
   const title               = formData.get('title') as string
@@ -49,6 +50,7 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
 export async function sendMeetingNotification(meetingId: string): Promise<ActionResult<{ notified_at: string }>> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์ส่งการแจ้งเตือน' }
 
   const supabase = await createClient()
   const now = new Date().toISOString()
@@ -69,6 +71,7 @@ export async function sendMeetingNotification(meetingId: string): Promise<Action
 export async function closeMeeting(meetingId: string): Promise<ActionResult<{ pendingCount: number }>> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์ปิดการประชุม' }
 
   const supabase = await createClient()
 
@@ -94,6 +97,7 @@ export async function closeMeeting(meetingId: string): Promise<ActionResult<{ pe
 export async function deleteMeeting(meetingId: string): Promise<ActionResult> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์ลบการประชุม' }
 
   const supabase = await createClient()
   const { error } = await supabase.from('meetings').delete().eq('id', meetingId)

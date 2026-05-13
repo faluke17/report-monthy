@@ -12,6 +12,7 @@ export async function createMeetingResolution(
 ): Promise<ActionResult<MeetingResolution>> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์สร้างข้อสั่งการ' }
 
   const supabase = await createClient()
 

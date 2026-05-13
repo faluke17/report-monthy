@@ -3,13 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
-import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { ActionResult } from '@/lib/types'
-
-function isRegionSession(branchName: string) {
-  if (!branchName) return false
-  return !PWA_BRANCHES.some((b) => b.name_th === branchName)
-}
 
 export async function submitMonthlyReport(formData: FormData): Promise<ActionResult> {
   const session = await getPwaSession()
@@ -62,7 +56,7 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
 export async function deleteAreaReport(id: string): Promise<ActionResult> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
-  if (!isRegionSession(session.branch_name)) return { success: false, error: 'ไม่มีสิทธิ์ลบข้อมูล' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์ลบข้อมูล' }
 
   const supabase = await createClient()
   const { error } = await supabase.from('area_monthly_reports').delete().eq('id', id)

@@ -34,7 +34,7 @@ export default async function NewMonthlyPage() {
 
   const branches = sortByPwaBranches((branchData ?? []) as Branch[])
   const matchedBranch = branches.find((b) => b.name_th === session?.branch_name)
-  const isAdmin = !session?.branch_name || !matchedBranch
+  const isAdmin = !session?.costcenter
 
   const mmNodesByBranch: Record<string, WaterNodeOption[]> = {}
   for (const node of (mmData ?? []) as WaterNodeOption[]) {

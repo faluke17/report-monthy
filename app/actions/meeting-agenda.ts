@@ -15,6 +15,7 @@ export async function saveAgenda(
 ): Promise<ActionResult> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์บันทึกวาระ' }
 
   const supabase = await createClient()
 

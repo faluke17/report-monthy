@@ -4,13 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { generateRunningCode } from '@/lib/utils/code-gen'
-import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { ActionResult } from '@/lib/types'
-
-function isRegionSession(branchName: string) {
-  if (!branchName) return false
-  return !PWA_BRANCHES.some((b) => b.name_th === branchName)
-}
 
 export async function submitObstacle(formData: FormData): Promise<ActionResult> {
   const session = await getPwaSession()
@@ -68,7 +62,7 @@ export async function updateObstacleProgress(
 
   const supabase = await createClient()
 
-  if (!isRegionSession(session.branch_name)) {
+  if (session.costcenter) {
     const { data: obs } = await supabase
       .from('obstacles')
       .select('branches!inner(name_th)')
@@ -96,7 +90,7 @@ export async function updateObstacleProgress(
 export async function deleteObstacle(id: string): Promise<ActionResult> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
-  if (!isRegionSession(session.branch_name)) return { success: false, error: 'ไม่มีสิทธิ์ลบข้อมูล' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์ลบข้อมูล' }
 
   const supabase = await createClient()
   const { error } = await supabase.from('obstacles').delete().eq('id', id)

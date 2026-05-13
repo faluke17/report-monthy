@@ -1,6 +1,11 @@
+import { redirect } from 'next/navigation'
+import { getPwaSession } from '@/lib/pwa-auth'
 import { MeetingSetupForm } from '@/components/forms/MeetingSetupForm'
 
 export default async function MeetingSetupPage() {
+  const session = await getPwaSession()
+  if (!session || session.costcenter) redirect('/meeting')
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
