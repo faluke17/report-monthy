@@ -1,71 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
-import { getBranchName } from '@/lib/utils/pwa-branches'
 
-const PWA_PROXY = 'https://pwa-proxy.taweechai-chairat.workers.dev'
+function createAnonClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } }
+  )
+}
+
+function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+}
 
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json()
 
   if (!username || !password) {
-    return NextResponse.json({ error: 'กรุณากรอกรหัสผ่านและรหัสพนักงาน' }, { status: 400 })
+    return NextResponse.json({ error: 'กรุณากรอกรหัสพนักงานและรหัสผ่าน' }, { status: 400 })
   }
 
-  let raw: string
-  try {
-    const res = await fetch(PWA_PROXY, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-proxy-secret': (process.env.PWA_PROXY_SECRET ?? '').replace(/^﻿/, ''),
-      },
-      body: JSON.stringify({ username, password }),
-    })
-    raw = await res.text()
-    if (!res.ok) {
-      const err = JSON.parse(raw)
-      return NextResponse.json({ error: err.error ?? 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้' }, { status: 502 })
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ error: 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้', detail: msg }, { status: 502 })
+  const anonClient = createAnonClient()
+  const { data: authData, error: authError } = await anonClient.auth.signInWithPassword({
+    email: `${username}@pwa.local`,
+    password,
+  })
+
+  if (authError) {
+    return NextResponse.json({ error: 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียน' }, { status: 401 })
   }
 
-  // PWA API wraps JSON with 1 leading char and 2 trailing chars
-  const jsonStr = raw.slice(1, -2)
-  let data: Record<string, string>
-  try {
-    data = JSON.parse(jsonStr)
-  } catch {
-    return NextResponse.json({ error: 'รูปแบบข้อมูลจาก กปภ. ผิดพลาด' }, { status: 502 })
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('users_profile')
+    .select('*, branches(name_th)')
+    .eq('id', authData.user.id)
+    .single()
+
+  if (!profile) {
+    return NextResponse.json({ error: 'ไม่พบข้อมูลพนักงาน' }, { status: 404 })
   }
 
-  if (data['check'] !== 'Pass') {
-    return NextResponse.json({ error: 'รหัสผ่านหรือรหัสพนักงานไม่ถูกต้อง' }, { status: 401 })
-  }
-
-  const costcenter = data['costcenter'] ?? ''
-  // PWA API: ba field = 4-digit branch costcenter, wwcode = 7-digit ba code
-  const ba = data['ba'] ?? ''
-  const wwcode = data['wwcode'] ?? ''
-
+  const branchObj = profile.branches as { name_th: string } | null
   const session: PwaSession = {
-    username: data['user'] ?? username,
-    name: data['Name'] ?? '',
-    surname: data['Surname'] ?? '',
-    prefix_name: data['Gender'] ?? '',
-    costcenter,
-    ba,
-    part: data['part'] ?? '',
-    area: data['area'] ?? '',
-    wwcode,
-    div_name: data['div_name'] ?? '',
-    job_name: data['Job_name'] ?? '',
-    dep_name: data['dep_name'] ?? '',
-    org_name: data['org_name'] ?? '',
-    position_name: data['Position'] ?? '',
-    level: data['MyLevel'] ?? '',
-    branch_name: getBranchName(ba || costcenter, wwcode),
+    username: profile.employee_id ?? username,
+    name: profile.name_first ?? '',
+    surname: profile.name_last ?? '',
+    prefix_name: '',
+    costcenter: profile.costcenter ?? '',
+    ba: profile.ba ?? '',
+    part: '',
+    area: '',
+    wwcode: profile.wwcode ?? '',
+    div_name: '',
+    job_name: '',
+    dep_name: '',
+    org_name: 'กปภ.เขต 10',
+    position_name: '',
+    level: '',
+    branch_name: profile.branch_name_th ?? branchObj?.name_th ?? '',
   }
 
   const response = NextResponse.json({ ok: true, username: session.username, branch_name: session.branch_name })
@@ -73,7 +71,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 8, // 8 hours
+    maxAge: 60 * 60 * 8,
   })
   return response
 }
