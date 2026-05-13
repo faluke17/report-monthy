@@ -49,7 +49,12 @@
       "Bash(curl -s --connect-timeout 5 \"https://intranet.pwa.co.th/login/webservice_reg10.php\")",
       "Bash(curl -sv --connect-timeout 5 \"https://intranet.pwa.co.th/login/webservice_reg10.php\")",
       "Bash(curl -sv \"https://intranet.pwa.co.th/\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "PowerShell(wrangler *)",
+      "PowerShell(npm install *)",
+      "Bash(mkdir -p \"E:\\\\report monthy\\\\pwa-proxy-worker\")",
+      "Bash(echo '{}')",
+      "PowerShell(New-Item *)"
     ]
   }
 }
