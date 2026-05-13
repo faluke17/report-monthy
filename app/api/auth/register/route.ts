@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Look up branch UUID
+  // Look up branch UUID by Thai name (branches table uses name_th not costcenter)
   const { data: branchRow } = await admin
     .from('branches')
     .select('id')
-    .eq('code', branch_code)
-    .single()
+    .eq('name_th', branch_name)
+    .maybeSingle()
 
   // Create Supabase auth user
   const { data: newUser, error: createError } = await admin.auth.admin.createUser({
@@ -47,8 +47,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการสร้างบัญชี', detail: createError.message }, { status: 500 })
   }
 
-  // Update profile with employee details
-  await admin.from('users_profile').update({
+  // Upsert profile (handles trigger race condition)
+  await admin.from('users_profile').upsert({
+    id: newUser.user.id,
+    full_name: `${name} ${surname}`,
     employee_id,
     name_first: name,
     name_last: surname,
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
     branch_name_th: branch_name,
     branch_id: branchRow?.id ?? null,
     role: 'branch_staff',
-  }).eq('id', newUser.user.id)
+  }, { onConflict: 'id' })
 
   const session: PwaSession = {
     username: employee_id,
