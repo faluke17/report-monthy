@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PWA_SESSION_COOKIE, PwaSession } from '@/lib/pwa-auth'
 import { getBranchName } from '@/lib/utils/pwa-branches'
 
-export const runtime = 'edge'
-
-const PWA_API = 'https://intranet.pwa.co.th/login/webservice_reg10.php'
+const PWA_PROXY = 'https://pwa-proxy.taweechai-chairat.workers.dev'
 
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json()
@@ -15,15 +13,16 @@ export async function POST(req: NextRequest) {
 
   let raw: string
   try {
-    const res = await fetch(`${PWA_API}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'th-TH,th;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://intranet.pwa.co.th/',
-      },
+    const res = await fetch(PWA_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
     })
     raw = await res.text()
+    if (!res.ok) {
+      const err = JSON.parse(raw)
+      return NextResponse.json({ error: err.error ?? 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้' }, { status: 502 })
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: 'ไม่สามารถเชื่อมต่อระบบ กปภ. ได้', detail: msg }, { status: 502 })
