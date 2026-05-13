@@ -57,8 +57,9 @@ export default function LoginPage() {
       toast.error('กรุณาเลือกสาขา')
       return
     }
-    const branch = PWA_BRANCHES.find(b => b.costcenter === regBranchCode)
-    if (!branch) {
+    const isRegion = regBranchCode === '__region__'
+    const branch = isRegion ? null : PWA_BRANCHES.find(b => b.costcenter === regBranchCode)
+    if (!isRegion && !branch) {
       toast.error('ไม่พบข้อมูลสาขา')
       return
     }
@@ -71,11 +72,11 @@ export default function LoginPage() {
           employee_id: regEmployeeId,
           name: regName,
           surname: regSurname,
-          branch_code: branch.costcenter,
-          ba: branch.ba,
-          costcenter: branch.costcenter,
-          wwcode: branch.ba,
-          branch_name: branch.name_th,
+          branch_code: isRegion ? 'REGION' : branch!.costcenter,
+          ba: branch?.ba ?? '',
+          costcenter: branch?.costcenter ?? '',
+          wwcode: branch?.ba ?? '',
+          branch_name: isRegion ? 'สำนักงานเขต 10' : branch!.name_th,
           password: regPassword,
         }),
       })
@@ -213,7 +214,8 @@ export default function LoginPage() {
                   onChange={e => setRegBranchCode(e.target.value)}
                   className="w-full appearance-none bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
                 >
-                  <option value="" className="bg-[#061327]">เลือกสาขา...</option>
+                  <option value="" className="bg-[#061327]">เลือกสาขา / เขต...</option>
+                  <option value="__region__" className="bg-[#061327]">🏢 สำนักงานเขต 10</option>
                   {PWA_BRANCHES.map(b => (
                     <option key={b.costcenter} value={b.costcenter} className="bg-[#061327]">
                       {b.name_th}
