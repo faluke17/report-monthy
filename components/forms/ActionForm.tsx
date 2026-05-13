@@ -71,7 +71,7 @@ export function ActionForm({ branches, profile }: Props) {
             className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-white/60 mb-1.5">ผู้รับผิดชอบ <span className="text-red-400">*</span></label>
             <input type="text" required value={form.owner} onChange={(e) => set('owner', e.target.value)} placeholder="ชื่อ-ตำแหน่ง"

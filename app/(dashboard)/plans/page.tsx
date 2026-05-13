@@ -17,7 +17,7 @@ export default async function PlansPage() {
 
   return (
     <div className="space-y-5 animate-fadein">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">แผนลดน้ำสูญเสีย</h1>
           <p className="text-sm text-white/40 mt-0.5">จัดการแผน NRW ของแต่ละสาขา</p>

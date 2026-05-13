@@ -48,7 +48,7 @@ export function Topbar({ session }: TopbarProps) {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10 backdrop-blur-xl"
+      className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10 backdrop-blur-xl"
       style={{
         background: 'rgba(3,6,13,.92)',
         borderBottom: '1px solid rgba(0,229,255,.18)',
@@ -56,8 +56,8 @@ export function Topbar({ session }: TopbarProps) {
       }}
     >
       <div className="flex flex-col gap-0.5">
-        <p className="page-kicker">{meta.kicker}</p>
-        <p className="text-[17px] font-bold text-white leading-tight">{meta.title}</p>
+        <p className="page-kicker hidden sm:block">{meta.kicker}</p>
+        <p className="text-[15px] md:text-[17px] font-bold text-white leading-tight">{meta.title}</p>
       </div>
 
       <div className="flex items-center gap-3">

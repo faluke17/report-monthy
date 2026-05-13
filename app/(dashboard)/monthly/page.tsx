@@ -56,7 +56,7 @@ export default async function MonthlyPage({
   return (
     <div className="space-y-5 animate-fadein">
       {/* ─── Header ─── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">รายงานรายพื้นที่ PDCA</h1>
           <p className="text-sm text-white/40 mt-0.5">

@@ -96,7 +96,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-white/60 mb-1.5">
               ประเภทการประชุม <span className="text-red-400">*</span>
@@ -140,7 +140,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
           <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
             <MapPin size={13} /> ช่องทางประชุม
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
               value={form.location}

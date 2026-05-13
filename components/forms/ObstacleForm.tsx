@@ -244,7 +244,7 @@ export function ObstacleForm({ branches, profile, plans }: Props) {
       <div className="glass-card p-6 space-y-5">
         <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest">ส่วนที่ 3 — ความก้าวหน้าการแก้ไข</p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={LABEL}>กำหนดแก้ไข</label>
             <input

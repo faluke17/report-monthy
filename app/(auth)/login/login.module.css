@@ -351,6 +351,51 @@
 .footSec { display: flex; align-items: center; gap: 6px; color: var(--grn); }
 .footSec::before { content: ""; width: 5px; height: 5px; border-radius: 99px; background: var(--grn); box-shadow: 0 0 6px var(--grn); }
 
+/* ── Responsive ── */
+
+/* iPad portrait (768–1023px) */
+@media (max-width: 1023px) {
+  .stage { grid-template-columns: 1fr 1.3fr; }
+  .left  { padding: 28px 28px 28px 36px; }
+  .title { font-size: 60px; }
+  .sub   { font-size: 13px; }
+  .radar { width: min(480px, 44vh); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 160px)); gap: 10px; }
+  .right { padding: 48px 16px 32px 12px; gap: 14px; }
+  .auth  { padding: 26px 22px 22px; }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  .chrome { font-size: 9px; letter-spacing: .14em; padding: 0 14px; gap: 10px; }
+  .chromeRight { gap: 8px; }
+
+  .stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .left  { display: none; }
+  .chips { display: none; }
+
+  .right {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 20px 16px 32px;
+    overflow-y: auto;
+    min-height: calc(100vh - 42px);
+  }
+  .auth {
+    width: 100%; max-width: 100%;
+    padding: 26px 20px 22px;
+    border-radius: 14px;
+  }
+  .ht h2 { font-size: 20px; }
+  .tab   { padding: 11px 8px; font-size: 14px; }
+  .btn   { padding: 14px 16px; font-size: 15px; }
+  .row2  { grid-template-columns: 1fr; }
+}
+
 /* particles */
 .particle {
   position: fixed; width: 2px; height: 2px; border-radius: 99px;

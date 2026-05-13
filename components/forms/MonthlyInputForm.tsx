@@ -148,7 +148,7 @@ export function MonthlyInputForm({ branches, profile, plans }: Props) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/60 mb-1.5">ปี (พ.ศ.)</label>
               <select
@@ -201,7 +201,7 @@ export function MonthlyInputForm({ branches, profile, plans }: Props) {
         <div className="glass-card p-6 space-y-4">
           <h2 className="font-semibold text-white">ปริมาณน้ำ</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/60 mb-1.5">น้ำจ่าย (ลบ.ม.)</label>
               <input

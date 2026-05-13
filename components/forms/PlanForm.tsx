@@ -61,7 +61,7 @@ export function PlanForm({ branches, profile }: Props) {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-white/60 mb-1.5">ประเภทแผน</label>
             <select value={form.plan_type ?? ''} onChange={(e) => set('plan_type', e.target.value)} required
@@ -88,7 +88,7 @@ export function PlanForm({ branches, profile }: Props) {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-white/60 mb-1.5">NRW Baseline (%)</label>
             <input type="number" step="0.01" value={form.baseline_nrw ?? ''} onChange={(e) => set('baseline_nrw', e.target.value)}
@@ -114,7 +114,7 @@ export function PlanForm({ branches, profile }: Props) {
             className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-white/60 mb-1.5">วันเริ่ม</label>
             <input type="date" value={form.start_date ?? ''} onChange={(e) => set('start_date', e.target.value)}

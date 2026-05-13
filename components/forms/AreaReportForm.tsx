@@ -325,7 +325,7 @@ export function AreaReportForm({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={LABEL}>เดือน</label>
               <select
@@ -464,7 +464,7 @@ export function AreaReportForm({
                   </div>
 
                   {/* Row 1: inputs */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div>
                       <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
                       <input
@@ -498,7 +498,7 @@ export function AreaReportForm({
                   </div>
 
                   {/* Row 2: calculated display */}
-                  <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <div>
                       <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
                       <div className={CALC_BOX}>
@@ -605,7 +605,7 @@ export function AreaReportForm({
                   </p>
 
                   {/* Row 1: inputs */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div>
                       <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
                       <input
@@ -639,7 +639,7 @@ export function AreaReportForm({
                   </div>
 
                   {/* Row 2: calculated display */}
-                  <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <div>
                       <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
                       <div className={CALC_BOX}>

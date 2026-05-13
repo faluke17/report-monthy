@@ -18,7 +18,14 @@ const MOBILE_NAV = [
 export function MobileNav({ notifyCount = 0 }: { notifyCount?: number }) {
   const pathname = usePathname()
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:hidden bg-[#0b1d3a] border-t border-white/10 z-50">
+    <nav
+      className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-xl"
+      style={{
+        background: 'rgba(3,6,13,.95)',
+        borderTop: '1px solid rgba(0,229,255,.18)',
+        boxShadow: '0 -4px 24px rgba(0,229,255,.06)',
+      }}
+    >
       <div className="flex">
         {MOBILE_NAV.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')

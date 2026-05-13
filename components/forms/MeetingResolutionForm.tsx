@@ -121,7 +121,7 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
       {/* Section 1 */}
       <div className={sectionClass}>
         <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">ที่มาและความสำคัญ</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>แหล่งที่มา</label>
             <Select value={form.source} onValueChange={v => set('source', v)}>
@@ -185,7 +185,7 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
       {/* Section 2 */}
       <div className={sectionClass}>
         <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">ผู้รับผิดชอบและกำหนดการ</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>สาขา</label>
             <Select value={form.responsible_branch} onValueChange={v => set('responsible_branch', v)}>
@@ -240,7 +240,7 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
       {/* Section 3 */}
       <div className={sectionClass}>
         <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">หมายเหตุ</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>หมายเหตุผู้บริหาร</label>
             <textarea

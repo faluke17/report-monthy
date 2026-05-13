@@ -136,7 +136,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* เดือนซ้าย ปีขวา */}
           <div>
             <label className={LABEL_CLASS}>เดือน</label>
@@ -226,7 +226,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
 
       {/* ข้อ 2: ALC */}
       <TopicCard no={2} color={TOPIC_COLORS[1]}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={LABEL_CLASS}>จำนวนครั้ง/เดือน</label>
             <input type="number" min="0" placeholder="0"
@@ -262,7 +262,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
 
       {/* ข้อ 3: PM — DMA / PRV / P3 */}
       <TopicCard no={3} color={TOPIC_COLORS[2]}>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
             <label className={LABEL_CLASS}>จำนวน DMA ที่ PM</label>
             <input type="number" min="0" placeholder="0"
@@ -292,7 +292,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
 
       {/* ข้อ 4: Sediment Flush */}
       <TopicCard no={4} color={TOPIC_COLORS[3]}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={LABEL_CLASS}>จำนวนจุดระบาย</label>
             <input type="number" min="0" placeholder="0"
