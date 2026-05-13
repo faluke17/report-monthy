@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-proxy-secret': process.env.PWA_PROXY_SECRET ?? '',
+        'x-proxy-secret': (process.env.PWA_PROXY_SECRET ?? '').replace(/^﻿/, ''),
       },
       body: JSON.stringify({ username, password }),
     })
