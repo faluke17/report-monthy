@@ -172,13 +172,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className={s.chips}>
-            <div className={s.chipRow}><span>UPLINK <b>STABLE</b></span></div>
-            <div className={s.chipRow}><span>SCADA <b className={s.ok}>SYNC</b></span></div>
-            <div className={s.chipRow}><span>26/26 NODES</span></div>
-            <div className={s.chipRow}><span>LAT <b>15.7°N</b> · LNG <b>100.1°E</b></span></div>
-          </div>
-
           <div className={s.radar}>
             <svg viewBox="-200 -200 400 400">
               <circle className={s.ring} cx="0" cy="0" r="180" />
@@ -337,6 +330,13 @@ export default function LoginPage() {
               <span>WSC-R10 · <b>v1.0</b></span>
               <span className={s.footSec}>SESSION ENCRYPTED</span>
             </div>
+          </div>
+
+          <div className={s.chips}>
+            <div className={s.chipRow}><span>UPLINK <b>STABLE</b></span></div>
+            <div className={s.chipRow}><span>SCADA <b className={s.ok}>SYNC</b></span></div>
+            <div className={s.chipRow}><span>26/26 NODES</span></div>
+            <div className={s.chipRow}><span>LAT <b>15.7°N</b> · LNG <b>100.1°E</b></span></div>
           </div>
         </section>
       </div>
