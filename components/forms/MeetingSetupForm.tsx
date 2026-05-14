@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { submitMeeting } from '@/app/actions/meetings'
-import { Calendar, MapPin, Link2, Users, FileText, Bell, Eye } from 'lucide-react'
+import { Calendar, MapPin, Link2, Users, FileText, Bell, Eye, Save, Trash2 } from 'lucide-react'
+
+const DRAFT_KEY = 'meeting_setup_draft'
 
 const MEETING_TYPES = [
   'WSC-R/NRW Monthly',
@@ -34,24 +36,63 @@ interface MeetingSetupFormProps {
   backHref?: string
 }
 
+const EMPTY_FORM = {
+  title: '',
+  meeting_type: '',
+  scheduled_date: '',
+  scheduled_time: '09:00',
+  location: '',
+  meeting_link: '',
+  target_audience: 'ทุกสาขา',
+  prep_required: '',
+  notification_message: '',
+}
+
 export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProps) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
-  const [form, setForm] = useState({
-    title: '',
-    meeting_type: '',
-    scheduled_date: '',
-    scheduled_time: '09:00',
-    location: '',
-    meeting_link: '',
-    target_audience: 'ทุกสาขา',
-    prep_required: '',
-    notification_message: '',
+  const [hasDraft, setHasDraft] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [form, setForm] = useState(() => {
+    if (typeof window === 'undefined') return EMPTY_FORM
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setHasDraft(true)
+        return { ...EMPTY_FORM, ...parsed }
+      }
+    } catch {}
+    return EMPTY_FORM
   })
 
+  useEffect(() => {
+    const saved = localStorage.getItem(DRAFT_KEY)
+    if (saved) setHasDraft(true)
+  }, [])
+
   function set(field: string, value: string) {
-    setForm((p) => ({ ...p, [field]: value }))
+    setForm((p: typeof EMPTY_FORM) => {
+      const next = { ...p, [field]: value }
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+      autoSaveTimer.current = setTimeout(() => {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
+        setHasDraft(true)
+        setLastSaved(new Date())
+      }, 800)
+      return next
+    })
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY)
+    setForm(EMPTY_FORM)
+    setHasDraft(false)
+    setLastSaved(null)
+    toast.success('ล้างแบบร่างแล้ว')
   }
 
   const isReadyToPreview = form.title && form.meeting_type && form.scheduled_date
@@ -60,9 +101,10 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
     e.preventDefault()
     setSubmitting(true)
     const fd = new FormData()
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v))
+    Object.entries(form).forEach(([k, v]) => fd.append(k, v as string))
     const result = await submitMeeting(fd)
     if (result.success) {
+      localStorage.removeItem(DRAFT_KEY)
       toast.success('สร้างการประชุมเรียบร้อย — กรอกวาระได้เลย')
       const id = result.data
       router.push(id ? `/meeting/${id}/agenda` : backHref)
@@ -74,6 +116,27 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+
+      {/* Draft indicator */}
+      {hasDraft && (
+        <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-amber-500/8 border border-amber-500/20">
+          <div className="flex items-center gap-2 text-xs text-amber-400/80">
+            <Save size={11} />
+            <span>
+              แบบร่าง{lastSaved
+                ? ` · บันทึกอัตโนมัติ ${lastSaved.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`
+                : ' · โหลดจากที่บันทึกไว้'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={clearDraft}
+            className="flex items-center gap-1 text-[11px] text-white/30 hover:text-red-400 transition-colors"
+          >
+            <Trash2 size={10} /> ล้าง
+          </button>
+        </div>
+      )}
 
       {/* ส่วนที่ 1 – รายละเอียดการประชุม */}
       <div className="glass-card p-6 space-y-4">
@@ -282,7 +345,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
           disabled={submitting}
           className="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
-          {submitting ? 'กำลังสร้าง...' : 'สร้างการประชุม + ส่งแจ้งเตือน'}
+          {submitting ? 'กำลังสร้าง...' : 'สร้างการประชุม — ถัดไป'}
         </button>
       </div>
     </form>

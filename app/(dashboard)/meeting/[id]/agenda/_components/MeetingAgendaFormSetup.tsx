@@ -29,7 +29,11 @@ export function MeetingAgendaFormSetup({
   const router = useRouter()
 
   function handleSaved(meetingId: string) {
-    router.push(`/meeting/${meetingId}/report`)
+    router.push(`/meeting/${meetingId}/preview`)
+  }
+
+  function handleDraftSaved() {
+    router.push('/meeting')
   }
 
   return (
@@ -40,6 +44,7 @@ export function MeetingAgendaFormSetup({
       openResolutions={openResolutions}
       pdcaSummaries={pdcaSummaries}
       onSaved={handleSaved}
+      onDraftSaved={handleDraftSaved}
     />
   )
 }

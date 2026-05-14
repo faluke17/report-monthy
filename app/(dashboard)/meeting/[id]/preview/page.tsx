@@ -70,7 +70,7 @@ export default async function MeetingPreviewPage({
       .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th)')
       .order('report_year', { ascending: false })
       .order('report_month', { ascending: false })
-      .limit(200),
+      .limit(400),
   ])
 
   const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
@@ -79,19 +79,15 @@ export default async function MeetingPreviewPage({
   const nrwCurrRaw: any[] = currNrwRes.data ?? []
   const nrwPrevRaw: any[] = prevNrwRes.data ?? []
 
-  const branchMap = new Map<string, any>()
-  for (const row of (monthlyRes.data ?? []) as any[]) {
-    if (!branchMap.has(row.branch_id)) {
-      branchMap.set(row.branch_id, {
-        branch_name: row.branches?.name_th ?? '',
-        pdca_do: row.pdca_do ?? null,
-        pdca_act: row.pdca_act ?? null,
-        report_month: row.report_month,
-        report_year: row.report_year,
-      })
-    }
-  }
-  const pdcaSummaries = Array.from(branchMap.values())
+  console.log('[preview] monthlyRes rows:', monthlyRes.data?.length, 'error:', monthlyRes.error?.message)
+
+  const pdcaAllRows = (monthlyRes.data ?? []).map((row: any) => ({
+    branch_name: row.branches?.name_th ?? '',
+    pdca_do: row.pdca_do ?? null,
+    pdca_act: row.pdca_act ?? null,
+    report_month: row.report_month,
+    report_year: row.report_year,
+  }))
 
   let prevResolutions: MeetingResolution[] = []
   if (prevMeeting) {
@@ -124,7 +120,7 @@ export default async function MeetingPreviewPage({
       nrwPrevRaw={nrwPrevRaw}
       nrwFiscalYear={nrwFiscalYear}
       nrwMonth={nrwMonth}
-      pdcaSummaries={pdcaSummaries}
+      pdcaAllRows={pdcaAllRows}
     />
   )
 }

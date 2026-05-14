@@ -261,9 +261,35 @@ interface PdcaSummaryRow {
 
 const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
-function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
+function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
   const [selected, setSelected] = useState<string | null>(null)
-  const summaryMap = new Map(summaries.map(s => [s.branch_name, s]))
+  const [activeMonthKey, setActiveMonthKey] = useState<string | null>(null)
+
+  const months = useMemo(() => {
+    const seen = new Set<string>()
+    const result: { month: number; year: number }[] = []
+    for (const row of allRows) {
+      const key = `${row.report_year}-${row.report_month}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        result.push({ month: row.report_month, year: row.report_year })
+      }
+    }
+    return result // already sorted desc from server query
+  }, [allRows])
+
+  const currentKey = activeMonthKey ?? (months[0] ? `${months[0].year}-${months[0].month}` : '')
+
+  const summaryMap = useMemo(() => {
+    if (!currentKey) return new Map<string, PdcaSummaryRow>()
+    const [year, month] = currentKey.split('-').map(Number)
+    return new Map(
+      allRows
+        .filter(r => r.report_year === year && r.report_month === month)
+        .map(r => [r.branch_name, r])
+    )
+  }, [allRows, currentKey])
+
   const detail = selected ? summaryMap.get(selected) : null
 
   return (
@@ -277,6 +303,32 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
           </button>
         )}
       </div>
+
+      {/* Month filter */}
+      {months.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-violet-500/10 flex-wrap">
+          <span className="text-[10px] text-white/30 shrink-0">เดือน</span>
+          {months.map(m => {
+            const key = `${m.year}-${m.month}`
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { setActiveMonthKey(key); setSelected(null) }}
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded-md border transition-all',
+                  currentKey === key
+                    ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
+                    : 'text-white/30 border-white/10 hover:border-violet-500/30 hover:text-violet-300'
+                )}
+              >
+                {THAI_MONTHS_SHORT[m.month - 1]} {m.year + 543}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div className="px-4 py-3 flex flex-wrap gap-1.5">
         {PWA_BRANCHES.map(b => {
           const has = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
@@ -476,7 +528,7 @@ interface Props {
   nrwPrevRaw: any[]
   nrwFiscalYear: number
   nrwMonth: number
-  pdcaSummaries: PdcaSummaryRow[]
+  pdcaAllRows: PdcaSummaryRow[]
 }
 
 export function MeetingPreviewClient({
@@ -490,7 +542,7 @@ export function MeetingPreviewClient({
   nrwPrevRaw,
   nrwFiscalYear,
   nrwMonth,
-  pdcaSummaries,
+  pdcaAllRows,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
   const [selectedBranch, setSelectedBranch] = useState<string>('') // '' = all
@@ -734,19 +786,18 @@ export function MeetingPreviewClient({
                 </div>
               )}
 
-              {agendaHeader && (
-                <div className="pt-1">
-                  <ResolutionBadge
-                    type={agendaHeader.agenda2_resolution ?? 'รับทราบ'}
-                    detail={agendaHeader.agenda2_resolution_detail}
-                  />
-                </div>
-              )}
             </div>
           ) : (
             <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ไม่พบรายงานการประชุมครั้งก่อน
             </div>
+          )}
+
+          {agendaHeader && (
+            <ResolutionBadge
+              type={agendaHeader.agenda2_resolution ?? 'รับทราบ'}
+              detail={agendaHeader.agenda2_resolution_detail}
+            />
           )}
         </div>
       )}
@@ -918,7 +969,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
           {!hasAgenda6 && (
-            <PdcaBranchPanel summaries={pdcaSummaries} />
+            <PdcaBranchPanel allRows={pdcaAllRows} />
           )}
 
           {/* Branch obstacle browser */}
@@ -1009,7 +1060,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ */}
           {hasAgenda6 && (
-            <PdcaBranchPanel summaries={pdcaSummaries} />
+            <PdcaBranchPanel allRows={pdcaAllRows} />
           )}
 
           {items(5).length === 0 ? (

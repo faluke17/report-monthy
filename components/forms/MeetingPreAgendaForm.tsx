@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useCallback } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, ChevronDown, AlertCircle, Brain, X } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, AlertCircle, Brain, X, Save, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Meeting, MeetingPreAgenda, PreAgendaItem } from '@/lib/types'
 import { savePreAgenda } from '@/app/actions/meeting-pre-agenda'
@@ -277,6 +277,7 @@ interface Props {
   openResolutions: OpenResolutionRow[]
   pdcaSummaries: PdcaSummaryRow[]
   onSaved?: (meetingId: string) => void
+  onDraftSaved?: (meetingId: string) => void
 }
 
 export function MeetingPreAgendaForm({
@@ -286,6 +287,7 @@ export function MeetingPreAgendaForm({
   openResolutions,
   pdcaSummaries,
   onSaved,
+  onDraftSaved,
 }: Props) {
   const [state, setState] = useState<FormState>(() => initState(initialData, previousMeetings))
   const [isPending, startTransition] = useTransition()
@@ -297,20 +299,36 @@ export function MeetingPreAgendaForm({
   const agenda5Label = state.agenda4Type === 'เรื่องสืบเนื่อง' ? 'เรื่องติดตามผลการดำเนินการ' : 'เรื่องอื่นๆ'
   const showAgenda6 = state.agenda4Type === 'เรื่องสืบเนื่อง'
 
+  function buildPayload() {
+    return {
+      agenda1_note: state.agenda1Note || null,
+      agenda2_ref_meeting_no: state.agenda2RefMeetingNo || null,
+      agenda4_type: state.agenda4Type,
+      items3: state.items3.filter(it => it.title.trim()),
+      items4: state.items4.filter(it => it.title.trim()),
+      items5: state.items5.filter(it => it.title.trim()),
+      items6: state.items6.filter(it => it.title.trim()),
+    }
+  }
+
   function handleSave() {
     startTransition(async () => {
-      const res = await savePreAgenda(meeting.id, {
-        agenda1_note: state.agenda1Note || null,
-        agenda2_ref_meeting_no: state.agenda2RefMeetingNo || null,
-        agenda4_type: state.agenda4Type,
-        items3: state.items3.filter(it => it.title.trim()),
-        items4: state.items4.filter(it => it.title.trim()),
-        items5: state.items5.filter(it => it.title.trim()),
-        items6: state.items6.filter(it => it.title.trim()),
-      })
+      const res = await savePreAgenda(meeting.id, buildPayload())
       if (res.success) {
         toast.success('บันทึกวาระการประชุมเรียบร้อย')
         onSaved?.(meeting.id)
+      } else {
+        toast.error(res.error)
+      }
+    })
+  }
+
+  function handleDraftSave() {
+    startTransition(async () => {
+      const res = await savePreAgenda(meeting.id, buildPayload())
+      if (res.success) {
+        toast.success('บันทึกแบบร่างแล้ว')
+        onDraftSaved?.(meeting.id)
       } else {
         toast.error(res.error)
       }
@@ -432,10 +450,20 @@ export function MeetingPreAgendaForm({
         <button
           type="button"
           disabled={isPending}
-          onClick={handleSave}
-          className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-5 py-2 rounded-xl text-sm transition-colors"
+          onClick={handleDraftSave}
+          className="flex items-center gap-2 px-4 py-2 text-sm border border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-xl transition-colors disabled:opacity-40"
         >
-          {isPending ? 'กำลังบันทึก...' : 'บันทึกวาระการประชุม'}
+          <Save size={14} />
+          {isPending ? 'กำลังบันทึก...' : 'บันทึกแบบร่าง'}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={handleSave}
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-5 py-2 rounded-xl text-sm transition-colors"
+        >
+          {isPending ? 'กำลังบันทึก...' : 'บันทึกและถัดไป'}
+          <ArrowRight size={14} />
         </button>
       </div>
     </div>
