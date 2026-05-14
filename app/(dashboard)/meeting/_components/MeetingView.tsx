@@ -14,7 +14,7 @@ import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
   Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle, Pencil, Eye,
-  ClipboardList, ChevronRight, Trash2,
+  ClipboardList, ChevronRight, Trash2, FileCheck,
 } from 'lucide-react'
 import { deleteMeeting } from '@/app/actions/meetings'
 
@@ -117,14 +117,21 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
                 className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-cyan-400 transition-colors"
               >
                 <Pencil size={10} />
-                กรอกวาระ
+                วาระ
+              </Link>
+              <Link
+                href={`/meeting/${m.id}/report`}
+                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-violet-400 transition-colors"
+              >
+                <ClipboardList size={10} />
+                รายงาน
               </Link>
               <Link
                 href={`/meeting/${m.id}/preview`}
                 className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-emerald-400 transition-colors"
               >
                 <Eye size={10} />
-                ดูตัวอย่าง
+                Preview
               </Link>
               <button
                 onClick={() => onDelete(m)}
@@ -172,7 +179,8 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
 
 interface Props {
   allMeetings: Meeting[]
-  agendaFilledIds: Set<string>
+  preAgendaFilledIds: Set<string>
+  reportFilledIds: Set<string>
   latestMeeting: Meeting | null
   prevMeeting: Meeting | null
   latestResolutions: MeetingResolution[]
@@ -189,7 +197,8 @@ interface Props {
 
 export function MeetingView({
   allMeetings,
-  agendaFilledIds,
+  preAgendaFilledIds,
+  reportFilledIds,
   latestMeeting,
   prevMeeting,
   latestResolutions,
@@ -220,10 +229,11 @@ export function MeetingView({
   const ackedSet = new Set(myAcks.map((a) => a.meeting_id))
 
   const totalScheduled = upcomingMeetings.length + overdueMeetings.length + pastMeetings.length
+  const totalReports = allMeetings.filter((m) => reportFilledIds.has(m.id)).length
 
   const TABS: { key: Tab; label: string; count?: number }[] = [
     { key: 'schedule',   label: 'ตารางประชุม',         count: totalScheduled },
-    { key: 'agenda',     label: 'รายงานการประชุม' },
+    { key: 'agenda',     label: 'รายงานการประชุม',     count: totalReports },
     { key: 'resolution', label: 'มติ / ข้อสั่งการ',   count: latestResolutions.length },
     { key: 'followup',   label: 'ติดตามมติเดือนก่อน', count: prevResolutions.length },
   ]
@@ -369,51 +379,45 @@ export function MeetingView({
 
       {/* ══ Tab 1: รายงานการประชุม ══ */}
       {tab === 'agenda' && (
-        <div className="space-y-4 max-w-2xl">
-          <div className="flex items-center justify-between">
+        <div className="space-y-3 max-w-2xl">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-bold text-white">รายงานการประชุม</h2>
-              <p className="text-xs text-white/35 mt-0.5">สรุปวาระจากการประชุมแต่ละครั้ง</p>
+              <p className="text-xs text-white/35 mt-0.5">รายงานที่กรอกเสร็จแล้วหลังการประชุม</p>
             </div>
             {isAdmin && (
               <Link
-                href="/meeting/setup"
+                href="/meeting/report-new"
                 className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-xl text-sm transition-colors shrink-0"
               >
-                <Plus size={15} />
-                สร้างการประชุม
+                <Plus size={14} />
+                สร้างรายงานการประชุม
               </Link>
             )}
           </div>
 
-          {allMeetings.length === 0 ? (
-            <div className="glass-card p-12 text-center">
-              <ClipboardList size={32} className="text-white/15 mx-auto mb-3" />
-              <p className="text-white/30 text-sm mb-4">ยังไม่มีรายงานการประชุมในระบบ</p>
-              {isAdmin && (
-                <Link
-                  href="/meeting/setup"
-                  className="inline-flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <Plus size={14} />
-                  สร้างการประชุมแรก
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {allMeetings.map((m) => {
-                const filled = agendaFilledIds.has(m.id)
-                return (
+          {(() => {
+            const reportedMeetings = allMeetings.filter((m) => reportFilledIds.has(m.id))
+            if (reportedMeetings.length === 0) {
+              return (
+                <div className="glass-card p-12 text-center">
+                  <ClipboardList size={32} className="text-white/15 mx-auto mb-3" />
+                  <p className="text-white/30 text-sm">ยังไม่มีรายงานการประชุมที่กรอกเสร็จแล้ว</p>
+                  {isAdmin && allMeetings.length === 0 && (
+                    <p className="text-xs text-white/20 mt-1">สร้างการประชุมก่อนได้ที่แท็บ ตารางประชุม</p>
+                  )}
+                </div>
+              )
+            }
+            return (
+              <div className="space-y-2">
+                {reportedMeetings.map((m) => (
                   <div key={m.id} className="glass-card-sm p-4 flex items-center gap-4">
-                    {/* Status dot */}
-                    <div className={cn(
-                      'shrink-0 w-2 h-2 rounded-full',
-                      filled ? 'bg-emerald-400' : 'bg-white/20'
-                    )} />
+                    {/* Accent */}
+                    <div className="shrink-0 w-1.5 h-10 rounded-full bg-emerald-500/50" />
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0 space-y-0.5">
+                    <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-sm font-semibold text-white leading-snug truncate">{m.title}</p>
                       <div className="flex items-center gap-3 text-xs text-white/40 flex-wrap">
                         <span className="flex items-center gap-1">
@@ -426,55 +430,39 @@ export function MeetingView({
                             {m.location}
                           </span>
                         )}
+                        {m.meeting_type && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/35">
+                            {m.meeting_type}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Badge + Action */}
+                    {/* Actions */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn(
-                        'text-[10px] px-2 py-0.5 rounded-full border font-medium',
-                        filled
-                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
-                          : 'text-white/30 bg-white/5 border-white/10'
-                      )}>
-                        {filled ? 'กรอกแล้ว' : 'ยังไม่กรอก'}
-                      </span>
-
-                      {filled ? (
-                        <Link
-                          href={`/meeting/${m.id}/preview`}
-                          className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 border border-cyan-500/25 hover:border-cyan-500/50 px-3 py-1.5 rounded-lg transition-all"
-                        >
-                          <Eye size={12} />
-                          ดูรายละเอียด
-                          <ChevronRight size={11} className="opacity-50" />
-                        </Link>
-                      ) : isAdmin ? (
-                        <Link
-                          href={`/meeting/${m.id}/agenda`}
-                          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 border border-amber-500/25 hover:border-amber-500/50 px-3 py-1.5 rounded-lg transition-all"
-                        >
-                          <Pencil size={12} />
-                          กรอกวาระ
-                        </Link>
-                      ) : null}
-
                       {isAdmin && (
-                        <button
-                          onClick={() => handleDelete(m)}
-                          disabled={deletingId === m.id}
-                          className="flex items-center gap-1 text-xs text-red-400/60 hover:text-red-400 border border-red-500/15 hover:border-red-500/40 px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-40"
+                        <Link
+                          href={`/meeting/${m.id}/report`}
+                          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-cyan-400 border border-white/10 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-all"
                         >
-                          <Trash2 size={12} />
-                          {deletingId === m.id ? '...' : 'ลบ'}
-                        </button>
+                          <Pencil size={11} />
+                          แก้ไข
+                        </Link>
                       )}
+                      <Link
+                        href={`/meeting/${m.id}/preview`}
+                        className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all"
+                      >
+                        <Eye size={11} />
+                        ดูรายงาน
+                        <ChevronRight size={10} className="opacity-50" />
+                      </Link>
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )
+          })()}
         </div>
       )}
 

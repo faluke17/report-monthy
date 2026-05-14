@@ -149,9 +149,12 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
     hasData: r.rate_delta !== null,
   }))
 
-  const maxAbs = Math.max(...data.map((d) => Math.abs(d.delta)), 0.5)
+  const withData = data.filter((d) => d.hasData)
+  const noData = data.filter((d) => !d.hasData)
+
+  const maxAbs = Math.max(...withData.map((d) => Math.abs(d.delta)), 0.5)
   const domain = [-maxAbs * 1.45, maxAbs * 1.45]
-  const chartHeight = Math.max(320, rows.length * 16)
+  const chartHeight = Math.max(320, data.length * 22)
 
   const improvedBranches = data.filter((d) => d.hasData && d.delta < 0).map((d) => d.name)
   const worsenedBranches = data.filter((d) => d.hasData && d.delta > 0).map((d) => d.name)
@@ -177,6 +180,16 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
             <LegendPill color="emerald" label="ดีขึ้น" branches={improvedBranches} />
             <LegendPill color="red" label="แย่ลง" branches={worsenedBranches} />
           </div>
+          {noData.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <span className="text-[10px] text-white/30 self-center">ไม่มีข้อมูลเปรียบเทียบ:</span>
+              {noData.map((d) => (
+                <span key={d.name} className="text-[10px] text-white/25 bg-white/4 border border-white/8 px-2 py-0.5 rounded-full">
+                  {d.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -207,7 +220,7 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
             <YAxis
               type="category"
               dataKey="name"
-              width={76}
+              width={96}
               tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
@@ -219,8 +232,11 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
               strokeWidth={1}
               strokeDasharray="0"
             />
-            <Bar dataKey="delta" maxBarSize={9} radius={2}>
+            <Bar dataKey="delta" maxBarSize={11} radius={2}>
               {data.map((entry, i) => {
+                if (!entry.hasData) {
+                  return <Cell key={`cell-${i}`} fill="#374151" fillOpacity={0.6} />
+                }
                 const intensity = maxAbs > 0 ? Math.min(Math.abs(entry.delta) / maxAbs, 1) : 0
                 const opacity = 0.45 + intensity * 0.55
                 return (

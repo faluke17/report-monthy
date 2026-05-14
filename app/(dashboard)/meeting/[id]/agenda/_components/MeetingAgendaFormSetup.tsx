@@ -1,39 +1,19 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { MeetingAgendaForm } from '@/components/forms/MeetingAgendaForm'
-import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
+import { MeetingPreAgendaForm } from '@/components/forms/MeetingPreAgendaForm'
+import type { Meeting, MeetingPreAgenda } from '@/lib/types'
+import type {
+  PreviousMeetingRow,
+  OpenResolutionRow,
+  PdcaSummaryRow,
+} from '@/components/forms/MeetingPreAgendaForm'
 
-export interface PreviousMeetingRow {
-  id: string
-  code: string
-  title: string
-  scheduled_date: string
-}
-
-export interface OpenResolutionRow {
-  id: string
-  meeting_id: string
-  title: string
-  responsible_branch: string | null
-  due_date: string | null
-  status: string
-  progress_pct: number
-  sequence_no: number
-}
-
-export interface PdcaSummaryRow {
-  branch_name: string
-  pdca_do: string | null
-  pdca_act: string | null
-  report_month: number
-  report_year: number
-}
+export type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow }
 
 interface Props {
   meeting: Meeting
-  initialHeader: MeetingAgendaHeader | null
-  initialSubitems: MeetingAgendaSubItem[]
+  initialData: MeetingPreAgenda | null
   previousMeetings: PreviousMeetingRow[]
   openResolutions: OpenResolutionRow[]
   pdcaSummaries: PdcaSummaryRow[]
@@ -41,8 +21,7 @@ interface Props {
 
 export function MeetingAgendaFormSetup({
   meeting,
-  initialHeader,
-  initialSubitems,
+  initialData,
   previousMeetings,
   openResolutions,
   pdcaSummaries,
@@ -50,19 +29,17 @@ export function MeetingAgendaFormSetup({
   const router = useRouter()
 
   function handleSaved(meetingId: string) {
-    router.push(`/meeting/${meetingId}/preview`)
+    router.push(`/meeting/${meetingId}/report`)
   }
 
   return (
-    <MeetingAgendaForm
+    <MeetingPreAgendaForm
       meeting={meeting}
-      initialHeader={initialHeader}
-      initialSubitems={initialSubitems}
-      isAdmin
-      onSaved={handleSaved}
+      initialData={initialData}
       previousMeetings={previousMeetings}
       openResolutions={openResolutions}
       pdcaSummaries={pdcaSummaries}
+      onSaved={handleSaved}
     />
   )
 }

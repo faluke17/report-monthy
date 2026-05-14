@@ -2,15 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { Meeting, MeetingPreAgenda } from '@/lib/types'
-import { MeetingAgendaFormSetup } from './_components/MeetingAgendaFormSetup'
-import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from './_components/MeetingAgendaFormSetup'
-import { Calendar, CheckCircle2, Circle } from 'lucide-react'
+import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
+import { MeetingReportFormSetup } from './_components/MeetingReportFormSetup'
+import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from './_components/MeetingReportFormSetup'
+import { Calendar } from 'lucide-react'
 import { formatThaiDate } from '@/lib/utils/date-th'
 
 export const dynamic = 'force-dynamic'
 
-export default async function MeetingAgendaPage({
+export default async function MeetingReportPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -30,8 +30,14 @@ export default async function MeetingAgendaPage({
   if (!meetingData) notFound()
   const meeting = meetingData as Meeting
 
-  const [preAgendaRes, prevMeetingsRes, openResRes, monthlyRes] = await Promise.all([
-    supabase.from('meeting_pre_agenda').select('*').eq('meeting_id', id).maybeSingle(),
+  const [headerRes, subitemsRes, prevMeetingsRes, openResRes, monthlyRes] = await Promise.all([
+    supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', id).maybeSingle(),
+    supabase
+      .from('meeting_agenda_subitems')
+      .select('*')
+      .eq('meeting_id', id)
+      .order('agenda_no')
+      .order('sort_order'),
     supabase
       .from('meetings')
       .select('id, code, title, scheduled_date')
@@ -54,7 +60,8 @@ export default async function MeetingAgendaPage({
       .limit(200),
   ])
 
-  const initialData = (preAgendaRes.data ?? null) as MeetingPreAgenda | null
+  const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
+  const agendaSubitems = (subitemsRes.data ?? []) as MeetingAgendaSubItem[]
   const previousMeetings: PreviousMeetingRow[] = (prevMeetingsRes.data ?? []) as PreviousMeetingRow[]
   const openResolutions: OpenResolutionRow[] = (openResRes.data ?? []) as OpenResolutionRow[]
 
@@ -75,24 +82,6 @@ export default async function MeetingAgendaPage({
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fadein">
 
-      {/* Progress Steps */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 size={16} className="text-emerald-400" />
-          <span className="text-sm text-white/50">รายละเอียดการประชุม</span>
-        </div>
-        <div className="h-px w-8 bg-white/20" />
-        <div className="flex items-center gap-2">
-          <Circle size={16} className="text-cyan-400 fill-cyan-500/20" />
-          <span className="text-sm text-white font-semibold">วาระการประชุม</span>
-        </div>
-        <div className="h-px w-8 bg-white/20" />
-        <div className="flex items-center gap-2">
-          <Circle size={16} className="text-white/20" />
-          <span className="text-sm text-white/35">รายงานการประชุม</span>
-        </div>
-      </div>
-
       {/* Meeting Info */}
       <div className="glass-card-sm p-4 flex items-center justify-between gap-4">
         <div className="min-w-0 space-y-0.5">
@@ -103,17 +92,26 @@ export default async function MeetingAgendaPage({
             {meeting.location && ` · ${meeting.location}`}
           </p>
         </div>
-        <Link
-          href={`/meeting/${id}/report`}
-          className="shrink-0 text-xs text-white/30 hover:text-white/60 transition-colors"
-        >
-          ข้ามไปรายงาน →
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href={`/meeting/${id}/agenda`}
+            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+          >
+            ← วาระ
+          </Link>
+          <Link
+            href={`/meeting/${id}/preview`}
+            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+          >
+            Preview →
+          </Link>
+        </div>
       </div>
 
-      <MeetingAgendaFormSetup
+      <MeetingReportFormSetup
         meeting={meeting}
-        initialData={initialData}
+        initialHeader={agendaHeader}
+        initialSubitems={agendaSubitems}
         previousMeetings={previousMeetings}
         openResolutions={openResolutions}
         pdcaSummaries={pdcaSummaries}

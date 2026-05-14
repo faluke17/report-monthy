@@ -42,7 +42,7 @@ export default async function MeetingPreviewPage({
 
   const { fiscalYear: nrwFiscalYear, month: nrwMonth } = deriveNrwPeriod(meeting.scheduled_date)
 
-  const [headerRes, subitemsRes, prevRes, currNrwRes, prevNrwRes] = await Promise.all([
+  const [headerRes, subitemsRes, prevRes, currNrwRes, prevNrwRes, monthlyRes] = await Promise.all([
     supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', id).maybeSingle(),
     supabase
       .from('meeting_agenda_subitems')
@@ -65,6 +65,12 @@ export default async function MeetingPreviewPage({
       .from('nrw_branch_monthly')
       .select('branch_name, month, water_produced, water_sold, water_free, blow_off')
       .eq('fiscal_year', nrwFiscalYear - 1),
+    supabase
+      .from('monthly_reports')
+      .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th)')
+      .order('report_year', { ascending: false })
+      .order('report_month', { ascending: false })
+      .limit(200),
   ])
 
   const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
@@ -72,6 +78,20 @@ export default async function MeetingPreviewPage({
   const prevMeeting = (prevRes.data ?? null) as Meeting | null
   const nrwCurrRaw: any[] = currNrwRes.data ?? []
   const nrwPrevRaw: any[] = prevNrwRes.data ?? []
+
+  const branchMap = new Map<string, any>()
+  for (const row of (monthlyRes.data ?? []) as any[]) {
+    if (!branchMap.has(row.branch_id)) {
+      branchMap.set(row.branch_id, {
+        branch_name: row.branches?.name_th ?? '',
+        pdca_do: row.pdca_do ?? null,
+        pdca_act: row.pdca_act ?? null,
+        report_month: row.report_month,
+        report_year: row.report_year,
+      })
+    }
+  }
+  const pdcaSummaries = Array.from(branchMap.values())
 
   let prevResolutions: MeetingResolution[] = []
   if (prevMeeting) {
@@ -104,6 +124,7 @@ export default async function MeetingPreviewPage({
       nrwPrevRaw={nrwPrevRaw}
       nrwFiscalYear={nrwFiscalYear}
       nrwMonth={nrwMonth}
+      pdcaSummaries={pdcaSummaries}
     />
   )
 }

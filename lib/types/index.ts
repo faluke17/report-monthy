@@ -485,6 +485,24 @@ export type ActionResult<T = void> =
 // Meeting Agenda Types
 // ============================================================
 
+export interface PreAgendaItem {
+  title: string
+}
+
+export interface MeetingPreAgenda {
+  id: string
+  meeting_id: string
+  agenda1_note: string | null
+  agenda2_ref_meeting_no: string | null
+  agenda4_type: 'เรื่องสืบเนื่อง' | 'เรื่องติดตามผลการดำเนินการ'
+  items3: PreAgendaItem[]
+  items4: PreAgendaItem[]
+  items5: PreAgendaItem[]
+  items6: PreAgendaItem[]
+  created_at: string
+  updated_at: string
+}
+
 export interface MeetingAgendaHeader {
   id: string
   meeting_id: string

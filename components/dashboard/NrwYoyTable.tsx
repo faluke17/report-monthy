@@ -76,8 +76,8 @@ export function NrwYoyTable({ rows, fiscalYear, monthCount }: Props) {
   const totPrevProd = rows.reduce((s, r) => s + (r.prev_produced ?? 0), 0)
 
   // Average monthly per branch across district
-  const distAvgCurrLoss = withCurr.length > 0 ? (totCurrLoss / mc) / withCurr.length : null
-  const distAvgPrevLoss = withPrev.length > 0 ? (totPrevLoss / mc) / withPrev.length : null
+  const distAvgCurrLoss = totCurrLoss > 0 ? totCurrLoss / mc : null
+  const distAvgPrevLoss = totPrevLoss > 0 ? totPrevLoss / mc : null
   const distCurrRate = totCurrProd > 0 ? (totCurrLoss / totCurrProd) * 100 : null
   const distPrevRate = totPrevProd > 0 ? (totPrevLoss / totPrevProd) * 100 : null
   const distRateDelta = distCurrRate !== null && distPrevRate !== null ? distCurrRate - distPrevRate : null
@@ -164,7 +164,7 @@ export function NrwYoyTable({ rows, fiscalYear, monthCount }: Props) {
           <tr className="border-t-2 border-white/12 bg-gradient-to-r from-white/5 to-transparent">
             <td className="px-2 py-2 text-white/20 text-center text-[9px]">x̄</td>
             <td className="px-2 py-2">
-              <div className="text-white/50 font-semibold text-xs">ค่าเฉลี่ยเขต</div>
+              <div className="text-white/50 font-semibold text-xs">ภาพรวมเขต</div>
               <div className="text-white/25 text-[9px] mt-0.5">
                 {withCurr.length}/{rows.length} สาขา · {mc} เดือน
               </div>

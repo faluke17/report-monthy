@@ -23,15 +23,19 @@ export default async function MeetingPage() {
   const latest = allMeetings[0] ?? null
   const prev = allMeetings[1] ?? null
 
-  // Which meetings have an agenda filled
+  // Which meetings have pre-agenda / report filled
   const allMeetingIds = allMeetings.map((m) => m.id)
-  const { data: filledHeadersRaw } = allMeetingIds.length > 0
-    ? await supabase
-        .from('meeting_agenda_headers')
-        .select('meeting_id')
-        .in('meeting_id', allMeetingIds)
-    : { data: [] }
-  const agendaFilledIds = new Set((filledHeadersRaw ?? []).map((h: any) => h.meeting_id))
+  let preAgendaFilledIds = new Set<string>()
+  let reportFilledIds = new Set<string>()
+
+  if (allMeetingIds.length > 0) {
+    const [preAgendaRes, reportHeadersRes] = await Promise.all([
+      supabase.from('meeting_pre_agenda').select('meeting_id').in('meeting_id', allMeetingIds),
+      supabase.from('meeting_agenda_headers').select('meeting_id').in('meeting_id', allMeetingIds),
+    ])
+    preAgendaFilledIds = new Set((preAgendaRes.data ?? []).map((h: any) => h.meeting_id))
+    reportFilledIds = new Set((reportHeadersRes.data ?? []).map((h: any) => h.meeting_id))
+  }
 
   // Resolutions for latest two meetings (resolution/followup tabs)
   let latestResolutions: MeetingResolution[] = []
@@ -95,7 +99,8 @@ export default async function MeetingPage() {
   return (
     <MeetingView
       allMeetings={allMeetings}
-      agendaFilledIds={agendaFilledIds}
+      preAgendaFilledIds={preAgendaFilledIds}
+      reportFilledIds={reportFilledIds}
       latestMeeting={latest}
       prevMeeting={prev}
       latestResolutions={latestResolutions}

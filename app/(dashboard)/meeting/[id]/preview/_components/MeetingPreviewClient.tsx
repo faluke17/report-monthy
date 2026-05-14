@@ -19,7 +19,7 @@ import { NrwYoyTable } from '@/components/dashboard/NrwYoyTable'
 import { NrwYoyChart } from '@/components/dashboard/NrwYoyChart'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { StatusPill } from '@/components/shared/StatusPill'
-import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send, Brain, X } from 'lucide-react'
 
 function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: string; initialNotifiedAt: string | null }) {
   const [notifiedAt, setNotifiedAt] = useState(initialNotifiedAt)
@@ -251,6 +251,84 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
+interface PdcaSummaryRow {
+  branch_name: string
+  pdca_do: string | null
+  pdca_act: string | null
+  report_month: number
+  report_year: number
+}
+
+const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+
+function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const summaryMap = new Map(summaries.map(s => [s.branch_name, s]))
+  const detail = selected ? summaryMap.get(selected) : null
+
+  return (
+    <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15">
+        <Brain size={13} className="text-violet-400 shrink-0" />
+        <span className="text-xs font-semibold text-violet-300">ผลการดำเนินการรายสาขา (PDCA)</span>
+        {selected && (
+          <button type="button" onClick={() => setSelected(null)} className="ml-auto text-white/30 hover:text-white/60 transition-colors">
+            <X size={12} />
+          </button>
+        )}
+      </div>
+      <div className="px-4 py-3 flex flex-wrap gap-1.5">
+        {PWA_BRANCHES.map(b => {
+          const has = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
+          const active = selected === b.name_th
+          return (
+            <button
+              key={b.costcenter}
+              type="button"
+              onClick={() => setSelected(active ? null : b.name_th)}
+              className={cn(
+                'text-[10px] px-2 py-0.5 rounded-full border transition-all',
+                active
+                  ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
+                  : has
+                    ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
+                    : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
+              )}
+            >
+              {b.name_th}
+            </button>
+          )
+        })}
+      </div>
+      {selected && (
+        <div className="border-t border-violet-500/15 px-4 py-3 space-y-3">
+          {detail && (detail.pdca_do || detail.pdca_act) ? (
+            <>
+              <p className="text-[10px] text-violet-400/70 font-semibold uppercase tracking-wider">
+                {selected} · {THAI_MONTHS_SHORT[detail.report_month - 1]} {detail.report_year + 543}
+              </p>
+              {detail.pdca_do && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">D — Do</p>
+                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
+                </div>
+              )}
+              {detail.pdca_act && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">A — Act</p>
+                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AgendaBadge({ no }: { no: number }) {
   const colors = [
     '', // 0 unused
@@ -278,8 +356,13 @@ function ResolutionBadge({ type, detail }: { type: string; detail: string | null
     )
   }
   return (
-    <div className="text-xs text-white/50 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-      {detail || 'มติ: อื่นๆ'}
+    <div className="flex items-stretch rounded-lg border border-emerald-500/25 bg-emerald-500/5 overflow-hidden">
+      <span className="shrink-0 flex items-center px-3 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border-r border-emerald-500/20">
+        มติ
+      </span>
+      <p className="flex-1 px-3 py-2.5 text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap">
+        {detail || '—'}
+      </p>
     </div>
   )
 }
@@ -393,6 +476,7 @@ interface Props {
   nrwPrevRaw: any[]
   nrwFiscalYear: number
   nrwMonth: number
+  pdcaSummaries: PdcaSummaryRow[]
 }
 
 export function MeetingPreviewClient({
@@ -406,6 +490,7 @@ export function MeetingPreviewClient({
   nrwPrevRaw,
   nrwFiscalYear,
   nrwMonth,
+  pdcaSummaries,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
   const [selectedBranch, setSelectedBranch] = useState<string>('') // '' = all
@@ -507,11 +592,11 @@ export function MeetingPreviewClient({
           <div className="flex lg:flex-col items-center lg:items-end gap-3 shrink-0">
             <StatusPill status={meeting.status} />
             <Link
-              href={`/meeting/${meeting.id}/agenda`}
+              href={`/meeting/${meeting.id}/report`}
               className="text-sm text-white/50 hover:text-white/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/25 transition-all"
             >
               <FileText size={13} />
-              แก้ไขวาระ
+              แก้ไขรายงาน
             </Link>
             {meeting.status !== 'เสร็จสิ้น' && meeting.status !== 'ยกเลิก' && (
               <SendNotificationButton meetingId={meeting.id} initialNotifiedAt={meeting.notified_at} />
@@ -831,6 +916,11 @@ export function MeetingPreviewClient({
             </div>
           )}
 
+          {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
+          {!hasAgenda6 && (
+            <PdcaBranchPanel summaries={pdcaSummaries} />
+          )}
+
           {/* Branch obstacle browser */}
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
@@ -916,6 +1006,11 @@ export function MeetingPreviewClient({
               <p className="text-xs text-white/40 mt-0.5">วาระที่ 5</p>
             </div>
           </div>
+
+          {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ */}
+          {hasAgenda6 && (
+            <PdcaBranchPanel summaries={pdcaSummaries} />
+          )}
 
           {items(5).length === 0 ? (
             <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">

@@ -124,8 +124,18 @@ function ResolutionBlock({
         <option value="อื่นๆ">อื่นๆ</option>
       </select>
       {value === 'อื่นๆ' && (
-        <textarea className={TEXTAREA} rows={2} placeholder="ระบุมติที่ประชุม..." value={detail}
-          onChange={e => onChange(value, e.target.value)} />
+        <div className="flex items-stretch rounded-lg border border-emerald-500/30 bg-emerald-500/5 focus-within:border-emerald-500/55 overflow-hidden">
+          <span className="shrink-0 flex items-center px-3 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border-r border-emerald-500/25">
+            มติ
+          </span>
+          <textarea
+            className="flex-1 bg-transparent px-3 py-2.5 text-sm text-emerald-100 placeholder:text-emerald-400/30 focus:outline-none resize-none"
+            rows={2}
+            placeholder="ระบุมติที่ประชุม..."
+            value={detail}
+            onChange={e => onChange(value, e.target.value)}
+          />
+        </div>
       )}
     </div>
   )
@@ -486,7 +496,14 @@ function ResolutionBadge({ value, detail }: { value: Resolution; detail: string 
           <CheckCircle size={10} /> รับทราบ
         </span>
       ) : (
-        <span className="text-xs text-white/65">{detail || 'อื่นๆ'}</span>
+        <div className="flex items-stretch rounded-lg border border-emerald-500/25 bg-emerald-500/5 overflow-hidden">
+          <span className="shrink-0 flex items-center px-3 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border-r border-emerald-500/20">
+            มติ
+          </span>
+          <p className="flex-1 px-3 py-2.5 text-sm text-emerald-200 leading-relaxed whitespace-pre-wrap">
+            {detail || '—'}
+          </p>
+        </div>
       )}
     </div>
   )
@@ -869,6 +886,9 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
           </select>
         </h3>
         {openResolutions && <OpenResolutionsPanel resolutions={openResolutions} />}
+        {state.agenda4Type === 'เรื่องติดตามผลการดำเนินการ' && pdcaSummaries && (
+          <PdcaBranchPanel summaries={pdcaSummaries} />
+        )}
         <SubItemGroup agendaNo={4} label={state.agenda4Type} items={state.items4}
           onChange={items => set('items4', items)} />
       </div>
@@ -878,7 +898,9 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
           <AgendaNumBadge n={5} /> วาระที่ 5 : {agenda5Label}
         </h3>
-        {pdcaSummaries && <PdcaBranchPanel summaries={pdcaSummaries} />}
+        {state.agenda4Type === 'เรื่องสืบเนื่อง' && pdcaSummaries && (
+          <PdcaBranchPanel summaries={pdcaSummaries} />
+        )}
         <SubItemGroup agendaNo={5} label={agenda5Label} items={state.items5}
           onChange={items => set('items5', items)} />
       </div>
