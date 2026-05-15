@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase local cache
+supabase/.temp/
+
+# claude local settings
+.claude/settings.local.json
