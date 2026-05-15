@@ -37,13 +37,54 @@ export async function submitPlan(formData: FormData): Promise<ActionResult> {
   const scope = owner_level === 'region' ? 'R10' : branch.code
   const code = await generateRunningCode('PLN', scope, supabase)
 
+  const ordered_by = [session.prefix_name, session.name, session.surname]
+    .filter(Boolean).join('').trim() || session.username
+
   const { error } = await supabase.from('plans').insert({
     code, branch_id, owner_level, plan_type, approach_group, area,
     baseline_nrw, target_nrw, baseline_mnf, target_mnf,
     action_plan, resources, priority, start_date, end_date, pic,
     status: 'รออนุมัติ',
-    created_by: session.username,
+    ordered_by,
   })
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/plans')
+  return { success: true }
+}
+
+export async function updatePlan(
+  id: string,
+  patch: {
+    status?: string
+    progress_pct?: number
+  }
+): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('plans').update(patch).eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/plans')
+  return { success: true }
+}
+
+export async function acknowledgePlan(id: string): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  const supabase = await createClient()
+
+  const acknowledged_by = [session.prefix_name, session.name, session.surname]
+    .filter(Boolean).join('').trim() || session.username
+
+  const { error } = await supabase.from('plans').update({
+    status: 'ระหว่างดำเนินการ',
+    acknowledged_by,
+    acknowledged_at: new Date().toISOString(),
+  }).eq('id', id)
 
   if (error) return { success: false, error: error.message }
 

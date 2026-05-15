@@ -50,8 +50,11 @@ export interface Plan {
   status: 'ระหว่างดำเนินการ' | 'สำเร็จ' | 'ล่าช้า' | 'ยกเลิก' | 'รออนุมัติ'
   progress_pct: number
   created_by: string | null
+  ordered_by: string | null
   approved_by: string | null
   approved_at: string | null
+  acknowledged_by: string | null
+  acknowledged_at: string | null
   created_at: string
   updated_at: string
   // joined
