@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
-  Calendar, Bell, BookOpen, Download, ChevronLeft, ChevronRight,
+  Calendar, BookOpen, Download, ChevronLeft, ChevronRight,
   Droplets, ListChecks, FileText, Crosshair, Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -37,8 +37,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
       { href: '/action',  label: 'Action Tracker',       icon: Crosshair },
-      { href: '/summary',          label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
-      { href: '/notify',           label: 'การแจ้งเตือน',          icon: Bell },
+      { href: '/summary', label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
     ],
   },
   {
@@ -235,14 +234,6 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
                   )}
                   {!sidebarCollapsed && 'badge' in item && item.badge === 'new' && (
                     <span className="nav-badge-new">ใหม่</span>
-                  )}
-                  {item.href === '/notify' && notifyCount > 0 && (
-                    <span className={cn(
-                      'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/25 text-red-400 border border-red-500/30',
-                      sidebarCollapsed ? 'absolute -top-1 -right-1' : ''
-                    )}>
-                      {notifyCount}
-                    </span>
                   )}
                 </Link>
               )

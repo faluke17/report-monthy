@@ -50,7 +50,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
-      <MobileNav notifyCount={notifyCount} />
+      <MobileNav />
     </div>
   )
 }

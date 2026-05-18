@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, ClipboardList, Calendar, Bell,
+  LayoutDashboard, BarChart3, ClipboardList, Calendar, Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,10 +12,10 @@ const MOBILE_NAV = [
   { href: '/ranking',   label: 'อันดับ',   icon: BarChart3 },
   { href: '/monthly',   label: 'รายงาน',   icon: ClipboardList },
   { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
-  { href: '/notify',    label: 'แจ้งเตือน', icon: Bell },
+  { href: '/plans',     label: 'แผน',      icon: Target },
 ]
 
-export function MobileNav({ notifyCount = 0 }: { notifyCount?: number }) {
+export function MobileNav() {
   const pathname = usePathname()
   return (
     <nav
@@ -30,7 +30,6 @@ export function MobileNav({ notifyCount = 0 }: { notifyCount?: number }) {
         {MOBILE_NAV.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const Icon = item.icon
-          const hasNotif = item.href === '/notify' && notifyCount > 0
           return (
             <Link
               key={item.href}
@@ -40,14 +39,7 @@ export function MobileNav({ notifyCount = 0 }: { notifyCount?: number }) {
                 isActive ? 'text-cyan-400' : 'text-white/40 hover:text-white/80'
               )}
             >
-              <span className="relative">
-                <Icon size={20} />
-                {hasNotif && (
-                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full px-0.5">
-                    {notifyCount}
-                  </span>
-                )}
-              </span>
+              <Icon size={20} />
               <span>{item.label}</span>
             </Link>
           )
