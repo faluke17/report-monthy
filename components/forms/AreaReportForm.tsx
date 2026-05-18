@@ -52,7 +52,9 @@ interface AreaSet {
   area_name: string
   area_code: string
   nrw_data_month: { year: number; month: number } | null
+  nrw_after_data_month: { year: number; month: number } | null
   manual_input: boolean
+  manual_input_after: boolean
   water_dist_before: string
   water_sold_before: string
   mnf_before: string
@@ -73,7 +75,9 @@ function newArea(index: number): AreaSet {
     area_name: '',
     area_code: '',
     nrw_data_month: null,
+    nrw_after_data_month: null,
     manual_input: false,
+    manual_input_after: false,
     water_dist_before: '',
     water_sold_before: '',
     mnf_before: '',
@@ -104,10 +108,17 @@ function lookupNrwStat(
   nrwStatsByBranchId: Record<number, NrwAreaLookup[]>,
   dmamabranchId: number | undefined,
   code: string,
+  year: number,
+  month: number,
 ): NrwAreaLookup | undefined {
   if (!dmamabranchId || !code) return undefined
   const stats = nrwStatsByBranchId[dmamabranchId] ?? []
-  return stats.find((s) => s.area_name.startsWith(code + '-') || s.area_name === code)
+  return stats.find(
+    (s) =>
+      s.report_year === year &&
+      s.report_month === month &&
+      (s.area_name.startsWith(code + '-') || s.area_name === code),
+  )
 }
 
 const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
@@ -134,10 +145,12 @@ export function AreaReportForm({
 }: Props) {
   const router = useRouter()
   const now = new Date()
+  const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
 
   const [branchId, setBranchId] = useState(userBranchId ?? '')
-  const [reportYear, setReportYear] = useState(now.getFullYear())
-  const [reportMonth, setReportMonth] = useState(now.getMonth() + 1)
+  const [reportYear, setReportYear] = useState(prevYear)
+  const [reportMonth, setReportMonth] = useState(prevMonth)
   const [areas, setAreas] = useState<AreaSet[]>([newArea(0)])
   const [submitting, setSubmitting] = useState(false)
 
@@ -152,13 +165,22 @@ export function AreaReportForm({
       return
     }
     const dmamabranchId = branchUuidToDmamaId[branchId]
-    const stat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code)
+    const yoyStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code, reportYear - 1, reportMonth)
+    const afterPatch = area?.manual_input_after ? {} : (() => {
+      const currentStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code, reportYear, reportMonth)
+      return {
+        nrw_after_data_month: currentStat ? { year: currentStat.report_year, month: currentStat.report_month } : null,
+        water_dist_after: currentStat?.outbound != null ? String(currentStat.outbound) : '',
+        water_sold_after: currentStat?.distribute_all != null ? String(currentStat.distribute_all) : '',
+      }
+    })()
     patchArea(areaKey, {
       area_name: label,
       area_code: code,
-      nrw_data_month: stat ? { year: stat.report_year, month: stat.report_month } : null,
-      water_dist_before: stat?.outbound != null ? String(stat.outbound) : '',
-      water_sold_before: stat?.distribute_all != null ? String(stat.distribute_all) : '',
+      nrw_data_month: yoyStat ? { year: yoyStat.report_year, month: yoyStat.report_month } : null,
+      water_dist_before: yoyStat?.outbound != null ? String(yoyStat.outbound) : '',
+      water_sold_before: yoyStat?.distribute_all != null ? String(yoyStat.distribute_all) : '',
+      ...afterPatch,
     })
   }
 
@@ -166,7 +188,6 @@ export function AreaReportForm({
     const area = areas.find((a) => a.key === areaKey)
     if (!area) return
     if (checked) {
-      // switch to manual: clear auto-filled values and badge
       patchArea(areaKey, {
         manual_input: true,
         nrw_data_month: null,
@@ -174,14 +195,35 @@ export function AreaReportForm({
         water_sold_before: '',
       })
     } else {
-      // switch back to auto: re-fill from dmama if area is already selected
       const dmamabranchId = branchUuidToDmamaId[branchId]
-      const stat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code)
+      const yoyStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code, reportYear - 1, reportMonth)
       patchArea(areaKey, {
         manual_input: false,
-        nrw_data_month: stat ? { year: stat.report_year, month: stat.report_month } : null,
-        water_dist_before: stat?.outbound != null ? String(stat.outbound) : '',
-        water_sold_before: stat?.distribute_all != null ? String(stat.distribute_all) : '',
+        nrw_data_month: yoyStat ? { year: yoyStat.report_year, month: yoyStat.report_month } : null,
+        water_dist_before: yoyStat?.outbound != null ? String(yoyStat.outbound) : '',
+        water_sold_before: yoyStat?.distribute_all != null ? String(yoyStat.distribute_all) : '',
+      })
+    }
+  }
+
+  function toggleManualInputAfter(areaKey: string, checked: boolean) {
+    const area = areas.find((a) => a.key === areaKey)
+    if (!area) return
+    if (checked) {
+      patchArea(areaKey, {
+        manual_input_after: true,
+        nrw_after_data_month: null,
+        water_dist_after: '',
+        water_sold_after: '',
+      })
+    } else {
+      const dmamabranchId = branchUuidToDmamaId[branchId]
+      const currentStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code, reportYear, reportMonth)
+      patchArea(areaKey, {
+        manual_input_after: false,
+        nrw_after_data_month: currentStat ? { year: currentStat.report_year, month: currentStat.report_month } : null,
+        water_dist_after: currentStat?.outbound != null ? String(currentStat.outbound) : '',
+        water_sold_after: currentStat?.distribute_all != null ? String(currentStat.distribute_all) : '',
       })
     }
   }
@@ -356,7 +398,7 @@ export function AreaReportForm({
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
             <span className="text-sm text-cyan-300/90">
-              {getThaiMonthName(reportMonth)} {toThaiYear(reportYear)}
+              รายงานประจำเดือน {getThaiMonthName(reportMonth)} {toThaiYear(reportYear)}
               {isAdmin && branchId && (
                 <span className="text-cyan-400/60">
                   {' · '}{branches.find((b) => b.id === branchId)?.name_th}
@@ -429,12 +471,17 @@ export function AreaReportForm({
                       ส่วนที่ 2 — ก่อนดำเนินการ
                     </p>
                     <div className="flex items-center gap-3">
-                      {area.nrw_data_month && !area.manual_input && (
-                        <span className="text-[10px] text-cyan-400/50">
-                          ดึงจาก dmama:{' '}
-                          {getThaiMonthName(area.nrw_data_month.month)}{' '}
-                          {toThaiYear(area.nrw_data_month.year)}
-                        </span>
+                      {!area.manual_input && area.area_code && (
+                        area.nrw_data_month ? (
+                          <span className="text-[10px] text-cyan-400/60">
+                            เทียบกับ {getThaiMonthName(area.nrw_data_month.month)}{' '}
+                            {toThaiYear(area.nrw_data_month.year)}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-amber-400/70">
+                            ไม่มีข้อมูลปีก่อน — กรอกเอง
+                          </span>
+                        )
                       )}
                       <label className="flex items-center gap-1.5 cursor-pointer select-none group">
                         <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
@@ -600,9 +647,44 @@ export function AreaReportForm({
 
                 {/* Part 4 ─ หลังดำเนินการ */}
                 <section>
-                  <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest mb-3">
-                    ส่วนที่ 4 — หลังดำเนินการ
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest">
+                      ส่วนที่ 4 — หลังดำเนินการ
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {area.nrw_after_data_month && !area.manual_input_after && (
+                        <span className="text-[10px] text-green-400/60">
+                          ดึงจาก dmama:{' '}
+                          {getThaiMonthName(area.nrw_after_data_month.month)}{' '}
+                          {toThaiYear(area.nrw_after_data_month.year)}
+                        </span>
+                      )}
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none group">
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                          area.manual_input_after
+                            ? 'bg-amber-500 border-amber-500'
+                            : 'bg-transparent border-white/25 group-hover:border-white/50'
+                        }`}>
+                          {area.manual_input_after && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={area.manual_input_after}
+                          onChange={(e) => toggleManualInputAfter(area.key, e.target.checked)}
+                        />
+                        <span className={`text-[10px] font-medium transition-colors ${
+                          area.manual_input_after ? 'text-amber-400' : 'text-white/30 group-hover:text-white/50'
+                        }`}>
+                          กรอกเอง
+                        </span>
+                      </label>
+                    </div>
+                  </div>
 
                   {/* Row 1: inputs */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

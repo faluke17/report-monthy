@@ -8,12 +8,13 @@ const SECTOR_ID = process.env.DMAMA_SECTOR_ID ?? '1'
 const DISTRICT_ID = process.env.DMAMA_DISTRICT_ID ?? '10'
 
 const MONTHS = [
-  { year: 2025, month: 11 },
-  { year: 2025, month: 12 },
-  { year: 2026, month: 1  },
-  { year: 2026, month: 2  },
-  { year: 2026, month: 3  },
-  { year: 2026, month: 4  },
+  { year: 2025, month: 4  },
+  { year: 2025, month: 5  },
+  { year: 2025, month: 6  },
+  { year: 2025, month: 7  },
+  { year: 2025, month: 8  },
+  { year: 2025, month: 9  },
+  { year: 2025, month: 10 },
 ]
 
 const PWA_BRANCHES = [

@@ -12,12 +12,19 @@ const APPROACH_GROUPS = [
   'ALC/Acoustic Logger', 'Commercial Loss', 'Booster Pump', 'อื่นๆ',
 ]
 
+interface BranchUser {
+  id: string
+  full_name: string | null
+  branch_id: string | null
+}
+
 interface Props {
   branches: Branch[]
   profile: UserProfile | null
+  branchUsers?: BranchUser[]
 }
 
-export function PlanForm({ branches, profile }: Props) {
+export function PlanForm({ branches, profile, branchUsers = [] }: Props) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState<Partial<PlanFormData>>({
@@ -46,6 +53,7 @@ export function PlanForm({ branches, profile }: Props) {
   }
 
   const isBranch = ['branch_manager', 'branch_staff'].includes(profile?.role ?? '')
+  const filteredUsers = branchUsers.filter((u) => u.branch_id === form.branch_id && u.full_name)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,7 +61,10 @@ export function PlanForm({ branches, profile }: Props) {
         {!isBranch && (
           <div>
             <label className="block text-sm text-white/60 mb-1.5">สาขา</label>
-            <select value={form.branch_id ?? ''} onChange={(e) => set('branch_id', e.target.value)} required
+            <select
+              value={form.branch_id ?? ''}
+              onChange={(e) => setForm((p) => ({ ...p, branch_id: e.target.value, pic: '' }))}
+              required
               className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60">
               <option value="">— เลือกสาขา —</option>
               {branches.map((b) => <option key={b.id} value={b.id}>{b.name_th} ({b.code})</option>)}
@@ -110,8 +121,19 @@ export function PlanForm({ branches, profile }: Props) {
 
         <div>
           <label className="block text-sm text-white/60 mb-1.5">ผู้รับผิดชอบ</label>
-          <input type="text" value={form.pic ?? ''} onChange={(e) => set('pic', e.target.value)} placeholder="ชื่อ-นามสกุล"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60" />
+          {filteredUsers.length > 0 ? (
+            <select value={form.pic ?? ''} onChange={(e) => set('pic', e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60">
+              <option value="">— เลือกผู้รับผิดชอบ —</option>
+              {filteredUsers.map((u) => (
+                <option key={u.id} value={u.full_name!}>{u.full_name}</option>
+              ))}
+            </select>
+          ) : (
+            <input type="text" value={form.pic ?? ''} onChange={(e) => set('pic', e.target.value)}
+              placeholder={form.branch_id ? 'ไม่พบผู้ใช้ในสาขานี้ กรอกชื่อ-นามสกุล' : 'ชื่อ-นามสกุล'}
+              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60" />
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

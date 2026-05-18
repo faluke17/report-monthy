@@ -50,6 +50,7 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   revalidatePath('/dashboard')
   revalidatePath('/')
   revalidatePath('/ranking')
+  revalidatePath('/monthly')
   return { success: true }
 }
 

@@ -12,7 +12,15 @@ export default async function NewMonthlyPage() {
   const supabase = await createClient()
   const session = await getPwaSession()
 
-  const [{ data: branchData }, { data: mmData }, { data: nrwData }] = await Promise.all([
+  // Compute default report period (previous month) — same logic as the form
+  const now = new Date()
+  const defaultMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const defaultYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  // YoY comparison: fetch same month, one year prior (~265 rows — well within any limit)
+  const yoyYear = defaultYear - 1
+  const yoyMonth = defaultMonth
+
+  const [{ data: branchData }, { data: mmData }, { data: yoyData }, { data: currentData }] = await Promise.all([
     supabase
       .from('branches')
       .select('id, code, name_th, province_th')
@@ -27,9 +35,13 @@ export default async function NewMonthlyPage() {
     supabase
       .from('nrw_area_stats')
       .select('dmama_branch_id, report_year, report_month, area_name, outbound, distribute_all')
-      .order('report_year', { ascending: false })
-      .order('report_month', { ascending: false })
-      .limit(1000),
+      .eq('report_year', yoyYear)
+      .eq('report_month', yoyMonth),
+    supabase
+      .from('nrw_area_stats')
+      .select('dmama_branch_id, report_year, report_month, area_name, outbound, distribute_all')
+      .eq('report_year', defaultYear)
+      .eq('report_month', defaultMonth),
   ])
 
   const branches = sortByPwaBranches((branchData ?? []) as Branch[])
@@ -49,22 +61,12 @@ export default async function NewMonthlyPage() {
     if (dmamaId) branchUuidToDmamaId[b.id] = dmamaId
   }
 
-  // Keep only the latest month per branch, then group by dmama_branch_id
+  // Combine YoY (before) + current month (after) into one lookup map
   type RawRow = { dmama_branch_id: number; report_year: number; report_month: number; area_name: string; outbound: number | null; distribute_all: number | null }
-  const rows = (nrwData ?? []) as RawRow[]
-
-  const latestByBranch: Record<number, { year: number; month: number }> = {}
-  for (const row of rows) {
-    const cur = latestByBranch[row.dmama_branch_id]
-    if (!cur || row.report_year > cur.year || (row.report_year === cur.year && row.report_month > cur.month)) {
-      latestByBranch[row.dmama_branch_id] = { year: row.report_year, month: row.report_month }
-    }
-  }
+  const allRows = [...(yoyData ?? []), ...(currentData ?? [])] as RawRow[]
 
   const nrwStatsByBranchId: Record<number, NrwAreaLookup[]> = {}
-  for (const row of rows) {
-    const latest = latestByBranch[row.dmama_branch_id]
-    if (!latest || row.report_year !== latest.year || row.report_month !== latest.month) continue
+  for (const row of allRows) {
     if (!nrwStatsByBranchId[row.dmama_branch_id]) nrwStatsByBranchId[row.dmama_branch_id] = []
     nrwStatsByBranchId[row.dmama_branch_id].push({
       area_name: row.area_name,
