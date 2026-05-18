@@ -24,6 +24,13 @@ interface Props {
   canDelete: boolean
 }
 
+function nrwColor(v: number | null) {
+  if (v == null) return { text: 'text-white/25', strip: 'bg-white/10' }
+  if (v <= 20)   return { text: 'text-green-400', strip: 'bg-green-500' }
+  if (v <= 25)   return { text: 'text-amber-400', strip: 'bg-amber-500' }
+  return           { text: 'text-red-400',   strip: 'bg-red-500'   }
+}
+
 export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
 
@@ -31,70 +38,172 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
     ? allRows.filter((r) => r.branch_id === selectedBranchId)
     : []
 
+  const submitted    = summaries.filter((s) => s.submitted)
+  const notSubmitted = summaries.filter((s) => !s.submitted)
+  const total        = summaries.length
+  const pct          = total > 0 ? Math.round((submitted.length / total) * 100) : 0
+
+  // KPI aggregates
+  const validNrw   = submitted.map((s) => s.avgNrwAfter).filter((n): n is number => n != null)
+  const avgNrw     = validNrw.length > 0 ? validNrw.reduce((a, b) => a + b, 0) / validNrw.length : null
+  const highPrio   = summaries.reduce((a, s) => a + s.highPriorityObstacles, 0)
+  const totalAreas = summaries.reduce((a, s) => a + s.areaCount, 0)
+
+  const progressColor =
+    pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'
+
+  // Submitted: worst NRW first
+  const sortedSubmitted = [...submitted].sort(
+    (a, b) => (b.avgNrwAfter ?? -1) - (a.avgNrwAfter ?? -1),
+  )
+
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-        {summaries.map((s) => {
-          const nrwColor =
-            s.avgNrwAfter == null ? 'text-white/25'
-            : s.avgNrwAfter <= 20 ? 'text-green-400'
-            : s.avgNrwAfter <= 25 ? 'text-amber-400'
-            : 'text-red-400'
+      <div className="space-y-5">
 
-          const hasHighPrio = s.highPriorityObstacles > 0
+        {/* ── KPI Bar ──────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* ส่งแล้ว */}
+          <div className="glass-card-sm p-4 space-y-1">
+            <p className="text-xs text-white/40">ส่งแล้ว</p>
+            <p className="text-2xl font-bold text-cyan-400 num">
+              {submitted.length}
+              <span className="text-base font-normal text-white/30"> / {total}</span>
+            </p>
+            <p className="text-xs text-white/30">สาขา</p>
+          </div>
 
-          return (
-            <button
-              key={s.branch_id}
-              onClick={() => s.submitted && setSelectedBranchId(s.branch_id)}
-              disabled={!s.submitted}
-              className={`glass-card-sm p-4 text-left space-y-2.5 transition-all text-sm w-full
-                ${s.submitted
-                  ? `hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer ${hasHighPrio ? 'border-red-500/25' : ''}`
-                  : 'opacity-40 cursor-default'
-                }`}
-            >
-              {/* Code + status pill */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold num bg-white/10 px-1.5 py-0.5 rounded text-white/50 shrink-0">
-                  {s.code}
-                </span>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 ${
-                  s.submitted
-                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
-                    : 'bg-white/5 border-white/10 text-white/30'
-                }`}>
-                  {s.submitted ? 'ส่งแล้ว' : 'ยังไม่ส่ง'}
-                </span>
-              </div>
+          {/* NRW เฉลี่ย */}
+          <div className="glass-card-sm p-4 space-y-1">
+            <p className="text-xs text-white/40">NRW เฉลี่ย</p>
+            <p className={`text-2xl font-bold num ${nrwColor(avgNrw).text}`}>
+              {avgNrw != null ? `${avgNrw.toFixed(1)}%` : '—'}
+            </p>
+            <p className="text-xs text-white/30">หลังดำเนินการ</p>
+          </div>
 
-              {/* Branch name */}
-              <p className="text-sm font-semibold text-white leading-tight">{s.name_th}</p>
+          {/* อุปสรรคเร่งด่วน */}
+          <div className="glass-card-sm p-4 space-y-1">
+            <p className="text-xs text-white/40">อุปสรรคเร่งด่วน</p>
+            <p className={`text-2xl font-bold num ${highPrio > 0 ? 'text-red-400' : 'text-white/25'}`}>
+              {highPrio}
+            </p>
+            <p className="text-xs text-white/30">รายการ</p>
+          </div>
 
-              {/* NRW */}
-              {s.submitted ? (
-                <p className={`text-xl font-bold num ${nrwColor}`}>
-                  {s.avgNrwAfter != null ? `${s.avgNrwAfter.toFixed(1)}%` : '—'}
-                </p>
-              ) : (
-                <p className="text-sm text-white/20">ไม่มีข้อมูล</p>
-              )}
+          {/* พื้นที่รายงาน */}
+          <div className="glass-card-sm p-4 space-y-1">
+            <p className="text-xs text-white/40">พื้นที่รายงาน</p>
+            <p className="text-2xl font-bold text-teal-400 num">{totalAreas}</p>
+            <p className="text-xs text-white/30">พื้นที่</p>
+          </div>
+        </div>
 
-              {/* Footer: areas + obstacles */}
-              <div className="flex items-center gap-2 text-[10px] text-white/40">
-                {s.submitted && <span>{s.areaCount} พื้นที่</span>}
-                {s.totalObstacles > 0 && (
-                  <span className={`flex items-center gap-0.5 font-bold ${
-                    hasHighPrio ? 'text-red-300' : 'text-amber-300'
-                  }`}>
-                    <AlertTriangle size={9} />
-                    {s.totalObstacles}
-                  </span>
-                )}
-              </div>
-            </button>
-          )
-        })}
+        {/* ── Progress Bar ─────────────────────────── */}
+        <div className="glass-card-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-white/60 font-medium">ความคืบหน้าการส่งรายงาน</span>
+            <span className="font-bold text-white num">{pct}%</span>
+          </div>
+          <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${progressColor}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-xs text-white/40 num">
+            ส่งแล้ว {submitted.length} / {total} สาขา
+            {notSubmitted.length > 0 && ` · รอ ${notSubmitted.length} สาขา`}
+          </p>
+        </div>
+
+        {/* ── ยังไม่ส่ง ─────────────────────────────── */}
+        {notSubmitted.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={14} className="text-orange-400 shrink-0" />
+              <p className="text-sm font-semibold text-orange-400">
+                ยังไม่ส่ง ({notSubmitted.length} สาขา)
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {notSubmitted.map((s) => (
+                <div
+                  key={s.branch_id}
+                  className="flex items-center gap-1.5 border border-orange-500/25 bg-orange-500/5 rounded-lg px-3 py-1.5"
+                >
+                  <span className="text-[10px] font-bold text-orange-400/60 num">{s.code}</span>
+                  <span className="text-sm text-white/70">{s.name_th}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── ส่งแล้ว ──────────────────────────────── */}
+        {sortedSubmitted.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-white/60">
+              ส่งแล้ว ({sortedSubmitted.length} สาขา) · เรียงตาม NRW สูงสุดก่อน
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {sortedSubmitted.map((s) => {
+                const { text, strip } = nrwColor(s.avgNrwAfter)
+                const hasHighPrio = s.highPriorityObstacles > 0
+
+                return (
+                  <button
+                    key={s.branch_id}
+                    onClick={() => setSelectedBranchId(s.branch_id)}
+                    className={`glass-card-sm text-left overflow-hidden transition-all hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer w-full
+                      ${hasHighPrio ? 'border-red-500/30' : 'border-white/10'}`}
+                  >
+                    {/* Colored top strip */}
+                    <div className={`h-1 w-full ${strip}`} />
+
+                    <div className="p-4 space-y-3">
+                      {/* Code + status */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold num bg-white/10 px-1.5 py-0.5 rounded text-white/50 shrink-0">
+                          {s.code}
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shrink-0">
+                          ส่งแล้ว
+                        </span>
+                      </div>
+
+                      {/* Branch name */}
+                      <p className="text-sm font-semibold text-white leading-tight">{s.name_th}</p>
+
+                      {/* NRW big number */}
+                      <div>
+                        <p className={`text-3xl font-bold num ${text}`}>
+                          {s.avgNrwAfter != null ? `${s.avgNrwAfter.toFixed(1)}%` : '—'}
+                        </p>
+                        <p className="text-[10px] text-white/30 mt-0.5">NRW หลังดำเนินการ</p>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/40">{s.areaCount} พื้นที่</span>
+                        {s.totalObstacles > 0 && (
+                          <span className={`flex items-center gap-1 text-xs font-bold ${
+                            hasHighPrio ? 'text-red-400' : 'text-amber-400'
+                          }`}>
+                            <AlertTriangle size={10} />
+                            {hasHighPrio
+                              ? `${s.highPriorityObstacles} เร่งด่วน`
+                              : `${s.totalObstacles} อุปสรรค`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <Sheet open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>

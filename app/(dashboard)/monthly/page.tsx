@@ -79,7 +79,6 @@ export default async function MonthlyPage({
 
   // District view: compute per-branch summaries
   const summaries = !isBranchUser ? computeBranchSummaries(rows, branches) : []
-  const submittedCount = summaries.filter((s) => s.submitted).length
 
   // Branch view: compute summary stats
   const branchStats = isBranchUser ? (() => {
@@ -108,7 +107,6 @@ export default async function MonthlyPage({
           </h1>
           <p className="text-sm text-white/40 mt-0.5">
             {periodLabel}
-            {!isBranchUser && ` · ส่งแล้ว ${submittedCount}/${branches.length} สาขา`}
             {isBranchUser && rows.length === 0 && ' · ยังไม่มีรายงาน'}
           </p>
         </div>
