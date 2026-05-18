@@ -12,6 +12,7 @@ export interface BranchSummaryItem {
   code: string
   areaCount: number
   submitted: boolean
+  avgNrwBefore: number | null
   avgNrwAfter: number | null
   highPriorityObstacles: number
   totalObstacles: number
@@ -44,8 +45,9 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
   const pct          = total > 0 ? Math.round((submitted.length / total) * 100) : 0
 
   // KPI aggregates
-  const validNrw   = submitted.map((s) => s.avgNrwAfter).filter((n): n is number => n != null)
-  const avgNrw     = validNrw.length > 0 ? validNrw.reduce((a, b) => a + b, 0) / validNrw.length : null
+  const nrwReduced = submitted.filter(
+    (s) => s.avgNrwBefore != null && s.avgNrwAfter != null && s.avgNrwAfter < s.avgNrwBefore,
+  ).length
   const highPrio   = summaries.reduce((a, s) => a + s.highPriorityObstacles, 0)
   const totalAreas = summaries.reduce((a, s) => a + s.areaCount, 0)
 
@@ -73,13 +75,14 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
             <p className="text-xs text-white/30">สาขา</p>
           </div>
 
-          {/* NRW เฉลี่ย */}
+          {/* ลด NRW ได้ */}
           <div className="glass-card-sm p-4 space-y-1">
-            <p className="text-xs text-white/40">NRW เฉลี่ย</p>
-            <p className={`text-2xl font-bold num ${nrwColor(avgNrw).text}`}>
-              {avgNrw != null ? `${avgNrw.toFixed(1)}%` : '—'}
+            <p className="text-xs text-white/40">ลด NRW ได้</p>
+            <p className={`text-2xl font-bold num ${nrwReduced > 0 ? 'text-green-400' : 'text-white/25'}`}>
+              {nrwReduced}
+              <span className="text-base font-normal text-white/30"> / {submitted.length}</span>
             </p>
-            <p className="text-xs text-white/30">หลังดำเนินการ</p>
+            <p className="text-xs text-white/30">สาขา (หลัง &lt; ก่อน)</p>
           </div>
 
           {/* อุปสรรคเร่งด่วน */}

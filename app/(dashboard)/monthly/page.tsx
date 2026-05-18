@@ -13,25 +13,34 @@ import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 export const dynamic = 'force-dynamic'
 
 function computeBranchSummaries(rows: AreaReport[], branches: Branch[]): BranchSummaryItem[] {
-  const map = new Map<string, { dist: number; sold: number; areas: number; highPrio: number; totalObs: number }>()
+  const map = new Map<string, {
+    distBefore: number; soldBefore: number
+    dist: number; sold: number
+    areas: number; highPrio: number; totalObs: number
+  }>()
   for (const r of rows) {
-    if (!map.has(r.branch_id)) map.set(r.branch_id, { dist: 0, sold: 0, areas: 0, highPrio: 0, totalObs: 0 })
+    if (!map.has(r.branch_id))
+      map.set(r.branch_id, { distBefore: 0, soldBefore: 0, dist: 0, sold: 0, areas: 0, highPrio: 0, totalObs: 0 })
     const agg = map.get(r.branch_id)!
     agg.areas++
-    agg.dist += r.water_dist_after ?? 0
-    agg.sold += r.water_sold_after ?? 0
+    agg.distBefore += r.water_dist_before ?? 0
+    agg.soldBefore += r.water_sold_before ?? 0
+    agg.dist  += r.water_dist_after ?? 0
+    agg.sold  += r.water_sold_after ?? 0
     agg.totalObs += r.area_obstacles?.length ?? 0
     agg.highPrio += r.area_obstacles?.filter((o) => o.priority_order === 1).length ?? 0
   }
   return branches.map((b) => {
     const agg = map.get(b.id)
-    const avgNrwAfter = agg && agg.dist > 0 ? ((agg.dist - agg.sold) / agg.dist) * 100 : null
+    const avgNrwBefore = agg && agg.distBefore > 0 ? ((agg.distBefore - agg.soldBefore) / agg.distBefore) * 100 : null
+    const avgNrwAfter  = agg && agg.dist > 0 ? ((agg.dist - agg.sold) / agg.dist) * 100 : null
     return {
       branch_id: b.id,
       name_th: b.name_th,
       code: b.code,
       areaCount: agg?.areas ?? 0,
       submitted: (agg?.areas ?? 0) > 0,
+      avgNrwBefore,
       avgNrwAfter,
       highPriorityObstacles: agg?.highPrio ?? 0,
       totalObstacles: agg?.totalObs ?? 0,
