@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { LogOut, User, FileText } from 'lucide-react'
+import { LogOut, User, Bell } from 'lucide-react'
 import { PwaSession } from '@/lib/pwa-auth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -11,6 +11,7 @@ import {
 
 interface TopbarProps {
   session: PwaSession
+  notifyCount?: number
 }
 
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
@@ -27,7 +28,7 @@ const PAGE_META: Record<string, { kicker: string; title: string }> = {
   '/export':    { kicker: 'Data Export',    title: 'ส่งออกรายงาน' },
 }
 
-export function Topbar({ session }: TopbarProps) {
+export function Topbar({ session, notifyCount = 0 }: TopbarProps) {
   const pathname = usePathname()
 
   const meta = Object.entries(PAGE_META).find(([path]) =>
@@ -43,8 +44,6 @@ export function Topbar({ session }: TopbarProps) {
 
   const fullName = `${session.name} ${session.surname}`.trim()
   const initials = [session.name[0], session.surname[0]].filter(Boolean).join('').toUpperCase()
-
-  const showSummaryBtn = pathname !== '/summary'
 
   return (
     <header
@@ -68,15 +67,18 @@ export function Topbar({ session }: TopbarProps) {
           </span>
         )}
 
-        {showSummaryBtn && (
-          <button
-            onClick={() => router.push('/summary')}
-            className="hidden sm:flex items-center gap-1.5 text-xs border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <FileText size={13} />
-            สรุป 1 หน้า
-          </button>
-        )}
+        <button
+          onClick={() => router.push('/notify')}
+          className="relative flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/5 transition-colors"
+          aria-label="การแจ้งเตือน"
+        >
+          <Bell size={18} className={notifyCount > 0 ? 'text-amber-300' : 'text-white/40'} />
+          {notifyCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1 num">
+              {notifyCount > 99 ? '99+' : notifyCount}
+            </span>
+          )}
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
