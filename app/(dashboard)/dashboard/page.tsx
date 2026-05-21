@@ -76,8 +76,9 @@ export default async function DashboardPage() {
       .select('*')
       .eq('report_year', reportYear)
       .eq('report_month', reportMonth),
+    // นับจาก area_monthly_reports เพราะสาขาส่งรายงานผ่านตารางนี้
     supabase
-      .from('monthly_reports')
+      .from('area_monthly_reports')
       .select('branch_id')
       .eq('report_year', reportYear)
       .eq('report_month', reportMonth)
@@ -91,7 +92,7 @@ export default async function DashboardPage() {
     meetingsWithReqs.map(m => [m.id, m.requirements])
   )
 
-  // นับสาขาที่ยังไม่ได้ submit monthly_reports (ตัด draft ออก)
+  // นับสาขาที่ยังไม่ได้ส่ง area_monthly_reports (ตัด draft ออก)
   const submittedIds = new Set((submittedResult.data ?? []).map((r) => r.branch_id as string))
   const pdcaNonSubmittedBranches = branches.filter((b) => !submittedIds.has(b.id))
 
