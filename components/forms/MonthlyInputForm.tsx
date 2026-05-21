@@ -25,12 +25,16 @@ export function MonthlyInputForm({ branches, profile, plans }: Props) {
   const now = new Date()
   const isBranch = ['branch_manager', 'branch_staff'].includes(profile?.role ?? '')
 
+  // default = เดือนก่อนหน้า (รายงานที่กรอกในเดือนนี้ = ข้อมูลเดือนที่แล้ว)
+  const defaultReportMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const defaultReportYear  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+
   // Form state
   const [form, setForm] = useState({
     branch_id: profile?.branch_id ?? '',
     plan_id: '',
-    report_year: now.getFullYear(),
-    report_month: now.getMonth() + 1,
+    report_year: defaultReportYear,
+    report_month: defaultReportMonth,
     volume_distributed: '',
     volume_sold: '',
     days_in_month: '30',
@@ -81,6 +85,7 @@ export function MonthlyInputForm({ branches, profile, plans }: Props) {
       try {
         const parsed = JSON.parse(draft)
         if (parsed.branch_id === (profile?.branch_id ?? '')) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setForm(parsed)
           toast.info('กู้คืนแบบร่างที่บันทึกไว้')
         }

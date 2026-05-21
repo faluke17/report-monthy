@@ -7,11 +7,12 @@ import { TrafficLightGrid } from '@/components/dashboard/TrafficLightGrid'
 import { MeetingBanner } from '@/components/dashboard/MeetingBanner'
 import { AlertPanel } from '@/components/dashboard/AlertPanel'
 import { DashboardSkeleton } from '@/components/shared/skeletons'
-import { Branch, Meeting, MonthlyReport, Obstacle } from '@/lib/types'
+import { Branch, Meeting, MonthlyReport, Obstacle, RequirementWithStatus } from '@/lib/types'
 import { UnsubmittedPanel } from '@/components/dashboard/UnsubmittedPanel'
 import { ObstacleSummaryPanel } from '@/components/dashboard/ObstacleSummaryPanel'
 import { LeakSummaryPanel } from '@/components/dashboard/LeakSummaryPanel'
 import { RatsReadingPanel } from '@/components/dashboard/RatsReadingPanel'
+import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,26 +26,17 @@ export default async function DashboardPage() {
 
   const [
     branchesResult,
-    reportsResult,
-    meetingResult,
+    meetingsResult,
     overdueActionsResult,
     obstaclesResult,
-    pdcaSubmittedResult,
   ] = await Promise.all([
     supabase.from('branches').select('*').eq('is_active', true).order('province_th'),
-    supabase
-      .from('monthly_reports')
-      .select('*')
-      .eq('report_year', year)
-      .eq('report_month', month),
     supabase
       .from('meetings')
       .select('*')
       .eq('status', 'กำหนดแล้ว')
       .gte('scheduled_date', today)
-      .order('scheduled_date', { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+      .order('scheduled_date', { ascending: true }),
     supabase
       .from('action_items')
       .select('id', { count: 'exact', head: true })
@@ -54,21 +46,54 @@ export default async function DashboardPage() {
       .from('obstacles')
       .select('id, status, category')
       .not('status', 'eq', 'ปิดประเด็น'),
-    supabase
-      .from('area_monthly_reports')
-      .select('branch_id')
-      .eq('report_year', year)
-      .eq('report_month', month),
   ])
 
   const branches = (branchesResult.data ?? []) as Branch[]
-  const reports = (reportsResult.data ?? []) as MonthlyReport[]
-  const meeting = meetingResult.data as Meeting | null
+  const upcomingMeetings = (meetingsResult.data ?? []) as Meeting[]
   const overdueCount = overdueActionsResult.count ?? 0
   const obstacles = (obstaclesResult.data ?? []) as Pick<Obstacle, 'id' | 'status' | 'category'>[]
-  // PDCA submission tracking
-  const pdcaSubmittedIds = new Set((pdcaSubmittedResult.data ?? []).map((r) => r.branch_id as string))
-  const pdcaNonSubmittedBranches = branches.filter((b) => !pdcaSubmittedIds.has(b.id))
+
+  // หา meeting ที่ระบุ report period ไว้ → ใช้เป็น source of truth ว่านับรายงานเดือนไหน
+  const periodMeeting = upcomingMeetings.find(
+    (m) => m.report_month !== null && m.report_year !== null
+  ) ?? null
+
+  const meetingsWithReqs = await getMeetingsWithRequirements()
+
+  // หา requirement monthly_report จาก meeting ที่ใกล้ที่สุด
+  const primaryReq = meetingsWithReqs
+    .flatMap(m => m.requirements)
+    .find(r => r.requirement_type === 'monthly_report') ?? null
+
+  // คำนวณ period จาก requirement หรือ fallback
+  const reportMonth = primaryReq?.target_month ?? periodMeeting?.report_month ?? (month === 1 ? 12 : month - 1)
+  const reportYear  = primaryReq?.target_year  ?? periodMeeting?.report_year  ?? (month === 1 ? year - 1 : year)
+
+  // ดึงรายงานของเดือนที่กำหนด
+  const [reportsResult, submittedResult] = await Promise.all([
+    supabase
+      .from('monthly_reports')
+      .select('*')
+      .eq('report_year', reportYear)
+      .eq('report_month', reportMonth),
+    supabase
+      .from('monthly_reports')
+      .select('branch_id')
+      .eq('report_year', reportYear)
+      .eq('report_month', reportMonth)
+      .in('status', ['submitted', 'reviewed']),
+  ])
+
+  const reports = (reportsResult.data ?? []) as MonthlyReport[]
+
+  // สร้าง requirementsByMeetingId สำหรับส่งไป MeetingBanner
+  const requirementsByMeetingId: Record<string, RequirementWithStatus[]> = Object.fromEntries(
+    meetingsWithReqs.map(m => [m.id, m.requirements])
+  )
+
+  // นับสาขาที่ยังไม่ได้ submit monthly_reports (ตัด draft ออก)
+  const submittedIds = new Set((submittedResult.data ?? []).map((r) => r.branch_id as string))
+  const pdcaNonSubmittedBranches = branches.filter((b) => !submittedIds.has(b.id))
 
   // Compute KPIs
   const withNrw = reports.filter((r) => r.nrw_pct !== null)
@@ -88,15 +113,19 @@ export default async function DashboardPage() {
     count: obstacles.filter((o) => o.status === s).length,
   }))
 
-  const totalLeaksFound    = reports.reduce((s, r) => s + (r.leaks_found    ?? 0), 0)
-  const totalLeaksRepaired = reports.reduce((s, r) => s + (r.leaks_repaired ?? 0), 0)
-  const totalLeaksPending  = reports.reduce((s, r) => s + (r.leaks_pending  ?? 0), 0)
+  // เฉพาะรายงานที่ submit แล้ว — ตัด draft ที่ยังไม่ยืนยันออก
+  const confirmedReports = reports.filter((r) => r.status === 'submitted' || r.status === 'reviewed')
+  const totalLeaksFound    = confirmedReports.reduce((s, r) => s + (r.leaks_found    ?? 0), 0)
+  const totalLeaksRepaired = confirmedReports.reduce((s, r) => s + (r.leaks_repaired ?? 0), 0)
+  const totalLeaksPending  = confirmedReports.reduce((s, r) => s + (r.leaks_pending  ?? 0), 0)
   const repairRatio        = totalLeaksFound > 0
     ? Math.round((totalLeaksRepaired / totalLeaksFound) * 100) : 0
 
   return (
     <div className="space-y-6">
-      {meeting && <MeetingBanner meeting={meeting} />}
+      {upcomingMeetings.length > 0 && (
+        <MeetingBanner meetings={upcomingMeetings} requirementsByMeetingId={requirementsByMeetingId} />
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -137,7 +166,11 @@ export default async function DashboardPage() {
           <UnsubmittedPanel
             nonSubmittedBranches={pdcaNonSubmittedBranches}
             totalBranches={branches.length}
-            nextMeeting={meeting}
+            reportYear={reportYear}
+            reportMonth={reportMonth}
+            periodMeeting={periodMeeting}
+            requirementTitle={primaryReq?.title ?? undefined}
+            requirementDueDate={primaryReq?.due_date ?? undefined}
           />
           <ObstacleSummaryPanel
             total={obstacles.length}

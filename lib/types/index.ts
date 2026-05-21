@@ -158,6 +158,8 @@ export interface Meeting {
   notification_message: string | null
   status: 'กำหนดแล้ว' | 'เสร็จสิ้น' | 'เลื่อน' | 'ยกเลิก'
   notified_at: string | null
+  report_year: number | null
+  report_month: number | null
   created_by: string | null
   created_at: string
   updated_at: string

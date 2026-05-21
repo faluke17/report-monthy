@@ -39,12 +39,12 @@ async function getFulfilledCostcenters(
 
   if (req.requirement_type === 'monthly_report' && req.target_year && req.target_month) {
     const { data } = await supabase
-      .from('monthly_reports')
+      .from('area_monthly_reports')
       .select('branch_id, branches!inner(name_th)')
       .eq('report_year', req.target_year)
       .eq('report_month', req.target_month)
-      .neq('status', 'draft')
-    return extractCC(data ?? [])
+      .eq('status', 'submitted')
+    return [...new Set(extractCC(data ?? []))]
   }
 
   if (req.requirement_type === 'five_topics' && req.target_year && req.target_month) {
@@ -141,7 +141,7 @@ export async function getMeetingsWithRequirements(opts?: {
   branchCostcenter?: string | null  // null = region user (all branches)
 }): Promise<MeetingWithRequirements[]> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString().split('T')[0]
 
   // ดึง meetings ที่ active (ยังไม่เสร็จ + ยังไม่ผ่านไปนาน)
   const { data: meetings } = await supabase
@@ -149,7 +149,7 @@ export async function getMeetingsWithRequirements(opts?: {
     .select('id, title, scheduled_date')
     .eq('status', 'กำหนดแล้ว')
     .not('notified_at', 'is', null)
-    .gte('scheduled_date', new Date(Date.now() - 30 * 86400_000).toISOString().split('T')[0])
+    .gte('scheduled_date', thirtyDaysAgo)
     .order('scheduled_date', { ascending: true })
 
   if (!meetings || meetings.length === 0) return []

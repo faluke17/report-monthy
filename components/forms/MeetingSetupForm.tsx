@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { submitMeeting } from '@/app/actions/meetings'
 import { Calendar, MapPin, Link2, Users, FileText, Bell, Eye, Save, Trash2, Plus, X, ClipboardList } from 'lucide-react'
+import { getThaiMonthName } from '@/lib/utils/date-th'
 import type { MeetingRequirementType } from '@/lib/types'
 
 const DRAFT_KEY = 'meeting_setup_draft'
@@ -74,32 +75,47 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
-  const [hasDraft, setHasDraft] = useState(false)
+  const [hasDraft, setHasDraft] = useState(() =>
+    typeof window !== 'undefined' && !!localStorage.getItem(DRAFT_KEY)
+  )
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [requirements, setRequirements] = useState<RequirementDraft[]>([])
+  const [reportMonth, setReportMonth] = useState<number | ''>('')
+  const [reportYearBe, setReportYearBe] = useState<number | ''>('')
+  const periodAutoSetRef = useRef(false)
 
   const [form, setForm] = useState(() => {
     if (typeof window === 'undefined') return EMPTY_FORM
     try {
       const saved = localStorage.getItem(DRAFT_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setHasDraft(true)
-        return { ...EMPTY_FORM, ...parsed }
-      }
+      if (saved) return { ...EMPTY_FORM, ...JSON.parse(saved) }
     } catch {}
     return EMPTY_FORM
   })
 
+  // auto-suggest report period เมื่อเลือก meeting_type = NRW Monthly + scheduled_date
   useEffect(() => {
-    const saved = localStorage.getItem(DRAFT_KEY)
-    if (saved) setHasDraft(true)
-  }, [])
+    if (form.meeting_type !== 'WSC-R/NRW Monthly' || !form.scheduled_date) return
+    if (periodAutoSetRef.current) return
+    const d = new Date(form.scheduled_date)
+    const m = d.getMonth() + 1
+    const suggestMonth = m === 1 ? 12 : m - 1
+    const suggestYear  = m === 1 ? d.getFullYear() - 1 : d.getFullYear()
+    setReportMonth(suggestMonth)
+    setReportYearBe(suggestYear + 543)
+    periodAutoSetRef.current = true
+  }, [form.scheduled_date, form.meeting_type])
 
   function set(field: string, value: string) {
     setForm((p: typeof EMPTY_FORM) => {
       const next = { ...p, [field]: value }
+      // เมื่อ meeting_type เปลี่ยน → reset period auto-suggest และล้างค่า
+      if (field === 'meeting_type') {
+        periodAutoSetRef.current = false
+        setReportMonth('')
+        setReportYearBe('')
+      }
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
       autoSaveTimer.current = setTimeout(() => {
         localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
@@ -161,6 +177,11 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
     setSubmitting(true)
     const fd = new FormData()
     Object.entries(form).forEach(([k, v]) => fd.append(k, v as string))
+    // แนบ report period ถ้าเป็น NRW Monthly และมีค่า
+    if (form.meeting_type === 'WSC-R/NRW Monthly' && reportMonth !== '' && reportYearBe !== '') {
+      fd.append('report_month', String(reportMonth))
+      fd.append('report_year', String(Number(reportYearBe) - 543)) // BE → AD
+    }
     // แนบ requirements เป็น JSON
     const reqPayload = requirements.map(({ id: _id, ...r }) => ({
       ...r,
@@ -292,6 +313,57 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
           </div>
         </div>
       </div>
+
+      {/* รายงานที่ประชุมพิจารณา — แสดงเฉพาะ WSC-R/NRW Monthly */}
+      {form.meeting_type === 'WSC-R/NRW Monthly' && (
+        <div className="glass-card p-6 space-y-4 border border-cyan-500/20">
+          <div className="flex items-center gap-2 mb-1">
+            <FileText size={15} className="text-cyan-400" />
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">รายงานที่ประชุมพิจารณา</span>
+            {reportMonth !== '' && reportYearBe !== '' && (
+              <span className="ml-auto text-[11px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                {getThaiMonthName(Number(reportMonth))} {reportYearBe}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-white/40">
+            dashboard จะนับสาขาที่ส่ง/ยังไม่ส่งรายงานตามเดือนนี้ — ระบบแนะนำเดือนก่อนวันประชุม
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/60 mb-1.5">เดือนรายงาน</label>
+              <select
+                value={reportMonth}
+                onChange={(e) => {
+                  setReportMonth(e.target.value === '' ? '' : Number(e.target.value))
+                  periodAutoSetRef.current = true
+                }}
+                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              >
+                <option value="">— เลือกเดือน —</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={m}>{getThaiMonthName(m)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-1.5">ปี (พ.ศ.)</label>
+              <input
+                type="number"
+                value={reportYearBe}
+                onChange={(e) => {
+                  setReportYearBe(e.target.value === '' ? '' : Number(e.target.value))
+                  periodAutoSetRef.current = true
+                }}
+                placeholder="เช่น 2569"
+                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ส่วนที่ 2 – กลุ่มเป้าหมายและการแจ้งเตือน */}
       <div className="glass-card p-6 space-y-4">

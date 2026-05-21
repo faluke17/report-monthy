@@ -3,7 +3,7 @@ import { getPwaSession } from '@/lib/pwa-auth'
 import { Meeting, MeetingAcknowledgment, ResolutionNotification } from '@/lib/types'
 import { formatThaiDate, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
-import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen, Bell, ClipboardList } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen, Bell, ClipboardList, ArrowRight } from 'lucide-react'
 import { AckButton } from '@/components/shared/AckButton'
 import { NotificationAckButton } from '@/components/shared/NotificationAckButton'
 import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
@@ -143,6 +143,22 @@ export default async function NotifyPage() {
                       {/* Branch: fulfill button for custom type */}
                       {!isRegion && req.requirement_type === 'custom' && !req.is_fulfilled_by_me && (
                         <RequirementFulfillButton requirementId={req.id} />
+                      )}
+                      {!isRegion && req.requirement_type === 'monthly_report' && !req.is_fulfilled_by_me && req.target_year && req.target_month && (
+                        <a
+                          href={`/monthly/new?year=${req.target_year}&month=${req.target_month}`}
+                          className="flex items-center gap-1 text-[12px] font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          ส่งรายงาน <ArrowRight size={11} />
+                        </a>
+                      )}
+                      {!isRegion && req.requirement_type === 'km_case' && !req.is_fulfilled_by_me && (
+                        <a
+                          href="/km/new"
+                          className="flex items-center gap-1 text-[12px] font-semibold text-violet-400 hover:text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          กรอก KM <ArrowRight size={11} />
+                        </a>
                       )}
                       {!isRegion && done && (
                         <div className="flex items-center gap-1 text-[11px] text-emerald-400 shrink-0">

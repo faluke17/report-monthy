@@ -8,14 +8,27 @@ import { ChevronLeft } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewMonthlyPage() {
+export default async function NewMonthlyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string; branch_id?: string }>
+}) {
   const supabase = await createClient()
   const session = await getPwaSession()
+  const params = await searchParams
 
   // Compute default report period (previous month) — same logic as the form
   const now = new Date()
-  const defaultMonth = now.getMonth() === 0 ? 12 : now.getMonth()
-  const defaultYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const fallbackMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const fallbackYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+
+  // searchParams may carry BE year (พ.ศ.) — convert to AD
+  const rawYear = params.year ? parseInt(params.year) : null
+  const rawMonth = params.month ? parseInt(params.month) : null
+  // BE year is typically > 2500; AD year is < 2100
+  const defaultYear = rawYear ? (rawYear > 2100 ? rawYear - 543 : rawYear) : fallbackYear
+  const defaultMonth = rawMonth ?? fallbackMonth
+
   // YoY comparison: fetch same month, one year prior (~265 rows — well within any limit)
   const yoyYear = defaultYear - 1
   const yoyMonth = defaultMonth
@@ -105,6 +118,8 @@ export default async function NewMonthlyPage() {
         mmNodesByBranch={mmNodesByBranch}
         nrwStatsByBranchId={nrwStatsByBranchId}
         branchUuidToDmamaId={branchUuidToDmamaId}
+        defaultYear={defaultYear}
+        defaultMonth={defaultMonth}
       />
     </div>
   )

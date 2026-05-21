@@ -18,9 +18,11 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
   const scheduled_time      = formData.get('scheduled_time') as string
   const location            = formData.get('location') as string || null
   const meeting_link        = formData.get('meeting_link') as string || null
-  const target_audience     = formData.get('target_audience') as string || 'ทุกสาขา'
-  const prep_required       = formData.get('prep_required') as string || null
+  const target_audience      = formData.get('target_audience') as string || 'ทุกสาขา'
+  const prep_required        = formData.get('prep_required') as string || null
   const notification_message = formData.get('notification_message') as string || null
+  const report_month = formData.get('report_month') ? Number(formData.get('report_month')) : null
+  const report_year  = formData.get('report_year')  ? Number(formData.get('report_year'))  : null
 
   if (!title || !meeting_type || !scheduled_date || !scheduled_time) {
     return { success: false, error: 'กรุณากรอกข้อมูลให้ครบ' }
@@ -35,6 +37,7 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
     .insert({
       code, title, meeting_type, scheduled_date, scheduled_time,
       location, meeting_link, target_audience, prep_required, notification_message,
+      report_month, report_year,
       status: 'กำหนดแล้ว',
       created_by: session.username,
     })

@@ -133,6 +133,8 @@ interface Props {
   mmNodesByBranch: Record<string, WaterNodeOption[]>
   nrwStatsByBranchId: Record<number, NrwAreaLookup[]>
   branchUuidToDmamaId: Record<string, number>
+  defaultYear?: number
+  defaultMonth?: number
 }
 
 export function AreaReportForm({
@@ -142,6 +144,8 @@ export function AreaReportForm({
   mmNodesByBranch,
   nrwStatsByBranchId,
   branchUuidToDmamaId,
+  defaultYear,
+  defaultMonth,
 }: Props) {
   const router = useRouter()
   const now = new Date()
@@ -149,8 +153,8 @@ export function AreaReportForm({
   const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
 
   const [branchId, setBranchId] = useState(userBranchId ?? '')
-  const [reportYear, setReportYear] = useState(prevYear)
-  const [reportMonth, setReportMonth] = useState(prevMonth)
+  const [reportYear, setReportYear] = useState(defaultYear ?? prevYear)
+  const [reportMonth, setReportMonth] = useState(defaultMonth ?? prevMonth)
   const [areas, setAreas] = useState<AreaSet[]>([newArea(0)])
   const [submitting, setSubmitting] = useState(false)
 
