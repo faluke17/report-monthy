@@ -59,7 +59,11 @@ export default async function DashboardLayout({
   const total     = branchesRes.count ?? 26
   const submitted = submittedRes.count ?? 0
   const notifyCount = (notifRes.count ?? 0) + Math.max(0, unackedMeetings)
-  const requirementCount = requirementMeetings.reduce((s, m) => s + m.total_pending, 0)
+  // region: นับจำนวน ticket ที่ยังไม่ครบ (ไม่ใช่จำนวนสาขา)
+  // branch: นับจำนวน ticket ที่ตัวเองยังไม่ทำ
+  const requirementCount = isRegion
+    ? requirementMeetings.flatMap(m => m.requirements).filter(r => r.pending_count > 0).length
+    : requirementMeetings.reduce((s, m) => s + m.total_pending, 0)
   const stats = {
     totalBranches: total,
     submitted,
