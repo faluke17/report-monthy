@@ -39,7 +39,7 @@ export async function createMeetingResolution(
       source: data.source,
       priority: data.priority,
       responsible_branch: data.responsible_branch,
-      responsible_party: data.responsible_branch,
+      responsible_party: data.responsible_dept,
       responsible_dept: data.responsible_dept,
       due_date,
       admin_notes: data.admin_notes ?? null,
@@ -136,6 +136,7 @@ export async function markNotificationRead(id: string): Promise<ActionResult> {
     .from('resolution_notifications')
     .update({ is_read: true })
     .eq('id', id)
+    .eq('branch_costcenter', session.costcenter ?? '')
 
   if (error) return { success: false, error: error.message }
 

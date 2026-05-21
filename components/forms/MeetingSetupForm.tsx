@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { submitMeeting } from '@/app/actions/meetings'
-import { Calendar, MapPin, Link2, Users, FileText, Bell, Eye, Save, Trash2 } from 'lucide-react'
+import { Calendar, MapPin, Link2, Users, FileText, Bell, Eye, Save, Trash2, Plus, X, ClipboardList } from 'lucide-react'
+import type { MeetingRequirementType } from '@/lib/types'
 
 const DRAFT_KEY = 'meeting_setup_draft'
 
@@ -13,6 +14,24 @@ const MEETING_TYPES = [
   'ประชุมเร่งรัดอุปสรรค',
   'KM Practice',
 ]
+
+const REQ_TYPES: { value: MeetingRequirementType; label: string; hint: string }[] = [
+  { value: 'monthly_report', label: 'รายงาน NRW รายเดือน (PDCA)',  hint: 'ตรวจจากระบบอัตโนมัติ' },
+  { value: 'five_topics',    label: 'รายงาน 5 หัวข้อ',             hint: 'ตรวจจากระบบอัตโนมัติ' },
+  { value: 'km_case',        label: 'KM Case',                     hint: 'ตรวจจากระบบอัตโนมัติ' },
+  { value: 'custom',         label: 'กำหนดเอง',                    hint: 'สาขากดยืนยันเอง' },
+]
+
+interface RequirementDraft {
+  id: string  // local only
+  requirement_type: MeetingRequirementType
+  title: string
+  description: string
+  target_year: number | ''
+  target_month: number | ''
+  due_date: string
+  sort_order: number
+}
 
 const TARGET_AUDIENCES = [
   'ทุกสาขา',
@@ -48,6 +67,9 @@ const EMPTY_FORM = {
   notification_message: '',
 }
 
+let reqCounter = 0
+function newReqId() { return `req_${++reqCounter}` }
+
 export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProps) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
@@ -55,6 +77,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
   const [hasDraft, setHasDraft] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [requirements, setRequirements] = useState<RequirementDraft[]>([])
 
   const [form, setForm] = useState(() => {
     if (typeof window === 'undefined') return EMPTY_FORM
@@ -95,6 +118,42 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
     toast.success('ล้างแบบร่างแล้ว')
   }
 
+  function addRequirement() {
+    const now = new Date()
+    setRequirements((prev) => [
+      ...prev,
+      {
+        id: newReqId(),
+        requirement_type: 'monthly_report',
+        title: 'รายงาน NRW รายเดือน',
+        description: '',
+        target_year: now.getFullYear(),
+        target_month: now.getMonth() + 1,
+        due_date: '',
+        sort_order: prev.length,
+      },
+    ])
+  }
+
+  function removeRequirement(id: string) {
+    setRequirements((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  function setReq<K extends keyof RequirementDraft>(id: string, key: K, value: RequirementDraft[K]) {
+    setRequirements((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r
+        const next = { ...r, [key]: value }
+        // เมื่อ type เปลี่ยน → ปรับ title default
+        if (key === 'requirement_type') {
+          const found = REQ_TYPES.find((t) => t.value === value)
+          next.title = found?.label ?? ''
+        }
+        return next
+      }),
+    )
+  }
+
   const isReadyToPreview = form.title && form.meeting_type && form.scheduled_date
 
   async function handleSubmit(e: React.FormEvent) {
@@ -102,6 +161,15 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
     setSubmitting(true)
     const fd = new FormData()
     Object.entries(form).forEach(([k, v]) => fd.append(k, v as string))
+    // แนบ requirements เป็น JSON
+    const reqPayload = requirements.map(({ id: _id, ...r }) => ({
+      ...r,
+      target_year:  r.target_year  === '' ? null : r.target_year,
+      target_month: r.target_month === '' ? null : r.target_month,
+      due_date:     r.due_date || null,
+      description:  r.description || null,
+    }))
+    fd.append('requirements_json', JSON.stringify(reqPayload))
     const result = await submitMeeting(fd)
     if (result.success) {
       localStorage.removeItem(DRAFT_KEY)
@@ -272,6 +340,116 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
         </div>
+      </div>
+
+      {/* ส่วนที่ 3 – สิ่งที่ต้องการจากสาขา */}
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <ClipboardList size={15} className="text-cyan-400" />
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">ส่วนที่ 3 — สิ่งที่ต้องการจากสาขา</span>
+          </div>
+          <button
+            type="button"
+            onClick={addRequirement}
+            className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/60 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            <Plus size={12} /> เพิ่มรายการ
+          </button>
+        </div>
+
+        {requirements.length === 0 ? (
+          <p className="text-sm text-white/25 text-center py-3">
+            ยังไม่มีรายการ — กด &quot;เพิ่มรายการ&quot; เพื่อกำหนดสิ่งที่สาขาต้องส่ง
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {requirements.map((req) => {
+              const typeInfo = REQ_TYPES.find((t) => t.value === req.requirement_type)
+              const needsPeriod = req.requirement_type === 'monthly_report' || req.requirement_type === 'five_topics'
+              return (
+                <div key={req.id} className="border border-white/10 rounded-xl p-4 space-y-3 bg-white/2">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Type */}
+                      <div>
+                        <label className="block text-[11px] text-white/40 mb-1">ประเภท</label>
+                        <select
+                          value={req.requirement_type}
+                          onChange={(e) => setReq(req.id, 'requirement_type', e.target.value as MeetingRequirementType)}
+                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+                        >
+                          {REQ_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
+                        {typeInfo && (
+                          <p className="text-[10px] text-white/30 mt-0.5">{typeInfo.hint}</p>
+                        )}
+                      </div>
+                      {/* Title */}
+                      <div>
+                        <label className="block text-[11px] text-white/40 mb-1">ชื่อรายการ</label>
+                        <input
+                          type="text"
+                          value={req.title}
+                          onChange={(e) => setReq(req.id, 'title', e.target.value)}
+                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                        />
+                      </div>
+                      {/* Period (monthly/five_topics only) */}
+                      {needsPeriod && (
+                        <>
+                          <div>
+                            <label className="block text-[11px] text-white/40 mb-1">ปี (พ.ศ.)</label>
+                            <input
+                              type="number"
+                              value={req.target_year}
+                              onChange={(e) => setReq(req.id, 'target_year', e.target.value === '' ? '' : Number(e.target.value))}
+                              placeholder="เช่น 2568"
+                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-white/40 mb-1">เดือน (1–12)</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={12}
+                              value={req.target_month}
+                              onChange={(e) => setReq(req.id, 'target_month', e.target.value === '' ? '' : Number(e.target.value))}
+                              placeholder="เช่น 5"
+                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                            />
+                          </div>
+                        </>
+                      )}
+                      {/* Due date */}
+                      <div className={needsPeriod ? 'sm:col-span-2' : ''}>
+                        <label className="block text-[11px] text-white/40 mb-1">กำหนดส่ง (ไม่บังคับ)</label>
+                        <input
+                          type="date"
+                          value={req.due_date}
+                          onChange={(e) => setReq(req.id, 'due_date', e.target.value)}
+                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+                        />
+                      </div>
+                    </div>
+                    {/* Remove */}
+                    <button
+                      type="button"
+                      onClick={() => removeRequirement(req.id)}
+                      className="mt-5 text-white/25 hover:text-red-400 transition-colors shrink-0"
+                      aria-label="ลบรายการ"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Preview Box */}

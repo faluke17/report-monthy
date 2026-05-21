@@ -26,6 +26,8 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
     return { success: false, error: 'กรุณากรอกข้อมูลให้ครบ' }
   }
 
+  const requirementsJson = formData.get('requirements_json') as string | null
+
   const code = await generateRunningCode('MIT', 'R10', supabase)
 
   const { data: created, error } = await supabase
@@ -40,6 +42,26 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
     .single()
 
   if (error) return { success: false, error: error.message }
+
+  // บันทึก requirements ถ้ามี
+  if (requirementsJson && created?.id) {
+    try {
+      const reqs = JSON.parse(requirementsJson) as Array<{
+        requirement_type: string
+        title: string
+        description?: string
+        target_year?: number
+        target_month?: number
+        due_date?: string
+        sort_order: number
+      }>
+      if (reqs.length > 0) {
+        await supabase.from('meeting_requirements').insert(
+          reqs.map((r) => ({ ...r, meeting_id: created.id }))
+        )
+      }
+    } catch { /* invalid JSON — skip */ }
+  }
 
   revalidatePath('/meeting')
   revalidatePath('/notify')

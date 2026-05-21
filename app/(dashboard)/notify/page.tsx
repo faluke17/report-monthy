@@ -3,9 +3,11 @@ import { getPwaSession } from '@/lib/pwa-auth'
 import { Meeting, MeetingAcknowledgment, ResolutionNotification } from '@/lib/types'
 import { formatThaiDate, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
-import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen, Bell } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, FileText, AlertTriangle, BookOpen, Bell, ClipboardList } from 'lucide-react'
 import { AckButton } from '@/components/shared/AckButton'
 import { NotificationAckButton } from '@/components/shared/NotificationAckButton'
+import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
+import { RequirementFulfillButton } from '@/components/shared/RequirementFulfillButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +31,7 @@ export default async function NotifyPage() {
   const meetings = (data ?? []) as Meeting[]
 
   let myAcks: MeetingAcknowledgment[] = []
-  if (session?.costcenter && meetings.length > 0) {
+  if (session?.branch_name && meetings.length > 0) {
     const meetingIds = meetings.map((m) => m.id)
     const { data: ackData } = await supabase
       .from('meeting_acknowledgments')
@@ -54,6 +56,8 @@ export default async function NotifyPage() {
     resolutionNotifs = (notifData ?? []) as ResolutionNotification[]
   }
 
+  const requirementMeetings = await getMeetingsWithRequirements({ branchCostcenter })
+
   const unreadCount = resolutionNotifs.filter(n => !n.is_read).length
   const branchLabel = isRegion
     ? 'ทุกสาขา'
@@ -65,6 +69,95 @@ export default async function NotifyPage() {
         <h1 className="text-xl font-bold text-white">การแจ้งเตือน</h1>
         <p className="text-sm text-white/40 mt-0.5">ข้อมูลการประชุมและข้อสั่งการ</p>
       </div>
+
+      {/* Requirements per meeting */}
+      {requirementMeetings.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <ClipboardList size={14} className="text-cyan-400" />
+            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">สิ่งที่ต้องดำเนินการ</h2>
+          </div>
+          {requirementMeetings.map((m) => (
+            <div key={m.id} className="space-y-2">
+              <p className="text-sm font-semibold text-white/70 px-1">{m.title}</p>
+              {m.requirements.map((req) => {
+                const fulfilledCount = req.fulfilled_costcenters.length
+                const pct = Math.round((fulfilledCount / 26) * 100)
+                const done = isRegion ? req.pending_count === 0 : req.is_fulfilled_by_me
+                const MONTH_TH = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+                return (
+                  <div
+                    key={req.id}
+                    className={`glass-card-sm p-4 border-l-4 transition-opacity ${done ? 'border-emerald-500 opacity-60' : 'border-amber-500'}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {done
+                            ? <CheckCircle size={13} className="text-emerald-400 shrink-0" />
+                            : <Clock size={13} className="text-amber-400 shrink-0" />
+                          }
+                          <span className={`text-sm font-semibold ${done ? 'text-white/50' : 'text-white'}`}>
+                            {req.title}
+                          </span>
+                          {req.target_month && (
+                            <span className="text-[11px] bg-white/10 text-white/50 px-2 py-0.5 rounded-full">
+                              {MONTH_TH[req.target_month]}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Region: progress bar + list of pending */}
+                        {isRegion && (
+                          <div className="space-y-1.5 pl-5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-amber-400'}`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              <span className="text-[11px] text-white/40 shrink-0">{fulfilledCount}/26</span>
+                            </div>
+                            {req.pending_count > 0 && (
+                              <p className="text-[11px] text-white/35">
+                                ยังไม่ส่ง: {req.pending_count} สาขา
+                                {' · '}
+                                {PWA_BRANCHES
+                                  .filter((b) => !req.fulfilled_costcenters.includes(b.costcenter))
+                                  .map((b) => b.name_th)
+                                  .join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {req.due_date && (
+                          <p className="text-[11px] text-white/30 pl-5">
+                            กำหนดส่ง {new Date(req.due_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long' })}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Branch: fulfill button for custom type */}
+                      {!isRegion && req.requirement_type === 'custom' && !req.is_fulfilled_by_me && (
+                        <RequirementFulfillButton requirementId={req.id} />
+                      )}
+                      {!isRegion && done && (
+                        <div className="flex items-center gap-1 text-[11px] text-emerald-400 shrink-0">
+                          <CheckCircle size={12} />
+                          ดำเนินการแล้ว
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Resolution notifications */}
       {(branchCostcenter || isRegion) && (
@@ -142,7 +235,7 @@ export default async function NotifyPage() {
             const isAcked = ackedSet.has(m.id)
             const myAck = myAcks.find((a) => a.meeting_id === m.id)
             return (
-              <div key={m.id} className="glass-card-sm p-5 border-l-4 border-cyan-500">
+              <div key={m.id} className={`glass-card-sm p-5 border-l-4 ${isAcked ? 'border-emerald-500 opacity-60' : 'border-cyan-500'}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">

@@ -1,17 +1,22 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { LogOut, User, Bell } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { LogOut, User } from 'lucide-react'
 import { PwaSession } from '@/lib/pwa-auth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { NotificationBell } from '@/components/layout/NotificationBell'
+import type { MeetingWithRequirements } from '@/lib/types'
 
 interface TopbarProps {
   session: PwaSession
   notifyCount?: number
+  requirementCount?: number
+  requirementMeetings?: MeetingWithRequirements[]
+  isRegion?: boolean
 }
 
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
@@ -28,14 +33,18 @@ const PAGE_META: Record<string, { kicker: string; title: string }> = {
   '/export':    { kicker: 'Data Export',    title: 'ส่งออกรายงาน' },
 }
 
-export function Topbar({ session, notifyCount = 0 }: TopbarProps) {
+export function Topbar({
+  session,
+  notifyCount = 0,
+  requirementCount = 0,
+  requirementMeetings = [],
+  isRegion = false,
+}: TopbarProps) {
   const pathname = usePathname()
 
   const meta = Object.entries(PAGE_META).find(([path]) =>
     pathname === path || pathname.startsWith(path + '/')
   )?.[1] ?? { kicker: 'NRW Tracker', title: 'กปภ.เขต 10' }
-
-  const router = useRouter()
 
   async function handleSignOut() {
     await fetch('/api/auth/pwa-logout', { method: 'POST' })
@@ -67,18 +76,12 @@ export function Topbar({ session, notifyCount = 0 }: TopbarProps) {
           </span>
         )}
 
-        <button
-          onClick={() => router.push('/notify')}
-          className="relative flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/5 transition-colors"
-          aria-label="การแจ้งเตือน"
-        >
-          <Bell size={18} className={notifyCount > 0 ? 'text-amber-300' : 'text-white/40'} />
-          {notifyCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1 num">
-              {notifyCount > 99 ? '99+' : notifyCount}
-            </span>
-          )}
-        </button>
+        <NotificationBell
+          notifyCount={notifyCount}
+          requirementCount={requirementCount}
+          meetings={requirementMeetings}
+          isRegion={isRegion}
+        />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

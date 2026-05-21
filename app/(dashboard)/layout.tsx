@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
 
 export default async function DashboardLayout({
   children,
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
   // branch_name-based check (consistent with monthly/page.tsx)
   const isBranchUser = !!session?.branch_name
 
-  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes] = await Promise.all([
+  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes, requirementMeetings] = await Promise.all([
     supabase.from('branches').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('monthly_reports').select('id', { count: 'exact', head: true })
       .eq('report_year', now.getFullYear()).eq('report_month', now.getMonth() + 1),
@@ -39,6 +40,8 @@ export default async function DashboardLayout({
           .gte('scheduled_date', today)
           .not('notified_at', 'is', null)
       : Promise.resolve({ data: [] as { id: string }[] }),
+    // Requirements with fulfillment status
+    getMeetingsWithRequirements({ branchCostcenter: branchCostcenter }),
   ])
 
   // Count unacknowledged meetings for branch users
@@ -56,6 +59,7 @@ export default async function DashboardLayout({
   const total     = branchesRes.count ?? 26
   const submitted = submittedRes.count ?? 0
   const notifyCount = (notifRes.count ?? 0) + Math.max(0, unackedMeetings)
+  const requirementCount = requirementMeetings.reduce((s, m) => s + m.total_pending, 0)
   const stats = {
     totalBranches: total,
     submitted,
@@ -65,9 +69,15 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'transparent' }}>
-      <Sidebar stats={stats} notifyCount={notifyCount} />
+      <Sidebar stats={stats} notifyCount={notifyCount + requirementCount} />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Topbar session={session} notifyCount={notifyCount} />
+        <Topbar
+          session={session}
+          notifyCount={notifyCount}
+          requirementCount={requirementCount}
+          requirementMeetings={requirementMeetings}
+          isRegion={isRegion}
+        />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 animate-fadein">
           {children}
         </main>

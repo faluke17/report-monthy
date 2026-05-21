@@ -545,6 +545,45 @@ export interface ResolutionNotification {
   created_at: string
 }
 
+export type MeetingRequirementType = 'monthly_report' | 'five_topics' | 'km_case' | 'custom'
+
+export interface MeetingRequirement {
+  id: string
+  meeting_id: string
+  requirement_type: MeetingRequirementType
+  title: string
+  description: string | null
+  target_year: number | null
+  target_month: number | null
+  due_date: string | null
+  sort_order: number
+  created_at: string
+}
+
+export interface MeetingRequirementFulfillment {
+  id: string
+  requirement_id: string
+  branch_costcenter: string
+  fulfilled_by: string
+  fulfilled_name: string | null
+  fulfilled_at: string
+}
+
+// Requirement enriched with fulfillment status — used in UI
+export interface RequirementWithStatus extends MeetingRequirement {
+  fulfilled_costcenters: string[]   // costcenters ที่ส่งแล้ว
+  pending_count: number             // จำนวนสาขาที่ยังไม่ส่ง (จาก 26)
+  is_fulfilled_by_me: boolean       // สำหรับ branch user
+}
+
+export interface MeetingWithRequirements {
+  id: string
+  title: string
+  scheduled_date: string
+  requirements: RequirementWithStatus[]
+  total_pending: number             // รวมทุก requirement
+}
+
 export interface MeetingResolutionFormData {
   meeting_id: string
   source: string
