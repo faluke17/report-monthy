@@ -161,8 +161,11 @@ function parseResponse(
 }
 
 // POST /api/dmama/mnf-sync
-// Header: x-sync-secret: <DMAMA_SYNC_SECRET>
-// Body (optional):
+// Header: x-sync-secret: <DMAMA_SYNC_SECRET>  (manual)
+//         Authorization: Bearer <CRON_SECRET>  (Vercel Cron)
+// Query param (optional):
+//   ?mode=daily  → ดึงแค่เมื่อวาน (ใช้กับ Cron รายวัน)
+// Body (optional, ใช้กับ manual backfill):
 //   {}                                              → fiscal year Oct–current month
 //   { year: 2026, month: 5 }                       → single month
 //   { from_year: 2025, from_month: 10, to_year: 2026, to_month: 5 }  → custom range
@@ -178,17 +181,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: Record<string, number> = {}
-  try {
-    body = await req.json()
-  } catch {
-    // empty body is fine
-  }
+  // ?mode=daily → ดึงแค่เมื่อวานวันเดียว (ใช้สำหรับ Cron รายวัน)
+  const url = new URL(req.url)
+  const isDaily = url.searchParams.get('mode') === 'daily'
 
-  const months =
-    body.year && body.month
-      ? getFiscalMonths(body.year, body.month, body.year, body.month)
-      : getFiscalMonths(body.from_year, body.from_month, body.to_year, body.to_month)
+  let months: ReturnType<typeof getFiscalMonths>
+
+  if (isDaily) {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const y = yesterday.getFullYear()
+    const m = yesterday.getMonth() + 1
+    months = getFiscalMonths(y, m, y, m)
+  } else {
+    let body: Record<string, number> = {}
+    try {
+      body = await req.json()
+    } catch {
+      // empty body is fine
+    }
+    months =
+      body.year && body.month
+        ? getFiscalMonths(body.year, body.month, body.year, body.month)
+        : getFiscalMonths(body.from_year, body.from_month, body.to_year, body.to_month)
+  }
 
   // Login to DMAMA
   let token: string

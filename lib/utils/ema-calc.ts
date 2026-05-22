@@ -186,15 +186,25 @@ export async function computeEmaForDateRange(
   const computedAt  = new Date().toISOString()
   const errors: string[] = []
 
-  const { data: rawRows, error: fetchErr } = await supabase
-    .from('mnf_daily')
-    .select('dmama_branch_id, logger_id, node_label, record_date, mnf_flow')
-    .gte('record_date', warmupFrom)
-    .lte('record_date', toDate)
-    .order('record_date', { ascending: true })
-
-  if (fetchErr) {
-    return { upserted: 0, node_pairs: 0, skipped: 0, errors: [`fetch mnf_daily: ${fetchErr.message}`] }
+  // Paginate because PostgREST caps max-rows at 1000 per request
+  const PAGE = 1000
+  const rawRows: RawRow[] = []
+  let offset = 0
+  while (true) {
+    const { data: page, error: fetchErr } = await supabase
+      .from('mnf_daily')
+      .select('dmama_branch_id, logger_id, node_label, record_date, mnf_flow')
+      .gte('record_date', warmupFrom)
+      .lte('record_date', toDate)
+      .order('record_date', { ascending: true })
+      .range(offset, offset + PAGE - 1)
+    if (fetchErr) {
+      return { upserted: 0, node_pairs: 0, skipped: 0, errors: [`fetch mnf_daily: ${fetchErr.message}`] }
+    }
+    if (!page || page.length === 0) break
+    rawRows.push(...(page as RawRow[]))
+    if (page.length < PAGE) break
+    offset += PAGE
   }
 
   // ── Group by node ──

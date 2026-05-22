@@ -5,6 +5,10 @@
     {
       "path": "/api/dmama/sync",
       "schedule": "0 2 16 * *"
+    },
+    {
+      "path": "/api/dmama/mnf-sync?mode=daily",
+      "schedule": "0 1 * * *"
     }
   ],
   "headers": [
