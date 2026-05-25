@@ -740,16 +740,20 @@ function PdcaBranchPanel({
     )
   }, [allRows, currentKey])
 
-  // Open obstacles count per branch (badge display on tags)
+  // Ref-month obstacles count per branch (badge matches what modal shows)
   const obsByBranch = useMemo(() => {
     const map = new Map<string, number>()
+    if (!refMonth || !refYear) return map
+    const start = new Date(refYear, refMonth - 1, 1)
+    const end = new Date(refYear, refMonth, 1)
     for (const obs of obstacles) {
       const name = obs.branches?.name_th ?? ''
       if (!name) continue
-      map.set(name, (map.get(name) ?? 0) + 1)
+      const d = new Date(obs.created_at)
+      if (d >= start && d < end) map.set(name, (map.get(name) ?? 0) + 1)
     }
     return map
-  }, [obstacles])
+  }, [obstacles, refMonth, refYear])
 
   // Prev month map for delta comparison
   const prevMap = useMemo(() => {
