@@ -432,6 +432,7 @@ function PdcaDetailModal({
   detail,
   prevDetail,
   branchObstacles,
+  oldObsCount,
   open,
   onClose,
   onPrev,
@@ -447,6 +448,7 @@ function PdcaDetailModal({
   detail: PdcaSummaryRow | null
   prevDetail: PdcaPrevRow | null
   branchObstacles: Obstacle[]
+  oldObsCount: number
   open: boolean
   onClose: () => void
   onPrev: () => void
@@ -645,14 +647,25 @@ function PdcaDetailModal({
                 </div>
               )}
 
-              {/* Obstacles — full detail */}
+              {/* Obstacles — only ref-month new obstacles */}
               {branchObstacles.length > 0 && (
                 <div>
-                  <ModalSectionLabel accent="amber">⚠ อุปสรรคที่เปิดก่อนการประชุม ({branchObstacles.length} รายการ)</ModalSectionLabel>
+                  <ModalSectionLabel accent="amber">⚠ อุปสรรคที่เปิดในเดือนนี้ ({branchObstacles.length} รายการ)</ModalSectionLabel>
                   <div className="space-y-3">
                     {branchObstacles.map(obs => (
                       <ModalObstacleCard key={obs.id} obs={obs} />
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reference note for old/continuing obstacles in วาระ 4 */}
+              {oldObsCount > 0 && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/15 bg-amber-500/5">
+                  <TriangleAlert size={14} className="text-amber-400/70 shrink-0" />
+                  <div className="text-[12px] text-amber-300/70 leading-relaxed">
+                    มีอุปสรรคสืบเนื่องจากก่อนหน้า <strong className="text-amber-300">{oldObsCount} รายการ</strong>
+                    {' '}— ดูรายละเอียดทั้งหมดในวาระที่ 4
                   </div>
                 </div>
               )}
@@ -777,9 +790,27 @@ function PdcaBranchPanel({
 
   const modalDetail = modalBranchName ? (summaryMap.get(modalBranchName) ?? null) : null
   const modalPrevDetail = modalBranchName ? (prevMap.get(modalBranchName) ?? null) : null
-  const modalObstacles = modalBranchName
-    ? obstacles.filter(obs => obs.branches?.name_th === modalBranchName)
-    : []
+
+  // Modal obstacles: only those created IN the ref month (new issues for this PDCA period)
+  // Old/continuing obstacles belong in วาระ 4, not here
+  const { modalObstacles, oldObsCount } = useMemo(() => {
+    if (!modalBranchName) return { modalObstacles: [], oldObsCount: 0 }
+    const branchObs = obstacles.filter(obs => obs.branches?.name_th === modalBranchName)
+    if (!refMonth || !refYear) {
+      return { modalObstacles: [], oldObsCount: branchObs.length }
+    }
+    const start = new Date(refYear, refMonth - 1, 1)
+    const end = new Date(refYear, refMonth, 1)
+    const refMonthObs = branchObs.filter(obs => {
+      const d = new Date(obs.created_at)
+      return d >= start && d < end
+    })
+    const oldObs = branchObs.filter(obs => {
+      const d = new Date(obs.created_at)
+      return d < start
+    })
+    return { modalObstacles: refMonthObs, oldObsCount: oldObs.length }
+  }, [modalBranchName, obstacles, refMonth, refYear])
 
   return (
     <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
@@ -887,6 +918,7 @@ function PdcaBranchPanel({
         detail={modalDetail}
         prevDetail={modalPrevDetail}
         branchObstacles={modalObstacles}
+        oldObsCount={oldObsCount}
         open={modalOpen}
         onClose={closeModal}
         onPrev={() => navModal(-1)}
