@@ -152,6 +152,14 @@ export default async function NotifyPage() {
                           ส่งรายงาน <ArrowRight size={11} />
                         </a>
                       )}
+                      {!isRegion && req.requirement_type === 'pdca_monthly' && !req.is_fulfilled_by_me && req.target_year && req.target_month && (
+                        <a
+                          href={`/monthly/new?year=${req.target_year}&month=${req.target_month}&for_meeting=1`}
+                          className="flex items-center gap-1 text-[12px] font-semibold text-violet-400 hover:text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          กรอก PDCA <ArrowRight size={11} />
+                        </a>
+                      )}
                       {!isRegion && req.requirement_type === 'km_case' && !req.is_fulfilled_by_me && (
                         <a
                           href="/km/new"

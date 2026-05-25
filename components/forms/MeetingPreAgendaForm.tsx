@@ -57,6 +57,9 @@ interface FormState {
   items4: PreAgendaItem[]
   items5: PreAgendaItem[]
   items6: PreAgendaItem[]
+  pdcaRefMonth: number | null
+  pdcaRefYear: number | null
+  pdcaDeadline: string
 }
 
 function initState(data: MeetingPreAgenda | null, previousMeetings: PreviousMeetingRow[]): FormState {
@@ -69,6 +72,9 @@ function initState(data: MeetingPreAgenda | null, previousMeetings: PreviousMeet
       items4: [{ title: '' }],
       items5: [{ title: '' }],
       items6: [{ title: '' }],
+      pdcaRefMonth: null,
+      pdcaRefYear: null,
+      pdcaDeadline: '',
     }
   }
   return {
@@ -79,6 +85,9 @@ function initState(data: MeetingPreAgenda | null, previousMeetings: PreviousMeet
     items4: data.items4.length ? data.items4 : [{ title: '' }],
     items5: data.items5.length ? data.items5 : [{ title: '' }],
     items6: data.items6.length ? data.items6 : [{ title: '' }],
+    pdcaRefMonth: data.pdca_ref_month ?? null,
+    pdcaRefYear: data.pdca_ref_year ?? null,
+    pdcaDeadline: data.pdca_deadline ?? '',
   }
 }
 
@@ -210,6 +219,85 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
   )
 }
 
+// ─── PDCA reference month picker ─────────────────────────────────────────────
+
+const THAI_MONTHS_FULL = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+
+function PdcaRefPicker({
+  refMonth, refYear, deadline,
+  onChangeMonth, onChangeYear, onChangeDeadline,
+}: {
+  refMonth: number | null
+  refYear: number | null
+  deadline: string
+  onChangeMonth: (v: number | null) => void
+  onChangeYear: (v: number | null) => void
+  onChangeDeadline: (v: string) => void
+}) {
+  const now = new Date()
+  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1]
+  const hasRef = refMonth && refYear
+  return (
+    <div className="rounded-xl border border-violet-500/25 bg-violet-500/5 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15">
+        <Brain size={13} className="text-violet-400 shrink-0" />
+        <span className="text-xs font-semibold text-violet-300">PDCA ที่จะนำเสนอในประชุม</span>
+        {hasRef && (
+          <span className="ml-auto text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full">
+            {THAI_MONTHS_FULL[refMonth!]} {(refYear! + 543)}
+          </span>
+        )}
+      </div>
+      <div className="px-4 py-3 space-y-3">
+        <p className="text-[11px] text-white/40 leading-relaxed">
+          ระบุเดือนที่ต้องการนำ PDCA มาเสนอ — ระบบจะส่งแจ้งเตือนไปทุกสาขาให้กรอกรายงานเดือนนั้นก่อนประชุม
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            className={SELECT}
+            value={refMonth ?? ''}
+            onChange={e => onChangeMonth(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">— เลือกเดือน —</option>
+            {THAI_MONTHS_FULL.slice(1).map((name, i) => (
+              <option key={i + 1} value={i + 1}>{name}</option>
+            ))}
+          </select>
+          <select
+            className={SELECT}
+            value={refYear ?? ''}
+            onChange={e => onChangeYear(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">— เลือกปี —</option>
+            {years.map(y => (
+              <option key={y} value={y}>{y + 543}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={LABEL}>กำหนดส่งข้อมูล (ไม่บังคับ)</label>
+          <input
+            type="date"
+            className={cn(INPUT, 'max-w-xs')}
+            value={deadline}
+            onChange={e => onChangeDeadline(e.target.value)}
+          />
+        </div>
+        {hasRef && (
+          <button
+            type="button"
+            onClick={() => { onChangeMonth(null); onChangeYear(null); onChangeDeadline('') }}
+            className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
+          >
+            ล้างค่า
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── agenda item group ────────────────────────────────────────────────────────
 
 function AgendaNumBadge({ n }: { n: number }) {
@@ -308,6 +396,9 @@ export function MeetingPreAgendaForm({
       items4: state.items4.filter(it => it.title.trim()),
       items5: state.items5.filter(it => it.title.trim()),
       items6: state.items6.filter(it => it.title.trim()),
+      pdca_ref_month: state.pdcaRefMonth,
+      pdca_ref_year: state.pdcaRefYear,
+      pdca_deadline: state.pdcaDeadline || null,
     }
   }
 
@@ -413,7 +504,17 @@ export function MeetingPreAgendaForm({
         </h3>
         <OpenResolutionsPanel resolutions={openResolutions} />
         {state.agenda4Type === 'เรื่องติดตามผลการดำเนินการ' && (
-          <PdcaBranchPanel summaries={pdcaSummaries} />
+          <>
+            <PdcaRefPicker
+              refMonth={state.pdcaRefMonth}
+              refYear={state.pdcaRefYear}
+              deadline={state.pdcaDeadline}
+              onChangeMonth={v => set('pdcaRefMonth', v)}
+              onChangeYear={v => set('pdcaRefYear', v)}
+              onChangeDeadline={v => set('pdcaDeadline', v)}
+            />
+            <PdcaBranchPanel summaries={pdcaSummaries} />
+          </>
         )}
         <div>
           <label className={LABEL}>รายการวาระที่ 4</label>
@@ -427,7 +528,17 @@ export function MeetingPreAgendaForm({
           <AgendaNumBadge n={5} /> วาระที่ 5 : {agenda5Label}
         </h3>
         {state.agenda4Type === 'เรื่องสืบเนื่อง' && (
-          <PdcaBranchPanel summaries={pdcaSummaries} />
+          <>
+            <PdcaRefPicker
+              refMonth={state.pdcaRefMonth}
+              refYear={state.pdcaRefYear}
+              deadline={state.pdcaDeadline}
+              onChangeMonth={v => set('pdcaRefMonth', v)}
+              onChangeYear={v => set('pdcaRefYear', v)}
+              onChangeDeadline={v => set('pdcaDeadline', v)}
+            />
+            <PdcaBranchPanel summaries={pdcaSummaries} />
+          </>
         )}
         <div>
           <label className={LABEL}>รายการวาระที่ 5</label>

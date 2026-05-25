@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -19,7 +19,7 @@ import { NrwYoyTable } from '@/components/dashboard/NrwYoyTable'
 import { NrwYoyChart } from '@/components/dashboard/NrwYoyChart'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { StatusPill } from '@/components/shared/StatusPill'
-import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send, Brain, X } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send, Brain, X, TriangleAlert } from 'lucide-react'
 
 function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: string; initialNotifiedAt: string | null }) {
   const [notifiedAt, setNotifiedAt] = useState(initialNotifiedAt)
@@ -257,12 +257,446 @@ interface PdcaSummaryRow {
   pdca_act: string | null
   report_month: number
   report_year: number
+  volume_distributed: number | null
+  volume_sold: number | null
+  mnf_latest: number | null
+  mnf_factor: number | null
+  nrw_pct: number | null
+  leaks_found: number
+  leaks_repaired: number
+  leaks_pending: number
+  leaks_repeat: number
+  meters_abnormal: number
+}
+
+interface PdcaPrevRow {
+  branch_name: string
+  volume_distributed: number | null
+  volume_sold: number | null
+  mnf_latest: number | null
+  nrw_pct: number | null
 }
 
 const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
-function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
-  const [selected, setSelected] = useState<string | null>(null)
+// ─── Modal helper sub-components ─────────────────────────────────────────────
+
+function ModalSectionLabel({ children, accent }: { children: React.ReactNode; accent?: 'amber' }) {
+  const color = accent === 'amber' ? 'rgba(251,191,36,.4)' : 'rgba(255,255,255,.22)'
+  const barColor = accent === 'amber' ? 'rgba(251,191,36,.65)' : 'rgba(255,255,255,.22)'
+  return (
+    <p style={{ fontSize: '10px', fontWeight: 700, color, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ display: 'block', width: '3px', height: '12px', borderRadius: '2px', background: barColor, opacity: .6, flexShrink: 0 }} />
+      {children}
+    </p>
+  )
+}
+
+function ModalStatCard({ label, color, value, unit, sub, delta }: {
+  label: string; color: string; value: string; unit?: string; sub?: string; delta?: React.ReactNode
+}) {
+  const borders: Record<string, string> = { blue: 'rgba(59,130,246,.2)', indigo: 'rgba(99,102,241,.2)', amber: 'rgba(251,191,36,.2)', red: 'rgba(239,68,68,.2)', green: 'rgba(52,211,153,.2)', violet: 'rgba(139,92,246,.2)' }
+  const vals: Record<string, string> = { blue: '#7dd3fc', indigo: '#a5b4fc', amber: '#fde68a', red: '#fca5a5', green: '#6ee7b7', violet: '#c4b5fd' }
+  return (
+    <div style={{ borderRadius: '12px', border: `1px solid ${borders[color] ?? 'rgba(255,255,255,.07)'}`, background: 'rgba(255,255,255,.025)', padding: '12px 14px' }}>
+      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.3)', letterSpacing: '.05em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
+      <div style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1, color: vals[color] ?? '#fff', fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+        {unit && <span style={{ fontSize: '10px', fontWeight: 400, opacity: .5, marginLeft: '2px' }}>{unit}</span>}
+      </div>
+      {(delta || sub) && (
+        <div style={{ fontSize: '10px', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.2)' }}>
+          {delta ?? sub}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ModalLeakCard({ label, val, color }: { label: string; val: number; color: string }) {
+  return (
+    <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.025)', padding: '12px 14px', textAlign: 'center' }}>
+      <div style={{ fontSize: '28px', fontWeight: 800, lineHeight: 1, color, fontVariantNumeric: 'tabular-nums', marginBottom: '5px' }}>{val}</div>
+      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{label}</div>
+    </div>
+  )
+}
+
+function ModalPdcaBlock({ icon, label, sub, color, text }: {
+  icon: string; label: string; sub: string; color: 'blue' | 'emerald'; text: string | null | undefined
+}) {
+  const iconStyle = color === 'blue'
+    ? { background: 'linear-gradient(135deg,rgba(59,130,246,.3),rgba(59,130,246,.1))', color: '#93c5fd', border: '1px solid rgba(59,130,246,.3)' }
+    : { background: 'linear-gradient(135deg,rgba(16,185,129,.28),rgba(16,185,129,.08))', color: '#6ee7b7', border: '1px solid rgba(16,185,129,.28)' }
+  const labelColor = color === 'blue' ? '#93c5fd' : '#6ee7b7'
+  return (
+    <div style={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.025)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+        <div style={{ width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 900, flexShrink: 0, ...iconStyle }}>{icon}</div>
+        <div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: labelColor }}>{label}</div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.28)' }}>{sub}</div>
+        </div>
+      </div>
+      {text
+        ? <div style={{ padding: '16px', fontSize: '12.5px', lineHeight: 1.85, color: 'rgba(255,255,255,.73)', whiteSpace: 'pre-wrap' }}>{text}</div>
+        : <div style={{ padding: '16px', fontSize: '12px', color: 'rgba(255,255,255,.2)', fontStyle: 'italic' }}>ไม่ได้กรอก</div>
+      }
+    </div>
+  )
+}
+
+function ModalObstacleCard({ obs }: { obs: Obstacle }) {
+  const pct = obs.progress_pct ?? 0
+  const progressColor = pct >= 70 ? '#34d399' : pct >= 40 ? '#fbbf24' : '#f87171'
+  const catStyle: Record<string, string> = {
+    MM: 'bg-blue-500/15 text-blue-300 border-blue-500/25',
+    DMA: 'bg-violet-500/15 text-violet-300 border-violet-500/25',
+    P3: 'bg-teal-500/15 text-teal-300 border-teal-500/25',
+    'อื่นๆ': 'bg-white/8 text-white/40 border-white/15',
+  }
+  const statusStyle: Record<string, string> = {
+    'รายงานใหม่':  'bg-blue-500/15 text-blue-300 border-blue-500/25',
+    'ระหว่างแก้':  'bg-amber-500/15 text-amber-300 border-amber-500/25',
+    'รอสนับสนุน':  'bg-orange-500/15 text-orange-300 border-orange-500/25',
+    'ล่าช้า':       'bg-red-500/15 text-red-300 border-red-500/25',
+    'เกินกำหนด':   'bg-red-800/20 text-red-200 border-red-500/40',
+    'ปิดประเด็น':  'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
+  }
+  const daysLeft = obs.due_date
+    ? Math.round((new Date(obs.due_date).getTime() - Date.now()) / 86400000)
+    : null
+
+  return (
+    <div style={{ border: '1px solid rgba(251,191,36,.2)', background: 'linear-gradient(135deg,rgba(251,191,36,.06),rgba(251,191,36,.02))', borderRadius: '14px', overflow: 'hidden' }}>
+      {/* Head */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(251,191,36,.1)' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="text-[10px] font-bold text-amber-500/55 font-mono tracking-wider mb-0.5">{obs.code}</div>
+          <div className="text-[13px] font-bold text-yellow-100 leading-snug">{obs.obstacle_type}</div>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${catStyle[obs.category] ?? catStyle['อื่นๆ']}`}>{obs.category}</span>
+          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${statusStyle[obs.status] ?? statusStyle['รายงานใหม่']}`}>{obs.status}</span>
+        </div>
+      </div>
+      {/* Body grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '14px 16px' }}>
+        {obs.area && (
+          <div>
+            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">พื้นที่ / โซน</div>
+            <div className="text-[12px] text-white/75">📍 {obs.area}</div>
+          </div>
+        )}
+        {obs.data_quality_impact && (
+          <div>
+            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">ผลกระทบต่อข้อมูล / NRW</div>
+            <div className="text-[12px] text-white/75 leading-relaxed">{obs.data_quality_impact}</div>
+          </div>
+        )}
+        {obs.resolution_plan && (
+          <div style={{ gridColumn: '1/-1' }}>
+            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">แผนแก้ไข / Resolution Plan</div>
+            <div className="text-[12px] text-white/75 leading-relaxed">{obs.resolution_plan}</div>
+          </div>
+        )}
+        {obs.region_support_needed && (
+          <div style={{ gridColumn: '1/-1' }}>
+            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">⚑ ขอสนับสนุนจากเขต</div>
+            <div className="text-[12px] text-orange-300 font-semibold leading-relaxed">{obs.region_support_needed}</div>
+          </div>
+        )}
+      </div>
+      {/* Footer */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderTop: '1px solid rgba(251,191,36,.08)' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="text-[10px] text-amber-500/45 whitespace-nowrap">ความคืบหน้า {pct}%</span>
+          <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,.07)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: `linear-gradient(to right,${progressColor}88,${progressColor})`, transition: 'width .5s ease' }} />
+          </div>
+        </div>
+        {daysLeft !== null && (
+          daysLeft < 0
+            ? <span className="text-red-400 text-[10px] flex items-center gap-1"><AlertCircle size={10} />เกินกำหนด {Math.abs(daysLeft)} วัน</span>
+            : daysLeft <= 7
+            ? <span className="text-orange-400 text-[10px] flex items-center gap-1"><Clock size={10} />เหลือ {daysLeft} วัน</span>
+            : <span className="text-white/25 text-[10px]">ครบ {obs.due_date}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PdcaDetailModal({
+  branchName,
+  detail,
+  prevDetail,
+  branchObstacles,
+  open,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+  counterIdx,
+  totalBranches,
+  refMonth,
+  refYear,
+}: {
+  branchName: string
+  detail: PdcaSummaryRow | null
+  prevDetail: PdcaPrevRow | null
+  branchObstacles: Obstacle[]
+  open: boolean
+  onClose: () => void
+  onPrev: () => void
+  onNext: () => void
+  hasPrev: boolean
+  hasNext: boolean
+  counterIdx: number
+  totalBranches: number
+  refMonth: number | null
+  refYear: number | null
+}) {
+  useEffect(() => {
+    if (!open) return
+    function handler(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev()
+      if (e.key === 'ArrowRight' && hasNext) onNext()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, hasPrev, hasNext, onClose, onPrev, onNext])
+
+  if (!branchName) return null
+
+  const hasPdca = !!(detail?.pdca_do || detail?.pdca_act)
+  const hasData = detail?.volume_distributed != null
+  const nrwPct = detail?.nrw_pct ??
+    (detail?.volume_distributed && detail?.volume_sold
+      ? ((detail.volume_distributed - detail.volume_sold) / detail.volume_distributed * 100)
+      : null)
+
+  function Delta({ curr, prev, decimals = 1 }: { curr: number | null; prev: number | null; decimals?: number }) {
+    if (curr == null || prev == null) return null
+    const d = curr - prev
+    if (Math.abs(d) < 0.005) return <span style={{ color: 'rgba(255,255,255,.25)' }}>— เท่าเดิม</span>
+    const good = d < 0
+    return (
+      <span style={{ color: good ? '#34d399' : '#f87171' }}>
+        {d < 0 ? '▼' : '▲'} {Math.abs(d).toFixed(decimals)}
+      </span>
+    )
+  }
+
+  const progPct = totalBranches > 0 ? ((counterIdx + 1) / totalBranches) * 100 : 0
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(2,8,20,.85)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        zIndex: 50,
+        opacity: open ? 1 : 0,
+        pointerEvents: open ? 'all' : 'none',
+        transition: 'opacity .25s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: 'min(1060px, 96vw)', maxHeight: '90vh',
+          background: '#0b1b30',
+          border: '1px solid rgba(255,255,255,.09)',
+          borderRadius: '24px',
+          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          transform: open ? 'scale(1) translateY(0)' : 'scale(.9) translateY(22px)',
+          opacity: open ? 1 : 0,
+          transition: 'transform .32s cubic-bezier(.34,1.4,.64,1), opacity .22s ease',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Header ── */}
+        <div style={{
+          padding: '24px 30px 20px',
+          borderBottom: '1px solid rgba(255,255,255,.06)',
+          flexShrink: 0, position: 'relative', overflow: 'hidden',
+          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(139,92,246,.16) 0%, transparent 65%), radial-gradient(ellipse 50% 100% at 110% 0%, rgba(59,130,246,.1) 0%, transparent 55%)',
+        }}>
+          <div className="flex justify-between items-start mb-3">
+            <h2 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-.4px', background: 'linear-gradient(135deg,#fff 40%,rgba(196,181,253,.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              สาขา{branchName}
+            </h2>
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={e => { e.stopPropagation(); onPrev() }} disabled={!hasPrev}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
+              <button type="button" onClick={e => { e.stopPropagation(); onNext() }} disabled={!hasNext}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
+              <button type="button" onClick={e => { e.stopPropagation(); onClose() }}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white transition-all">
+                <X size={15} />
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {hasPdca
+              ? <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/25 font-semibold">✓ ส่ง PDCA แล้ว</span>
+              : <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-white/5 text-white/30 border-white/10 font-semibold">ยังไม่ส่ง</span>
+            }
+            {refMonth && refYear && (
+              <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-violet-500/12 text-violet-300 border-violet-500/25 font-semibold">
+                {THAI_MONTHS_SHORT[refMonth - 1]} {refYear + 543}
+              </span>
+            )}
+            {branchObstacles.length > 0 && (
+              <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-amber-500/10 text-amber-300 border-amber-500/25 font-semibold flex items-center gap-1.5">
+                <TriangleAlert size={11} /> อุปสรรค {branchObstacles.length} รายการ
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '22px 30px 24px', display: 'flex', flexDirection: 'column', gap: '20px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(139,92,246,.25) transparent' }}>
+          {!hasPdca && !hasData && branchObstacles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-5xl opacity-20 mb-4">📋</div>
+              <p className="text-white/30 font-bold text-lg mb-1">ยังไม่มีข้อมูลรายงาน</p>
+              <p className="text-white/15 text-sm">สาขา{branchName} ยังไม่ได้ส่งรายงานประจำเดือน</p>
+            </div>
+          ) : (
+            <>
+              {/* NRW Stats */}
+              {hasData && (
+                <div>
+                  <ModalSectionLabel>ข้อมูล NRW ประจำเดือน</ModalSectionLabel>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '10px' }}>
+                    <ModalStatCard label="น้ำจ่าย" color="blue"
+                      value={detail!.volume_distributed ? (detail!.volume_distributed / 1000).toFixed(1) : '—'}
+                      unit="พัน ลบ.ม."
+                      sub={detail!.volume_distributed ? `${detail!.volume_distributed.toLocaleString('th-TH')} ลบ.ม.` : undefined}
+                    />
+                    <ModalStatCard label="น้ำจำหน่าย" color="indigo"
+                      value={detail!.volume_sold ? (detail!.volume_sold / 1000).toFixed(1) : '—'}
+                      unit="พัน ลบ.ม."
+                      sub={detail!.volume_sold ? `${detail!.volume_sold.toLocaleString('th-TH')} ลบ.ม.` : undefined}
+                    />
+                    <ModalStatCard label="น้ำสูญเสีย (นสส.)" color="amber"
+                      value={detail!.volume_distributed && detail!.volume_sold
+                        ? ((detail!.volume_distributed - detail!.volume_sold) / 1000).toFixed(1)
+                        : '—'}
+                      unit="พัน ลบ.ม."
+                      delta={<Delta
+                        curr={detail!.volume_distributed && detail!.volume_sold ? detail!.volume_distributed - detail!.volume_sold : null}
+                        prev={prevDetail?.volume_distributed && prevDetail?.volume_sold ? prevDetail.volume_distributed - prevDetail.volume_sold : null}
+                      />}
+                    />
+                    <ModalStatCard label="% นสส." color={nrwPct != null && nrwPct < 20 ? 'green' : 'red'}
+                      value={nrwPct != null ? nrwPct.toFixed(2) : '—'}
+                      unit="%"
+                      delta={prevDetail?.nrw_pct != null
+                        ? <><Delta curr={nrwPct} prev={prevDetail.nrw_pct} /><span style={{ color: 'rgba(255,255,255,.2)', fontSize: '9px', marginLeft: '3px' }}>vs ก่อนหน้า</span></>
+                        : undefined}
+                    />
+                    <ModalStatCard label="MNF ล่าสุด" color="violet"
+                      value={detail!.mnf_latest != null ? detail!.mnf_latest.toFixed(1) : '—'}
+                      unit="ลบ.ม./ชม."
+                      delta={prevDetail?.mnf_latest != null
+                        ? <><Delta curr={detail!.mnf_latest} prev={prevDetail.mnf_latest} /><span style={{ color: 'rgba(255,255,255,.2)', fontSize: '9px', marginLeft: '3px' }}>vs ก่อนหน้า</span></>
+                        : undefined}
+                    />
+                    <ModalStatCard label="MNF Factor" color="green"
+                      value={detail!.mnf_factor != null ? detail!.mnf_factor.toFixed(2) : '—'}
+                      sub={detail!.mnf_factor != null
+                        ? (detail!.mnf_factor <= 0.6 ? '✓ ดี' : detail!.mnf_factor <= 1.0 ? '⚠ ปานกลาง' : '✗ สูงเกิน')
+                        : undefined}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Leak / meter */}
+              {hasData && (
+                <div>
+                  <ModalSectionLabel>ท่อรั่วและมาตรผิดปกติ</ModalSectionLabel>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px' }}>
+                    <ModalLeakCard label="จุดรั่วพบใหม่" val={detail!.leaks_found} color="#f87171" />
+                    <ModalLeakCard label="ซ่อมแล้ว" val={detail!.leaks_repaired} color="#34d399" />
+                    <ModalLeakCard label="รอดำเนินการ" val={detail!.leaks_pending} color="#fbbf24" />
+                    <ModalLeakCard label="รั่วซ้ำ" val={detail!.leaks_repeat} color="#fb923c" />
+                    <ModalLeakCard label="มาตรผิดปกติ" val={detail!.meters_abnormal} color="#a78bfa" />
+                  </div>
+                </div>
+              )}
+
+              {/* PDCA D + A */}
+              {hasPdca && (
+                <div>
+                  <ModalSectionLabel>ผลการดำเนินการ PDCA</ModalSectionLabel>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <ModalPdcaBlock icon="D" label="Do" sub="สิ่งที่ดำเนินการในเดือนนี้" color="blue" text={detail?.pdca_do} />
+                    <ModalPdcaBlock icon="A" label="Act" sub="แผนการปรับปรุงต่อไป" color="emerald" text={detail?.pdca_act} />
+                  </div>
+                </div>
+              )}
+
+              {/* Obstacles — full detail */}
+              {branchObstacles.length > 0 && (
+                <div>
+                  <ModalSectionLabel accent="amber">⚠ อุปสรรคที่เปิดก่อนการประชุม ({branchObstacles.length} รายการ)</ModalSectionLabel>
+                  <div className="space-y-3">
+                    {branchObstacles.map(obs => (
+                      <ModalObstacleCard key={obs.id} obs={obs} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{ padding: '12px 30px', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'rgba(255,255,255,.015)' }}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-white/22 num">{counterIdx + 1} / {totalBranches} สาขา</span>
+            <div style={{ width: '100px', height: '3px', background: 'rgba(255,255,255,.08)', borderRadius: '999px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: '999px', background: 'linear-gradient(to right,#7c3aed,#a78bfa)', width: `${progPct}%`, transition: 'width .3s ease' }} />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-white/18">
+            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">←</kbd>
+            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">→</kbd>
+            <span>ข้ามสาขา</span>
+            <span className="mx-1 opacity-30">|</span>
+            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">Esc</kbd>
+            <span>ปิด</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PdcaBranchPanel({
+  allRows,
+  refMonth,
+  refYear,
+  obstacles = [],
+  prevRows = [],
+}: {
+  allRows: PdcaSummaryRow[]
+  refMonth: number | null
+  refYear: number | null
+  obstacles?: Obstacle[]
+  prevRows?: PdcaPrevRow[]
+}) {
+  const [modalBranchName, setModalBranchName] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
   const [activeMonthKey, setActiveMonthKey] = useState<string | null>(null)
 
   const months = useMemo(() => {
@@ -275,10 +709,13 @@ function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
         result.push({ month: row.report_month, year: row.report_year })
       }
     }
-    return result // already sorted desc from server query
+    return result
   }, [allRows])
 
-  const currentKey = activeMonthKey ?? (months[0] ? `${months[0].year}-${months[0].month}` : '')
+  const defaultKey = refMonth && refYear
+    ? `${refYear}-${refMonth}`
+    : (months[0] ? `${months[0].year}-${months[0].month}` : '')
+  const currentKey = activeMonthKey ?? defaultKey
 
   const summaryMap = useMemo(() => {
     if (!currentKey) return new Map<string, PdcaSummaryRow>()
@@ -290,22 +727,93 @@ function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
     )
   }, [allRows, currentKey])
 
-  const detail = selected ? summaryMap.get(selected) : null
+  // Open obstacles count per branch (badge display on tags)
+  const obsByBranch = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const obs of obstacles) {
+      const name = obs.branches?.name_th ?? ''
+      if (!name) continue
+      map.set(name, (map.get(name) ?? 0) + 1)
+    }
+    return map
+  }, [obstacles])
+
+  // Prev month map for delta comparison
+  const prevMap = useMemo(() => {
+    const map = new Map<string, PdcaPrevRow>()
+    for (const r of prevRows) map.set(r.branch_name, r)
+    return map
+  }, [prevRows])
+
+  const submittedCount = useMemo(() => {
+    if (!currentKey) return 0
+    const [year, month] = currentKey.split('-').map(Number)
+    const names = new Set(allRows
+      .filter(r => r.report_year === year && r.report_month === month && (r.pdca_do || r.pdca_act))
+      .map(r => r.branch_name))
+    return names.size
+  }, [allRows, currentKey])
+
+  // Modal helpers
+  const modalIdx = modalBranchName ? PWA_BRANCHES.findIndex(b => b.name_th === modalBranchName) : -1
+
+  function openModal(name: string) {
+    setModalBranchName(name)
+    requestAnimationFrame(() => requestAnimationFrame(() => setModalOpen(true)))
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setTimeout(() => setModalBranchName(null), 350)
+  }
+
+  function navModal(dir: 1 | -1) {
+    const idx = modalBranchName ? PWA_BRANCHES.findIndex(b => b.name_th === modalBranchName) : -1
+    if (idx < 0) return
+    const next = idx + dir
+    if (next < 0 || next >= PWA_BRANCHES.length) return
+    setModalBranchName(PWA_BRANCHES[next].name_th)
+  }
+
+  const modalDetail = modalBranchName ? (summaryMap.get(modalBranchName) ?? null) : null
+  const modalPrevDetail = modalBranchName ? (prevMap.get(modalBranchName) ?? null) : null
+  const modalObstacles = modalBranchName
+    ? obstacles.filter(obs => obs.branches?.name_th === modalBranchName)
+    : []
 
   return (
     <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15 flex-wrap">
         <Brain size={13} className="text-violet-400 shrink-0" />
         <span className="text-xs font-semibold text-violet-300">ผลการดำเนินการรายสาขา (PDCA)</span>
-        {selected && (
-          <button type="button" onClick={() => setSelected(null)} className="ml-auto text-white/30 hover:text-white/60 transition-colors">
-            <X size={12} />
-          </button>
+        {currentKey && (
+          <span className={cn(
+            'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
+            submittedCount >= 26
+              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+              : submittedCount > 0
+                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                : 'bg-white/5 text-white/30 border-white/10'
+          )}>
+            {submittedCount}/26 ส่งแล้ว
+          </span>
+        )}
+        {obsByBranch.size > 0 && (
+          <span className="text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/25 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <TriangleAlert size={9} />
+            {obsByBranch.size} สาขามีอุปสรรคค้าง
+          </span>
+        )}
+        {refMonth && refYear && (
+          <span className="text-[10px] bg-violet-500/15 text-violet-300 border border-violet-500/25 px-2 py-0.5 rounded-full ml-auto">
+            {THAI_MONTHS_SHORT[refMonth - 1]} {refYear + 543}
+          </span>
         )}
       </div>
 
-      {/* Month filter */}
-      {months.length > 0 && (
+      {/* Month tabs — only when no ref specified */}
+      {!refMonth && months.length > 0 && (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-violet-500/10 flex-wrap">
           <span className="text-[10px] text-white/30 shrink-0">เดือน</span>
           {months.map(m => {
@@ -314,7 +822,7 @@ function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
               <button
                 key={key}
                 type="button"
-                onClick={() => { setActiveMonthKey(key); setSelected(null) }}
+                onClick={() => { setActiveMonthKey(key); setModalBranchName(null) }}
                 className={cn(
                   'text-[10px] px-2 py-0.5 rounded-md border transition-all',
                   currentKey === key
@@ -329,54 +837,67 @@ function PdcaBranchPanel({ allRows }: { allRows: PdcaSummaryRow[] }) {
         </div>
       )}
 
+      {/* Branch tags */}
       <div className="px-4 py-3 flex flex-wrap gap-1.5">
         {PWA_BRANCHES.map(b => {
-          const has = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
-          const active = selected === b.name_th
+          const hasPdca = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
+          const obsCount = obsByBranch.get(b.name_th) ?? 0
+          const hasObs = obsCount > 0
           return (
             <button
               key={b.costcenter}
               type="button"
-              onClick={() => setSelected(active ? null : b.name_th)}
+              onClick={() => openModal(b.name_th)}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border transition-all',
-                active
-                  ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
-                  : has
-                    ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
-                    : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
+                'text-[10px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1',
+                hasObs && hasPdca
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:border-amber-500/55 hover:bg-amber-500/18'
+                  : hasObs
+                    ? 'bg-amber-500/8 text-amber-400/70 border-amber-500/20 hover:border-amber-500/45'
+                    : hasPdca
+                      ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300 hover:bg-violet-500/8'
+                      : 'bg-transparent text-white/25 border-white/8 hover:text-white/40 hover:border-white/18',
               )}
             >
               {b.name_th}
+              {hasObs && (
+                <span className="flex items-center gap-0.5 text-amber-400/80">
+                  <TriangleAlert size={7} />
+                  <span>{obsCount}</span>
+                </span>
+              )}
             </button>
           )
         })}
       </div>
-      {selected && (
-        <div className="border-t border-violet-500/15 px-4 py-3 space-y-3">
-          {detail && (detail.pdca_do || detail.pdca_act) ? (
-            <>
-              <p className="text-[10px] text-violet-400/70 font-semibold uppercase tracking-wider">
-                {selected} · {THAI_MONTHS_SHORT[detail.report_month - 1]} {detail.report_year + 543}
-              </p>
-              {detail.pdca_do && (
-                <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">D — Do</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
-                </div>
-              )}
-              {detail.pdca_act && (
-                <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">A — Act</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
-          )}
-        </div>
-      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 px-4 pb-2 text-[10px] text-white/25">
+        {obsByBranch.size > 0 && (
+          <span className="flex items-center gap-1"><TriangleAlert size={8} className="text-amber-400" /> มีอุปสรรคค้าง</span>
+        )}
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/30" /> ส่ง PDCA แล้ว</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/10" /> ยังไม่ส่ง</span>
+        <span className="ml-auto flex items-center gap-1 text-violet-400/40">กดสาขาเพื่อดูรายละเอียด</span>
+      </div>
+
+      {/* Modal */}
+      <PdcaDetailModal
+        branchName={modalBranchName ?? ''}
+        detail={modalDetail}
+        prevDetail={modalPrevDetail}
+        branchObstacles={modalObstacles}
+        open={modalOpen}
+        onClose={closeModal}
+        onPrev={() => navModal(-1)}
+        onNext={() => navModal(1)}
+        hasPrev={modalIdx > 0}
+        hasNext={modalIdx >= 0 && modalIdx < PWA_BRANCHES.length - 1}
+        counterIdx={modalIdx}
+        totalBranches={PWA_BRANCHES.length}
+        refMonth={refMonth}
+        refYear={refYear}
+      />
     </div>
   )
 }
@@ -529,6 +1050,9 @@ interface Props {
   nrwFiscalYear: number
   nrwMonth: number
   pdcaAllRows: PdcaSummaryRow[]
+  pdcaPrevRows: PdcaPrevRow[]
+  pdcaRefMonth: number | null
+  pdcaRefYear: number | null
 }
 
 export function MeetingPreviewClient({
@@ -543,6 +1067,9 @@ export function MeetingPreviewClient({
   nrwFiscalYear,
   nrwMonth,
   pdcaAllRows,
+  pdcaPrevRows,
+  pdcaRefMonth,
+  pdcaRefYear,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
   const [selectedBranch, setSelectedBranch] = useState<string>('') // '' = all
@@ -551,18 +1078,22 @@ export function MeetingPreviewClient({
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
   const hasAgenda6 = agenda4Label === 'เรื่องสืบเนื่อง'
 
-  // Group obstacles by branch name for quick lookup
+  // วาระ 4 (สืบเนื่อง): อุปสรรคที่เปิดก่อนวันประชุม
+  const continuingObstacles = useMemo(() => {
+    const cutoff = new Date(meeting.scheduled_date)
+    return obstacles.filter(obs => new Date(obs.created_at) < cutoff)
+  }, [obstacles, meeting.scheduled_date])
+
   const obstaclesByBranch = useMemo(() => {
     const map = new Map<string, Obstacle[]>()
-    for (const obs of obstacles) {
+    for (const obs of continuingObstacles) {
       const name = obs.branches?.name_th ?? 'ไม่ระบุ'
       if (!map.has(name)) map.set(name, [])
       map.get(name)!.push(obs)
     }
     return map
-  }, [obstacles])
+  }, [continuingObstacles])
 
-  // Branches sorted by PWA_BRANCHES order, with obstacle counts
   const branchList = useMemo(() => {
     return PWA_BRANCHES.map((b) => ({
       name: b.name_th,
@@ -571,9 +1102,9 @@ export function MeetingPreviewClient({
   }, [obstaclesByBranch])
 
   const visibleObstacles = useMemo(() => {
-    if (!selectedBranch) return obstacles
+    if (!selectedBranch) return continuingObstacles
     return obstaclesByBranch.get(selectedBranch) ?? []
-  }, [selectedBranch, obstacles, obstaclesByBranch])
+  }, [selectedBranch, continuingObstacles, obstaclesByBranch])
 
   const items = (no: number) => agendaSubitems.filter((s) => s.agenda_no === no)
 
@@ -969,7 +1500,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
           {!hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} obstacles={continuingObstacles} />
           )}
 
           {/* Branch obstacle browser */}
@@ -978,7 +1509,7 @@ export function MeetingPreviewClient({
               <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
                 อุปสรรคตามสาขา
               </p>
-              <span className="text-[10px] text-white/25">{obstacles.length} รายการทั้งหมด</span>
+              <span className="text-[10px] text-white/25">{continuingObstacles.length} รายการ</span>
             </div>
 
             {/* Branch selector */}
@@ -993,7 +1524,7 @@ export function MeetingPreviewClient({
                 )}
               >
                 ทั้งหมด
-                <span className="ml-1.5 num opacity-60">{obstacles.length}</span>
+                <span className="ml-1.5 num opacity-60">{continuingObstacles.length}</span>
               </button>
 
               {branchList.map((b) => (
@@ -1060,7 +1591,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ */}
           {hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} obstacles={continuingObstacles} />
           )}
 
           {items(5).length === 0 ? (

@@ -504,6 +504,9 @@ export interface MeetingPreAgenda {
   items4: PreAgendaItem[]
   items5: PreAgendaItem[]
   items6: PreAgendaItem[]
+  pdca_ref_month: number | null
+  pdca_ref_year: number | null
+  pdca_deadline: string | null
   created_at: string
   updated_at: string
 }
@@ -547,7 +550,7 @@ export interface ResolutionNotification {
   created_at: string
 }
 
-export type MeetingRequirementType = 'monthly_report' | 'five_topics' | 'km_case' | 'custom'
+export type MeetingRequirementType = 'monthly_report' | 'five_topics' | 'km_case' | 'custom' | 'pdca_monthly'
 
 export interface MeetingRequirement {
   id: string

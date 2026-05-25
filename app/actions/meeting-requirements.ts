@@ -47,6 +47,15 @@ async function getFulfilledCostcenters(
     return [...new Set(extractCC(data ?? []))]
   }
 
+  if (req.requirement_type === 'pdca_monthly' && req.target_year && req.target_month) {
+    const { data } = await supabase
+      .from('monthly_reports')
+      .select('branch_id, branches!inner(name_th)')
+      .eq('report_year', req.target_year)
+      .eq('report_month', req.target_month)
+    return [...new Set(extractCC(data ?? []))]
+  }
+
   if (req.requirement_type === 'five_topics' && req.target_year && req.target_month) {
     const { data } = await supabase
       .from('five_topics_reports')
