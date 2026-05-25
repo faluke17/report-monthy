@@ -704,6 +704,7 @@ function PdcaBranchPanel({
   meetingId,
   obstacles = [],
   prevRows = [],
+  yoyRows,
 }: {
   allRows: PdcaSummaryRow[]
   refMonth: number | null
@@ -711,6 +712,7 @@ function PdcaBranchPanel({
   meetingId: string
   obstacles?: Obstacle[]
   prevRows?: PdcaPrevRow[]
+  yoyRows?: NrwYoyRow[]
 }) {
   const router = useRouter()
   const [modalBranchName, setModalBranchName] = useState<string | null>(null)
@@ -720,6 +722,13 @@ function PdcaBranchPanel({
   const [editMonth, setEditMonth] = useState<number>(refMonth ?? new Date().getMonth() + 1)
   const [editYear, setEditYear] = useState<number>(refYear ?? new Date().getFullYear())
   const [isSavingRef, startSavingRef] = useTransition()
+
+  // branch_name → rate_delta from วาระ 3 chart, used for color coding
+  const yoyMap = useMemo(() => {
+    const map = new Map<string, number | null>()
+    for (const r of yoyRows ?? []) map.set(r.branch_name, r.rate_delta)
+    return map
+  }, [yoyRows])
 
   function handleSaveRef() {
     startSavingRef(async () => {
@@ -945,48 +954,84 @@ function PdcaBranchPanel({
         </div>
       )}
 
-      {/* Branch tags */}
-      <div className="px-4 py-3 flex flex-wrap gap-1.5">
+      {/* Branch card grid — color-coded by NRW performance from วาระ 3 */}
+      <div className="px-4 pb-4 pt-2 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-7 gap-2">
         {PWA_BRANCHES.map(b => {
           const hasPdca = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
           const obsCount = obsByBranch.get(b.name_th) ?? 0
           const hasObs = obsCount > 0
+          const delta = yoyMap.size > 0 ? (yoyMap.get(b.name_th) ?? null) : null
+          const nrwGood = delta !== null && delta < -0.001
+          const nrwBad  = delta !== null && delta >  0.001
+
           return (
             <button
               key={b.costcenter}
               type="button"
               onClick={() => openModal(b.name_th)}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1',
-                hasObs && hasPdca
-                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:border-amber-500/55 hover:bg-amber-500/18'
-                  : hasObs
-                    ? 'bg-amber-500/8 text-amber-400/70 border-amber-500/20 hover:border-amber-500/45'
-                    : hasPdca
-                      ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300 hover:bg-violet-500/8'
-                      : 'bg-transparent text-white/25 border-white/8 hover:text-white/40 hover:border-white/18',
+                'relative rounded-xl border p-2.5 text-left transition-all duration-150',
+                'hover:scale-[1.04] hover:shadow-lg active:scale-[0.97]',
+                nrwBad
+                  ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
+                  : nrwGood
+                    ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
+                    : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
               )}
             >
-              {b.name_th}
+              {/* Obstacle badge — floats top-right like a notification */}
               {hasObs && (
-                <span className="flex items-center gap-0.5 text-amber-400/80">
-                  <TriangleAlert size={7} />
-                  <span>{obsCount}</span>
-                </span>
+                <div className="absolute -top-2 -right-2 flex items-center gap-0.5 bg-amber-400 text-[#1c0a00] text-[9px] font-extrabold px-1.5 py-[3px] rounded-full shadow-[0_0_10px_rgba(251,191,36,.55)] z-10">
+                  <TriangleAlert size={8} strokeWidth={2.5} />
+                  {obsCount}
+                </div>
               )}
+
+              {/* Branch name */}
+              <p className={cn(
+                'text-[11px] font-bold leading-snug mb-1.5 truncate',
+                nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/65',
+              )}>
+                {b.name_th}
+              </p>
+
+              {/* Delta row */}
+              {delta !== null ? (
+                <p className={cn(
+                  'text-[12px] font-extrabold tabular-nums leading-none',
+                  nrwBad ? 'text-red-400' : 'text-emerald-400',
+                )}>
+                  {nrwBad ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+                  <span className="text-[9px] font-normal opacity-60 ml-0.5">%</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-white/18">— ไม่มีข้อมูล</p>
+              )}
+
             </button>
           )
         })}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-3 px-4 pb-2 text-[10px] text-white/25">
-        {obsByBranch.size > 0 && (
-          <span className="flex items-center gap-1"><TriangleAlert size={8} className="text-amber-400" /> มีอุปสรรคค้าง</span>
+      <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-white/25 flex-wrap border-t border-white/5 pt-2.5">
+        {yoyMap.size > 0 && (
+          <>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-emerald-500/40 border border-emerald-500/50 inline-block" />
+              NRW ดีขึ้น
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-red-500/40 border border-red-500/50 inline-block" />
+              NRW แย่ลง
+            </span>
+          </>
         )}
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/30" /> ส่ง PDCA แล้ว</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/10" /> ยังไม่ส่ง</span>
-        <span className="ml-auto flex items-center gap-1 text-violet-400/40">กดสาขาเพื่อดูรายละเอียด</span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(251,191,36,.5)]" />
+          อุปสรรคค้าง
+        </span>
+        <span className="ml-auto text-violet-400/35">กดสาขาเพื่อดูรายละเอียด</span>
       </div>
 
       {/* Modal */}
@@ -1698,9 +1743,9 @@ export function MeetingPreviewClient({
             </div>
           </div>
 
-          {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ */}
+          {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ, sorted by วาระ 3 chart */}
           {hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
           )}
 
           {items(5).length === 0 ? (
