@@ -81,19 +81,20 @@ export default async function MeetingPreviewPage({
   const pdcaRefMonth: number | null = preAgendaRes.data?.pdca_ref_month ?? null
   const pdcaRefYear: number | null = preAgendaRes.data?.pdca_ref_year ?? null
 
-  // ดึง PDCA: ถ้ามี ref ระบุ → ดึงเฉพาะเดือนนั้น, ถ้าไม่มี → ดึง 400 rows ล่าสุดให้ user เลือกเอง
-  let monthlyQuery = supabase
-    .from('monthly_reports')
-    .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th), volume_distributed, volume_sold, mnf_latest, mnf_factor, nrw_pct, leaks_found, leaks_repaired, leaks_pending, leaks_repeat, meters_abnormal')
+  // ดึง PDCA จาก area_monthly_reports (ตารางจริงที่สาขาใช้กรอก)
+  // แต่ละสาขามีหลาย area → aggregate ต่อสาขา
+  let areaQuery = (supabase as any)
+    .from('area_monthly_reports')
+    .select('branch_id, pdca_do, pdca_act, report_month, report_year, water_dist_after, water_sold_after, mnf_after, leaks_repaired, leaks_pending, branches(name_th), step_test_results(leaks_found)')
     .order('report_year', { ascending: false })
     .order('report_month', { ascending: false })
 
   if (pdcaRefMonth && pdcaRefYear) {
-    monthlyQuery = monthlyQuery
+    areaQuery = areaQuery
       .eq('report_month', pdcaRefMonth)
       .eq('report_year', pdcaRefYear)
   } else {
-    monthlyQuery = (monthlyQuery as any).limit(400)
+    areaQuery = areaQuery.limit(1000)
   }
 
   // Previous month for delta comparison
@@ -102,41 +103,76 @@ export default async function MeetingPreviewPage({
     ? (pdcaRefMonth === 1 ? (pdcaRefYear ?? 0) - 1 : pdcaRefYear)
     : null
 
-  const [monthlyRes, prevMonthlyRes] = await Promise.all([
-    monthlyQuery,
+  const [areaRes, prevAreaRes] = await Promise.all([
+    areaQuery,
     prevMonthNum && prevMonthYear
-      ? supabase
-          .from('monthly_reports')
-          .select('branch_id, volume_distributed, volume_sold, mnf_latest, nrw_pct, branches(name_th)')
+      ? (supabase as any)
+          .from('area_monthly_reports')
+          .select('branch_id, water_dist_after, water_sold_after, mnf_after, branches(name_th)')
           .eq('report_month', prevMonthNum)
           .eq('report_year', prevMonthYear)
       : Promise.resolve({ data: [] as any[] }),
   ])
 
-  const pdcaAllRows = (monthlyRes.data ?? []).map((row: any) => ({
-    branch_name: row.branches?.name_th ?? '',
-    pdca_do: row.pdca_do ?? null,
-    pdca_act: row.pdca_act ?? null,
-    report_month: row.report_month,
-    report_year: row.report_year,
-    volume_distributed: row.volume_distributed ?? null,
-    volume_sold: row.volume_sold ?? null,
-    mnf_latest: row.mnf_latest ?? null,
-    mnf_factor: row.mnf_factor ?? null,
-    nrw_pct: row.nrw_pct ?? null,
-    leaks_found: row.leaks_found ?? 0,
-    leaks_repaired: row.leaks_repaired ?? 0,
-    leaks_pending: row.leaks_pending ?? 0,
-    leaks_repeat: row.leaks_repeat ?? 0,
-    meters_abnormal: row.meters_abnormal ?? 0,
+  // Aggregate area rows → one row per branch
+  function aggregateAreaRows(rows: any[]): {
+    branch_name: string; pdca_do: string | null; pdca_act: string | null
+    report_month: number; report_year: number
+    volume_distributed: number | null; volume_sold: number | null
+    mnf_latest: number | null; nrw_pct: number | null
+    leaks_found: number; leaks_repaired: number; leaks_pending: number
+  }[] {
+    const map = new Map<string, {
+      name: string; do_parts: string[]; act_parts: string[]
+      month: number; year: number
+      dist: number; sold: number; mnf_sum: number; mnf_count: number
+      lf: number; lr: number; lp: number
+    }>()
+    for (const row of rows) {
+      const name: string = row.branches?.name_th ?? ''
+      if (!name) continue
+      if (!map.has(name)) {
+        map.set(name, { name, do_parts: [], act_parts: [], month: row.report_month, year: row.report_year, dist: 0, sold: 0, mnf_sum: 0, mnf_count: 0, lf: 0, lr: 0, lp: 0 })
+      }
+      const a = map.get(name)!
+      if (row.pdca_do) a.do_parts.push(row.pdca_do)
+      if (row.pdca_act) a.act_parts.push(row.pdca_act)
+      a.dist += row.water_dist_after ?? 0
+      a.sold += row.water_sold_after ?? 0
+      if (row.mnf_after != null) { a.mnf_sum += row.mnf_after; a.mnf_count++ }
+      a.lr += row.leaks_repaired ?? 0
+      a.lp += row.leaks_pending ?? 0
+      for (const st of row.step_test_results ?? []) a.lf += st.leaks_found ?? 0
+    }
+    return Array.from(map.values()).map(a => {
+      const nrw_pct = a.dist > 0 ? Math.round((a.dist - a.sold) / a.dist * 10000) / 100 : null
+      return {
+        branch_name: a.name,
+        pdca_do: a.do_parts.length ? a.do_parts.join('\n\n') : null,
+        pdca_act: a.act_parts.length ? a.act_parts.join('\n\n') : null,
+        report_month: a.month, report_year: a.year,
+        volume_distributed: a.dist || null, volume_sold: a.sold || null,
+        mnf_latest: a.mnf_count ? Math.round(a.mnf_sum / a.mnf_count * 100) / 100 : null,
+        nrw_pct,
+        leaks_found: a.lf, leaks_repaired: a.lr, leaks_pending: a.lp,
+      }
+    })
+  }
+
+  const pdcaAllRows = aggregateAreaRows(areaRes.data ?? []).map(r => ({
+    ...r,
+    mnf_factor: null,
+    leaks_repeat: 0,
+    meters_abnormal: 0,
   }))
 
-  const pdcaPrevRows = (prevMonthlyRes.data ?? []).map((row: any) => ({
-    branch_name: row.branches?.name_th ?? '',
-    volume_distributed: row.volume_distributed ?? null,
-    volume_sold: row.volume_sold ?? null,
-    mnf_latest: row.mnf_latest ?? null,
-    nrw_pct: row.nrw_pct ?? null,
+  const prevAggregated = aggregateAreaRows(prevAreaRes.data ?? [])
+  const pdcaPrevRows = prevAggregated.map(r => ({
+    branch_name: r.branch_name,
+    volume_distributed: r.volume_distributed,
+    volume_sold: r.volume_sold,
+    mnf_latest: r.mnf_latest,
+    nrw_pct: r.nrw_pct,
   }))
 
   let prevResolutions: MeetingResolution[] = []
