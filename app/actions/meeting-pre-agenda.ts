@@ -90,3 +90,61 @@ export async function savePreAgenda(
   revalidatePath('/notify')
   return { success: true }
 }
+
+export async function updatePdcaRef(
+  meetingId: string,
+  month: number,
+  year: number,
+): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  if (session.costcenter) return { success: false, error: 'ไม่มีสิทธิ์' }
+
+  const supabase = await createClient()
+
+  // Upsert only the ref fields, preserve everything else via merge
+  const { data: existing } = await supabase
+    .from('meeting_pre_agenda')
+    .select('*')
+    .eq('meeting_id', meetingId)
+    .maybeSingle()
+
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('meeting_pre_agenda')
+    .upsert(
+      {
+        ...(existing ?? {}),
+        meeting_id: meetingId,
+        pdca_ref_month: month,
+        pdca_ref_year: year,
+        updated_at: now,
+      },
+      { onConflict: 'meeting_id' },
+    )
+
+  if (error) return { success: false, error: error.message }
+
+  // Sync meeting_requirements
+  await supabase
+    .from('meeting_requirements')
+    .delete()
+    .eq('meeting_id', meetingId)
+    .eq('requirement_type', 'pdca_monthly')
+
+  const monthName = THAI_MONTHS[month] ?? ''
+  const buddhistYear = year + 543
+  await supabase.from('meeting_requirements').insert({
+    meeting_id: meetingId,
+    requirement_type: 'pdca_monthly',
+    title: `ส่งรายงานประจำเดือน ${monthName} ${buddhistYear}`,
+    description: 'กรุณากรอกรายงานประจำเดือน (NRW / PDCA) ให้ครบก่อนวันประชุม',
+    target_year: year,
+    target_month: month,
+    sort_order: 1,
+  })
+
+  revalidatePath(`/meeting/${meetingId}/agenda`)
+  revalidatePath(`/meeting/${meetingId}/preview`)
+  return { success: true }
+}

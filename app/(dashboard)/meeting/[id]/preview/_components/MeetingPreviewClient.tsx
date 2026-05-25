@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { closeMeeting, sendMeetingNotification } from '@/app/actions/meetings'
+import { updatePdcaRef } from '@/app/actions/meeting-pre-agenda'
 import { cn } from '@/lib/utils'
 import type {
   Meeting,
@@ -19,7 +20,7 @@ import { NrwYoyTable } from '@/components/dashboard/NrwYoyTable'
 import { NrwYoyChart } from '@/components/dashboard/NrwYoyChart'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { StatusPill } from '@/components/shared/StatusPill'
-import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send, Brain, X, TriangleAlert } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Link2, FileText, CheckCircle2, AlertCircle, Clock, XCircle, Send, Brain, X, TriangleAlert, Pencil, Check } from 'lucide-react'
 
 function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: string; initialNotifiedAt: string | null }) {
   const [notifiedAt, setNotifiedAt] = useState(initialNotifiedAt)
@@ -278,6 +279,7 @@ interface PdcaPrevRow {
 }
 
 const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+const THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
 
 // ─── Modal helper sub-components ─────────────────────────────────────────────
 
@@ -699,18 +701,35 @@ function PdcaBranchPanel({
   allRows,
   refMonth,
   refYear,
+  meetingId,
   obstacles = [],
   prevRows = [],
 }: {
   allRows: PdcaSummaryRow[]
   refMonth: number | null
   refYear: number | null
+  meetingId: string
   obstacles?: Obstacle[]
   prevRows?: PdcaPrevRow[]
 }) {
+  const router = useRouter()
   const [modalBranchName, setModalBranchName] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [activeMonthKey, setActiveMonthKey] = useState<string | null>(null)
+  const [editingRef, setEditingRef] = useState(false)
+  const [editMonth, setEditMonth] = useState<number>(refMonth ?? new Date().getMonth() + 1)
+  const [editYear, setEditYear] = useState<number>(refYear ?? new Date().getFullYear())
+  const [isSavingRef, startSavingRef] = useTransition()
+
+  function handleSaveRef() {
+    startSavingRef(async () => {
+      const res = await updatePdcaRef(meetingId, editMonth, editYear)
+      if (!res.success) { toast.error(res.error); return }
+      toast.success(`เชื่อมกับ PDCA เดือน ${THAI_MONTHS_FULL[editMonth - 1]} ${editYear + 543} แล้ว`)
+      setEditingRef(false)
+      router.refresh()
+    })
+  }
 
   const months = useMemo(() => {
     const seen = new Set<string>()
@@ -840,11 +859,65 @@ function PdcaBranchPanel({
             {obsByBranch.size} สาขามีอุปสรรคค้าง
           </span>
         )}
-        {refMonth && refYear && (
-          <span className="text-[10px] bg-violet-500/15 text-violet-300 border border-violet-500/25 px-2 py-0.5 rounded-full ml-auto">
-            {THAI_MONTHS_SHORT[refMonth - 1]} {refYear + 543}
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          {!editingRef && refMonth && refYear && (
+            <span className="text-[10px] bg-violet-500/15 text-violet-300 border border-violet-500/25 px-2 py-0.5 rounded-full">
+              {THAI_MONTHS_SHORT[refMonth - 1]} {refYear + 543}
+            </span>
+          )}
+          {!editingRef && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditMonth(refMonth ?? new Date().getMonth() + 1)
+                setEditYear(refYear ?? new Date().getFullYear())
+                setEditingRef(true)
+              }}
+              title="เปลี่ยนเดือน PDCA"
+              className="p-1 rounded text-violet-400/50 hover:text-violet-300 hover:bg-violet-500/15 transition-all"
+            >
+              <Pencil size={11} />
+            </button>
+          )}
+          {editingRef && (
+            <div className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/25 rounded-lg px-2 py-1">
+              <select
+                className="text-[11px] bg-transparent text-violet-200 outline-none cursor-pointer"
+                value={editMonth}
+                onChange={e => setEditMonth(Number(e.target.value))}
+              >
+                {THAI_MONTHS_FULL.map((m, i) => (
+                  <option key={i + 1} value={i + 1} className="bg-[#0f1f35] text-white">{m}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                className="text-[11px] bg-transparent text-violet-200 outline-none w-14 text-center"
+                value={editYear + 543}
+                onChange={e => setEditYear(Number(e.target.value) - 543)}
+                min={2560}
+                max={2580}
+              />
+              <button
+                type="button"
+                disabled={isSavingRef}
+                onClick={handleSaveRef}
+                className="text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
+                title="บันทึก"
+              >
+                <Check size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingRef(false)}
+                className="text-white/30 hover:text-white/60 transition-colors"
+                title="ยกเลิก"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Month tabs — only when no ref specified */}
@@ -1536,7 +1609,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
           {!hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} obstacles={continuingObstacles} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
           )}
 
           {/* Branch obstacle browser */}
@@ -1627,7 +1700,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ */}
           {hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} obstacles={continuingObstacles} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
           )}
 
           {items(5).length === 0 ? (
