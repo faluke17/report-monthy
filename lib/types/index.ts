@@ -674,3 +674,91 @@ export interface ResolutionStepFormData {
   title: string
   description?: string
 }
+
+// ============================================================
+// Project Progress Tracking Types (ความก้าวหน้าโครงการ)
+// ============================================================
+
+export interface BudgetYear {
+  id: string
+  name: string
+  fiscal_year: number
+  is_active: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+  // joined
+  budget_groups?: BudgetGroup[]
+}
+
+export interface BudgetGroup {
+  id: string
+  budget_year_id: string
+  name: string
+  created_by: string
+  created_at: string
+  updated_at: string
+  // joined
+  budget_projects?: BudgetProjectSummary[]
+}
+
+export interface BudgetProjectSummary {
+  id: string
+  current_phase: number
+  budget_excl_vat: number | null
+  contract_incl_vat: number | null
+  project_contracts?: {
+    contract_end_date: string | null
+    estimated_pipe_length: number | null
+  } | null
+}
+
+export interface BudgetProject {
+  id: string
+  code: string | null
+  budget_year_id: string
+  budget_group_id: string
+  branch_id: string
+  project_name: string
+  budget_excl_vat: number | null
+  contract_incl_vat: number | null
+  phase1_completed_at: string | null
+  phase1_notes: string | null
+  phase2_completed_at: string | null
+  phase2_notes: string | null
+  phase3_completed_at: string | null
+  phase3_notes: string | null
+  completion_submission_date: string | null
+  completion_inspection_date: string | null
+  completion_notes: string | null
+  current_phase: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  // joined
+  branches?: Branch
+  project_contracts?: ProjectContract | null
+  project_progress_updates?: ProjectProgressUpdate[]
+}
+
+export interface ProjectContract {
+  id: string
+  project_id: string
+  estimated_pipe_length: number | null
+  contractor_name: string | null
+  contract_number: string | null
+  contract_date: string | null
+  construction_days: number | null
+  contract_start_date: string | null
+  contract_end_date: string | null
+}
+
+export interface ProjectProgressUpdate {
+  id: string
+  project_id: string
+  reported_date: string
+  pipe_length_completed: number
+  notes: string | null
+  created_by: string
+  created_at: string
+}

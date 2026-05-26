@@ -42,7 +42,7 @@ export default async function MeetingPreviewPage({
 
   const { fiscalYear: nrwFiscalYear, month: nrwMonth } = deriveNrwPeriod(meeting.scheduled_date)
 
-  const [headerRes, subitemsRes, prevRes, currNrwRes, prevNrwRes, preAgendaRes] = await Promise.all([
+  const [headerRes, subitemsRes, pastMeetingsRes, currNrwRes, prevNrwRes, preAgendaRes] = await Promise.all([
     supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', id).maybeSingle(),
     supabase
       .from('meeting_agenda_subitems')
@@ -55,8 +55,7 @@ export default async function MeetingPreviewPage({
       .select('*')
       .lt('scheduled_date', meeting.scheduled_date)
       .order('scheduled_date', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(10),
     (supabase as any)
       .from('nrw_branch_monthly')
       .select('branch_name, month, water_produced, water_sold, water_free, blow_off')
@@ -74,12 +73,29 @@ export default async function MeetingPreviewPage({
 
   const agendaHeader = (headerRes.data ?? null) as MeetingAgendaHeader | null
   const agendaSubitems = (subitemsRes.data ?? []) as MeetingAgendaSubItem[]
-  const prevMeeting = (prevRes.data ?? null) as Meeting | null
+  const pastMeetingList = (pastMeetingsRes.data ?? []) as Meeting[]
   const nrwCurrRaw: any[] = currNrwRes.data ?? []
   const nrwPrevRaw: any[] = prevNrwRes.data ?? []
 
   const pdcaRefMonth: number | null = preAgendaRes.data?.pdca_ref_month ?? null
   const pdcaRefYear: number | null = preAgendaRes.data?.pdca_ref_year ?? null
+
+  // ดึง resolutions ของ past meetings ทั้งหมดพร้อมกัน
+  let allPastResolutions: MeetingResolution[] = []
+  if (pastMeetingList.length > 0) {
+    const { data } = await supabase
+      .from('meeting_resolutions')
+      .select('*')
+      .in('meeting_id', pastMeetingList.map(m => m.id))
+      .order('meeting_id')
+      .order('sequence_no')
+    allPastResolutions = (data ?? []) as MeetingResolution[]
+  }
+
+  const pastMeetings = pastMeetingList.map(m => ({
+    meeting: m,
+    resolutions: allPastResolutions.filter(r => r.meeting_id === m.id),
+  }))
 
   // ดึง PDCA จาก area_monthly_reports (ตารางจริงที่สาขาใช้กรอก)
   // แต่ละสาขามีหลาย area → aggregate ต่อสาขา
@@ -175,16 +191,6 @@ export default async function MeetingPreviewPage({
     nrw_pct: r.nrw_pct,
   }))
 
-  let prevResolutions: MeetingResolution[] = []
-  if (prevMeeting) {
-    const { data } = await supabase
-      .from('meeting_resolutions')
-      .select('*')
-      .eq('meeting_id', prevMeeting.id)
-      .order('sequence_no')
-    prevResolutions = (data ?? []) as MeetingResolution[]
-  }
-
   const { data: obstaclesData } = await supabase
     .from('obstacles')
     .select('*, branches(id, name_th, code)')
@@ -199,8 +205,7 @@ export default async function MeetingPreviewPage({
       meeting={meeting}
       agendaHeader={agendaHeader}
       agendaSubitems={agendaSubitems}
-      prevMeeting={prevMeeting}
-      prevResolutions={prevResolutions}
+      pastMeetings={pastMeetings}
       obstacles={obstacles}
       nrwCurrRaw={nrwCurrRaw}
       nrwPrevRaw={nrwPrevRaw}

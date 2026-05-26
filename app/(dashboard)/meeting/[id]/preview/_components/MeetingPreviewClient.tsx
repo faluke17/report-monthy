@@ -1448,12 +1448,16 @@ function ObstacleCard({ obs }: { obs: Obstacle }) {
 
 // ─── main props ───────────────────────────────────────────────────────────────
 
+interface PastMeetingEntry {
+  meeting: Meeting
+  resolutions: MeetingResolution[]
+}
+
 interface Props {
   meeting: Meeting
   agendaHeader: MeetingAgendaHeader | null
   agendaSubitems: MeetingAgendaSubItem[]
-  prevMeeting: Meeting | null
-  prevResolutions: MeetingResolution[]
+  pastMeetings: PastMeetingEntry[]
   obstacles: Obstacle[]
   nrwCurrRaw: any[]
   nrwPrevRaw: any[]
@@ -1469,8 +1473,7 @@ export function MeetingPreviewClient({
   meeting,
   agendaHeader,
   agendaSubitems,
-  prevMeeting,
-  prevResolutions,
+  pastMeetings,
   obstacles,
   nrwCurrRaw,
   nrwPrevRaw,
@@ -1482,6 +1485,9 @@ export function MeetingPreviewClient({
   pdcaRefYear,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
+  const [selectedPrevId, setSelectedPrevId] = useState<string | null>(
+    pastMeetings[0]?.meeting.id ?? null
+  )
   const [selectedMonths, setSelectedMonths] = useState(() => monthToCount(nrwMonth))
 
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
@@ -1633,92 +1639,123 @@ export function MeetingPreviewClient({
       )}
 
       {/* ══ วาระ 2 ══ */}
-      {activeTab === 2 && (
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <AgendaBadge no={2} />
-            <div>
-              <p className="font-bold text-white">
-                รับรองรายงานการประชุม
-                {agendaHeader?.agenda2_meeting_no && (
-                  <span className="text-white/60"> ครั้งที่ {agendaHeader.agenda2_meeting_no}</span>
-                )}
-              </p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 2</p>
-            </div>
-          </div>
-
-          {prevMeeting ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 px-1">
-                <Calendar size={12} className="text-white/30" />
-                <p className="text-xs text-white/40">
-                  รายงานจาก: <span className="text-white/60">{prevMeeting.title}</span>
-                  {' '}· {formatThaiDate(prevMeeting.scheduled_date)}
+      {activeTab === 2 && (() => {
+        const selectedEntry = pastMeetings.find(e => e.meeting.id === selectedPrevId) ?? pastMeetings[0] ?? null
+        const prevResolutions = selectedEntry?.resolutions ?? []
+        const prevMeeting = selectedEntry?.meeting ?? null
+        return (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <AgendaBadge no={2} />
+              <div>
+                <p className="font-bold text-white">
+                  รับรองรายงานการประชุม
+                  {agendaHeader?.agenda2_meeting_no && (
+                    <span className="text-white/60"> ครั้งที่ {agendaHeader.agenda2_meeting_no}</span>
+                  )}
                 </p>
+                <p className="text-xs text-white/40 mt-0.5">วาระที่ 2</p>
               </div>
+            </div>
 
-              {prevResolutions.length === 0 ? (
-                <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-                  ไม่มีมติบันทึกไว้จากการประชุมครั้งก่อน
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {prevResolutions.map((r) => {
-                    const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
-                    return (
-                      <div
-                        key={r.id}
-                        className={cn('glass-card-sm p-4 space-y-2', done && 'opacity-50')}
+            {pastMeetings.length === 0 ? (
+              <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+                ไม่พบรายงานการประชุมครั้งก่อน
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Meeting selector */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-white/30 shrink-0">รับรองรายงาน</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pastMeetings.map(e => (
+                      <button
+                        key={e.meeting.id}
+                        type="button"
+                        onClick={() => setSelectedPrevId(e.meeting.id)}
+                        className={cn(
+                          'text-[11px] px-3 py-1 rounded-lg border transition-all',
+                          selectedPrevId === e.meeting.id
+                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                            : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                        )}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-2 flex-1 min-w-0">
-                            <span className="num text-xs font-bold text-cyan-400 shrink-0 mt-0.5">
-                              #{r.sequence_no}
-                            </span>
-                            <div className="min-w-0 space-y-1">
-                              <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
-                              {r.detail && (
-                                <p className="text-xs text-white/50 leading-relaxed">{r.detail}</p>
-                              )}
-                            </div>
-                          </div>
-                          <StatusPill status={r.status} />
-                        </div>
-
-                        <div className="flex items-center gap-3 text-[11px] text-white/35 pl-5">
-                          {r.responsible_branch && <span>สาขา: {r.responsible_branch}</span>}
-                          {r.due_date && (
-                            <span className="flex items-center gap-1">
-                              <Clock size={10} />
-                              {formatThaiDate(r.due_date, true)}
-                            </span>
-                          )}
-                          {r.progress_pct > 0 && (
-                            <span className="text-amber-400">{r.progress_pct}%</span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                        {e.meeting.title}
+                        <span className="ml-1.5 text-[10px] opacity-60">
+                          {formatThaiDate(e.meeting.scheduled_date, true)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
 
-            </div>
-          ) : (
-            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-              ไม่พบรายงานการประชุมครั้งก่อน
-            </div>
-          )}
+                {prevMeeting && (
+                  <div className="flex items-center gap-2 px-1">
+                    <Calendar size={12} className="text-white/30" />
+                    <p className="text-xs text-white/40">
+                      รายงานจาก: <span className="text-white/60">{prevMeeting.title}</span>
+                      {' '}· {formatThaiDate(prevMeeting.scheduled_date)}
+                    </p>
+                  </div>
+                )}
 
-          {agendaHeader && (
-            <ResolutionBadge
-              type={agendaHeader.agenda2_resolution ?? 'รับทราบ'}
-              detail={agendaHeader.agenda2_resolution_detail}
-            />
-          )}
-        </div>
-      )}
+                {prevResolutions.length === 0 ? (
+                  <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+                    ไม่มีมติบันทึกไว้จากการประชุมครั้งนี้
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {prevResolutions.map((r) => {
+                      const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
+                      return (
+                        <div
+                          key={r.id}
+                          className={cn('glass-card-sm p-4 space-y-2', done && 'opacity-50')}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="num text-xs font-bold text-cyan-400 shrink-0 mt-0.5">
+                                #{r.sequence_no}
+                              </span>
+                              <div className="min-w-0 space-y-1">
+                                <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
+                                {r.detail && (
+                                  <p className="text-xs text-white/50 leading-relaxed">{r.detail}</p>
+                                )}
+                              </div>
+                            </div>
+                            <StatusPill status={r.status} />
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[11px] text-white/35 pl-5">
+                            {r.responsible_branch && <span>สาขา: {r.responsible_branch}</span>}
+                            {r.due_date && (
+                              <span className="flex items-center gap-1">
+                                <Clock size={10} />
+                                {formatThaiDate(r.due_date, true)}
+                              </span>
+                            )}
+                            {r.progress_pct > 0 && (
+                              <span className="text-amber-400">{r.progress_pct}%</span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {agendaHeader && (
+              <ResolutionBadge
+                type={agendaHeader.agenda2_resolution ?? 'รับทราบ'}
+                detail={agendaHeader.agenda2_resolution_detail}
+              />
+            )}
+          </div>
+        )
+      })()}
 
       {/* ══ วาระ 3 ══ */}
       {activeTab === 3 && (

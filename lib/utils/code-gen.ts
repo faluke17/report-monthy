@@ -7,7 +7,7 @@ const TABLE_MAP: Record<CodePrefix, string> = {
   ORD: 'action_items',
   OBS: 'obstacles',
   MIT: 'meetings',
-  KM: 'km_cases',
+  KM:  'km_cases',
 }
 
 /**

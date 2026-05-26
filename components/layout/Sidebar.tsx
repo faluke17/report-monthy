@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
   Calendar, BookOpen, Download, ChevronLeft, ChevronRight,
-  Droplets, ListChecks, FileText, Crosshair, Activity,
+  Droplets, ListChecks, FileText, Crosshair, Activity, Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
@@ -26,10 +26,11 @@ const NAV_GROUPS = [
   {
     label: 'ภาพรวม',
     items: [
-      { href: '/dashboard',    label: 'Dashboard เขต',  icon: LayoutDashboard },
-      { href: '/ranking',      label: 'Ranking สาขา',   icon: BarChart3 },
-      { href: '/mnf-monitor',  label: 'MNF Monitor',    icon: Activity },
-      { href: '/report-nrw',   label: 'Report NRW',     icon: Droplets },
+      { href: '/dashboard',          label: 'Dashboard เขต',         icon: LayoutDashboard },
+      { href: '/ranking',            label: 'Ranking สาขา',          icon: BarChart3 },
+      { href: '/mnf-monitor',        label: 'MNF Monitor',           icon: Activity },
+      { href: '/report-nrw',         label: 'Report NRW',            icon: Droplets },
+      { href: '/project-progress',   label: 'ความก้าวหน้าโครงการ',   icon: Building2 },
     ],
   },
   {
@@ -53,7 +54,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/plans',  label: 'แผนลดน้ำสูญเสีย', icon: Target },
       { href: '/km',     label: 'KM Best Practice', icon: BookOpen },
-      { href: '/export', label: 'Export ข้อมูล',    icon: Download },
+      { href: '/export',           label: 'Export ข้อมูล',       icon: Download },
     ],
   },
 ]
