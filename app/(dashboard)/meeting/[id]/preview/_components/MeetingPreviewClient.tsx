@@ -697,6 +697,267 @@ function PdcaDetailModal({
   )
 }
 
+function ObstacleDetailModal({
+  branchName,
+  obstacles,
+  open,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+}: {
+  branchName: string
+  obstacles: Obstacle[]
+  open: boolean
+  onClose: () => void
+  onPrev: () => void
+  onNext: () => void
+  hasPrev: boolean
+  hasNext: boolean
+}) {
+  useEffect(() => {
+    if (!open) return
+    function handler(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev()
+      if (e.key === 'ArrowRight' && hasNext) onNext()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, hasPrev, hasNext, onClose, onPrev, onNext])
+
+  if (!branchName) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(2,8,20,.85)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        zIndex: 50,
+        opacity: open ? 1 : 0,
+        pointerEvents: open ? 'all' : 'none',
+        transition: 'opacity .25s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: 'min(700px, 96vw)', maxHeight: '90vh',
+          background: '#0b1b30',
+          border: '1px solid rgba(255,255,255,.09)',
+          borderRadius: '24px',
+          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          transform: open ? 'scale(1) translateY(0)' : 'scale(.9) translateY(22px)',
+          opacity: open ? 1 : 0,
+          transition: 'transform .32s cubic-bezier(.34,1.4,.64,1), opacity .22s ease',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '24px 30px 20px',
+          borderBottom: '1px solid rgba(255,255,255,.06)',
+          flexShrink: 0,
+          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(251,191,36,.12) 0%, transparent 65%)',
+        }}>
+          <div className="flex justify-between items-start">
+            <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-.3px', background: 'linear-gradient(135deg,#fff 40%,rgba(253,224,71,.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              สาขา{branchName}
+            </h2>
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={e => { e.stopPropagation(); onPrev() }} disabled={!hasPrev}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
+              <button type="button" onClick={e => { e.stopPropagation(); onNext() }} disabled={!hasNext}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
+              <button type="button" onClick={e => { e.stopPropagation(); onClose() }}
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white transition-all">
+                <X size={15} />
+              </button>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className={cn(
+              'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
+              obstacles.length > 0
+                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                : 'bg-white/5 text-white/30 border-white/10'
+            )}>
+              {obstacles.length > 0 ? `${obstacles.length} อุปสรรค` : 'ไม่มีอุปสรรค'}
+            </span>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }} className="space-y-3">
+          {obstacles.length === 0 ? (
+            <div className="text-center text-white/25 text-sm py-12">ไม่มีอุปสรรคที่เปิดอยู่</div>
+          ) : (
+            obstacles.map(obs => <ModalObstacleCard key={obs.id} obs={obs} />)
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ObstacleBranchPanel({
+  obstacles,
+  yoyRows,
+}: {
+  obstacles: Obstacle[]
+  yoyRows?: NrwYoyRow[]
+}) {
+  const [modalBranchName, setModalBranchName] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const yoyMap = useMemo(() => {
+    const map = new Map<string, number | null>()
+    for (const r of yoyRows ?? []) map.set(r.branch_name, r.rate_delta)
+    return map
+  }, [yoyRows])
+
+  const obsByBranch = useMemo(() => {
+    const map = new Map<string, Obstacle[]>()
+    for (const obs of obstacles) {
+      const name = obs.branches?.name_th ?? ''
+      if (!name) continue
+      if (!map.has(name)) map.set(name, [])
+      map.get(name)!.push(obs)
+    }
+    return map
+  }, [obstacles])
+
+  // Only branches that have obstacles, sorted by delta most negative first
+  const branchesWithObs = useMemo(() => {
+    return [...PWA_BRANCHES]
+      .filter(b => (obsByBranch.get(b.name_th)?.length ?? 0) > 0)
+      .sort((a, b) => {
+        const da = yoyMap.get(a.name_th) ?? null
+        const db = yoyMap.get(b.name_th) ?? null
+        if (da === null && db === null) return 0
+        if (da === null) return 1
+        if (db === null) return -1
+        return da - db
+      })
+  }, [obsByBranch, yoyMap])
+
+  const modalIdx = modalBranchName ? branchesWithObs.findIndex(b => b.name_th === modalBranchName) : -1
+
+  function openModal(name: string) {
+    setModalBranchName(name)
+    requestAnimationFrame(() => requestAnimationFrame(() => setModalOpen(true)))
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setTimeout(() => setModalBranchName(null), 350)
+  }
+
+  function navModal(dir: 1 | -1) {
+    const idx = modalBranchName ? branchesWithObs.findIndex(b => b.name_th === modalBranchName) : -1
+    if (idx < 0) return
+    const next = idx + dir
+    if (next < 0 || next >= branchesWithObs.length) return
+    setModalBranchName(branchesWithObs[next].name_th)
+  }
+
+  const modalObstacles = modalBranchName ? (obsByBranch.get(modalBranchName) ?? []) : []
+
+  return (
+    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-amber-500/15 flex-wrap">
+        <TriangleAlert size={13} className="text-amber-400 shrink-0" />
+        <span className="text-xs font-semibold text-amber-300">อุปสรรคตามสาขา</span>
+        <span className={cn(
+          'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
+          obstacles.length > 0
+            ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+            : 'bg-white/5 text-white/30 border-white/10'
+        )}>
+          {obstacles.length} รายการ · {branchesWithObs.length} สาขา
+        </span>
+      </div>
+
+      {/* Branch cards — only branches with obstacles */}
+      <div className="px-4 pb-4 pt-3 flex flex-wrap gap-2">
+        {branchesWithObs.length === 0 ? (
+          <p className="w-full text-center text-white/25 text-sm py-6">ไม่มีอุปสรรคที่เปิดอยู่</p>
+        ) : branchesWithObs.map(b => {
+          const obsCount = obsByBranch.get(b.name_th)?.length ?? 0
+          const delta = yoyMap.size > 0 ? (yoyMap.get(b.name_th) ?? null) : null
+          const nrwGood = delta !== null && delta < -0.001
+          const nrwBad  = delta !== null && delta >  0.001
+
+          return (
+            <button
+              key={b.costcenter}
+              type="button"
+              onClick={() => openModal(b.name_th)}
+              className={cn(
+                'flex items-center gap-2 rounded-xl border px-3 py-2 transition-all duration-150',
+                'hover:scale-[1.04] hover:shadow-lg active:scale-[0.97]',
+                nrwBad
+                  ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
+                  : nrwGood
+                    ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
+                    : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
+              )}
+            >
+              <span className={cn(
+                'text-[12px] font-bold leading-none',
+                nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/70',
+              )}>
+                {b.name_th}
+              </span>
+              <span className="flex items-center gap-0.5 text-amber-400">
+                <TriangleAlert size={12} strokeWidth={2.5} />
+                <span className="text-[12px] font-extrabold tabular-nums leading-none">{obsCount}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      {branchesWithObs.length > 0 && (
+        <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-white/25 flex-wrap border-t border-white/5 pt-2.5">
+          {yoyMap.size > 0 && (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm bg-emerald-500/40 border border-emerald-500/50 inline-block" />
+                NRW ดีขึ้น
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm bg-red-500/40 border border-red-500/50 inline-block" />
+                NRW แย่ลง
+              </span>
+            </>
+          )}
+          <span className="ml-auto text-amber-400/35">กดสาขาเพื่อดูรายละเอียด</span>
+        </div>
+      )}
+
+      {/* Modal */}
+      <ObstacleDetailModal
+        branchName={modalBranchName ?? ''}
+        obstacles={modalObstacles}
+        open={modalOpen}
+        onClose={closeModal}
+        onPrev={() => navModal(-1)}
+        onNext={() => navModal(1)}
+        hasPrev={modalIdx > 0}
+        hasNext={modalIdx >= 0 && modalIdx < branchesWithObs.length - 1}
+      />
+    </div>
+  )
+}
+
 function PdcaBranchPanel({
   allRows,
   refMonth,
@@ -850,6 +1111,10 @@ function PdcaBranchPanel({
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15 flex-wrap">
         <Brain size={13} className="text-violet-400 shrink-0" />
         <span className="text-xs font-semibold text-violet-300">ผลการดำเนินการรายสาขา (PDCA)</span>
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
         {currentKey && (
           <span className={cn(
             'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
@@ -954,63 +1219,54 @@ function PdcaBranchPanel({
         </div>
       )}
 
-      {/* Branch card grid — color-coded by NRW performance from วาระ 3 */}
-      <div className="px-4 pb-4 pt-2 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-7 gap-2">
-        {PWA_BRANCHES.map(b => {
-          const hasPdca = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
-          const obsCount = obsByBranch.get(b.name_th) ?? 0
-          const hasObs = obsCount > 0
-          const delta = yoyMap.size > 0 ? (yoyMap.get(b.name_th) ?? null) : null
-          const nrwGood = delta !== null && delta < -0.001
-          const nrwBad  = delta !== null && delta >  0.001
+      {/* Branch badges — color-coded by NRW rate_delta from วาระ 3, sorted most negative first */}
+      <div className="px-4 pb-4 pt-2 flex flex-wrap gap-1.5">
+        {[...PWA_BRANCHES]
+          .sort((a, b) => {
+            const da = yoyMap.get(a.name_th) ?? null
+            const db = yoyMap.get(b.name_th) ?? null
+            if (da === null && db === null) return 0
+            if (da === null) return 1
+            if (db === null) return -1
+            return da - db
+          })
+          .map(b => {
+            const obsCount = obsByBranch.get(b.name_th) ?? 0
+            const hasObs = obsCount > 0
+            const delta = yoyMap.size > 0 ? (yoyMap.get(b.name_th) ?? null) : null
+            const nrwGood = delta !== null && delta < -0.001
+            const nrwBad  = delta !== null && delta >  0.001
 
-          return (
-            <button
-              key={b.costcenter}
-              type="button"
-              onClick={() => openModal(b.name_th)}
-              className={cn(
-                'relative rounded-xl border p-2.5 text-left transition-all duration-150',
-                'hover:scale-[1.04] hover:shadow-lg active:scale-[0.97]',
-                nrwBad
-                  ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
-                  : nrwGood
-                    ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
-                    : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
-              )}
-            >
-              {/* Obstacle badge — floats top-right like a notification */}
-              {hasObs && (
-                <div className="absolute -top-2 -right-2 flex items-center gap-0.5 bg-amber-400 text-[#1c0a00] text-[9px] font-extrabold px-1.5 py-[3px] rounded-full shadow-[0_0_10px_rgba(251,191,36,.55)] z-10">
-                  <TriangleAlert size={8} strokeWidth={2.5} />
-                  {obsCount}
-                </div>
-              )}
-
-              {/* Branch name */}
-              <p className={cn(
-                'text-[11px] font-bold leading-snug mb-1.5 truncate',
-                nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/65',
-              )}>
-                {b.name_th}
-              </p>
-
-              {/* Delta row */}
-              {delta !== null ? (
-                <p className={cn(
-                  'text-[12px] font-extrabold tabular-nums leading-none',
-                  nrwBad ? 'text-red-400' : 'text-emerald-400',
+            return (
+              <button
+                key={b.costcenter}
+                type="button"
+                onClick={() => openModal(b.name_th)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all duration-150',
+                  'hover:scale-[1.04] hover:shadow-lg active:scale-[0.97]',
+                  nrwBad
+                    ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
+                    : nrwGood
+                      ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
+                      : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
+                )}
+              >
+                <span className={cn(
+                  'text-[11px] font-bold leading-none',
+                  nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/65',
                 )}>
-                  {nrwBad ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
-                  <span className="text-[9px] font-normal opacity-60 ml-0.5">%</span>
-                </p>
-              ) : (
-                <p className="text-[10px] text-white/18">— ไม่มีข้อมูล</p>
-              )}
-
-            </button>
-          )
-        })}
+                  {b.name_th}
+                </span>
+                {hasObs && (
+                  <span className="flex items-center gap-0.5 text-[10px] font-extrabold text-amber-400">
+                    <TriangleAlert size={9} strokeWidth={2.5} />
+                    {obsCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
       </div>
 
       {/* Legend */}
@@ -1226,7 +1482,6 @@ export function MeetingPreviewClient({
   pdcaRefYear,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
-  const [selectedBranch, setSelectedBranch] = useState<string>('') // '' = all
   const [selectedMonths, setSelectedMonths] = useState(() => monthToCount(nrwMonth))
 
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
@@ -1237,28 +1492,6 @@ export function MeetingPreviewClient({
     const cutoff = new Date(meeting.scheduled_date)
     return obstacles.filter(obs => new Date(obs.created_at) < cutoff)
   }, [obstacles, meeting.scheduled_date])
-
-  const obstaclesByBranch = useMemo(() => {
-    const map = new Map<string, Obstacle[]>()
-    for (const obs of continuingObstacles) {
-      const name = obs.branches?.name_th ?? 'ไม่ระบุ'
-      if (!map.has(name)) map.set(name, [])
-      map.get(name)!.push(obs)
-    }
-    return map
-  }, [continuingObstacles])
-
-  const branchList = useMemo(() => {
-    return PWA_BRANCHES.map((b) => ({
-      name: b.name_th,
-      count: obstaclesByBranch.get(b.name_th)?.length ?? 0,
-    }))
-  }, [obstaclesByBranch])
-
-  const visibleObstacles = useMemo(() => {
-    if (!selectedBranch) return continuingObstacles
-    return obstaclesByBranch.get(selectedBranch) ?? []
-  }, [selectedBranch, continuingObstacles, obstaclesByBranch])
 
   const items = (no: number) => agendaSubitems.filter((s) => s.agenda_no === no)
 
@@ -1657,76 +1890,7 @@ export function MeetingPreviewClient({
             <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
           )}
 
-          {/* Branch obstacle browser */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                อุปสรรคตามสาขา
-              </p>
-              <span className="text-[10px] text-white/25">{continuingObstacles.length} รายการ</span>
-            </div>
-
-            {/* Branch selector */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedBranch('')}
-                className={cn(
-                  'text-xs px-3 py-1.5 rounded-full border transition-all',
-                  selectedBranch === ''
-                    ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                    : 'text-white/40 border-white/15 hover:border-white/30 hover:text-white/60'
-                )}
-              >
-                ทั้งหมด
-                <span className="ml-1.5 num opacity-60">{continuingObstacles.length}</span>
-              </button>
-
-              {branchList.map((b) => (
-                <button
-                  key={b.name}
-                  onClick={() => setSelectedBranch(b.name)}
-                  className={cn(
-                    'text-xs px-3 py-1.5 rounded-full border transition-all',
-                    selectedBranch === b.name
-                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                      : b.count > 0
-                      ? 'text-white/60 border-white/20 hover:border-white/40 hover:text-white/80'
-                      : 'text-white/20 border-white/8 hover:text-white/35'
-                  )}
-                >
-                  {b.name}
-                  {b.count > 0 && (
-                    <span className={cn(
-                      'ml-1.5 num',
-                      selectedBranch === b.name ? 'opacity-100' : 'opacity-50'
-                    )}>
-                      {b.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Obstacles list */}
-            {visibleObstacles.length === 0 ? (
-              <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-                {selectedBranch ? `สาขา${selectedBranch}ไม่มีอุปสรรคที่เปิดอยู่` : 'ไม่มีอุปสรรคที่เปิดอยู่'}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {visibleObstacles.map((obs) => (
-                  <div key={obs.id} className="space-y-1">
-                    {!selectedBranch && obs.branches?.name_th && (
-                      <p className="text-[10px] text-white/30 px-1 font-medium">
-                        สาขา{obs.branches.name_th}
-                      </p>
-                    )}
-                    <ObstacleCard obs={obs} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ObstacleBranchPanel obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
         </div>
       )}
 
