@@ -278,6 +278,29 @@ interface PdcaPrevRow {
   nrw_pct: number | null
 }
 
+interface PdcaAreaRow {
+  branch_name: string
+  area_name: string
+  pdca_do: string | null
+  pdca_act: string | null
+  report_month: number
+  report_year: number
+  water_dist_before: number | null
+  water_sold_before: number | null
+  mnf_before: number | null
+  water_dist_after: number | null
+  water_sold_after: number | null
+  mnf_after: number | null
+  leaks_repaired: number
+  leaks_pending: number
+  step_tests: Array<{
+    step_no: number
+    estimated_loss: number | null
+    leaks_found: number
+    leaks_repaired: number | null
+  }>
+}
+
 const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 const THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
 
@@ -297,17 +320,24 @@ function ModalSectionLabel({ children, accent }: { children: React.ReactNode; ac
 function ModalStatCard({ label, color, value, unit, sub, delta }: {
   label: string; color: string; value: string; unit?: string; sub?: string; delta?: React.ReactNode
 }) {
-  const borders: Record<string, string> = { blue: 'rgba(59,130,246,.2)', indigo: 'rgba(99,102,241,.2)', amber: 'rgba(251,191,36,.2)', red: 'rgba(239,68,68,.2)', green: 'rgba(52,211,153,.2)', violet: 'rgba(139,92,246,.2)' }
-  const vals: Record<string, string> = { blue: '#7dd3fc', indigo: '#a5b4fc', amber: '#fde68a', red: '#fca5a5', green: '#6ee7b7', violet: '#c4b5fd' }
+  const palette: Record<string, { border: string; bg: string; val: string; glow: string }> = {
+    blue:   { border: 'rgba(56,189,248,.3)',  bg: 'rgba(56,189,248,.07)',  val: '#38bdf8', glow: 'rgba(56,189,248,.22)' },
+    indigo: { border: 'rgba(129,140,248,.28)',bg: 'rgba(129,140,248,.07)', val: '#818cf8', glow: 'rgba(129,140,248,.2)' },
+    amber:  { border: 'rgba(251,191,36,.3)',  bg: 'rgba(251,191,36,.07)',  val: '#fbbf24', glow: 'rgba(251,191,36,.22)' },
+    red:    { border: 'rgba(248,113,113,.3)', bg: 'rgba(248,113,113,.07)', val: '#f87171', glow: 'rgba(248,113,113,.22)' },
+    green:  { border: 'rgba(52,211,153,.28)', bg: 'rgba(52,211,153,.07)',  val: '#34d399', glow: 'rgba(52,211,153,.2)' },
+    violet: { border: 'rgba(167,139,250,.28)',bg: 'rgba(167,139,250,.07)', val: '#a78bfa', glow: 'rgba(167,139,250,.2)' },
+  }
+  const p = palette[color] ?? { border: 'rgba(255,255,255,.1)', bg: 'rgba(255,255,255,.03)', val: '#fff', glow: 'transparent' }
   return (
-    <div style={{ borderRadius: '12px', border: `1px solid ${borders[color] ?? 'rgba(255,255,255,.07)'}`, background: 'rgba(255,255,255,.025)', padding: '12px 14px' }}>
-      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.3)', letterSpacing: '.05em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
-      <div style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1, color: vals[color] ?? '#fff', fontVariantNumeric: 'tabular-nums' }}>
+    <div style={{ borderRadius: '12px', border: `1px solid ${p.border}`, background: p.bg, padding: '12px 14px' }}>
+      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.32)', letterSpacing: '.05em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
+      <div style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1, color: p.val, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 14px ${p.glow}` }}>
         {value}
         {unit && <span style={{ fontSize: '10px', fontWeight: 400, opacity: .5, marginLeft: '2px' }}>{unit}</span>}
       </div>
       {(delta || sub) && (
-        <div style={{ fontSize: '10px', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.2)' }}>
+        <div style={{ fontSize: '10px', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.25)' }}>
           {delta ?? sub}
         </div>
       )}
@@ -327,23 +357,63 @@ function ModalLeakCard({ label, val, color }: { label: string; val: number; colo
 function ModalPdcaBlock({ icon, label, sub, color, text }: {
   icon: string; label: string; sub: string; color: 'blue' | 'emerald'; text: string | null | undefined
 }) {
-  const iconStyle = color === 'blue'
-    ? { background: 'linear-gradient(135deg,rgba(59,130,246,.3),rgba(59,130,246,.1))', color: '#93c5fd', border: '1px solid rgba(59,130,246,.3)' }
-    : { background: 'linear-gradient(135deg,rgba(16,185,129,.28),rgba(16,185,129,.08))', color: '#6ee7b7', border: '1px solid rgba(16,185,129,.28)' }
-  const labelColor = color === 'blue' ? '#93c5fd' : '#6ee7b7'
+  const p = color === 'blue'
+    ? { border: 'rgba(59,130,246,.22)', headBg: 'rgba(59,130,246,.07)', iconBg: 'linear-gradient(135deg,rgba(59,130,246,.38),rgba(59,130,246,.16))', iconBorder: 'rgba(59,130,246,.45)', iconColor: '#93c5fd', iconGlow: 'rgba(59,130,246,.25)', labelColor: '#93c5fd' }
+    : { border: 'rgba(16,185,129,.2)', headBg: 'rgba(16,185,129,.06)', iconBg: 'linear-gradient(135deg,rgba(16,185,129,.35),rgba(16,185,129,.14))', iconBorder: 'rgba(16,185,129,.4)', iconColor: '#6ee7b7', iconGlow: 'rgba(16,185,129,.22)', labelColor: '#6ee7b7' }
   return (
-    <div style={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.025)', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-        <div style={{ width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 900, flexShrink: 0, ...iconStyle }}>{icon}</div>
+    <div style={{ borderRadius: '16px', border: `1px solid ${p.border}`, background: 'rgba(255,255,255,.02)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '14px 18px', background: p.headBg, borderBottom: `1px solid ${p.border}` }}>
+        <div style={{ width: '42px', height: '42px', borderRadius: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 900, flexShrink: 0, background: p.iconBg, color: p.iconColor, border: `1px solid ${p.iconBorder}`, boxShadow: `0 0 14px ${p.iconGlow}` }}>{icon}</div>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: labelColor }}>{label}</div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.28)' }}>{sub}</div>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: p.labelColor, letterSpacing: '-.15px' }}>{label}</div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.28)', marginTop: '2px' }}>{sub}</div>
         </div>
       </div>
       {text
-        ? <div style={{ padding: '16px', fontSize: '12.5px', lineHeight: 1.85, color: 'rgba(255,255,255,.73)', whiteSpace: 'pre-wrap' }}>{text}</div>
-        : <div style={{ padding: '16px', fontSize: '12px', color: 'rgba(255,255,255,.2)', fontStyle: 'italic' }}>ไม่ได้กรอก</div>
+        ? <div style={{ padding: '18px', fontSize: '13px', lineHeight: 2, color: 'rgba(255,255,255,.78)', whiteSpace: 'pre-wrap' }}>{text}</div>
+        : <div style={{ padding: '22px 18px', fontSize: '12px', color: 'rgba(255,255,255,.18)', fontStyle: 'italic', textAlign: 'center' }}>— ไม่ได้กรอก —</div>
       }
+    </div>
+  )
+}
+
+function TrendCard({
+  label, unit, beforeStr, afterStr, delta, lowerBetter, borderColor, accentColor,
+}: {
+  label: string; unit?: string
+  beforeStr: string | null; afterStr: string | null; delta: number | null
+  lowerBetter?: boolean; borderColor: string; accentColor: string
+}) {
+  const isGood = delta != null && (lowerBetter ? delta < 0 : delta > 0)
+  const isBad  = delta != null && (lowerBetter ? delta > 0 : delta < 0)
+  const deltaColor = isGood ? '#34d399' : isBad ? '#f87171' : 'rgba(255,255,255,.3)'
+  const deltaBg    = isGood ? 'rgba(52,211,153,.1)' : isBad ? 'rgba(248,113,113,.1)' : 'rgba(255,255,255,.05)'
+  const deltaBorder= isGood ? 'rgba(52,211,153,.28)' : isBad ? 'rgba(248,113,113,.28)' : 'rgba(255,255,255,.12)'
+  const sign = delta != null ? (delta < 0 ? '▼' : '▲') : null
+  return (
+    <div style={{ borderRadius: '16px', border: `1px solid ${borderColor}`, background: 'linear-gradient(160deg,rgba(255,255,255,.025) 0%,rgba(255,255,255,.008) 100%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '11px 15px 0', fontSize: '9px', fontWeight: 700, color: accentColor, letterSpacing: '.07em', textTransform: 'uppercase', opacity: .9 }}>
+        {label}{unit && <span style={{ fontWeight: 400, opacity: .5, marginLeft: '3px' }}>({unit})</span>}
+      </div>
+      <div style={{ padding: '10px 15px 15px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '3px' }}>
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,.2)', width: '24px', flexShrink: 0 }}>ก่อน</span>
+          <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{beforeStr ?? '—'}</span>
+        </div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.1)', lineHeight: 1, margin: '3px 0 3px 24px' }}>↓</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px' }}>
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,.2)', width: '24px', flexShrink: 0 }}>หลัง</span>
+          <span style={{ fontSize: '22px', fontWeight: 900, color: accentColor, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{afterStr ?? '—'}</span>
+        </div>
+        {delta != null && Math.abs(delta) >= 0.005 && sign && (
+          <div style={{ marginLeft: '24px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: deltaColor, background: deltaBg, border: `1px solid ${deltaBorder}`, borderRadius: '6px', padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: '3px', fontVariantNumeric: 'tabular-nums' }}>
+              {sign} {Math.abs(delta).toFixed(1)}
+              {isGood && <span style={{ opacity: .6, fontSize: '10px' }}>ดี</span>}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -435,6 +505,7 @@ function PdcaDetailModal({
   prevDetail,
   branchObstacles,
   oldObsCount,
+  branchAreaRows,
   open,
   onClose,
   onPrev,
@@ -451,6 +522,7 @@ function PdcaDetailModal({
   prevDetail: PdcaPrevRow | null
   branchObstacles: Obstacle[]
   oldObsCount: number
+  branchAreaRows: PdcaAreaRow[]
   open: boolean
   onClose: () => void
   onPrev: () => void
@@ -462,6 +534,10 @@ function PdcaDetailModal({
   refMonth: number | null
   refYear: number | null
 }) {
+  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+
+  useEffect(() => { setSelectedArea(null) }, [branchName])
+
   useEffect(() => {
     if (!open) return
     function handler(e: KeyboardEvent) {
@@ -475,12 +551,38 @@ function PdcaDetailModal({
 
   if (!branchName) return null
 
-  const hasPdca = !!(detail?.pdca_do || detail?.pdca_act)
+  // Area-level derived data
+  const areaNames = Array.from(new Set(branchAreaRows.map(r => r.area_name).filter(Boolean)))
+  const hasMultipleAreas = areaNames.length > 1
+  const activeArea = selectedArea ?? (areaNames.length === 1 ? areaNames[0] : null)
+  // Fall back to first row when no specific area is selected (handles empty/null area_name)
+  const activeAreaRow = activeArea
+    ? (branchAreaRows.find(r => r.area_name === activeArea) ?? branchAreaRows[0] ?? null)
+    : (branchAreaRows[0] ?? null)
+
+  const hasPdca = activeAreaRow
+    ? !!(activeAreaRow.pdca_do || activeAreaRow.pdca_act)
+    : !!(detail?.pdca_do || detail?.pdca_act)
   const hasData = detail?.volume_distributed != null
   const nrwPct = detail?.nrw_pct ??
     (detail?.volume_distributed && detail?.volume_sold
       ? ((detail.volume_distributed - detail.volume_sold) / detail.volume_distributed * 100)
       : null)
+
+  function nrwFromDist(dist: number | null, sold: number | null) {
+    return dist && sold && dist > 0 ? ((dist - sold) / dist * 100) : null
+  }
+  const beforeNrw = activeAreaRow
+    ? nrwFromDist(activeAreaRow.water_dist_before, activeAreaRow.water_sold_before)
+    : null
+  const afterNrw = activeAreaRow
+    ? nrwFromDist(activeAreaRow.water_dist_after, activeAreaRow.water_sold_after)
+    : null
+  const hasTrend = activeAreaRow && (
+    activeAreaRow.water_dist_before != null ||
+    activeAreaRow.mnf_before != null
+  )
+  const hasStepTests = activeAreaRow && activeAreaRow.step_tests.length > 0
 
   function Delta({ curr, prev, decimals = 1 }: { curr: number | null; prev: number | null; decimals?: number }) {
     if (curr == null || prev == null) return null
@@ -563,6 +665,40 @@ function PdcaDetailModal({
               </span>
             )}
           </div>
+
+          {/* Area selector — only when multiple areas */}
+          {hasMultipleAreas && (
+            <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-white/6">
+              <span className="text-[10px] text-white/30 shrink-0">พื้นที่</span>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); setSelectedArea(null) }}
+                className={cn(
+                  'text-[11px] px-2.5 py-0.5 rounded-lg border transition-all',
+                  activeArea === null
+                    ? 'bg-violet-500/20 text-violet-300 border-violet-500/40'
+                    : 'text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                )}
+              >
+                ทุกพื้นที่
+              </button>
+              {areaNames.map(name => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setSelectedArea(name) }}
+                  className={cn(
+                    'text-[11px] px-2.5 py-0.5 rounded-lg border transition-all',
+                    activeArea === name
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                      : 'text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                  )}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Body ── */}
@@ -595,24 +731,14 @@ function PdcaDetailModal({
                         ? ((detail!.volume_distributed - detail!.volume_sold) / 1000).toFixed(1)
                         : '—'}
                       unit="พัน ลบ.ม."
-                      delta={<Delta
-                        curr={detail!.volume_distributed && detail!.volume_sold ? detail!.volume_distributed - detail!.volume_sold : null}
-                        prev={prevDetail?.volume_distributed && prevDetail?.volume_sold ? prevDetail.volume_distributed - prevDetail.volume_sold : null}
-                      />}
                     />
                     <ModalStatCard label="% นสส." color={nrwPct != null && nrwPct < 20 ? 'green' : 'red'}
                       value={nrwPct != null ? nrwPct.toFixed(2) : '—'}
                       unit="%"
-                      delta={prevDetail?.nrw_pct != null
-                        ? <><Delta curr={nrwPct} prev={prevDetail.nrw_pct} /><span style={{ color: 'rgba(255,255,255,.2)', fontSize: '9px', marginLeft: '3px' }}>vs ก่อนหน้า</span></>
-                        : undefined}
                     />
                     <ModalStatCard label="MNF ล่าสุด" color="violet"
                       value={detail!.mnf_latest != null ? detail!.mnf_latest.toFixed(1) : '—'}
                       unit="ลบ.ม./ชม."
-                      delta={prevDetail?.mnf_latest != null
-                        ? <><Delta curr={detail!.mnf_latest} prev={prevDetail.mnf_latest} /><span style={{ color: 'rgba(255,255,255,.2)', fontSize: '9px', marginLeft: '3px' }}>vs ก่อนหน้า</span></>
-                        : undefined}
                     />
                     <ModalStatCard label="MNF Factor" color="green"
                       value={detail!.mnf_factor != null ? detail!.mnf_factor.toFixed(2) : '—'}
@@ -638,13 +764,139 @@ function PdcaDetailModal({
                 </div>
               )}
 
+              {/* Trend summary — before vs after per active area */}
+              {hasTrend && activeAreaRow && (
+                <div>
+                  <ModalSectionLabel>สรุปแนวโน้ม{activeArea ? ` — ${activeArea}` : ''}</ModalSectionLabel>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '10px' }}>
+                    <TrendCard
+                      label="NRW%"
+                      beforeStr={beforeNrw != null ? beforeNrw.toFixed(1) + '%' : null}
+                      afterStr={afterNrw != null ? afterNrw.toFixed(1) + '%' : null}
+                      delta={beforeNrw != null && afterNrw != null ? afterNrw - beforeNrw : null}
+                      lowerBetter
+                      borderColor="rgba(251,191,36,.2)"
+                      accentColor={afterNrw != null && afterNrw < 20 ? '#6ee7b7' : '#fca5a5'}
+                    />
+                    <TrendCard
+                      label="MNF" unit="ลบ.ม./ชม."
+                      beforeStr={activeAreaRow.mnf_before != null ? activeAreaRow.mnf_before.toFixed(1) : null}
+                      afterStr={activeAreaRow.mnf_after != null ? activeAreaRow.mnf_after.toFixed(1) : null}
+                      delta={activeAreaRow.mnf_before != null && activeAreaRow.mnf_after != null ? activeAreaRow.mnf_after - activeAreaRow.mnf_before : null}
+                      lowerBetter
+                      borderColor="rgba(139,92,246,.2)"
+                      accentColor="#c4b5fd"
+                    />
+                    <TrendCard
+                      label="น้ำจ่าย" unit="K ลบ.ม."
+                      beforeStr={activeAreaRow.water_dist_before != null ? (activeAreaRow.water_dist_before / 1000).toFixed(1) + 'K' : null}
+                      afterStr={activeAreaRow.water_dist_after != null ? (activeAreaRow.water_dist_after / 1000).toFixed(1) + 'K' : null}
+                      delta={activeAreaRow.water_dist_before != null && activeAreaRow.water_dist_after != null ? (activeAreaRow.water_dist_after - activeAreaRow.water_dist_before) / 1000 : null}
+                      lowerBetter
+                      borderColor="rgba(59,130,246,.2)"
+                      accentColor="#7dd3fc"
+                    />
+                    <TrendCard
+                      label="น้ำจำหน่าย" unit="K ลบ.ม."
+                      beforeStr={activeAreaRow.water_sold_before != null ? (activeAreaRow.water_sold_before / 1000).toFixed(1) + 'K' : null}
+                      afterStr={activeAreaRow.water_sold_after != null ? (activeAreaRow.water_sold_after / 1000).toFixed(1) + 'K' : null}
+                      delta={activeAreaRow.water_sold_before != null && activeAreaRow.water_sold_after != null ? (activeAreaRow.water_sold_after - activeAreaRow.water_sold_before) / 1000 : null}
+                      borderColor="rgba(16,185,129,.2)"
+                      accentColor="#6ee7b7"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step Test Results */}
+              {hasStepTests && activeAreaRow && (() => {
+                const sorted = [...activeAreaRow.step_tests].sort((a, b) => a.step_no - b.step_no)
+                const totalFound = sorted.reduce((s, r) => s + r.leaks_found, 0)
+                const totalRepaired = sorted.reduce((s, r) => s + (r.leaks_repaired ?? 0), 0)
+                const totalLoss = sorted.reduce((s, r) => s + (r.estimated_loss ?? 0), 0)
+                return (
+                  <div>
+                    <ModalSectionLabel>ผล Step Test{activeArea ? ` — ${activeArea}` : ''}</ModalSectionLabel>
+                    <div style={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,.08)', overflow: 'hidden', background: 'rgba(255,255,255,.015)' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(255,255,255,.04)' }}>
+                            {['Step', 'Loss โดยประมาณ (ลบ.ม./ชม.)', 'จุดรั่วพบ', 'ซ่อมแล้ว', 'ค้างซ่อม'].map(h => (
+                              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: 'rgba(255,255,255,.28)', fontWeight: 700, fontSize: '10px', letterSpacing: '.06em', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,.07)' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sorted.map((s, i) => {
+                            const hasLeak = s.leaks_found > 0
+                            const repaired = s.leaks_repaired ?? 0
+                            const pending = Math.max(0, s.leaks_found - repaired)
+                            return (
+                              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)', background: hasLeak ? 'rgba(248,113,113,.04)' : i % 2 === 1 ? 'rgba(255,255,255,.012)' : 'transparent' }}>
+                                <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,.55)', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', padding: '2px 8px' }}>S{s.step_no}</span>
+                                </td>
+                                <td style={{ padding: '10px 14px', color: s.estimated_loss != null ? '#fde68a' : 'rgba(255,255,255,.18)', fontVariantNumeric: 'tabular-nums', fontWeight: s.estimated_loss != null ? 700 : 400 }}>
+                                  {s.estimated_loss != null ? s.estimated_loss.toFixed(2) : '—'}
+                                </td>
+                                <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
+                                  {hasLeak
+                                    ? <span style={{ color: '#fca5a5', fontWeight: 800 }}>{s.leaks_found} จุด</span>
+                                    : <span style={{ color: 'rgba(255,255,255,.2)' }}>0 จุด</span>}
+                                </td>
+                                <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
+                                  {s.leaks_repaired != null
+                                    ? <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{s.leaks_repaired} จุด</span>
+                                    : <span style={{ color: 'rgba(255,255,255,.18)' }}>—</span>}
+                                </td>
+                                <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
+                                  {hasLeak
+                                    ? <span style={{ color: pending > 0 ? '#fbbf24' : 'rgba(255,255,255,.25)', fontWeight: pending > 0 ? 700 : 400 }}>{pending} จุด</span>
+                                    : <span style={{ color: 'rgba(255,255,255,.18)' }}>—</span>}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                        {sorted.length > 1 && (
+                          <tfoot>
+                            <tr style={{ background: 'rgba(255,255,255,.03)', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                              <td style={{ padding: '9px 14px', fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,.3)', letterSpacing: '.04em' }}>รวม</td>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalLoss > 0 ? '#fde68a' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                                {totalLoss > 0 ? totalLoss.toFixed(2) : '—'}
+                              </td>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 800, color: totalFound > 0 ? '#fca5a5' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                                {totalFound} จุด
+                              </td>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalRepaired > 0 ? '#6ee7b7' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                                {totalRepaired > 0 ? `${totalRepaired} จุด` : '—'}
+                              </td>
+                              {(() => {
+                                const totalPending = sorted.reduce((s, r) => s + Math.max(0, r.leaks_found - (r.leaks_repaired ?? 0)), 0)
+                                return (
+                                  <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: totalPending > 0 ? 800 : 400, color: totalPending > 0 ? '#fbbf24' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                                    {totalPending > 0 ? `${totalPending} จุด` : '—'}
+                                  </td>
+                                )
+                              })()}
+                            </tr>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* PDCA D + A */}
               {hasPdca && (
                 <div>
                   <ModalSectionLabel>ผลการดำเนินการ PDCA</ModalSectionLabel>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                    <ModalPdcaBlock icon="D" label="Do" sub="สิ่งที่ดำเนินการในเดือนนี้" color="blue" text={detail?.pdca_do} />
-                    <ModalPdcaBlock icon="A" label="Act" sub="แผนการปรับปรุงต่อไป" color="emerald" text={detail?.pdca_act} />
+                    <ModalPdcaBlock icon="D" label="Do" sub="สิ่งที่ดำเนินการในเดือนนี้" color="blue"
+                      text={activeAreaRow ? activeAreaRow.pdca_do : detail?.pdca_do} />
+                    <ModalPdcaBlock icon="A" label="Act" sub="แผนการปรับปรุงต่อไป" color="emerald"
+                      text={activeAreaRow ? activeAreaRow.pdca_act : detail?.pdca_act} />
                   </div>
                 </div>
               )}
@@ -966,6 +1218,7 @@ function PdcaBranchPanel({
   obstacles = [],
   prevRows = [],
   yoyRows,
+  areaRows = [],
 }: {
   allRows: PdcaSummaryRow[]
   refMonth: number | null
@@ -974,6 +1227,7 @@ function PdcaBranchPanel({
   obstacles?: Obstacle[]
   prevRows?: PdcaPrevRow[]
   yoyRows?: NrwYoyRow[]
+  areaRows?: PdcaAreaRow[]
 }) {
   const router = useRouter()
   const [modalBranchName, setModalBranchName] = useState<string | null>(null)
@@ -1083,6 +1337,21 @@ function PdcaBranchPanel({
 
   const modalDetail = modalBranchName ? (summaryMap.get(modalBranchName) ?? null) : null
   const modalPrevDetail = modalBranchName ? (prevMap.get(modalBranchName) ?? null) : null
+  const modalAreaRows = useMemo(() => {
+    if (!modalBranchName) return []
+    // If currentKey is set, filter by year/month; otherwise return all rows for the branch
+    if (currentKey) {
+      const [year, month] = currentKey.split('-').map(Number)
+      const filtered = areaRows.filter(r =>
+        r.branch_name === modalBranchName &&
+        r.report_year === year &&
+        r.report_month === month
+      )
+      if (filtered.length > 0) return filtered
+    }
+    // Fallback: any area row for this branch (e.g. when no month filter or data has different key)
+    return areaRows.filter(r => r.branch_name === modalBranchName)
+  }, [modalBranchName, currentKey, areaRows])
 
   // Modal obstacles: only those created IN the ref month (new issues for this PDCA period)
   // Old/continuing obstacles belong in วาระ 4, not here
@@ -1297,6 +1566,7 @@ function PdcaBranchPanel({
         prevDetail={modalPrevDetail}
         branchObstacles={modalObstacles}
         oldObsCount={oldObsCount}
+        branchAreaRows={modalAreaRows}
         open={modalOpen}
         onClose={closeModal}
         onPrev={() => navModal(-1)}
@@ -1446,11 +1716,260 @@ function ObstacleCard({ obs }: { obs: Obstacle }) {
   )
 }
 
+// ─── Past-meeting report modal (Mac-style window) ────────────────────────────
+
+function ModalSection({ no, title, children }: { no: number; title: string; children: React.ReactNode }) {
+  const colorMap: Record<number, { badge: string }> = {
+    1: { badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
+    2: { badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
+    3: { badge: 'bg-violet-500/20 text-violet-300 border-violet-500/30' },
+    4: { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+    5: { badge: 'bg-green-500/20 text-green-300 border-green-500/30' },
+    6: { badge: 'bg-white/15 text-white/60 border-white/25' },
+  }
+  const style = colorMap[no] ?? colorMap[6]
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <span className={cn('shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm font-bold', style.badge)}>{no}</span>
+        <div className="h-px flex-1 bg-white/6" />
+      </div>
+      <p className="text-xs font-bold text-white/50 uppercase tracking-widest pl-11">{title}</p>
+      <div className="pl-11 space-y-2">{children}</div>
+    </div>
+  )
+}
+
+interface PastMeetingReportModalProps {
+  entry: PastMeetingEntry | null
+  open: boolean
+  onClose: () => void
+}
+function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModalProps) {
+  useEffect(() => {
+    if (!open) return
+    function handler(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, onClose])
+
+  const meeting = entry?.meeting ?? null
+  const agendaHeader = entry?.agendaHeader ?? null
+  const agendaSubitems = entry?.agendaSubitems ?? []
+  const resolutions = entry?.resolutions ?? []
+  const hasReport = entry?.hasReport ?? false
+  const subItems = (no: number) => agendaSubitems.filter(s => s.agenda_no === no)
+  const hasAgenda6 = agendaHeader?.agenda4_type === 'เรื่องสืบเนื่อง'
+  const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(2,8,20,.88)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        zIndex: 60,
+        opacity: open ? 1 : 0,
+        pointerEvents: open ? 'all' : 'none',
+        transition: 'opacity .2s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: 'min(860px, 96vw)', maxHeight: '92vh',
+          background: 'linear-gradient(160deg,#0d1f38 0%,#091627 100%)',
+          border: '1px solid rgba(255,255,255,.1)',
+          borderRadius: '16px',
+          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 60px 140px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.07)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          transform: open ? 'scale(1) translateY(0)' : 'scale(.95) translateY(16px)',
+          opacity: open ? 1 : 0,
+          transition: 'transform .28s cubic-bezier(.34,1.4,.64,1), opacity .2s ease',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Mac title bar ── */}
+        <div style={{
+          height: '44px',
+          background: 'rgba(255,255,255,.03)',
+          borderBottom: '1px solid rgba(255,255,255,.08)',
+          display: 'flex', alignItems: 'center',
+          padding: '0 16px', gap: '8px', flexShrink: 0, userSelect: 'none',
+        }}>
+          {/* Traffic-light dots */}
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onClose() }}
+            title="ปิด"
+            style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#ff5f57', border: '1px solid rgba(0,0,0,.3)', cursor: 'pointer', flexShrink: 0 }}
+          />
+          <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#febc2e', border: '1px solid rgba(0,0,0,.3)', flexShrink: 0 }} />
+          <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#28c840', border: '1px solid rgba(0,0,0,.3)', flexShrink: 0 }} />
+
+          <div style={{ flex: 1, textAlign: 'center', fontSize: '12.5px', fontWeight: 600, color: 'rgba(255,255,255,.45)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', padding: '0 8px' }}>
+            {meeting?.code && <span style={{ fontFamily: 'monospace', marginRight: '8px', opacity: .55 }}>{meeting.code}</span>}
+            {meeting?.title ?? ''}
+          </div>
+
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onClose() }}
+            className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white/70 transition-all shrink-0"
+          >
+            <X size={13} />
+          </button>
+        </div>
+
+        {/* ── Scrollable body ── */}
+        <div
+          style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}
+          className="space-y-6"
+        >
+          {!meeting ? null : !hasReport || !agendaHeader ? (
+            <div className="rounded-xl border border-white/8 bg-white/3 p-12 text-center">
+              <FileText size={36} className="mx-auto mb-3 opacity-15" />
+              <p className="text-white/30 text-sm font-medium">ยังไม่มีรายงานการประชุมบันทึกไว้</p>
+              <p className="text-white/18 text-xs mt-1">กรอกรายงานในหน้า แก้ไขรายงาน</p>
+            </div>
+          ) : (
+            <>
+              {/* Meeting info */}
+              <div className="space-y-1.5">
+                <h2 className="text-xl font-bold text-white leading-tight">{meeting.title}</h2>
+                <div className="flex flex-wrap gap-4 text-xs text-white/40">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={11} className="text-white/22" />
+                    {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time?.slice(0, 5)} น.
+                  </span>
+                  {meeting.location && (
+                    <span className="flex items-center gap-1.5">
+                      <MapPin size={11} className="text-white/22" />
+                      {meeting.location}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="h-px bg-white/8" />
+
+              {/* วาระ 1 */}
+              <ModalSection no={1} title="ประธานแจ้งที่ประชุมทราบ">
+                {agendaHeader.agenda1_detail ? (
+                  <>
+                    <p className="text-sm text-white/72 leading-relaxed whitespace-pre-wrap">{agendaHeader.agenda1_detail}</p>
+                    <ResolutionBadge type={agendaHeader.agenda1_resolution ?? 'รับทราบ'} detail={agendaHeader.agenda1_resolution_detail} />
+                  </>
+                ) : (
+                  <p className="text-sm text-white/22 italic">ไม่ได้กรอกรายละเอียด</p>
+                )}
+                {subItems(1).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
+              </ModalSection>
+
+              {/* วาระ 2 */}
+              <ModalSection no={2} title={`รับรองรายงานการประชุม${agendaHeader.agenda2_meeting_no ? ` ครั้งที่ ${agendaHeader.agenda2_meeting_no}` : ''}`}>
+                {subItems(2).length > 0
+                  ? subItems(2).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
+                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                }
+                {agendaHeader.agenda2_resolution && (
+                  <ResolutionBadge type={agendaHeader.agenda2_resolution} detail={agendaHeader.agenda2_resolution_detail} />
+                )}
+              </ModalSection>
+
+              {/* วาระ 3 — sub-items only, no NRW chart */}
+              <ModalSection no={3} title="เรื่องเพื่อทราบ">
+                {subItems(3).length > 0
+                  ? subItems(3).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
+                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                }
+              </ModalSection>
+
+              {/* วาระ 4 */}
+              <ModalSection no={4} title={agenda4Label}>
+                {subItems(4).length > 0
+                  ? subItems(4).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
+                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                }
+              </ModalSection>
+
+              {/* วาระ 5 */}
+              <ModalSection no={5} title={hasAgenda6 ? 'ผลการดำเนินการ / PDCA' : 'เรื่องอื่นๆ'}>
+                {subItems(5).length > 0
+                  ? subItems(5).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
+                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                }
+              </ModalSection>
+
+              {/* วาระ 6 */}
+              {hasAgenda6 && (
+                <ModalSection no={6} title="เรื่องอื่นๆ">
+                  {subItems(6).length > 0
+                    ? subItems(6).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
+                    : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                  }
+                </ModalSection>
+              )}
+
+              {/* มติ / ข้อสั่งการ */}
+              {resolutions.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-px flex-1 bg-emerald-500/20" />
+                    <span className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-widest">มติ / ข้อสั่งการ</span>
+                    <span className="h-px flex-1 bg-emerald-500/20" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {resolutions.map(r => {
+                      const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
+                      return (
+                        <div key={r.id} className={cn('glass-card-sm p-3.5 space-y-2', done && 'opacity-50')}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2 flex-1 min-w-0">
+                              <span className="num text-xs font-bold text-cyan-400 shrink-0 mt-0.5">#{r.sequence_no}</span>
+                              <div className="min-w-0 space-y-0.5">
+                                <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
+                                {r.detail && <p className="text-xs text-white/45 leading-relaxed">{r.detail}</p>}
+                              </div>
+                            </div>
+                            <StatusPill status={r.status} />
+                          </div>
+                          {(r.responsible_branch || r.due_date) && (
+                            <div className="flex items-center gap-3 text-[11px] text-white/30 pl-5">
+                              {r.responsible_branch && <span>สาขา: {r.responsible_branch}</span>}
+                              {r.due_date && (
+                                <span className="flex items-center gap-1">
+                                  <Clock size={10} />
+                                  {formatThaiDate(r.due_date, true)}
+                                </span>
+                              )}
+                              {r.progress_pct > 0 && <span className="text-amber-400">{r.progress_pct}%</span>}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── main props ───────────────────────────────────────────────────────────────
 
 interface PastMeetingEntry {
   meeting: Meeting
   resolutions: MeetingResolution[]
+  hasReport: boolean
+  agendaHeader: MeetingAgendaHeader | null
+  agendaSubitems: MeetingAgendaSubItem[]
 }
 
 interface Props {
@@ -1458,6 +1977,7 @@ interface Props {
   agendaHeader: MeetingAgendaHeader | null
   agendaSubitems: MeetingAgendaSubItem[]
   pastMeetings: PastMeetingEntry[]
+  agenda2RefCode: string | null
   obstacles: Obstacle[]
   nrwCurrRaw: any[]
   nrwPrevRaw: any[]
@@ -1465,6 +1985,7 @@ interface Props {
   nrwMonth: number
   pdcaAllRows: PdcaSummaryRow[]
   pdcaPrevRows: PdcaPrevRow[]
+  pdcaAreaRows: PdcaAreaRow[]
   pdcaRefMonth: number | null
   pdcaRefYear: number | null
 }
@@ -1474,6 +1995,7 @@ export function MeetingPreviewClient({
   agendaHeader,
   agendaSubitems,
   pastMeetings,
+  agenda2RefCode,
   obstacles,
   nrwCurrRaw,
   nrwPrevRaw,
@@ -1481,14 +2003,34 @@ export function MeetingPreviewClient({
   nrwMonth,
   pdcaAllRows,
   pdcaPrevRows,
+  pdcaAreaRows,
   pdcaRefMonth,
   pdcaRefYear,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
-  const [selectedPrevId, setSelectedPrevId] = useState<string | null>(
-    pastMeetings[0]?.meeting.id ?? null
-  )
+  const [selectedPrevId, setSelectedPrevId] = useState<string | null>(() => {
+    // auto-select meeting ที่ตรงกับ agenda2_ref_meeting_no (code ที่กรอกในฟอร์มวาระ)
+    if (agenda2RefCode) {
+      const match = pastMeetings.find(e => e.meeting.code === agenda2RefCode)
+      if (match) return match.meeting.id
+    }
+    // fallback: meeting ที่มี report เต็ม (hasReport) แล้วค่อย fallback ไป meeting แรก
+    return pastMeetings.find(e => e.hasReport)?.meeting.id ?? pastMeetings[0]?.meeting.id ?? null
+  })
   const [selectedMonths, setSelectedMonths] = useState(() => monthToCount(nrwMonth))
+  const [reportModalEntry, setReportModalEntry] = useState<PastMeetingEntry | null>(null)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+
+  function openReportModal(entry: PastMeetingEntry) {
+    setSelectedPrevId(entry.meeting.id)
+    setReportModalEntry(entry)
+    requestAnimationFrame(() => requestAnimationFrame(() => setReportModalOpen(true)))
+  }
+
+  function closeReportModal() {
+    setReportModalOpen(false)
+    setTimeout(() => setReportModalEntry(null), 300)
+  }
 
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
   const hasAgenda6 = agenda4Label === 'เรื่องสืบเนื่อง'
@@ -1642,7 +2184,6 @@ export function MeetingPreviewClient({
       {activeTab === 2 && (() => {
         const selectedEntry = pastMeetings.find(e => e.meeting.id === selectedPrevId) ?? pastMeetings[0] ?? null
         const prevResolutions = selectedEntry?.resolutions ?? []
-        const prevMeeting = selectedEntry?.meeting ?? null
         return (
           <div className="space-y-4">
             <div className="flex items-start gap-3">
@@ -1665,39 +2206,54 @@ export function MeetingPreviewClient({
             ) : (
               <div className="space-y-3">
                 {/* Meeting selector */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] text-white/30 shrink-0">รับรองรายงาน</span>
+                <div className="flex items-start gap-2 flex-wrap">
+                  <span className="text-[10px] text-white/30 shrink-0 mt-1.5">รับรองรายงาน</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {pastMeetings.map(e => (
-                      <button
-                        key={e.meeting.id}
-                        type="button"
-                        onClick={() => setSelectedPrevId(e.meeting.id)}
-                        className={cn(
-                          'text-[11px] px-3 py-1 rounded-lg border transition-all',
-                          selectedPrevId === e.meeting.id
-                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                            : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
-                        )}
-                      >
-                        {e.meeting.title}
-                        <span className="ml-1.5 text-[10px] opacity-60">
-                          {formatThaiDate(e.meeting.scheduled_date, true)}
-                        </span>
-                      </button>
-                    ))}
+                    {pastMeetings.map(e => {
+                      const isRef = agenda2RefCode ? e.meeting.code === agenda2RefCode : false
+                      const isSelected = selectedPrevId === e.meeting.id
+                      return (
+                        <button
+                          key={e.meeting.id}
+                          type="button"
+                          onClick={() => openReportModal(e)}
+                          className={cn(
+                            'text-[11px] px-3 py-1 rounded-lg border transition-all flex items-center gap-1.5',
+                            isSelected
+                              ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                              : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                          )}
+                        >
+                          <span className="font-mono text-[10px] opacity-70">{e.meeting.code}</span>
+                          <span>{e.meeting.title}</span>
+                          <span className="text-[10px] opacity-60">
+                            {formatThaiDate(e.meeting.scheduled_date, true)}
+                          </span>
+                          {e.hasReport && (
+                            <span className={cn(
+                              'text-[9px] px-1 py-0.5 rounded border',
+                              isSelected
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : 'bg-white/5 text-white/30 border-white/10'
+                            )}>
+                              มีรายงาน
+                            </span>
+                          )}
+                          {isRef && (
+                            <span className={cn(
+                              'text-[9px] px-1 py-0.5 rounded border',
+                              isSelected
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                : 'bg-amber-500/10 text-amber-400/60 border-amber-500/20'
+                            )}>
+                              กำหนดรับรอง
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
-
-                {prevMeeting && (
-                  <div className="flex items-center gap-2 px-1">
-                    <Calendar size={12} className="text-white/30" />
-                    <p className="text-xs text-white/40">
-                      รายงานจาก: <span className="text-white/60">{prevMeeting.title}</span>
-                      {' '}· {formatThaiDate(prevMeeting.scheduled_date)}
-                    </p>
-                  </div>
-                )}
 
                 {prevResolutions.length === 0 ? (
                   <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
@@ -1924,7 +2480,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
           {!hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
           )}
 
           <ObstacleBranchPanel obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
@@ -1946,7 +2502,7 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ, sorted by วาระ 3 chart */}
           {hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
           )}
 
           {items(5).length === 0 ? (
@@ -1983,6 +2539,13 @@ export function MeetingPreviewClient({
           )}
         </div>
       )}
+
+      {/* ══ Past meeting report modal ══ */}
+      <PastMeetingReportModal
+        entry={reportModalEntry}
+        open={reportModalOpen}
+        onClose={closeReportModal}
+      />
 
     </div>
   )

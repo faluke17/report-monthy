@@ -312,6 +312,23 @@ export async function bulkCreateProjects(
   return { success: true, inserted: (data as unknown[]).length }
 }
 
+// ─── Certificate URL ──────────────────────────────────────────────────────────
+
+export async function saveCertificateUrl(projectId: string, url: string | null): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+  const supabase = await createClient()
+
+  const { error } = await (supabase as any)
+    .from('budget_projects')
+    .update({ certificate_url: url })
+    .eq('id', projectId)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/project-progress', 'layout')
+  return { success: true }
+}
+
 // ─── End Phase: Completion ────────────────────────────────────────────────────
 
 export async function updateProjectCompletion(

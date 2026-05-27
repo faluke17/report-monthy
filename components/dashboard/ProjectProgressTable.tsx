@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, X, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, X, Trash2, AlertTriangle, Paperclip, ExternalLink, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { BudgetProject, Branch } from '@/lib/types'
 import { PhaseTimeline } from '@/components/dashboard/PhaseTimeline'
 import {
   createProject, deleteProject, updateProjectPhase, upsertProjectContract,
-  updateCurrentPhase, addProgressUpdate, updateProjectCompletion,
+  updateCurrentPhase, addProgressUpdate, updateProjectCompletion, saveCertificateUrl,
 } from '@/app/actions/project-progress'
+import { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 interface Props {
   projects: BudgetProject[]
@@ -20,6 +21,7 @@ interface Props {
   sessionBranchId: string | null
   isRegion: boolean
   isAdmin: boolean
+  defaultProjectId?: string
 }
 
 const PHASE_LABELS = ['ยังไม่เริ่ม','ราคากลาง','TOR','พิจารณาผล','เซ็นสัญญา','ดำเนินงาน','แล้วเสร็จ']
@@ -49,14 +51,31 @@ function progressPct(project: BudgetProject) {
   if (!latest || !est || est === 0) return null
   return Math.round((latest.pipe_length_completed / est) * 100)
 }
+function phase6Missing(project: BudgetProject) {
+  if (project.current_phase !== 6) return null
+  return {
+    dates: !project.completion_submission_date || !project.completion_inspection_date,
+    certificate: !project.certificate_url,
+  }
+}
 
-export function ProjectProgressTable({ projects, yearId, groupId, groupName, branches, sessionBranchId, isRegion, isAdmin }: Props) {
+export function ProjectProgressTable({ projects, yearId, groupId, groupName, branches, sessionBranchId, isRegion, isAdmin, defaultProjectId }: Props) {
   const router = useRouter()
   const [selected, setSelected]             = useState<BudgetProject | null>(null)
   const [expandedPhase, setExpandedPhase]   = useState<number | null>(null)
   const [showNewProject, setShowNewProject] = useState(false)
   const [confirmDelete, setConfirmDelete]   = useState(false)
   const [isPending, startTransition]        = useTransition()
+  const [filterBranchId, setFilterBranchId] = useState<string>('')
+  const [searchQuery, setSearchQuery]       = useState<string>('')
+
+  // Auto-open modal when arriving from search
+  useEffect(() => {
+    if (defaultProjectId && projects.length > 0) {
+      const target = projects.find(p => p.id === defaultProjectId)
+      if (target) { setSelected(target); setExpandedPhase(null) }
+    }
+  }, [defaultProjectId, projects])
 
   useEffect(() => {
     if (selected) {
@@ -78,11 +97,29 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
     })
   }
 
-  const total      = projects.length
-  const completed  = projects.filter(p => p.current_phase === 6).length
-  const inProgress = projects.filter(p => p.current_phase > 0 && p.current_phase < 6).length
-  const today      = new Date(); today.setHours(0,0,0,0)
-  const overdue    = projects.filter(p => {
+  // Derive branches that actually have projects — auto-updates when projects change
+  const activeBranches = useMemo(() => {
+    const seen = new Map<string, { id: string; name_th: string; count: number }>()
+    for (const p of projects) {
+      const name = p.branches?.name_th ?? p.branch_id
+      if (!seen.has(p.branch_id)) seen.set(p.branch_id, { id: p.branch_id, name_th: name, count: 0 })
+      seen.get(p.branch_id)!.count++
+    }
+    return Array.from(seen.values()).sort((a, b) => a.name_th.localeCompare(b.name_th, 'th'))
+  }, [projects])
+
+  const q        = searchQuery.trim().toLowerCase()
+  const filtered = projects.filter(p =>
+    (!filterBranchId || p.branch_id === filterBranchId) &&
+    (!q || p.project_name.toLowerCase().includes(q) || (p.code ?? '').toLowerCase().includes(q))
+  )
+  const total       = filtered.length
+  const inProgress  = filtered.filter(p => p.current_phase > 0 && p.current_phase < 6).length
+  const phase6      = filtered.filter(p => p.current_phase === 6)
+  const completed   = phase6.filter(p => !phase6Missing(p)?.dates && !phase6Missing(p)?.certificate).length
+  const incomplete6 = phase6.length - completed
+  const today       = new Date(); today.setHours(0,0,0,0)
+  const overdue     = filtered.filter(p => {
     if (p.current_phase === 6) return false
     const end = p.project_contracts?.contract_end_date
     return end && new Date(end) < today
@@ -91,12 +128,13 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
   return (
     <>
       {/* Summary bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'ทั้งหมด',      value: total,      color: 'text-white' },
-          { label: 'กำลังดำเนิน',  value: inProgress,  color: 'text-cyan-400' },
-          { label: 'เสร็จแล้ว',    value: completed,   color: 'text-emerald-400' },
-          { label: 'เกินกำหนด',    value: overdue,     color: 'text-red-400' },
+          { label: 'ทั้งหมด',     value: total,       color: 'text-white' },
+          { label: 'กำลังดำเนิน', value: inProgress,  color: 'text-cyan-400' },
+          { label: 'เสร็จแล้ว',   value: completed,   color: 'text-emerald-400' },
+          { label: 'รอข้อมูล',    value: incomplete6, color: 'text-amber-400' },
+          { label: 'เกินกำหนด',   value: overdue,     color: 'text-red-400' },
         ].map(s => (
           <div key={s.label} className="glass-card px-4 py-3">
             <p className="text-[11px] text-white/40 mb-1">{s.label}</p>
@@ -106,20 +144,63 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
       </div>
 
       {/* Header row */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-white/50">{groupName} · {total} โครงการ</p>
-        <button
-          onClick={() => setShowNewProject(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 transition-colors"
-        >
-          <Plus size={14} /> เพิ่มโครงการ
-        </button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px] max-w-sm">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="ค้นหาชื่อโครงการ หรือรหัส..."
+              className="w-full bg-white/5 border border-white/12 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-cyan-500/40"
+            />
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* Branch filter (region only) */}
+          {isRegion && (
+            <select
+              value={filterBranchId}
+              onChange={e => setFilterBranchId(e.target.value)}
+              className="flex-1 min-w-[140px] max-w-[200px] bg-white/5 border border-white/12 rounded-lg px-3 py-1.5 text-xs text-white/70 focus:outline-none focus:border-cyan-500/40"
+            >
+              <option value="">ทุกสาขา</option>
+              {activeBranches.map(b => (
+                <option key={b.id} value={b.id}>{b.name_th}</option>
+              ))}
+            </select>
+          )}
+
+          <div className="flex items-center justify-between flex-1 min-w-0">
+            <p className="text-xs text-white/40 truncate">
+              {groupName}
+              {(q || filterBranchId)
+                ? <span className="text-cyan-400 ml-1">· {total} โครงการ (กรอง)</span>
+                : <span className="ml-1">· {total} โครงการ</span>
+              }
+            </p>
+            <button
+              onClick={() => setShowNewProject(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 transition-colors shrink-0 ml-3"
+            >
+              <Plus size={14} /> เพิ่มโครงการ
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Project Table */}
       <div className="glass-card overflow-hidden">
-        {projects.length === 0 ? (
-          <div className="py-16 text-center text-white/25 text-sm">ยังไม่มีโครงการ</div>
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-white/25 text-sm">
+            {filterBranchId ? 'ไม่มีโครงการในสาขาที่เลือก' : 'ยังไม่มีโครงการ'}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -132,10 +213,12 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                 </tr>
               </thead>
               <tbody>
-                {projects.map((project, idx) => {
-                  const phase = project.current_phase
-                  const ds    = deadlineStatus(project)
-                  const pct   = progressPct(project)
+                {filtered.map((project, idx) => {
+                  const phase   = project.current_phase
+                  const ds      = deadlineStatus(project)
+                  const pct     = progressPct(project)
+                  const missing = phase6Missing(project)
+                  const incomplete = missing && (missing.dates || missing.certificate)
                   return (
                     <tr
                       key={project.id}
@@ -153,14 +236,25 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                       <td className="px-4 py-3 text-center">
                         <div className="flex flex-col items-center gap-1">
                           <span className={`text-[11px] px-2.5 py-0.5 rounded-full whitespace-nowrap ${
-                            phase === 6 ? 'bg-emerald-500/15 text-emerald-400'
-                            : phase > 0  ? 'bg-cyan-500/15 text-cyan-400'
-                            :              'bg-white/5 text-white/30'
+                            phase === 6 && !incomplete ? 'bg-emerald-500/15 text-emerald-400'
+                            : phase === 6 &&  incomplete ? 'bg-amber-500/15 text-amber-400'
+                            : phase > 0                  ? 'bg-cyan-500/15 text-cyan-400'
+                            :                              'bg-white/5 text-white/30'
                           }`}>
-                            {PHASE_LABELS[phase]}
+                            {phase === 6 && incomplete ? 'รอข้อมูล' : PHASE_LABELS[phase]}
                           </span>
                           {phase === 5 && pct !== null && (
                             <span className="text-[10px] text-cyan-400 num">{pct}%</span>
+                          )}
+                          {missing?.dates && (
+                            <span className="text-[10px] text-amber-400/80 flex items-center gap-0.5">
+                              <Calendar size={9} /> ขาดวันส่ง/ตรวจ
+                            </span>
+                          )}
+                          {missing?.certificate && (
+                            <span className="text-[10px] text-amber-400/80 flex items-center gap-0.5">
+                              <Paperclip size={9} /> ไม่มีใบรับรอง
+                            </span>
                           )}
                           {ds === 'overdue' && (
                             <span className="text-[10px] text-red-400 flex items-center gap-0.5">
@@ -291,6 +385,11 @@ function DetailBody({
       {/* Contract Info (phase 4+) */}
       {project.current_phase >= 4 && project.project_contracts && (
         <ContractInfo contract={project.project_contracts} deadlineSt={ds} />
+      )}
+
+      {/* Certificate (phase 6 only) */}
+      {project.current_phase === 6 && (
+        <CertificateSection project={project} onRefresh={() => router.refresh()} />
       )}
 
       {/* Phase Timeline */}
@@ -588,25 +687,118 @@ function PhaseEditForm({
 
   if (phase === 6) {
     return (
-      <form onSubmit={handleCompletion} className="space-y-3">
-        <p className="text-xs font-semibold text-white/60">{LABEL}</p>
-        <div className="grid grid-cols-2 gap-2">
-          <InputField name="completion_submission_date" label="วันส่งงาน" type="date"
-            defaultValue={project.completion_submission_date ?? ''} />
-          <InputField name="completion_inspection_date" label="วันตรวจรับงาน" type="date"
-            defaultValue={project.completion_inspection_date ?? ''} />
-        </div>
-        <div>
-          <label className="block text-[11px] text-white/40 mb-1">หมายเหตุ</label>
-          <textarea name="completion_notes" defaultValue={project.completion_notes ?? ''} rows={2}
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50" />
-        </div>
-        <SaveBtn isPending={isPending} />
-      </form>
+      <div className="space-y-3">
+        <form onSubmit={handleCompletion} className="space-y-3">
+          <p className="text-xs font-semibold text-white/60">{LABEL}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <InputField name="completion_submission_date" label="วันส่งงาน" type="date"
+              defaultValue={project.completion_submission_date ?? ''} />
+            <InputField name="completion_inspection_date" label="วันตรวจรับงาน" type="date"
+              defaultValue={project.completion_inspection_date ?? ''} />
+          </div>
+          <div>
+            <label className="block text-[11px] text-white/40 mb-1">หมายเหตุ</label>
+            <textarea name="completion_notes" defaultValue={project.completion_notes ?? ''} rows={2}
+              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50" />
+          </div>
+          <SaveBtn isPending={isPending} />
+        </form>
+        <CertificateSection project={project} onRefresh={onSuccess} />
+      </div>
     )
   }
 
   return null
+}
+
+// ─── Certificate Section ──────────────────────────────────────────────────────
+
+function CertificateSection({ project, onRefresh }: {
+  project: BudgetProject
+  onRefresh: () => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function extractStoragePath(url: string): string | null {
+    const marker = '/object/public/project-certificates/'
+    const idx = url.indexOf(marker)
+    return idx !== -1 ? decodeURIComponent(url.slice(idx + marker.length)) : null
+  }
+
+  const handleUpload = async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast.error('รองรับเฉพาะไฟล์ PDF เท่านั้น')
+      return
+    }
+    setUploading(true)
+    try {
+      const supabase = createBrowserClient()
+
+      if (project.certificate_url) {
+        const oldPath = extractStoragePath(project.certificate_url)
+        if (oldPath) await supabase.storage.from('project-certificates').remove([oldPath])
+      }
+
+      const path = `projects/${project.id}/${Date.now()}.pdf`
+      const { error: upErr } = await supabase.storage
+        .from('project-certificates')
+        .upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+
+      const { data: { publicUrl } } = supabase.storage.from('project-certificates').getPublicUrl(path)
+      const res = await saveCertificateUrl(project.id, publicUrl)
+      if (res.success) { toast.success('แนบใบรับรองสำเร็จ'); onRefresh() }
+      else toast.error(res.error)
+    } catch {
+      toast.error('อัปโหลดไม่สำเร็จ กรุณาลองใหม่')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">ใบรับรองผลงาน</p>
+      <div className="bg-white/4 rounded-xl p-3">
+        {project.certificate_url ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={project.certificate_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors"
+            >
+              <ExternalLink size={12} /> เปิดเอกสาร
+            </a>
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/40 border border-white/10 hover:text-white/70 hover:border-white/20 disabled:opacity-40 transition-colors"
+            >
+              <Paperclip size={12} /> {uploading ? 'กำลังอัปโหลด...' : 'เปลี่ยนไฟล์'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70 disabled:opacity-40 transition-colors"
+          >
+            <Paperclip size={12} /> {uploading ? 'กำลังอัปโหลด...' : 'แนบใบรับรอง PDF'}
+          </button>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }}
+        />
+      </div>
+    </div>
+  )
 }
 
 // ─── New Project Modal ────────────────────────────────────────────────────────

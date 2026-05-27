@@ -32,7 +32,7 @@ export default async function YearGroupsPage({
   // Fetch budget groups with full project summaries for stats
   const { data: budgetGroups } = await (supabase as any)
     .from('budget_groups')
-    .select('*, budget_projects(id, current_phase, budget_excl_vat, contract_incl_vat, project_contracts(contract_end_date, estimated_pipe_length))')
+    .select('*, budget_projects(id, project_name, code, current_phase, budget_excl_vat, contract_incl_vat, project_contracts(contract_end_date, estimated_pipe_length))')
     .eq('budget_year_id', yearId)
     .order('created_at', { ascending: true })
 

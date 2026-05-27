@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Plus, ChevronRight, Folders, Trash2,
+  Plus, ChevronRight, Folders, Trash2, X,
   Layers, Banknote, Receipt, Ruler, CheckCircle2, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -61,12 +61,44 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
   const [showForm, setShowForm]               = useState(false)
   const [groupName, setGroupName]             = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery]         = useState('')
+  const [showDropdown, setShowDropdown]       = useState(false)
   const [isPending, startTransition]          = useTransition()
+  const searchRef                             = useRef<HTMLDivElement>(null)
 
-  const allProjects     = budgetGroups.flatMap(g => g.budget_projects ?? [])
+  const q = searchQuery.trim().toLowerCase()
+
+  // Autocomplete results — flat list from all groups, max 10
+  const dropdownResults = useMemo(() => {
+    if (!q) return []
+    const results: Array<{ id: string; project_name: string; code: string | null; groupId: string; groupName: string }> = []
+    for (const g of budgetGroups) {
+      for (const p of g.budget_projects ?? []) {
+        if (p.project_name.toLowerCase().includes(q) || (p.code ?? '').toLowerCase().includes(q)) {
+          results.push({ id: p.id, project_name: p.project_name, code: p.code, groupId: g.id, groupName: g.name })
+        }
+      }
+    }
+    return results.slice(0, 10)
+  }, [budgetGroups, q])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Dashboard display — unaffected by search
+  const allProjects = budgetGroups.flatMap(g => g.budget_projects ?? [])
   const filteredProjects = activeGroup === 'all'
     ? allProjects
     : (budgetGroups.find(g => g.id === activeGroup)?.budget_projects ?? [])
+  const visibleGroups = budgetGroups
 
   const s = computeStats(filteredProjects)
 
@@ -100,14 +132,72 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
           <h1 className="text-2xl font-bold text-white tracking-tight">{yearName}</h1>
           <p className="text-sm text-white/40 mt-1">ภาพรวมโครงการก่อสร้าง / วางท่อ</p>
         </div>
-        {canCreate && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 transition-colors"
-          >
-            <Plus size={15} /> เพิ่มชื่องบประมาณ
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search with autocomplete */}
+          <div className="relative" ref={searchRef}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true) }}
+              onFocus={() => { if (q) setShowDropdown(true) }}
+              placeholder="ค้นหาชื่อโครงการ หรือรหัส..."
+              className="w-64 bg-white/5 border border-white/12 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-cyan-500/40"
+            />
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(''); setShowDropdown(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                <X size={12} />
+              </button>
+            )}
+
+            {/* Dropdown */}
+            {showDropdown && q && (
+              <div className="absolute top-full left-0 mt-1.5 w-80 bg-[#141824] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                {dropdownResults.length === 0 ? (
+                  <p className="px-4 py-3 text-xs text-white/30">ไม่พบโครงการที่ค้นหา</p>
+                ) : (
+                  <>
+                    <p className="px-4 pt-2.5 pb-1 text-[10px] text-white/25 uppercase tracking-widest">พบ {dropdownResults.length} รายการ</p>
+                    {dropdownResults.map(r => (
+                      <button
+                        key={r.id}
+                        onMouseDown={() => {
+                          router.push(`/project-progress/${yearId}/${r.groupId}?project=${r.id}`)
+                          setSearchQuery('')
+                          setShowDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-white/6 transition-colors border-t border-white/5 first:border-0 flex items-start gap-2.5"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white/85 font-medium leading-snug truncate">
+                            <Highlight text={r.project_name} query={q} />
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {r.code && (
+                              <span className="text-[10px] text-white/30 font-mono">
+                                <Highlight text={r.code} query={q} />
+                              </span>
+                            )}
+                            <span className="text-[10px] text-cyan-400/60">{r.groupName}</span>
+                          </div>
+                        </div>
+                        <ChevronRight size={12} className="text-white/20 shrink-0 mt-0.5" />
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          {canCreate && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 transition-colors"
+            >
+              <Plus size={15} /> เพิ่มชื่องบประมาณ
+            </button>
+          )}
+        </div>
       </div>
 
       {budgetGroups.length === 0 ? (
@@ -224,7 +314,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
           {/* ── Group list ───────────────────────────────────────────────── */}
           <div className="space-y-2">
             <p className="text-[11px] text-white/30 uppercase tracking-widest px-1">ชื่องบประมาณ</p>
-            {budgetGroups.map(group => {
+            {visibleGroups.map(group => {
               const gProjects = group.budget_projects ?? []
               const gs = computeStats(gProjects)
               const isConfirmDelete = confirmDeleteId === group.id
@@ -340,6 +430,20 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
         </div>
       )}
     </div>
+  )
+}
+
+// ─── Highlight matching text ──────────────────────────────────────────────────
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-cyan-500/30 text-cyan-300 rounded-sm not-italic px-0.5">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
   )
 }
 

@@ -449,14 +449,16 @@ export function MeetingView({
                           แก้ไข
                         </Link>
                       )}
-                      <Link
-                        href={`/meeting/${m.id}/preview`}
-                        className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all"
-                      >
-                        <Eye size={11} />
-                        ดูรายงาน
-                        <ChevronRight size={10} className="opacity-50" />
-                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href={`/meeting/${m.id}/preview`}
+                          className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all"
+                        >
+                          <Eye size={11} />
+                          ดูรายงาน
+                          <ChevronRight size={10} className="opacity-50" />
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}

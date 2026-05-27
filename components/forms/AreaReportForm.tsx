@@ -321,7 +321,7 @@ export function AreaReportForm({
         step_no: s.step_no,
         estimated_loss: parseFloat(s.estimated_loss) || null,
         leaks_found: parseInt(s.leaks_found) || 0,
-        leaks_repaired: parseInt(s.leaks_repaired) || null,
+        leaks_repaired: s.leaks_repaired.trim() === '' ? null : (parseInt(s.leaks_repaired) || 0),
       })),
       obstacles: a.has_obstacle
         ? a.obstacles

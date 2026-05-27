@@ -704,6 +704,8 @@ export interface BudgetGroup {
 
 export interface BudgetProjectSummary {
   id: string
+  project_name: string
+  code: string | null
   current_phase: number
   budget_excl_vat: number | null
   contract_incl_vat: number | null
@@ -731,6 +733,7 @@ export interface BudgetProject {
   completion_submission_date: string | null
   completion_inspection_date: string | null
   completion_notes: string | null
+  certificate_url: string | null
   current_phase: number
   created_by: string
   created_at: string

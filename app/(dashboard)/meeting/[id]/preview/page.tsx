@@ -31,12 +31,15 @@ export default async function MeetingPreviewPage({
 
   const supabase = await createClient()
 
-  const { data: meetingData } = await supabase
+  const { data: meetingData, error: meetingError } = await supabase
     .from('meetings')
     .select('*')
     .eq('id', id)
     .single()
 
+  if (meetingError) {
+    console.error('[preview] meetings query error:', meetingError.message, '| id:', id)
+  }
   if (!meetingData) notFound()
   const meeting = meetingData as Meeting
 
@@ -66,7 +69,7 @@ export default async function MeetingPreviewPage({
       .eq('fiscal_year', nrwFiscalYear - 1),
     supabase
       .from('meeting_pre_agenda')
-      .select('pdca_ref_month, pdca_ref_year')
+      .select('pdca_ref_month, pdca_ref_year, agenda2_ref_meeting_no')
       .eq('meeting_id', id)
       .maybeSingle(),
   ])
@@ -79,29 +82,50 @@ export default async function MeetingPreviewPage({
 
   const pdcaRefMonth: number | null = preAgendaRes.data?.pdca_ref_month ?? null
   const pdcaRefYear: number | null = preAgendaRes.data?.pdca_ref_year ?? null
+  const agenda2RefCode: string | null = preAgendaRes.data?.agenda2_ref_meeting_no ?? null
 
-  // ดึง resolutions ของ past meetings ทั้งหมดพร้อมกัน
+  // ดึง resolutions + agenda headers/subitems ของ past meetings
   let allPastResolutions: MeetingResolution[] = []
+  let pastHeaders: MeetingAgendaHeader[] = []
+  let pastSubitems: MeetingAgendaSubItem[] = []
+
   if (pastMeetingList.length > 0) {
-    const { data } = await supabase
-      .from('meeting_resolutions')
-      .select('*')
-      .in('meeting_id', pastMeetingList.map(m => m.id))
-      .order('meeting_id')
-      .order('sequence_no')
-    allPastResolutions = (data ?? []) as MeetingResolution[]
+    const [resolutionRes, pastHeaderRes, pastSubitemsRes] = await Promise.all([
+      supabase
+        .from('meeting_resolutions')
+        .select('*')
+        .in('meeting_id', pastMeetingList.map(m => m.id))
+        .order('meeting_id')
+        .order('sequence_no'),
+      supabase
+        .from('meeting_agenda_headers')
+        .select('*')
+        .in('meeting_id', pastMeetingList.map(m => m.id)),
+      supabase
+        .from('meeting_agenda_subitems')
+        .select('*')
+        .in('meeting_id', pastMeetingList.map(m => m.id))
+        .order('agenda_no')
+        .order('sort_order'),
+    ])
+    allPastResolutions = (resolutionRes.data ?? []) as MeetingResolution[]
+    pastHeaders = (pastHeaderRes.data ?? []) as MeetingAgendaHeader[]
+    pastSubitems = (pastSubitemsRes.data ?? []) as MeetingAgendaSubItem[]
   }
 
   const pastMeetings = pastMeetingList.map(m => ({
     meeting: m,
     resolutions: allPastResolutions.filter(r => r.meeting_id === m.id),
+    hasReport: pastHeaders.some(h => h.meeting_id === m.id),
+    agendaHeader: pastHeaders.find(h => h.meeting_id === m.id) ?? null,
+    agendaSubitems: pastSubitems.filter(s => s.meeting_id === m.id),
   }))
 
   // ดึง PDCA จาก area_monthly_reports (ตารางจริงที่สาขาใช้กรอก)
   // แต่ละสาขามีหลาย area → aggregate ต่อสาขา
   let areaQuery = (supabase as any)
     .from('area_monthly_reports')
-    .select('branch_id, pdca_do, pdca_act, report_month, report_year, water_dist_after, water_sold_after, mnf_after, leaks_repaired, leaks_pending, branches(name_th), step_test_results(leaks_found)')
+    .select('branch_id, area_name, pdca_do, pdca_act, report_month, report_year, water_dist_before, water_sold_before, mnf_before, water_dist_after, water_sold_after, mnf_after, leaks_repaired, leaks_pending, branches(name_th), step_test_results(step_no, estimated_loss, leaks_found, leaks_repaired)')
     .order('report_year', { ascending: false })
     .order('report_month', { ascending: false })
 
@@ -156,9 +180,11 @@ export default async function MeetingPreviewPage({
       a.dist += row.water_dist_after ?? 0
       a.sold += row.water_sold_after ?? 0
       if (row.mnf_after != null) { a.mnf_sum += row.mnf_after; a.mnf_count++ }
-      a.lr += row.leaks_repaired ?? 0
-      a.lp += row.leaks_pending ?? 0
-      for (const st of row.step_test_results ?? []) a.lf += st.leaks_found ?? 0
+      for (const st of row.step_test_results ?? []) {
+        a.lf += st.leaks_found ?? 0
+        a.lr += st.leaks_repaired ?? 0
+        a.lp += Math.max(0, (st.leaks_found ?? 0) - (st.leaks_repaired ?? 0))
+      }
     }
     return Array.from(map.values()).map(a => {
       const nrw_pct = a.dist > 0 ? Math.round((a.dist - a.sold) / a.dist * 10000) / 100 : null
@@ -191,6 +217,32 @@ export default async function MeetingPreviewPage({
     nrw_pct: r.nrw_pct,
   }))
 
+  // Raw per-area rows (non-aggregated) for area-level drill-down in modal
+  const pdcaAreaRows = (areaRes.data ?? [])
+    .filter((row: any) => row.branches?.name_th)
+    .map((row: any) => ({
+      branch_name: row.branches.name_th as string,
+      area_name: (row.area_name ?? '') as string,
+      pdca_do: row.pdca_do ?? null,
+      pdca_act: row.pdca_act ?? null,
+      report_month: row.report_month as number,
+      report_year: row.report_year as number,
+      water_dist_before: row.water_dist_before ?? null,
+      water_sold_before: row.water_sold_before ?? null,
+      mnf_before: row.mnf_before ?? null,
+      water_dist_after: row.water_dist_after ?? null,
+      water_sold_after: row.water_sold_after ?? null,
+      mnf_after: row.mnf_after ?? null,
+      leaks_repaired: row.leaks_repaired ?? 0,
+      leaks_pending: row.leaks_pending ?? 0,
+      step_tests: (row.step_test_results ?? []).map((s: any) => ({
+        step_no: s.step_no as number,
+        estimated_loss: s.estimated_loss ?? null,
+        leaks_found: s.leaks_found ?? 0,
+        leaks_repaired: s.leaks_repaired ?? null,
+      })),
+    }))
+
   const { data: obstaclesData } = await supabase
     .from('obstacles')
     .select('*, branches(id, name_th, code)')
@@ -206,6 +258,7 @@ export default async function MeetingPreviewPage({
       agendaHeader={agendaHeader}
       agendaSubitems={agendaSubitems}
       pastMeetings={pastMeetings}
+      agenda2RefCode={agenda2RefCode}
       obstacles={obstacles}
       nrwCurrRaw={nrwCurrRaw}
       nrwPrevRaw={nrwPrevRaw}
@@ -213,6 +266,7 @@ export default async function MeetingPreviewPage({
       nrwMonth={nrwMonth}
       pdcaAllRows={pdcaAllRows}
       pdcaPrevRows={pdcaPrevRows}
+      pdcaAreaRows={pdcaAreaRows}
       pdcaRefMonth={pdcaRefMonth}
       pdcaRefYear={pdcaRefYear}
     />

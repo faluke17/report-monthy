@@ -10,10 +10,13 @@ export const dynamic = 'force-dynamic'
 
 export default async function GroupProjectsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ yearId: string; groupId: string }>
+  searchParams: Promise<{ project?: string }>
 }) {
   const { yearId, groupId } = await params
+  const { project: defaultProjectId } = await searchParams
   const session = await getPwaSession()
   if (!session) redirect('/login')
 
@@ -94,6 +97,7 @@ export default async function GroupProjectsPage({
         sessionBranchId={sessionBranchId}
         isRegion={isRegion}
         isAdmin={isAdmin}
+        defaultProjectId={defaultProjectId}
       />
     </div>
   )
