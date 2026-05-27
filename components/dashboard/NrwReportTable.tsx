@@ -313,10 +313,11 @@ interface Props {
   fiscalYear: number
   month: number
   targets: Record<string, number | null>
+  districtTarget?: number | null
   canEdit: boolean
 }
 
-export function NrwReportTable({ rows, fiscalYear, month, targets, canEdit }: Props) {
+export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarget = null, canEdit }: Props) {
   const [sheet, setSheet] = useState<SheetState | null>(null)
   const [pending, startTransition] = useTransition()
   const [sheetMonth, setSheetMonth] = useState(month)
@@ -579,10 +580,13 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, canEdit }: Pr
               <td className="px-4 py-3 text-right font-mono text-white/80 text-xs">{fmtNum(totalFree)}</td>
               <td className="px-4 py-3 text-right font-mono text-white/80 text-xs">{fmtNum(totalBlowOff)}</td>
               <td className="px-4 py-3 text-right font-mono text-white/70 text-xs">{fmtNum(totalLoss)}</td>
-              <td className={`px-4 py-3 text-right font-mono font-bold text-xs ${nrwColor(totalRate, null)}`}>
+              <td className={`px-4 py-3 text-right font-mono font-bold text-xs ${nrwColor(totalRate, districtTarget)}`}>
                 {totalRate !== null ? `${fmtNum(totalRate, 2)}%` : '—'}
               </td>
-              <td className="px-4 py-3" colSpan={2}></td>
+              <td className="px-4 py-3 text-right font-mono text-cyan-300/70 text-xs font-semibold">
+                {districtTarget !== null ? `${fmtNum(districtTarget, 2)}%` : '—'}
+              </td>
+              <td className="px-4 py-3"></td>
             </tr>
           </tfoot>
         </table>
@@ -691,6 +695,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, canEdit }: Pr
         <NrwTargetModal
           fiscalYear={fiscalYear}
           initialTargets={targets}
+          initialDistrictTarget={districtTarget}
           onClose={() => setTargetModalOpen(false)}
         />
       )}

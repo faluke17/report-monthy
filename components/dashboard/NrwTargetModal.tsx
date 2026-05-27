@@ -11,11 +11,13 @@ const INPUT = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 tex
 interface Props {
   fiscalYear: number
   initialTargets: Record<string, number | null>
+  initialDistrictTarget?: number | null
   onClose: () => void
 }
 
-export function NrwTargetModal({ fiscalYear, initialTargets, onClose }: Props) {
+export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarget, onClose }: Props) {
   const [pending, startTransition] = useTransition()
+  const [districtValue, setDistrictValue] = useState(initialDistrictTarget?.toString() ?? '')
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       BRANCH_ORDER.map((b) => [b, initialTargets[b]?.toString() ?? ''])
@@ -27,10 +29,13 @@ export function NrwTargetModal({ fiscalYear, initialTargets, onClose }: Props) {
   }
 
   function handleSave() {
-    const targets = BRANCH_ORDER.map((b) => ({
-      branch_name: b,
-      target_nrw:  parseFloat(values[b] ?? '') || null,
-    }))
+    const targets = [
+      { branch_name: '__district__', target_nrw: parseFloat(districtValue) || null },
+      ...BRANCH_ORDER.map((b) => ({
+        branch_name: b,
+        target_nrw:  parseFloat(values[b] ?? '') || null,
+      })),
+    ]
     startTransition(async () => {
       const res = await bulkUpsertNrwBranchTargets(targets, fiscalYear)
       if (res.success) {
@@ -59,6 +64,23 @@ export function NrwTargetModal({ fiscalYear, initialTargets, onClose }: Props) {
             <button onClick={onClose} className="text-white/40 hover:text-white">
               <X size={18} />
             </button>
+          </div>
+
+          {/* District target */}
+          <div className="px-5 py-3 border-b border-white/10 flex items-center gap-3 bg-cyan-500/5">
+            <span className="text-xs text-cyan-300/70 shrink-0 font-medium">เป้าหมายเขต:</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              placeholder="—"
+              value={districtValue}
+              onChange={(e) => setDistrictValue(e.target.value)}
+              className="w-28 bg-white/5 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/60 font-mono text-right"
+            />
+            <span className="text-xs text-white/30">%</span>
+            <span className="text-xs text-white/25 ml-auto">ใช้ทั้งปีงบ {fiscalYear}</span>
           </div>
 
           {/* Quick fill */}

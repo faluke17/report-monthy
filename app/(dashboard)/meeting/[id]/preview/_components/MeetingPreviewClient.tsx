@@ -715,7 +715,7 @@ function PdcaDetailModal({
               {hasData && (
                 <div>
                   <ModalSectionLabel>ข้อมูล NRW ประจำเดือน</ModalSectionLabel>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px' }}>
                     <ModalStatCard label="น้ำจ่าย" color="blue"
                       value={detail!.volume_distributed ? (detail!.volume_distributed / 1000).toFixed(1) : '—'}
                       unit="พัน ลบ.ม."
@@ -739,12 +739,6 @@ function PdcaDetailModal({
                     <ModalStatCard label="MNF ล่าสุด" color="violet"
                       value={detail!.mnf_latest != null ? detail!.mnf_latest.toFixed(1) : '—'}
                       unit="ลบ.ม./ชม."
-                    />
-                    <ModalStatCard label="MNF Factor" color="green"
-                      value={detail!.mnf_factor != null ? detail!.mnf_factor.toFixed(2) : '—'}
-                      sub={detail!.mnf_factor != null
-                        ? (detail!.mnf_factor <= 0.6 ? '✓ ดี' : detail!.mnf_factor <= 1.0 ? '⚠ ปานกลาง' : '✗ สูงเกิน')
-                        : undefined}
                     />
                   </div>
                 </div>

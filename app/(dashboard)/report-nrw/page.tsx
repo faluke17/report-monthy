@@ -45,8 +45,10 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
       .eq('fiscal_year', fiscalYear) as Promise<{ data: NrwBranchTarget[] | null; error: unknown }>,
   ])
 
+  const allTargets = targetRes.data ?? []
+  const districtTarget = allTargets.find((t) => t.branch_name === '__district__')?.target_nrw ?? null
   const targetMap = new Map(
-    (targetRes.data ?? []).map((t) => [t.branch_name, t.target_nrw])
+    allTargets.filter((t) => t.branch_name !== '__district__').map((t) => [t.branch_name, t.target_nrw])
   )
 
   const rows: NrwBranchMonthly[] = (monthlyRes.data ?? []).map((r) => {
@@ -106,6 +108,7 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
         fiscalYear={fiscalYear}
         month={month}
         targets={Object.fromEntries(targetMap)}
+        districtTarget={districtTarget}
         canEdit={canEdit}
       />
     </div>
