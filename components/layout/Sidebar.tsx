@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
   Calendar, BookOpen, Download, ChevronLeft, ChevronRight,
-  Droplets, ListChecks, FileText, Crosshair, Activity, Building2,
+  Droplets, ListChecks, FileText, Crosshair, Activity, Building2, Presentation,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
@@ -36,9 +36,10 @@ const NAV_GROUPS = [
   {
     label: 'ประชุม WSC-R',
     items: [
-      { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
-      { href: '/action',  label: 'Action Tracker',       icon: Crosshair },
-      { href: '/summary', label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
+      { href: '/meeting',            label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
+      { href: '/action',             label: 'Action Tracker',       icon: Crosshair },
+      { href: '/summary',            label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/executive-summary', label: 'บทสรุปผู้บริหาร', icon: Presentation }] : []),
     ],
   },
   {
