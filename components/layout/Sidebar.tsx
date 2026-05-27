@@ -27,7 +27,7 @@ const NAV_GROUPS = [
     label: 'ภาพรวม',
     items: [
       { href: '/dashboard',          label: 'Dashboard เขต',         icon: LayoutDashboard },
-      { href: '/ranking',            label: 'Ranking สาขา',          icon: BarChart3 },
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/ranking', label: 'Ranking สาขา', icon: BarChart3 }] : []),
       { href: '/mnf-monitor',        label: 'MNF Monitor',           icon: Activity },
       { href: '/report-nrw',         label: 'Report NRW',            icon: Droplets },
       { href: '/project-progress',   label: 'ความก้าวหน้าโครงการ',   icon: Building2 },
@@ -38,7 +38,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/meeting',            label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
       { href: '/action',             label: 'Action Tracker',       icon: Crosshair },
-      { href: '/summary',            label: 'Executive Summary',    icon: FileText, badge: 'new' as const },
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary', label: 'Executive Summary', icon: FileText, badge: 'new' as const }] : []),
       ...(process.env.NODE_ENV !== 'production' ? [{ href: '/executive-summary', label: 'บทสรุปผู้บริหาร', icon: Presentation }] : []),
     ],
   },
@@ -53,7 +53,7 @@ const NAV_GROUPS = [
   {
     label: 'แผนและ KM',
     items: [
-      { href: '/plans',  label: 'แผนลดน้ำสูญเสีย', icon: Target },
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/plans', label: 'แผนลดน้ำสูญเสีย', icon: Target }] : []),
       { href: '/km',     label: 'KM Best Practice', icon: BookOpen },
       { href: '/export',           label: 'Export ข้อมูล',       icon: Download },
     ],
