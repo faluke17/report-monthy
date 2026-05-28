@@ -108,8 +108,19 @@ export default function LoginPage() {
     try {
       const res  = await fetch('/api/auth/pwa-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) })
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error ?? 'เข้าสู่ระบบไม่สำเร็จ') }
-      else { setSuccess(true); setTimeout(() => { window.location.href = '/dashboard' }, 1400) }
+      if (!res.ok) {
+        if (data.error_code === 'profile_missing') {
+          // Profile lost (DB reset) — switch to register tab with employee_id pre-filled
+          setTab('reg')
+          setRegEmpId(data.employee_id ?? username)
+          toast.error('ไม่พบโปรไฟล์ — กรอกข้อมูลด้านล่างเพื่อกู้คืนบัญชี (ใช้รหัสผ่านเดิม)')
+        } else {
+          toast.error(data.error ?? 'เข้าสู่ระบบไม่สำเร็จ')
+        }
+      } else {
+        setSuccess(true)
+        setTimeout(() => { window.location.href = '/dashboard' }, 1400)
+      }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
   }

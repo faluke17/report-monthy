@@ -119,9 +119,9 @@ report-monthy/
 │   │   └── water-nodes.ts       # Water Node Select
 │   ├── api/
 │   │   ├── auth/
-│   │   │   ├── pwa-login/       # POST: login ผ่าน PWA API
-│   │   │   ├── pwa-logout/      # POST: logout
-│   │   │   └── register/        # POST: สร้าง user ใหม่
+│   │   │   ├── pwa-login/       # POST: login ผ่าน Supabase Auth → set pwa_session cookie
+│   │   │   ├── pwa-logout/      # POST: logout → clear cookie
+│   │   │   └── register/        # POST: สร้าง Supabase Auth user + users_profile (ลงทะเบียนครั้งแรก)
 │   │   ├── dmama/
 │   │   │   ├── sync/            # POST: sync NRW จาก DMAMA API (Cron วันที่ 16)
 │   │   │   ├── mnf-sync/        # POST: sync MNF daily จาก DMAMA API
@@ -192,24 +192,41 @@ report-monthy/
 
 ## 4. การ Authentication
 
-ระบบใช้ **2 ชั้น** แยกกันชัดเจน:
+ระบบใช้ **2 ชั้น** ที่ทำงานร่วมกัน:
 
-### ชั้น 1: PWA Session Cookie (หลัก)
+### ชั้น 1: Supabase Auth — ตรวจสอบ credentials (หลัก)
+
+> **ทำไมใช้ Supabase Auth แทน PWA กปภ. โดยตรง:**
+> ระบบเดิม (Initial commit) เชื่อมต่อ `intranet.pwa.co.th` ของ กปภ. โดยตรง แต่ server
+> อยู่ที่ Vercel Singapore ซึ่งเข้า intranet กปภ. ไม่ได้ ลอง Cloudflare Worker proxy
+> แล้วยังมีปัญหา จึงเปลี่ยนมาใช้ Supabase Auth ตั้งแต่ 13 พ.ค. 2568 เป็นต้นมา
 
 ```
 POST /api/auth/pwa-login
-  → ยิง PWA API ของ กปภ. เพื่อ validate username/password
-  → เมื่อสำเร็จ → เก็บข้อมูล user เป็น JSON ใน httpOnly cookie "pwa_session"
-  → cookie มีอายุ 8 ชั่วโมง
+  1. signInWithPassword({ email: "${username}@pwa.local", password })
+     ← Supabase Auth ตรวจ username+password
+  2. query users_profile โดย user.id (admin client, bypass RLS)
+     ← ดึงข้อมูลสาขา / costcenter / ชื่อ
+  3. สร้าง pwa_session cookie (httpOnly, 8 ชั่วโมง)
+
+POST /api/auth/register  ← ต้องทำก่อน login ครั้งแรก
+  1. createUser({ email: "${employee_id}@pwa.local", password })
+  2. upsert users_profile (employee_id, name, costcenter, branch_id ...)
+  3. สร้าง pwa_session cookie
+
+⚠ Profile Recovery: ถ้า users_profile หาย (DB reset) แต่ auth user ยังอยู่
+  → login จะ return error_code: "profile_missing"
+  → หน้า login auto-switch ไปแท็บ Register
+  → กรอกข้อมูลด้วย employee_id + password เดิม → profile ถูกสร้างใหม่
 ```
 
 **ข้อมูลใน session:**
 ```typescript
 interface PwaSession {
-  username: string       // รหัสพนักงาน
-  name, surname: string  // ชื่อ-นามสกุล
-  costcenter: string     // รหัส cost center สาขา
-  branch_name: string    // ชื่อสาขา
+  username: string       // รหัสพนักงาน (employee_id)
+  name, surname: string  // ชื่อ-นามสกุล (จาก users_profile)
+  costcenter: string     // รหัส cost center สาขา (จาก users_profile)
+  branch_name: string    // ชื่อสาขา (จาก users_profile)
   ba, wwcode, ...        // metadata อื่นๆ
 }
 ```
@@ -219,13 +236,16 @@ interface PwaSession {
 - ถ้าไม่มี session → `redirect('/login')` หรือ return error
 - `costcenter` ว่าง = ผู้ใช้เขต (region), มีค่า = ผู้ใช้สาขา
 
-### ชั้น 2: Supabase Auth (รอง)
+### ชั้น 2: Supabase Database (service role)
 
-- ใช้สำหรับ row-level security (RLS) policies ใน Supabase
-- Server client ใช้ **service role key** → bypass RLS ทั้งหมด
-- Middleware (`lib/supabase/middleware.ts`) refresh Supabase session
+- Server actions/routes ใช้ **service role key** → bypass RLS ทั้งหมด
+- Auth ที่แท้จริงอยู่ที่ PWA session cookie ชั้นบน ไม่ใช่ Supabase JWT
+- `lib/supabase/middleware.ts` — **dead code** (export ฟังก์ชัน `updateSession` แต่ไม่มี root `middleware.ts` เรียกใช้) เก็บไว้เผื่อต้องการเปิดใช้ในอนาคต
 
-> **หมายเหตุ:** auth หลักของแอปคือ PWA cookie ไม่ใช่ Supabase JWT โดยตรง
+> **ข้อควรระวัง:** `users_profile` เป็น PostgreSQL table ที่ reset ได้ ส่วน Supabase Auth
+> users เป็นคนละ system ที่ไม่ถูก reset ตาม DB — ถ้า `supabase db push` ทำให้ตาราง
+> recreate → profile data หาย แต่ auth user ยังอยู่ → login ล้มเหลว
+> แก้โดยรัน migration `20260528_auth_profile_robustness.sql` ใน Supabase SQL Editor
 
 ---
 
