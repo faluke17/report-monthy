@@ -564,6 +564,7 @@ function PdcaDetailModal({
     ? !!(activeAreaRow.pdca_do || activeAreaRow.pdca_act)
     : !!(detail?.pdca_do || detail?.pdca_act)
   const hasData = detail?.volume_distributed != null
+  const daysInMonth = detail ? new Date(detail.report_year, detail.report_month, 0).getDate() : null
   const nrwPct = detail?.nrw_pct ??
     (detail?.volume_distributed && detail?.volume_sold
       ? ((detail.volume_distributed - detail.volume_sold) / detail.volume_distributed * 100)
@@ -583,6 +584,7 @@ function PdcaDetailModal({
     activeAreaRow.mnf_before != null
   )
   const hasStepTests = activeAreaRow && activeAreaRow.step_tests.length > 0
+  const areaDaysInMonth = activeAreaRow ? new Date(activeAreaRow.report_year, activeAreaRow.report_month, 0).getDate() : null
 
   function Delta({ curr, prev, decimals = 1 }: { curr: number | null; prev: number | null; decimals?: number }) {
     if (curr == null || prev == null) return null
@@ -716,21 +718,24 @@ function PdcaDetailModal({
                 <div>
                   <ModalSectionLabel>ข้อมูล NRW ประจำเดือน</ModalSectionLabel>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px' }}>
-                    <ModalStatCard label="น้ำจ่าย" color="blue"
-                      value={detail!.volume_distributed ? (detail!.volume_distributed / 1000).toFixed(1) : '—'}
-                      unit="พัน ลบ.ม."
-                      sub={detail!.volume_distributed ? `${detail!.volume_distributed.toLocaleString('th-TH')} ลบ.ม.` : undefined}
+                    <ModalStatCard label="น้ำจ่าย / วัน" color="blue"
+                      value={detail!.volume_distributed && daysInMonth ? Math.round(detail!.volume_distributed / daysInMonth).toLocaleString('en-US') : '—'}
+                      unit="ลบ.ม."
+                      sub={detail!.volume_distributed && daysInMonth ? `รวม ${detail!.volume_distributed.toLocaleString('en-US')} · ${daysInMonth} วัน` : undefined}
                     />
-                    <ModalStatCard label="น้ำจำหน่าย" color="indigo"
-                      value={detail!.volume_sold ? (detail!.volume_sold / 1000).toFixed(1) : '—'}
-                      unit="พัน ลบ.ม."
-                      sub={detail!.volume_sold ? `${detail!.volume_sold.toLocaleString('th-TH')} ลบ.ม.` : undefined}
+                    <ModalStatCard label="น้ำจำหน่าย / วัน" color="indigo"
+                      value={detail!.volume_sold && daysInMonth ? Math.round(detail!.volume_sold / daysInMonth).toLocaleString('en-US') : '—'}
+                      unit="ลบ.ม."
+                      sub={detail!.volume_sold && daysInMonth ? `รวม ${detail!.volume_sold.toLocaleString('en-US')} · ${daysInMonth} วัน` : undefined}
                     />
-                    <ModalStatCard label="น้ำสูญเสีย (นสส.)" color="amber"
-                      value={detail!.volume_distributed && detail!.volume_sold
-                        ? ((detail!.volume_distributed - detail!.volume_sold) / 1000).toFixed(1)
+                    <ModalStatCard label="น้ำสูญเสีย / วัน" color="amber"
+                      value={detail!.volume_distributed && detail!.volume_sold && daysInMonth
+                        ? Math.round((detail!.volume_distributed - detail!.volume_sold) / daysInMonth).toLocaleString('en-US')
                         : '—'}
-                      unit="พัน ลบ.ม."
+                      unit="ลบ.ม."
+                      sub={detail!.volume_distributed && detail!.volume_sold && daysInMonth
+                        ? `รวม ${(detail!.volume_distributed - detail!.volume_sold).toLocaleString('en-US')}`
+                        : undefined}
                     />
                     <ModalStatCard label="% นสส." color={nrwPct != null && nrwPct < 20 ? 'green' : 'red'}
                       value={nrwPct != null ? nrwPct.toFixed(2) : '—'}
@@ -782,19 +787,19 @@ function PdcaDetailModal({
                       accentColor="#c4b5fd"
                     />
                     <TrendCard
-                      label="น้ำจ่าย" unit="K ลบ.ม."
-                      beforeStr={activeAreaRow.water_dist_before != null ? (activeAreaRow.water_dist_before / 1000).toFixed(1) + 'K' : null}
-                      afterStr={activeAreaRow.water_dist_after != null ? (activeAreaRow.water_dist_after / 1000).toFixed(1) + 'K' : null}
-                      delta={activeAreaRow.water_dist_before != null && activeAreaRow.water_dist_after != null ? (activeAreaRow.water_dist_after - activeAreaRow.water_dist_before) / 1000 : null}
+                      label="น้ำจ่าย / วัน" unit="ลบ.ม."
+                      beforeStr={activeAreaRow.water_dist_before != null && areaDaysInMonth ? Math.round(activeAreaRow.water_dist_before / areaDaysInMonth).toLocaleString('en-US') : null}
+                      afterStr={activeAreaRow.water_dist_after != null && areaDaysInMonth ? Math.round(activeAreaRow.water_dist_after / areaDaysInMonth).toLocaleString('en-US') : null}
+                      delta={activeAreaRow.water_dist_before != null && activeAreaRow.water_dist_after != null && areaDaysInMonth ? (activeAreaRow.water_dist_after - activeAreaRow.water_dist_before) / areaDaysInMonth : null}
                       lowerBetter
                       borderColor="rgba(59,130,246,.2)"
                       accentColor="#7dd3fc"
                     />
                     <TrendCard
-                      label="น้ำจำหน่าย" unit="K ลบ.ม."
-                      beforeStr={activeAreaRow.water_sold_before != null ? (activeAreaRow.water_sold_before / 1000).toFixed(1) + 'K' : null}
-                      afterStr={activeAreaRow.water_sold_after != null ? (activeAreaRow.water_sold_after / 1000).toFixed(1) + 'K' : null}
-                      delta={activeAreaRow.water_sold_before != null && activeAreaRow.water_sold_after != null ? (activeAreaRow.water_sold_after - activeAreaRow.water_sold_before) / 1000 : null}
+                      label="น้ำจำหน่าย / วัน" unit="ลบ.ม."
+                      beforeStr={activeAreaRow.water_sold_before != null && areaDaysInMonth ? Math.round(activeAreaRow.water_sold_before / areaDaysInMonth).toLocaleString('en-US') : null}
+                      afterStr={activeAreaRow.water_sold_after != null && areaDaysInMonth ? Math.round(activeAreaRow.water_sold_after / areaDaysInMonth).toLocaleString('en-US') : null}
+                      delta={activeAreaRow.water_sold_before != null && activeAreaRow.water_sold_after != null && areaDaysInMonth ? (activeAreaRow.water_sold_after - activeAreaRow.water_sold_before) / areaDaysInMonth : null}
                       borderColor="rgba(16,185,129,.2)"
                       accentColor="#6ee7b7"
                     />

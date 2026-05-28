@@ -36,6 +36,23 @@ interface StepRow {
   leaks_repaired: string
 }
 
+interface PdcaItem {
+  title: string
+  detail: string
+}
+
+function serializePdca(items: PdcaItem[]): string | null {
+  const filled = items.filter((i) => i.title.trim() || i.detail.trim())
+  if (!filled.length) return null
+  return filled
+    .map((item, idx) =>
+      item.detail.trim()
+        ? `${idx + 1}. ${item.title.trim()}\n   ${item.detail.trim()}`
+        : `${idx + 1}. ${item.title.trim()}`
+    )
+    .join('\n\n')
+}
+
 interface ObstacleRow {
   obstacle_type: string
   other_description: string
@@ -62,8 +79,8 @@ interface AreaSet {
   water_dist_after: string
   water_sold_after: string
   mnf_after: string
-  pdca_do: string
-  pdca_act: string
+  pdca_do_items: PdcaItem[]
+  pdca_act_items: PdcaItem[]
   has_obstacle: boolean
   obstacles: ObstacleRow[]
 }
@@ -85,8 +102,8 @@ function newArea(index: number): AreaSet {
     water_dist_after: '',
     water_sold_after: '',
     mnf_after: '',
-    pdca_do: '',
-    pdca_act: '',
+    pdca_do_items: [{ title: '', detail: '' }],
+    pdca_act_items: [{ title: '', detail: '' }],
     has_obstacle: false,
     obstacles: [{ obstacle_type: '', other_description: '', obstacle_detail: '', resolution_plan: '', impact: '', region_support_needed: '', priority: 'กลาง' as const }],
   }
@@ -297,6 +314,34 @@ export function AreaReportForm({
     )
   }
 
+  type PdcaField = 'pdca_do_items' | 'pdca_act_items'
+
+  function addPdcaItem(key: string, field: PdcaField) {
+    setAreas((prev) =>
+      prev.map((a) =>
+        a.key === key ? { ...a, [field]: [...a[field], { title: '', detail: '' }] } : a
+      )
+    )
+  }
+
+  function removePdcaItem(key: string, field: PdcaField, idx: number) {
+    setAreas((prev) =>
+      prev.map((a) =>
+        a.key === key ? { ...a, [field]: a[field].filter((_, i) => i !== idx) } : a
+      )
+    )
+  }
+
+  function patchPdcaItem(key: string, field: PdcaField, idx: number, patch: Partial<PdcaItem>) {
+    setAreas((prev) =>
+      prev.map((a) =>
+        a.key === key
+          ? { ...a, [field]: a[field].map((item, i) => (i === idx ? { ...item, ...patch } : item)) }
+          : a
+      )
+    )
+  }
+
   async function handleSubmit() {
     if (!branchId) { toast.error('กรุณาเลือกสาขา'); return }
     const missing = areas.find((a) => !a.area_name.trim())
@@ -315,8 +360,8 @@ export function AreaReportForm({
       water_dist_after: parseFloat(a.water_dist_after) || null,
       water_sold_after: parseFloat(a.water_sold_after) || null,
       mnf_after: parseFloat(a.mnf_after) || null,
-      pdca_do: a.pdca_do || null,
-      pdca_act: a.pdca_act || null,
+      pdca_do: serializePdca(a.pdca_do_items),
+      pdca_act: serializePdca(a.pdca_act_items),
       step_tests: a.step_tests.map((s) => ({
         step_no: s.step_no,
         estimated_loss: parseFloat(s.estimated_loss) || null,
@@ -757,31 +802,118 @@ export function AreaReportForm({
                 </section>
 
                 {/* Part 5 ─ Do / Act */}
-                <section>
-                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest mb-3">
+                <section className="space-y-5">
+                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest">
                     ส่วนที่ 5 — Do / Act
                   </p>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className={LABEL}>D (Do) — สิ่งที่ดำเนินการ</label>
-                      <textarea
-                        value={area.pdca_do}
-                        onChange={(e) => patchArea(area.key, { pdca_do: e.target.value })}
-                        rows={2}
-                        placeholder="ระบุกิจกรรมที่ดำเนินการในช่วงเวลานี้..."
-                        className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
-                      />
+                  {/* ── D (Do) ── */}
+                  <div className="rounded-2xl border border-cyan-500/20 overflow-hidden">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-cyan-500/8 border-b border-cyan-500/15">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-md bg-cyan-500/25 border border-cyan-500/40 flex items-center justify-center text-[11px] font-black text-cyan-300">D</span>
+                        <span className="text-xs font-semibold text-cyan-300">Do — สิ่งที่ดำเนินการ</span>
+                        <span className="text-[10px] text-cyan-400/40">{area.pdca_do_items.length} ข้อ</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addPdcaItem(area.key, 'pdca_do_items')}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan-400 hover:text-cyan-200 hover:bg-cyan-500/20 px-2.5 py-1 rounded-lg transition-all"
+                      >
+                        <Plus size={11} />
+                        เพิ่มข้อ
+                      </button>
                     </div>
-                    <div>
-                      <label className={LABEL}>A (Act) — แผนเดือนถัดไป</label>
-                      <textarea
-                        value={area.pdca_act}
-                        onChange={(e) => patchArea(area.key, { pdca_act: e.target.value })}
-                        rows={2}
-                        placeholder="ระบุแผนที่จะดำเนินการถัดไป..."
-                        className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
-                      />
+                    {/* Items */}
+                    <div className="divide-y divide-white/5">
+                      {area.pdca_do_items.map((item, idx) => (
+                        <div key={idx} className="px-4 py-3 space-y-2 group">
+                          <div className="flex items-center gap-3">
+                            <span className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-500/35 flex items-center justify-center text-[10px] font-bold text-cyan-400 shrink-0">
+                              {idx + 1}
+                            </span>
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => patchPdcaItem(area.key, 'pdca_do_items', idx, { title: e.target.value })}
+                              placeholder="ชื่อหัวข้อ / กิจกรรม..."
+                              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-sm font-medium text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 focus:bg-white/8 transition-all"
+                            />
+                            {area.pdca_do_items.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removePdcaItem(area.key, 'pdca_do_items', idx)}
+                                className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all shrink-0"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                          <textarea
+                            value={item.detail}
+                            onChange={(e) => patchPdcaItem(area.key, 'pdca_do_items', idx, { detail: e.target.value })}
+                            rows={2}
+                            placeholder="รายละเอียด..."
+                            className="w-full bg-white/3 border border-white/8 rounded-lg px-3 py-2 text-sm text-white/65 placeholder:text-white/18 focus:outline-none focus:border-cyan-500/35 focus:bg-white/5 resize-none transition-all ml-8"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ── A (Act) ── */}
+                  <div className="rounded-2xl border border-emerald-500/20 overflow-hidden">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-500/8 border-b border-emerald-500/15">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-md bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-center text-[11px] font-black text-emerald-300">A</span>
+                        <span className="text-xs font-semibold text-emerald-300">Act — แผนเดือนถัดไป</span>
+                        <span className="text-[10px] text-emerald-400/40">{area.pdca_act_items.length} ข้อ</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addPdcaItem(area.key, 'pdca_act_items')}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 hover:text-emerald-200 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg transition-all"
+                      >
+                        <Plus size={11} />
+                        เพิ่มข้อ
+                      </button>
+                    </div>
+                    {/* Items */}
+                    <div className="divide-y divide-white/5">
+                      {area.pdca_act_items.map((item, idx) => (
+                        <div key={idx} className="px-4 py-3 space-y-2 group">
+                          <div className="flex items-center gap-3">
+                            <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/35 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0">
+                              {idx + 1}
+                            </span>
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => patchPdcaItem(area.key, 'pdca_act_items', idx, { title: e.target.value })}
+                              placeholder="ชื่อหัวข้อ / แผนงาน..."
+                              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-sm font-medium text-white placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 focus:bg-white/8 transition-all"
+                            />
+                            {area.pdca_act_items.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removePdcaItem(area.key, 'pdca_act_items', idx)}
+                                className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all shrink-0"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                          <textarea
+                            value={item.detail}
+                            onChange={(e) => patchPdcaItem(area.key, 'pdca_act_items', idx, { detail: e.target.value })}
+                            rows={2}
+                            placeholder="รายละเอียด..."
+                            className="w-full bg-white/3 border border-white/8 rounded-lg px-3 py-2 text-sm text-white/65 placeholder:text-white/18 focus:outline-none focus:border-emerald-500/35 focus:bg-white/5 resize-none transition-all ml-8"
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </section>

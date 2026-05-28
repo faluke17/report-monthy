@@ -160,7 +160,8 @@ function parseResponse(
   return records
 }
 
-// POST /api/dmama/mnf-sync
+// POST /api/dmama/mnf-sync  (manual trigger)
+// GET  /api/dmama/mnf-sync  (Vercel Cron — always sends GET)
 // Header: x-sync-secret: <DMAMA_SYNC_SECRET>  (manual)
 //         Authorization: Bearer <CRON_SECRET>  (Vercel Cron)
 // Query param (optional):
@@ -169,7 +170,7 @@ function parseResponse(
 //   {}                                              → fiscal year Oct–current month
 //   { year: 2026, month: 5 }                       → single month
 //   { from_year: 2025, from_month: 10, to_year: 2026, to_month: 5 }  → custom range
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   const syncSecret = process.env.DMAMA_SYNC_SECRET
   const authHeader = req.headers.get('authorization')
@@ -289,3 +290,6 @@ export async function POST(req: NextRequest) {
     errors: combinedErrors.length > 0 ? combinedErrors : undefined,
   })
 }
+
+// Vercel Cron sends GET — expose the same handler for both methods
+export { handler as GET, handler as POST }
