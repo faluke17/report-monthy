@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, ChevronRight, Building2, AlertTriangle, Pencil, Trash2 } from 'lucide-react'
+import { Plus, ChevronRight, Building2, AlertTriangle, Pencil, Trash2, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { BudgetYear, BudgetProjectSummary } from '@/lib/types'
 import { createBudgetYear, deleteBudgetYear, updateBudgetYear } from '@/app/actions/project-progress'
@@ -17,8 +17,7 @@ const PHASE_COLORS = [
   'bg-indigo-400', 'bg-amber-400', 'bg-cyan-400', 'bg-emerald-400',
 ]
 
-function yearStats(year: BudgetYear) {
-  const projects: BudgetProjectSummary[] = (year.budget_groups ?? []).flatMap(g => g.budget_projects ?? [])
+function projectStats(projects: BudgetProjectSummary[]) {
   const total      = projects.length
   const completed  = projects.filter(p => p.current_phase === 6).length
   const inProgress = projects.filter(p => p.current_phase > 0 && p.current_phase < 6).length
@@ -30,9 +29,17 @@ function yearStats(year: BudgetYear) {
     const end = p.project_contracts?.contract_end_date
     return end && new Date(end) < today
   }).length
-  const groupCount = (year.budget_groups ?? []).length
   const donePct    = total > 0 ? Math.round((completed / total) * 100) : 0
-  return { total, completed, inProgress, notStarted, byPhase, overdue, groupCount, donePct }
+  return { total, completed, inProgress, notStarted, byPhase, overdue, donePct }
+}
+
+function yearStats(year: BudgetYear) {
+  const projects: BudgetProjectSummary[] = (year.budget_groups ?? []).flatMap(g => g.budget_projects ?? [])
+  const s          = projectStats(projects)
+  const groupCount = (year.budget_groups ?? []).length
+  const pipeCount  = projects.filter(p => p.project_type === 'pipe').length
+  const dmaCount   = projects.filter(p => p.project_type === 'dma').length
+  return { ...s, groupCount, pipeCount, dmaCount }
 }
 
 export function BudgetYearList({ budgetYears, canCreate }: Props) {
@@ -42,6 +49,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [editingYear, setEditingYear]         = useState<{ id: string; name: string } | null>(null)
   const [editName, setEditName]               = useState('')
+  const [expandedYearId, setExpandedYearId]   = useState<string | null>(null)
   const [isPending, startTransition]          = useTransition()
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,8 +112,25 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
       ) : (
         <div className="space-y-3">
           {budgetYears.map(year => {
-            const s = yearStats(year)
+            const s             = yearStats(year)
             const isConfirmDelete = confirmDeleteId === year.id
+            const isExpanded    = expandedYearId === year.id
+            const hasBothTypes  = s.pipeCount > 0 && s.dmaCount > 0
+
+            const allProjects   = (year.budget_groups ?? []).flatMap(g => g.budget_projects ?? [])
+            const pipeProjects  = allProjects.filter(p => p.project_type === 'pipe')
+            const dmaProjects   = allProjects.filter(p => p.project_type === 'dma')
+            const pipeStats     = projectStats(pipeProjects)
+            const dmaStats      = projectStats(dmaProjects)
+
+            const handleCardClick = () => {
+              if (hasBothTypes) {
+                setExpandedYearId(isExpanded ? null : year.id)
+              } else {
+                router.push(`/project-progress/${year.id}`)
+              }
+            }
+
             return (
               <div key={year.id} className="glass-card overflow-hidden hover:border-white/15 transition-all group/card">
                 <div className="flex items-stretch">
@@ -115,7 +140,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                   {/* Main clickable area */}
                   <button
                     className="flex-1 min-w-0 text-left px-5 py-4"
-                    onClick={() => router.push(`/project-progress/${year.id}`)}
+                    onClick={handleCardClick}
                   >
                     <div className="flex items-start justify-between gap-4">
                       {/* Left: year info */}
@@ -125,6 +150,11 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                             {year.fiscal_year}
                           </span>
                           <span className="text-sm text-white/40 font-medium">{year.name}</span>
+                          {hasBothTypes && (
+                            <span className="text-[11px] text-white/30">
+                              {isExpanded ? 'เลือกประเภท' : 'คลิกเพื่อดู'}
+                            </span>
+                          )}
                         </div>
 
                         {/* Phase segmented bar */}
@@ -161,18 +191,16 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                               <AlertTriangle size={11} /> เกิน {s.overdue}
                             </span>
                           )}
-                          {s.notStarted > 0 && (
-                            <span className="text-xs text-white/25 num">
-                              รอ {s.notStarted}
-                            </span>
-                          )}
                         </div>
                       </div>
 
-                      {/* Right: completion ring */}
+                      {/* Right: ring + arrow */}
                       <div className="shrink-0 flex flex-col items-center gap-1">
                         <ProgressRing pct={s.donePct} size={52} />
-                        <ChevronRight size={14} className="text-white/20 group-hover/card:text-cyan-400 transition-colors" />
+                        {hasBothTypes
+                          ? <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-cyan-400' : 'text-white/20'}`} />
+                          : <ChevronRight size={14} className="text-white/20 group-hover/card:text-cyan-400 transition-colors" />
+                        }
                       </div>
                     </div>
                   </button>
@@ -210,6 +238,86 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                     </div>
                   )}
                 </div>
+
+                {/* ── Type selector panel (expands inline) ─────────────────── */}
+                {hasBothTypes && isExpanded && (
+                  <div className="border-t border-white/8 px-5 py-4 bg-white/2 animate-fadein">
+                    <p className="text-[10px] text-white/30 uppercase tracking-widest mb-3">เลือกประเภทโครงการ</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                      {/* Pipe */}
+                      <button
+                        onClick={() => router.push(`/project-progress/${year.id}?type=pipe`)}
+                        className="group/btn text-left p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/12 hover:border-cyan-500/40 transition-all"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-cyan-400"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                            </div>
+                            <span className="text-sm font-bold text-cyan-300">ปรับปรุงท่อ</span>
+                          </div>
+                          <ChevronRight size={14} className="text-cyan-400/40 group-hover/btn:text-cyan-400 transition-colors" />
+                        </div>
+                        <p className="text-2xl font-black text-white num">{s.pipeCount}</p>
+                        <p className="text-[11px] text-white/40 mt-0.5">โครงการ</p>
+                        {pipeStats.total > 0 && (
+                          <div className="mt-2.5 space-y-1">
+                            <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                              {Array.from({ length: 7 }, (_, i) => pipeStats.byPhase[i]).map((count, i) =>
+                                count > 0 ? (
+                                  <div key={i} className={`${PHASE_COLORS[i]} rounded-sm`}
+                                    style={{ width: `${(count / pipeStats.total) * 100}%` }} />
+                                ) : null
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {pipeStats.completed > 0 && <span className="text-[10px] text-emerald-400 num">✓ {pipeStats.completed}</span>}
+                              {pipeStats.inProgress > 0 && <span className="text-[10px] text-cyan-400 num">↺ {pipeStats.inProgress}</span>}
+                              {pipeStats.overdue > 0 && <span className="text-[10px] text-red-400 num">⚠ {pipeStats.overdue}</span>}
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {/* DMA */}
+                      <button
+                        onClick={() => router.push(`/project-progress/${year.id}?type=dma`)}
+                        className="group/btn text-left p-4 rounded-xl border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/12 hover:border-violet-500/40 transition-all"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-violet-400"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                            </div>
+                            <span className="text-sm font-bold text-violet-300">DMA / PRV</span>
+                          </div>
+                          <ChevronRight size={14} className="text-violet-400/40 group-hover/btn:text-violet-400 transition-colors" />
+                        </div>
+                        <p className="text-2xl font-black text-white num">{s.dmaCount}</p>
+                        <p className="text-[11px] text-white/40 mt-0.5">โครงการ</p>
+                        {dmaStats.total > 0 && (
+                          <div className="mt-2.5 space-y-1">
+                            <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                              {Array.from({ length: 7 }, (_, i) => dmaStats.byPhase[i]).map((count, i) =>
+                                count > 0 ? (
+                                  <div key={i} className={`${PHASE_COLORS[i]} rounded-sm`}
+                                    style={{ width: `${(count / dmaStats.total) * 100}%` }} />
+                                ) : null
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {dmaStats.completed > 0 && <span className="text-[10px] text-emerald-400 num">✓ {dmaStats.completed}</span>}
+                              {dmaStats.inProgress > 0 && <span className="text-[10px] text-violet-400 num">↺ {dmaStats.inProgress}</span>}
+                              {dmaStats.overdue > 0 && <span className="text-[10px] text-red-400 num">⚠ {dmaStats.overdue}</span>}
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })}

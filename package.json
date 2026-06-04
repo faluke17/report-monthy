@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "sync:dmama": "node --env-file=.env.local scripts/sync-dmama.mjs",
     "sync:rats": "node --env-file=.env.local scripts/sync-rats.mjs",
-    "backfill:dmama": "node --env-file=.env.local scripts/backfill-dmama.mjs"
+    "backfill:dmama": "node --env-file=.env.local scripts/backfill-dmama.mjs",
+    "seed:dma69": "node --env-file=.env.local scripts/seed-dma-69.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -15,6 +15,7 @@ interface Props {
   yearId: string
   yearName: string
   canCreate: boolean
+  initialType?: 'all' | 'pipe' | 'dma'
 }
 
 const PHASES = [
@@ -55,9 +56,10 @@ function computeStats(projects: BudgetProjectSummary[]) {
   return { total, byPhase, budget, contract, estPipe, donePipe, overdue, donePct }
 }
 
-export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: Props) {
+export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, initialType = 'all' }: Props) {
   const router = useRouter()
   const [activeGroup, setActiveGroup]         = useState<string>('all')
+  const [activeType, setActiveType]           = useState<'all' | 'pipe' | 'dma'>(initialType)
   const [showForm, setShowForm]               = useState(false)
   const [groupName, setGroupName]             = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -93,14 +95,37 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Dashboard display — unaffected by search
-  const allProjects = budgetGroups.flatMap(g => g.budget_projects ?? [])
-  const filteredProjects = activeGroup === 'all'
-    ? allProjects
-    : (budgetGroups.find(g => g.id === activeGroup)?.budget_projects ?? [])
-  const visibleGroups = budgetGroups
+  // Type-filtered groups: groups that have at least one project of the selected type
+  const typeFilteredGroups = useMemo(() => {
+    if (activeType === 'all') return budgetGroups
+    return budgetGroups.filter(g => (g.budget_projects ?? []).some(p => p.project_type === activeType))
+  }, [budgetGroups, activeType])
+
+  // Reset active group when type changes, if current group has no projects of that type
+  const activeGroupValid = useMemo(() => {
+    if (activeGroup === 'all') return true
+    return typeFilteredGroups.some(g => g.id === activeGroup)
+  }, [activeGroup, typeFilteredGroups])
+
+  // Dashboard display
+  const typeProjects = (activeType === 'all')
+    ? budgetGroups.flatMap(g => g.budget_projects ?? [])
+    : budgetGroups.flatMap(g => (g.budget_projects ?? []).filter(p => p.project_type === activeType))
+
+  const filteredProjects = (() => {
+    if (!activeGroupValid || activeGroup === 'all') return typeProjects
+    return (typeFilteredGroups.find(g => g.id === activeGroup)?.budget_projects ?? [])
+      .filter(p => activeType === 'all' || p.project_type === activeType)
+  })()
+
+  const visibleGroups = typeFilteredGroups
 
   const s = computeStats(filteredProjects)
+
+  // Count pipe vs dma across all groups
+  const allProjects = budgetGroups.flatMap(g => g.budget_projects ?? [])
+  const pipeCount   = allProjects.filter(p => p.project_type === 'pipe').length
+  const dmaCount    = allProjects.filter(p => p.project_type === 'dma').length
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,16 +232,46 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
         </div>
       ) : (
         <>
-          {/* ── Filter tabs ──────────────────────────────────────────────── */}
+          {/* ── Type tabs ────────────────────────────────────────────────── */}
+          {(pipeCount > 0 && dmaCount > 0) && (
+            <div className="flex items-center gap-2 p-1 bg-white/4 rounded-xl w-fit border border-white/8">
+              {([
+                { key: 'all',  label: 'ทั้งหมด',       count: pipeCount + dmaCount, color: 'text-white' },
+                { key: 'pipe', label: 'ปรับปรุงท่อ',   count: pipeCount,             color: 'text-cyan-300' },
+                { key: 'dma',  label: 'DMA / PRV',      count: dmaCount,              color: 'text-violet-300' },
+              ] as const).map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => { setActiveType(t.key); setActiveGroup('all') }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeType === t.key
+                      ? t.key === 'dma'
+                        ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40'
+                        : t.key === 'pipe'
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                          : 'bg-white/10 text-white border border-white/20'
+                      : 'text-white/40 hover:text-white/70 border border-transparent'
+                  }`}
+                >
+                  <span>{t.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    activeType === t.key ? 'bg-white/15' : 'bg-white/8'
+                  } num`}>{t.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* ── Group filter tabs ────────────────────────────────────────── */}
           <div className="flex flex-wrap gap-2">
-            {(['all', ...budgetGroups.map(g => g.id)] as string[]).map((id) => {
-              const label = id === 'all' ? 'ทั้งหมด' : budgetGroups.find(g => g.id === id)!.name
-              const active = activeGroup === id
+            {(['all', ...visibleGroups.map(g => g.id)] as string[]).map((id) => {
+              const label = id === 'all' ? 'ทุกกลุ่ม' : visibleGroups.find(g => g.id === id)!.name
+              const active = (activeGroupValid ? activeGroup : 'all') === id
               return (
                 <button
                   key={id}
                   onClick={() => setActiveGroup(id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all max-w-[200px] truncate ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all max-w-[220px] truncate ${
                     active
                       ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                       : 'bg-white/4 text-white/40 border-white/8 hover:bg-white/8 hover:text-white/70'
@@ -252,21 +307,25 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
               value={fmtMillion(s.contract)}
               sub="บาท"
             />
-            <KpiCard
-              icon={<Ruler size={17} className="text-cyan-400" />}
-              iconBg="bg-cyan-500/10"
-              label="ความยาวท่อประมาณการ"
-              value={fmtMeter(s.estPipe)}
-              sub="เมตร"
-            />
-            <KpiCard
-              icon={<CheckCircle2 size={17} className="text-emerald-400" />}
-              iconBg="bg-emerald-500/10"
-              label="ความยาวท่อแล้วเสร็จ"
-              value={fmtMeter(s.donePipe)}
-              sub="เมตร"
-              highlight={s.donePipe > 0}
-            />
+            {activeType !== 'dma' && (
+              <KpiCard
+                icon={<Ruler size={17} className="text-cyan-400" />}
+                iconBg="bg-cyan-500/10"
+                label="ความยาวท่อประมาณการ"
+                value={fmtMeter(s.estPipe)}
+                sub="เมตร"
+              />
+            )}
+            {activeType !== 'dma' && (
+              <KpiCard
+                icon={<CheckCircle2 size={17} className="text-emerald-400" />}
+                iconBg="bg-emerald-500/10"
+                label="ความยาวท่อแล้วเสร็จ"
+                value={fmtMeter(s.donePipe)}
+                sub="เมตร"
+                highlight={s.donePipe > 0}
+              />
+            )}
           </div>
 
           {/* ── Phase Distribution ──────────────────────────────────────── */}
@@ -332,7 +391,21 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate }: P
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white leading-snug truncate">{group.name}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-white leading-snug truncate">{group.name}</p>
+                            {(() => {
+                              const gps = group.budget_projects ?? []
+                              const hasPipe = gps.some(p => p.project_type === 'pipe')
+                              const hasDma  = gps.some(p => p.project_type === 'dma')
+                              return (
+                                <>
+                                  {hasPipe && !hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 shrink-0">ท่อ</span>}
+                                  {hasDma && !hasPipe && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 shrink-0">DMA</span>}
+                                  {hasPipe && hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50 shrink-0">ท่อ+DMA</span>}
+                                </>
+                              )
+                            })()}
+                          </div>
 
                           {/* Stats row */}
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">

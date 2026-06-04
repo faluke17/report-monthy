@@ -706,6 +706,7 @@ export interface BudgetProjectSummary {
   id: string
   project_name: string
   code: string | null
+  project_type: 'pipe' | 'dma'
   current_phase: number
   budget_excl_vat: number | null
   contract_incl_vat: number | null
@@ -722,6 +723,7 @@ export interface BudgetProject {
   budget_group_id: string
   branch_id: string
   project_name: string
+  project_type: 'pipe' | 'dma'
   budget_excl_vat: number | null
   contract_incl_vat: number | null
   phase1_completed_at: string | null
@@ -760,7 +762,7 @@ export interface ProjectProgressUpdate {
   id: string
   project_id: string
   reported_date: string
-  pipe_length_completed: number
+  pipe_length_completed: number | null
   notes: string | null
   created_by: string
   created_at: string

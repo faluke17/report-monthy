@@ -16,7 +16,7 @@ export default async function ProjectProgressPage() {
   // ลอง query พร้อม join budget_groups ก่อน — ถ้า table ยังไม่มี ให้ fallback ดึงแค่ budget_years
   const { data: withGroups, error: groupError } = await (supabase as any)
     .from('budget_years')
-    .select('*, budget_groups(id, name, budget_projects(id, current_phase, project_contracts(contract_end_date)))')
+    .select('*, budget_groups(id, name, budget_projects(id, current_phase, project_type, project_contracts(contract_end_date)))')
     .order('fiscal_year', { ascending: false })
 
   let budgetYears: BudgetYear[] = []

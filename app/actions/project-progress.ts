@@ -115,6 +115,7 @@ export async function createProject(formData: FormData): Promise<ActionResult> {
   const code              = (formData.get('code') as string)?.trim() || null
   const budget_excl_vat   = parseFloat(formData.get('budget_excl_vat') as string) || null
   const contract_incl_vat = parseFloat(formData.get('contract_incl_vat') as string) || null
+  const project_type      = (formData.get('project_type') as string) || 'pipe'
 
   if (!budget_year_id)  return { success: false, error: 'ไม่พบปีงบประมาณ' }
   if (!budget_group_id) return { success: false, error: 'ไม่พบชื่องบประมาณ' }
@@ -127,6 +128,7 @@ export async function createProject(formData: FormData): Promise<ActionResult> {
     budget_group_id,
     branch_id,
     project_name,
+    project_type,
     budget_excl_vat,
     contract_incl_vat,
     current_phase: 0,
@@ -251,10 +253,11 @@ export async function addProgressUpdate(
   const supabase = await createClient()
 
   const reported_date         = (formData.get('reported_date') as string) || new Date().toISOString().split('T')[0]
-  const pipe_length_completed = parseFloat(formData.get('pipe_length_completed') as string)
+  const pipeRaw               = formData.get('pipe_length_completed') as string
+  const pipe_length_completed = pipeRaw ? parseFloat(pipeRaw) : null
   const notes                 = (formData.get('notes') as string) || null
 
-  if (isNaN(pipe_length_completed) || pipe_length_completed < 0) {
+  if (pipe_length_completed !== null && (isNaN(pipe_length_completed) || pipe_length_completed < 0)) {
     return { success: false, error: 'กรุณากรอกความยาวท่อที่ถูกต้อง' }
   }
 
@@ -282,6 +285,7 @@ export async function bulkCreateProjects(
     code?: string | null
     budget_excl_vat?: number | null
     contract_incl_vat?: number | null
+    project_type?: 'pipe' | 'dma'
   }>
 ): Promise<ActionResult & { inserted?: number; skipped?: number }> {
   const session = await getPwaSession()
@@ -297,6 +301,7 @@ export async function bulkCreateProjects(
     code:             r.code || null,
     budget_excl_vat:  r.budget_excl_vat ?? null,
     contract_incl_vat: r.contract_incl_vat ?? null,
+    project_type:     r.project_type ?? 'pipe',
     current_phase:    0,
     created_by:       by,
   }))

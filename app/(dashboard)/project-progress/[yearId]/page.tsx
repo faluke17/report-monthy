@@ -10,10 +10,14 @@ export const dynamic = 'force-dynamic'
 
 export default async function YearGroupsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ yearId: string }>
+  searchParams: Promise<{ type?: string }>
 }) {
   const { yearId } = await params
+  const { type }   = await searchParams
+  const initialType = (type === 'pipe' || type === 'dma') ? type : 'all'
   const session = await getPwaSession()
   if (!session) redirect('/login')
 
@@ -32,7 +36,7 @@ export default async function YearGroupsPage({
   // Fetch budget groups with full project summaries for stats
   const { data: budgetGroups } = await (supabase as any)
     .from('budget_groups')
-    .select('*, budget_projects(id, project_name, code, current_phase, budget_excl_vat, contract_incl_vat, project_contracts(contract_end_date, estimated_pipe_length))')
+    .select('*, budget_projects(id, project_name, code, project_type, current_phase, budget_excl_vat, contract_incl_vat, project_contracts(contract_end_date, estimated_pipe_length))')
     .eq('budget_year_id', yearId)
     .order('created_at', { ascending: true })
 
@@ -52,6 +56,7 @@ export default async function YearGroupsPage({
         yearId={yearId}
         yearName={year.name}
         canCreate={isRegion}
+        initialType={initialType}
       />
     </div>
   )

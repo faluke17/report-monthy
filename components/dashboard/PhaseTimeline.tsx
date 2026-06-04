@@ -51,9 +51,10 @@ interface Props {
   onSelectPhase: (phase: number) => void
   onTogglePhase?: (phaseNo: 1 | 2 | 3, isCompleted: boolean) => void
   progressPct: number | null
+  projectType?: 'pipe' | 'dma'
 }
 
-export function PhaseTimeline({ project, selectedPhase, onSelectPhase, onTogglePhase, progressPct }: Props) {
+export function PhaseTimeline({ project, selectedPhase, onSelectPhase, onTogglePhase, progressPct, projectType = 'pipe' }: Props) {
   return (
     <div className="space-y-1">
       {PHASES.map((phase, idx) => {
@@ -125,7 +126,7 @@ export function PhaseTimeline({ project, selectedPhase, onSelectPhase, onToggleP
                     {phase.no}. {phase.label}
                   </p>
                   {date && <p className="text-[11px] text-white/30 mt-0.5">{formatDate(date)}</p>}
-                  {phase.no === 5 && status !== 'pending' && progressPct !== null && (
+                  {phase.no === 5 && status !== 'pending' && progressPct !== null && projectType === 'pipe' && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
                         <div className="h-full rounded-full bg-cyan-400 transition-all" style={{ width: `${Math.min(progressPct, 100)}%` }} />

@@ -46,9 +46,10 @@ function latestProgress(project: BudgetProject) {
   )[0] ?? null
 }
 function progressPct(project: BudgetProject) {
+  if (project.project_type !== 'pipe') return null
   const latest = latestProgress(project)
   const est = project.project_contracts?.estimated_pipe_length
-  if (!latest || !est || est === 0) return null
+  if (!latest || !est || est === 0 || latest.pipe_length_completed == null) return null
   return Math.round((latest.pipe_length_completed / est) * 100)
 }
 function phase6Missing(project: BudgetProject) {
@@ -231,7 +232,12 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-white font-medium leading-snug">{project.project_name}</p>
-                        {project.code && <p className="text-[10px] text-white/25 font-mono mt-0.5">{project.code}</p>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {project.code && <p className="text-[10px] text-white/25 font-mono">{project.code}</p>}
+                          {project.project_type === 'dma' && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400">DMA</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex flex-col items-center gap-1">
@@ -401,6 +407,7 @@ function DetailBody({
           onSelectPhase={onSelectPhase}
           onTogglePhase={onTogglePhase}
           progressPct={pct}
+          projectType={project.project_type}
         />
       </div>
 
@@ -608,11 +615,12 @@ function PhaseEditForm({
 
   if (phase === 4) {
     const c = project.project_contracts
+    const isPipe = project.project_type === 'pipe'
     return (
       <form onSubmit={handlePhase4} className="space-y-3">
         <p className="text-xs font-semibold text-white/60">{LABEL}</p>
         <div className="grid grid-cols-2 gap-2">
-          <InputField name="estimated_pipe_length" label="ความยาวประมาณการ (ม.)" type="number" defaultValue={c?.estimated_pipe_length ?? ''} />
+          {isPipe && <InputField name="estimated_pipe_length" label="ความยาวประมาณการ (ม.)" type="number" defaultValue={c?.estimated_pipe_length ?? ''} />}
           <InputField name="contractor_name" label="ชื่อผู้รับจ้าง" defaultValue={c?.contractor_name ?? ''} />
           <InputField name="contract_number" label="เลขที่สัญญา" defaultValue={c?.contract_number ?? ''} />
           <InputField name="contract_date" label="ลงวันที่สัญญา" type="date" defaultValue={c?.contract_date ?? ''} />
@@ -635,6 +643,7 @@ function PhaseEditForm({
   }
 
   if (phase === 5) {
+    const isPipe  = project.project_type === 'pipe'
     const updates = [...(project.project_progress_updates ?? [])].sort(
       (a, b) => new Date(b.reported_date).getTime() - new Date(a.reported_date).getTime()
     )
@@ -652,15 +661,21 @@ function PhaseEditForm({
           <div className="space-y-1.5">
             <p className="text-[11px] text-white/30">ประวัติอัปเดต</p>
             {updates.map(u => {
-              const p = est && est > 0 ? Math.round((u.pipe_length_completed / est) * 100) : null
+              const p = isPipe && est && est > 0 && u.pipe_length_completed != null
+                ? Math.round((u.pipe_length_completed / est) * 100)
+                : null
               return (
                 <div key={u.id} className="bg-white/4 rounded-lg px-3 py-2 text-xs">
                   <div className="flex justify-between items-center">
                     <span className="text-white/50">{new Date(u.reported_date).toLocaleDateString('th-TH')}</span>
-                    <span className="text-cyan-400 font-semibold num">
-                      {u.pipe_length_completed.toLocaleString('th-TH')} ม.
-                      {p !== null && <span className="text-white/30 ml-1">({p}%)</span>}
-                    </span>
+                    {isPipe && u.pipe_length_completed != null ? (
+                      <span className="text-cyan-400 font-semibold num">
+                        {u.pipe_length_completed.toLocaleString('th-TH')} ม.
+                        {p !== null && <span className="text-white/30 ml-1">({p}%)</span>}
+                      </span>
+                    ) : (
+                      <span className="text-cyan-400/60 text-[10px]">บันทึกแล้ว</span>
+                    )}
                   </div>
                   {u.notes && <p className="text-white/35 mt-0.5">{u.notes}</p>}
                 </div>
@@ -674,9 +689,11 @@ function PhaseEditForm({
             <div className="grid grid-cols-2 gap-2">
               <InputField name="reported_date" label="วันที่" type="date"
                 defaultValue={new Date().toISOString().split('T')[0]} />
-              <InputField name="pipe_length_completed" label="ความยาวท่อที่วาง (ม.)" type="number" step="0.01" />
+              {isPipe && (
+                <InputField name="pipe_length_completed" label="ความยาวท่อที่วาง (ม.)" type="number" step="0.01" />
+              )}
             </div>
-            <textarea name="notes" placeholder="หมายเหตุ (ถ้ามี)" rows={2}
+            <textarea name="notes" placeholder="หมายเหตุ / สถานะงาน" rows={2}
               className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50 placeholder-white/20" />
             <SaveBtn isPending={isPending} label="เพิ่มอัปเดต" />
           </form>
@@ -849,6 +866,14 @@ function NewProjectModal({ yearId, groupId, branches, sessionBranchId, isRegion,
           {!isRegion && sessionBranchId && (
             <input type="hidden" name="branch_id" value={sessionBranchId} />
           )}
+          <div>
+            <label className="block text-xs text-white/40 mb-1">ประเภทโครงการ</label>
+            <select name="project_type" defaultValue="pipe"
+              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+              <option value="pipe">ปรับปรุงท่อ (มีการวัดความยาวท่อ)</option>
+              <option value="dma">DMA / มาตรวัดน้ำ / PRV (ไม่มีความยาวท่อ)</option>
+            </select>
+          </div>
           <div>
             <label className="block text-xs text-white/40 mb-1">รหัสโครงการ</label>
             <input type="text" name="code" placeholder="เช่น ผด.07-2568-001"
