@@ -7,160 +7,201 @@ import { Meeting, RequirementWithStatus } from '@/lib/types'
 import { formatThaiDate, formatThaiMonthYearShort } from '@/lib/utils/date-th'
 
 function daysUntilDate(dateStr: string): number {
-  const d = new Date(dateStr)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  d.setHours(0, 0, 0, 0)
-  return Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const d = new Date(dateStr), now = new Date()
+  now.setHours(0, 0, 0, 0); d.setHours(0, 0, 0, 0)
+  return Math.ceil((d.getTime() - now.getTime()) / 86400000)
 }
 
 interface MeetingSlideProps {
-  meeting: Meeting
+  meeting:      Meeting
   requirements: RequirementWithStatus[]
 }
 
 function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
-  const days = daysUntilDate(meeting.scheduled_date)
+  const days          = daysUntilDate(meeting.scheduled_date)
   const hasReportPeriod = meeting.report_month !== null && meeting.report_year !== null
-  const isUrgent = days <= 7
+  const isUrgent      = days <= 3
+  const isSoon        = days <= 7 && days > 3
 
-  const totalReqs = requirements.length
+  const totalReqs   = requirements.length
   const pendingReqs = requirements.filter(r => r.pending_count > 0).length
-  const hasReqs = totalReqs > 0
+  const hasReqs     = totalReqs > 0
+
+  const urgencyColor = isUrgent ? '#F87171' : isSoon ? '#FCD34D' : '#4782FF'
 
   return (
-    <div className="flex items-start gap-3 py-3 px-4">
+    <div className="flex items-start gap-3 py-3.5 px-4">
+      {/* Status dot */}
       <div className="relative mt-1 shrink-0">
-        <div className="pulse-dot bg-cyan-400" />
+        <div
+          className="pulse-dot"
+          style={{ background: urgencyColor, color: urgencyColor }}
+        />
       </div>
 
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {/* Title + urgency */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-white truncate">{meeting.title}</span>
-          {isUrgent && (
-            <span className="text-[11px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full shrink-0">
-              {days === 0 ? 'วันนี้' : `อีก ${days} วัน`}
+          <span className="text-[14px] font-semibold truncate" style={{ color: '#E4ECFF' }}>
+            {meeting.title}
+          </span>
+          {days <= 7 && (
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0"
+              style={{
+                background: isUrgent ? 'rgba(248,113,113,.14)' : 'rgba(252,211,77,.12)',
+                color: isUrgent ? '#F87171' : '#FCD34D',
+                border: `1px solid ${isUrgent ? 'rgba(248,113,113,.26)' : 'rgba(252,211,77,.24)'}`,
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              {days === 0 ? 'วันนี้' : `T-${days}d`}
             </span>
           )}
         </div>
 
+        {/* Meta row */}
         <div className="flex items-center gap-3 flex-wrap">
-          <p className="text-xs text-white/50 flex items-center gap-1">
-            <Calendar size={11} className="text-white/30" />
+          <p className="text-[11px] flex items-center gap-1" style={{ color: '#7B9CCC' }}>
+            <Calendar size={10} style={{ color: '#3D5380' }} />
             {formatThaiDate(meeting.scheduled_date, true)} · {meeting.scheduled_time.slice(0, 5)} น.
             {meeting.location && ` · ${meeting.location}`}
           </p>
 
           {hasReportPeriod && (
-            <span className="inline-flex items-center gap-1 text-[11px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
-              <FileText size={10} />
+            <span
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded"
+              style={{
+                background: 'rgba(71,130,255,.12)',
+                color: '#93C5FD',
+                border: '1px solid rgba(71,130,255,.22)',
+              }}
+            >
+              <FileText size={9} />
               รายงาน {formatThaiMonthYearShort(meeting.report_year!, meeting.report_month!)}
             </span>
           )}
 
           {hasReqs && (
-            <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
-              pendingReqs === 0
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-            }`}>
+            <span
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded"
+              style={pendingReqs === 0
+                ? { background: 'rgba(52,211,153,.10)',  color: '#34D399', border: '1px solid rgba(52,211,153,.24)' }
+                : { background: 'rgba(252,211,77,.10)',  color: '#FCD34D', border: '1px solid rgba(252,211,77,.24)' }
+              }
+            >
               {pendingReqs === 0
-                ? <><CheckCircle size={10} /> ครบทุกข้อ</>
-                : <><Clock size={10} /> รอ {pendingReqs}/{totalReqs} ข้อ</>
+                ? <><CheckCircle size={9} /> ครบทุกข้อ</>
+                : <><Clock size={9} /> รอ {pendingReqs}/{totalReqs} ข้อ</>
               }
             </span>
           )}
         </div>
 
         {meeting.notification_message && (
-          <p className="text-xs text-white/50">{meeting.notification_message}</p>
+          <p className="text-[11px]" style={{ color: '#7B9CCC' }}>{meeting.notification_message}</p>
         )}
       </div>
 
       <Link
         href="/notify"
-        className="shrink-0 text-xs text-cyan-400/70 hover:text-cyan-400 flex items-center gap-1 transition-colors"
+        className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all"
+        style={{ color: '#4782FF' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(71,130,255,.12)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
+        title="ดูรายละเอียด"
       >
-        <ExternalLink size={11} />
+        <ExternalLink size={12} />
       </Link>
     </div>
   )
 }
 
 interface MeetingBannerProps {
-  meetings: Meeting[]
-  requirementsByMeetingId: Record<string, RequirementWithStatus[]>
+  meetings:                  Meeting[]
+  requirementsByMeetingId:   Record<string, RequirementWithStatus[]>
 }
 
 export function MeetingBanner({ meetings, requirementsByMeetingId }: MeetingBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const total = meetings.length
+  const [paused, setPaused]             = useState(false)
+  const intervalRef                      = useRef<ReturnType<typeof setInterval> | null>(null)
+  const total                            = meetings.length
 
   useEffect(() => {
     if (total <= 1 || paused) return
     intervalRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % total)
-    }, 4000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
+      setCurrentIndex(prev => (prev + 1) % total)
+    }, 4500)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [total, paused])
 
   if (total === 0) return null
 
-  const prev = () => setCurrentIndex((i) => (i - 1 + total) % total)
-  const next = () => setCurrentIndex((i) => (i + 1) % total)
-
+  const prev    = () => setCurrentIndex(i => (i - 1 + total) % total)
+  const next    = () => setCurrentIndex(i => (i + 1) % total)
   const meeting = meetings[currentIndex]
-  const reqs = requirementsByMeetingId[meeting.id] ?? []
+  const days    = daysUntilDate(meeting.scheduled_date)
+  const reqs    = requirementsByMeetingId[meeting.id] ?? []
+
+  const accentColor = days <= 3 ? '#F87171' : days <= 7 ? '#FCD34D' : '#4782FF'
 
   return (
     <div
-      className="glass-card-sm border-l-4 border-cyan-500"
+      className="glass-card-sm overflow-hidden"
+      style={{ borderLeft: `3px solid ${accentColor}` }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       <MeetingSlide meeting={meeting} requirements={reqs} />
 
       {total > 1 && (
-        <div className="flex items-center justify-between px-4 pb-3 pt-0">
-          {/* Dot indicators */}
+        <div
+          className="flex items-center justify-between px-4 pb-3 pt-0"
+          style={{ borderTop: '1px solid rgba(71,130,255,.08)' }}
+        >
           <div className="flex items-center gap-1.5">
             {meetings.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentIndex(i)}
-                className={`rounded-full transition-all ${
-                  i === currentIndex
-                    ? 'w-4 h-1.5 bg-cyan-400'
-                    : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'
-                }`}
+                className="rounded-full transition-all"
+                style={{
+                  width:  i === currentIndex ? '16px' : '6px',
+                  height: '6px',
+                  background: i === currentIndex ? '#4782FF' : 'rgba(71,130,255,.25)',
+                }}
                 aria-label={`ไปยังการประชุม ${i + 1}`}
               />
             ))}
           </div>
 
-          {/* Arrow controls */}
           <div className="flex items-center gap-1">
             <button
               onClick={prev}
-              className="p-1 text-white/30 hover:text-white/70 transition-colors"
+              className="p-1.5 rounded-lg transition-all"
+              style={{ color: '#3D5380' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#93C5FD' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3D5380' }}
               aria-label="ก่อนหน้า"
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={13} />
             </button>
-            <span className="text-[11px] text-white/25 min-w-[32px] text-center">
+            <span
+              className="text-[10px] min-w-[28px] text-center"
+              style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}
+            >
               {currentIndex + 1}/{total}
             </span>
             <button
               onClick={next}
-              className="p-1 text-white/30 hover:text-white/70 transition-colors"
+              className="p-1.5 rounded-lg transition-all"
+              style={{ color: '#3D5380' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#93C5FD' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3D5380' }}
               aria-label="ถัดไป"
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={13} />
             </button>
           </div>
         </div>

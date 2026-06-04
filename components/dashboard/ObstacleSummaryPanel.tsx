@@ -1,53 +1,68 @@
-interface ObstacleStatusRow {
-  status: string
-  count: number
-}
+interface ObstacleStatusRow { status: string; count: number }
+interface ObstacleSummaryPanelProps { total: number; breakdown: ObstacleStatusRow[] }
 
-interface ObstacleSummaryPanelProps {
-  total: number
-  breakdown: ObstacleStatusRow[]
-}
-
-const STATUS_STYLE: Record<string, { label: string; bar: string }> = {
-  'เกินกำหนด':  { label: 'text-red-400',    bar: 'bg-red-400' },
-  'ล่าช้า':     { label: 'text-amber-400',  bar: 'bg-amber-400' },
-  'รอสนับสนุน': { label: 'text-cyan-400',   bar: 'bg-cyan-400' },
-  'ระหว่างแก้': { label: 'text-teal-400',   bar: 'bg-teal-400' },
-  'รายงานใหม่': { label: 'text-white/50',   bar: 'bg-white/30' },
+const STATUS_CFG: Record<string, { color: string; bar: string }> = {
+  'เกินกำหนด':  { color: '#F87171', bar: '#F87171' },
+  'ล่าช้า':     { color: '#FCD34D', bar: '#FCD34D' },
+  'รอสนับสนุน': { color: '#93C5FD', bar: '#4782FF' },
+  'ระหว่างแก้': { color: '#2DD4BF', bar: '#2DD4BF' },
+  'รายงานใหม่': { color: '#94A3B8', bar: '#475569' },
 }
 
 export function ObstacleSummaryPanel({ total, breakdown }: ObstacleSummaryPanelProps) {
   return (
-    <div className="glass-card p-4 pt-5 relative overflow-hidden accent-bar-red">
-      <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40 mb-2">
+    <div
+      className="relative overflow-hidden rounded-2xl p-5"
+      style={{
+        background: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(100,15,15,.18) 100%)',
+        border: '1px solid rgba(248,113,113,.20)',
+        boxShadow: 'inset 4px 0 0 #F87171, 0 4px 6px rgba(0,0,0,.40), 0 16px 48px rgba(0,0,0,.50)',
+      }}
+    >
+      <div aria-hidden className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(248,113,113,.12) 0%, transparent 70%)' }} />
+
+      <p className="relative text-[10px] font-bold tracking-[.14em] uppercase mb-1" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>
         อุปสรรคทั้งหมด
       </p>
 
-      <div className="flex items-baseline gap-1.5 mb-0.5">
-        <span className="num text-3xl font-bold leading-none text-[#fb7185]">{total}</span>
-        <span className="text-sm text-white/40 ml-0.5">รายการ</span>
+      <div className="relative flex items-baseline gap-2 mb-0.5">
+        <span
+          className="font-bold leading-none"
+          style={{
+            color: '#F87171', fontSize: '44px', fontFamily: 'var(--font-mono)',
+            letterSpacing: '-.02em',
+            textShadow: '0 0 28px rgba(248,113,113,.50), 0 0 56px rgba(248,113,113,.28)',
+          }}
+        >
+          {total}
+        </span>
+        <span className="text-[14px] font-semibold" style={{ color: '#F87171', opacity: .55 }}>รายการ</span>
       </div>
-      <p className="text-[11px] text-white/30 mb-3">เฉพาะที่ยังไม่ปิดประเด็น</p>
+      <p className="relative text-[11px] mb-4" style={{ color: '#7B9CCC' }}>เฉพาะที่ยังไม่ปิดประเด็น</p>
 
-      <div className="space-y-2">
+      <div className="relative space-y-2.5">
         {breakdown.map(({ status, count }) => {
-          const style = STATUS_STYLE[status] ?? { label: 'text-white/50', bar: 'bg-white/30' }
+          const cfg = STATUS_CFG[status] ?? { color: '#94A3B8', bar: '#475569' }
           const pct = total > 0 ? (count / total) * 100 : 0
-
           return (
-            <div key={status} className="flex items-center gap-2">
-              <span className={`text-[11px] w-20 shrink-0 ${style.label}`}>{status}</span>
-              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div key={status} className="flex items-center gap-3">
+              <span className="text-[11px] w-20 shrink-0 font-medium" style={{ color: cfg.color }}>{status}</span>
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.08)' }}>
                 <div
-                  className={`h-full rounded-full ${style.bar}`}
-                  style={{ width: `${pct}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: cfg.bar, boxShadow: `0 0 6px ${cfg.bar}55` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-white/60 w-5 text-right">{count}</span>
+              <span className="text-[12px] font-bold w-5 text-right shrink-0" style={{ color: '#E4ECFF', fontFamily: 'var(--font-mono)' }}>
+                {count}
+              </span>
             </div>
           )
         })}
       </div>
+
+      <div aria-hidden className="absolute bottom-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(248,113,113,.22), transparent)' }} />
     </div>
   )
 }

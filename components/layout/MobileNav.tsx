@@ -2,9 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard, BarChart3, ClipboardList, Calendar, Target,
-} from 'lucide-react'
+import { LayoutDashboard, BarChart3, ClipboardList, Calendar, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const MOBILE_NAV = [
@@ -17,13 +15,16 @@ const MOBILE_NAV = [
 
 export function MobileNav() {
   const pathname = usePathname()
+
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-xl"
+      className="fixed bottom-0 left-0 right-0 md:hidden z-50"
       style={{
-        background: 'rgba(3,6,13,.95)',
-        borderTop: '1px solid rgba(0,229,255,.18)',
-        boxShadow: '0 -4px 24px rgba(0,229,255,.06)',
+        background: 'rgba(5,9,26,.98)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(71,130,255,.16)',
+        boxShadow: '0 -4px 24px rgba(0,0,0,.50)',
       }}
     >
       <div className="flex">
@@ -35,11 +36,17 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'relative flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-xs',
-                isActive ? 'text-cyan-400' : 'text-white/40 hover:text-white/80'
+                'relative flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium transition-all'
               )}
+              style={{ color: isActive ? '#93C5FD' : '#3D5380' }}
             >
-              <Icon size={20} />
+              {isActive && (
+                <span
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-b-full"
+                  style={{ background: '#4782FF', boxShadow: '0 0 8px rgba(71,130,255,.70)' }}
+                />
+              )}
+              <Icon size={20} style={{ color: isActive ? '#4782FF' : 'currentColor' }} />
               <span>{item.label}</span>
             </Link>
           )

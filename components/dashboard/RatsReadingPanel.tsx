@@ -6,7 +6,7 @@ import { useRealtimeBranchReadStats } from '@/hooks/useRealtimeData'
 
 interface RatsReadingPanelProps {
   yearBe: number
-  month: number
+  month:  number
 }
 
 const THAI_MONTH_SHORT: Record<number, string> = {
@@ -15,28 +15,24 @@ const THAI_MONTH_SHORT: Record<number, string> = {
   9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.',
 }
 
-const RANK_COLORS = [
-  { ring: 'ring-[#d8b45a]', badge: 'bg-[#d8b45a]/20 text-[#d8b45a]', bar: 'bg-[#d8b45a]' },
-  { ring: 'ring-[#9ca3af]', badge: 'bg-[#9ca3af]/20 text-[#9ca3af]', bar: 'bg-[#9ca3af]' },
-  { ring: 'ring-[#b45309]', badge: 'bg-[#b45309]/30 text-[#fb923c]', bar: 'bg-[#fb923c]' },
-  { ring: 'ring-white/10',  badge: 'bg-white/8 text-white/50',        bar: 'bg-[#7dd3fc]' },
-  { ring: 'ring-white/10',  badge: 'bg-white/8 text-white/50',        bar: 'bg-[#7dd3fc]' },
+const RANK_STYLE = [
+  { badge: 'rgba(218,185,90,.18)', badgeText: '#D4A843', bar: '#D4A843' },   // gold
+  { badge: 'rgba(148,163,184,.14)', badgeText: '#94A3B8', bar: '#94A3B8' },  // silver
+  { badge: 'rgba(180,83,9,.18)',    badgeText: '#FB923C', bar: '#FB923C' },  // bronze
+  { badge: 'rgba(71,130,255,.10)',  badgeText: '#93C5FD', bar: '#4782FF' },
+  { badge: 'rgba(71,130,255,.10)',  badgeText: '#93C5FD', bar: '#4782FF' },
 ]
 
 export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
   const { data: stats, loading, syncing } = useRealtimeBranchReadStats(yearBe, month)
   const label = `${THAI_MONTH_SHORT[month]} ${yearBe}`
 
-  const started    = stats.filter((s) => s.read_count > 0)
-  const notStarted = stats.filter((s) => s.read_count === 0)
+  const started    = stats.filter(s => s.read_count > 0)
+  const notStarted = stats.filter(s => s.read_count === 0)
   const total      = stats.length
   const pct        = total > 0 ? Math.round((started.length / total) * 100) : 0
-
-  const top5 = [...stats]
-    .sort((a, b) => b.read_count - a.read_count)
-    .slice(0, 5)
-
-  const maxRead = top5[0]?.read_count ?? 1
+  const top5       = [...stats].sort((a, b) => b.read_count - a.read_count).slice(0, 5)
+  const maxRead    = top5[0]?.read_count ?? 1
 
   if (loading || (stats.length === 0 && syncing)) {
     return <div className="glass-card p-5 pt-6 h-48 animate-pulse accent-bar-purple" />
@@ -45,13 +41,11 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
   if (stats.length === 0) {
     return (
       <div className="glass-card p-5 pt-6 relative overflow-hidden accent-bar-purple">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40">การจดมาตร RATS2</p>
-            <p className="text-base font-semibold text-white/80 mt-0.5">เดือน {label}</p>
-          </div>
-        </div>
-        <p className="text-sm text-white/30 mt-4">ยังไม่มีข้อมูลจาก RATS สำหรับเดือนนี้</p>
+        <p className="text-[10px] font-bold tracking-[.10em] uppercase mb-1" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>
+          การจดมาตร RATS2
+        </p>
+        <p className="text-[15px] font-semibold mt-0.5 mb-4" style={{ color: '#E4ECFF' }}>เดือน {label}</p>
+        <p className="text-[13px]" style={{ color: '#7B9CCC' }}>ยังไม่มีข้อมูลจาก RATS สำหรับเดือนนี้</p>
       </div>
     )
   }
@@ -59,70 +53,85 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
   return (
     <div className="glass-card p-5 pt-6 relative overflow-hidden accent-bar-purple">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40">
+          <p className="text-[10px] font-bold tracking-[.10em] uppercase mb-0.5" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>
             การจดมาตร RATS2
           </p>
-          <p className="text-base font-semibold text-white/80 mt-0.5">เดือน {label}</p>
+          <p className="text-[15px] font-semibold" style={{ color: '#E4ECFF' }}>เดือน {label}</p>
         </div>
         <div className="flex items-center gap-2">
           {syncing && (
-            <span className="text-[10px] text-white/30 flex items-center gap-1">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#a5b4fc]/60 animate-pulse" />
+            <span className="text-[10px] flex items-center gap-1" style={{ color: '#5B7AAF' }}>
+              <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#A78BFA' }} />
               กำลังอัปเดต
             </span>
           )}
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#a5b4fc]/10 text-[#a5b4fc] ring-1 ring-[#a5b4fc]/25">
+          <span
+            className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+            style={{
+              background: 'rgba(167,139,250,.10)',
+              color: '#A78BFA',
+              border: '1px solid rgba(167,139,250,.22)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
             {total} สาขา
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ── Left: summary ── */}
         <div className="space-y-4">
-          {/* Stat row */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-[#4ade80]/8 ring-1 ring-[#4ade80]/20 px-4 py-3 flex flex-col gap-1">
-              <p className="text-[10px] text-white/40 uppercase tracking-wide">เริ่มดำเนินการ</p>
+            {/* Started */}
+            <div
+              className="rounded-xl px-4 py-3 flex flex-col gap-1"
+              style={{ background: 'rgba(52,211,153,.08)', border: '1px solid rgba(52,211,153,.18)' }}
+            >
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: '#5B7AAF' }}>เริ่มดำเนินการ</p>
               <div className="flex items-baseline gap-1.5">
-                <span className="num text-3xl font-bold text-[#4ade80]">{started.length}</span>
-                <span className="text-xs text-white/35">สาขา</span>
+                <span className="text-[28px] font-bold leading-none" style={{ color: '#34D399', fontFamily: 'var(--font-mono)' }}>
+                  {started.length}
+                </span>
+                <span className="text-[11px]" style={{ color: '#7B9CCC' }}>สาขา</span>
               </div>
             </div>
-            <div className={cn(
-              'rounded-xl px-4 py-3 flex flex-col gap-1 ring-1',
-              notStarted.length > 0
-                ? 'bg-[#fb7185]/8 ring-[#fb7185]/20'
-                : 'bg-white/5 ring-white/10'
-            )}>
-              <p className="text-[10px] text-white/40 uppercase tracking-wide">ยังไม่ดำเนินการ</p>
+            {/* Not started */}
+            <div
+              className="rounded-xl px-4 py-3 flex flex-col gap-1"
+              style={notStarted.length > 0
+                ? { background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.18)' }
+                : { background: 'rgba(71,130,255,.06)',  border: '1px solid rgba(71,130,255,.12)' }
+              }
+            >
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: '#5B7AAF' }}>ยังไม่ดำเนินการ</p>
               <div className="flex items-baseline gap-1.5">
-                <span className={cn(
-                  'num text-3xl font-bold',
-                  notStarted.length > 0 ? 'text-[#fb7185]' : 'text-white/40'
-                )}>
+                <span
+                  className="text-[28px] font-bold leading-none"
+                  style={{ color: notStarted.length > 0 ? '#F87171' : '#5B7AAF', fontFamily: 'var(--font-mono)' }}
+                >
                   {notStarted.length}
                 </span>
-                <span className="text-xs text-white/35">สาขา</span>
+                <span className="text-[11px]" style={{ color: '#7B9CCC' }}>สาขา</span>
               </div>
             </div>
           </div>
 
-          {/* Progress bar */}
+          {/* Progress */}
           <div>
             <div className="flex justify-between mb-1.5">
-              <p className="text-[11px] text-white/40">ความครอบคลุม</p>
-              <p className="text-[11px] font-bold text-[#a5b4fc]">{pct}%</p>
+              <p className="text-[11px]" style={{ color: '#7B9CCC' }}>ความครอบคลุม</p>
+              <p className="text-[11px] font-bold" style={{ color: '#A78BFA', fontFamily: 'var(--font-mono)' }}>{pct}%</p>
             </div>
-            <div className="h-2.5 bg-white/8 rounded-full overflow-hidden">
+            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.10)' }}>
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#a5b4fc] to-[#7dd3fc] transition-all duration-700"
-                style={{ width: `${pct}%` }}
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #A78BFA, #818CF8)' }}
               />
             </div>
-            <p className="text-[10px] text-white/30 mt-1.5">
+            <p className="text-[10px] mt-1.5" style={{ color: '#5B7AAF' }}>
               {started.length} จาก {total} สาขาเริ่มจดมาตรแล้ว
             </p>
           </div>
@@ -130,12 +139,13 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
           {/* Not-started badges */}
           {notStarted.length > 0 && (
             <div>
-              <p className="text-[10px] text-white/35 mb-1.5 uppercase tracking-wide">สาขาที่ยังไม่เริ่ม</p>
+              <p className="text-[10px] uppercase tracking-wide mb-1.5" style={{ color: '#5B7AAF' }}>สาขาที่ยังไม่เริ่ม</p>
               <div className="flex flex-wrap gap-1.5">
-                {notStarted.map((s) => (
+                {notStarted.map(s => (
                   <span
                     key={s.ba}
-                    className="px-2 py-0.5 rounded bg-[#fb7185]/10 ring-1 ring-[#fb7185]/20 text-[11px] text-[#fb7185]/80"
+                    className="px-2 py-0.5 rounded text-[11px]"
+                    style={{ background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.18)', color: '#F87171' }}
                   >
                     {getBranchByCostcenter(String(s.ba))?.name_th ?? `BA ${s.ba}`}
                   </span>
@@ -147,45 +157,44 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
 
         {/* ── Right: TOP 5 ── */}
         <div>
-          <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40 mb-3">
+          <p className="text-[10px] font-bold tracking-[.10em] uppercase mb-3" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>
             TOP 5 — บันทึกมากที่สุด
           </p>
           <div className="space-y-2.5">
             {top5.map((s, i) => {
-              const c = RANK_COLORS[i]
-              const barPct = maxRead > 0 ? (s.read_count / maxRead) * 100 : 0
+              const c       = RANK_STYLE[i]
+              const barPct  = maxRead > 0 ? (s.read_count / maxRead) * 100 : 0
               const targetPct = s.target > 0 ? Math.min(Math.round((s.read_count / s.target) * 100), 999) : 0
               return (
                 <div key={s.ba} className="flex items-center gap-3">
-                  {/* Rank badge */}
-                  <span className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ring-1',
-                    c.badge, c.ring
-                  )}>
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                    style={{ background: c.badge, color: c.badgeText, fontFamily: 'var(--font-mono)' }}
+                  >
                     {i + 1}
                   </span>
-
-                  {/* Bar + label */}
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
-                      <span className="text-[11px] text-white/70 font-medium">
+                      <span className="text-[11px] font-medium truncate" style={{ color: '#CBD5E1' }}>
                         {getBranchByCostcenter(String(s.ba))?.name_th ?? `BA ${s.ba}`}
                       </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="num text-[12px] font-bold text-white/90">{s.read_count.toLocaleString()}</span>
-                        <span className="text-[10px] text-white/30">/ {s.target}</span>
-                        <span className={cn(
-                          'text-[10px] font-bold px-1 rounded',
-                          targetPct >= 100 ? 'text-[#4ade80]' : 'text-[#f6c453]'
-                        )}>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        <span className="text-[12px] font-bold" style={{ color: '#E4ECFF', fontFamily: 'var(--font-mono)' }}>
+                          {s.read_count.toLocaleString()}
+                        </span>
+                        <span className="text-[10px]" style={{ color: '#3D5380' }}>/ {s.target}</span>
+                        <span
+                          className="text-[10px] font-bold"
+                          style={{ color: targetPct >= 100 ? '#34D399' : '#FCD34D', fontFamily: 'var(--font-mono)' }}
+                        >
                           {targetPct}%
                         </span>
                       </div>
                     </div>
-                    <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.10)' }}>
                       <div
-                        className={cn('h-full rounded-full transition-all duration-700', c.bar)}
-                        style={{ width: `${barPct}%` }}
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${barPct}%`, background: c.bar }}
                       />
                     </div>
                   </div>
