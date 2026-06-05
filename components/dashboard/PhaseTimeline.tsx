@@ -1,18 +1,51 @@
 'use client'
 
-import { CheckCircle2, Circle, CheckSquare, Square } from 'lucide-react'
+import { Check, AlertTriangle } from 'lucide-react'
 import { BudgetProject } from '@/lib/types'
 
 export const PHASES = [
-  { no: 1, label: 'ราคากลาง',          short: 'ราคากลาง' },
-  { no: 2, label: 'TOR',               short: 'TOR' },
-  { no: 3, label: 'พิจารณาผล',         short: 'พิจารณาผล' },
-  { no: 4, label: 'เซ็นสัญญา',         short: 'สัญญา' },
-  { no: 5, label: 'ดำเนินงานก่อสร้าง', short: 'ก่อสร้าง' },
-  { no: 6, label: 'งานแล้วเสร็จ',      short: 'เสร็จ' },
+  { no: 1, label: 'ราคากลาง' },
+  { no: 2, label: 'TOR' },
+  { no: 3, label: 'พิจารณาผล' },
+  { no: 4, label: 'เซ็นสัญญา' },
+  { no: 5, label: 'ดำเนินงาน' },
+  { no: 6, label: 'แล้วเสร็จ' },
 ]
 
-type PhaseStatus = 'completed' | 'active' | 'pending' | 'locked'
+export type MissingField = { label: string }
+
+export function getMissingFields(project: BudgetProject, phaseNo: number): MissingField[] {
+  if (project.current_phase < phaseNo) return []
+
+  switch (phaseNo) {
+    case 1:
+    case 2:
+    case 3:
+    case 5:
+      return []
+    case 4: {
+      const c = project.project_contracts
+      if (!c) return [{ label: 'ข้อมูลสัญญา (ยังไม่บันทึก)' }]
+      const missing: MissingField[] = []
+      if (!c.contractor_name) missing.push({ label: 'ชื่อผู้รับจ้าง' })
+      if (!c.contract_number) missing.push({ label: 'เลขที่สัญญา' })
+      if (!c.contract_date) missing.push({ label: 'วันที่สัญญา' })
+      if (!c.contract_start_date) missing.push({ label: 'วันเริ่มสัญญา' })
+      if (!c.construction_days) missing.push({ label: 'ระยะเวลาก่อสร้าง' })
+      return missing
+    }
+    case 6: {
+      const missing: MissingField[] = []
+      if (!project.completion_submission_date) missing.push({ label: 'วันส่งงาน' })
+      if (!project.completion_inspection_date) missing.push({ label: 'วันตรวจรับงาน' })
+      if (!project.certificate_url) missing.push({ label: 'ใบรับรองผลงาน' })
+      return missing
+    }
+    default: return []
+  }
+}
+
+type PhaseStatus = 'completed' | 'active' | 'pending'
 
 export function getPhaseStatus(project: BudgetProject, phaseNo: number): PhaseStatus {
   if (phaseNo === 6) {
@@ -35,14 +68,11 @@ export function getPhaseCompletedDate(project: BudgetProject, phaseNo: number): 
   }
 }
 
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return null
+function formatDateShort(d: string | null) {
+  if (!d) return null
   try {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
-  } catch {
-    return dateStr
-  }
+    return new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+  } catch { return null }
 }
 
 interface Props {
@@ -54,99 +84,134 @@ interface Props {
   projectType?: 'pipe' | 'dma'
 }
 
-export function PhaseTimeline({ project, selectedPhase, onSelectPhase, onTogglePhase, progressPct, projectType = 'pipe' }: Props) {
+export function PhaseTimeline({
+  project, selectedPhase, onSelectPhase, onTogglePhase, progressPct, projectType = 'pipe',
+}: Props) {
+  const cp = project.current_phase
+  // Fill rail from node-1-center toward the active node
+  const fillPct = cp === 0 ? 0 : Math.min(cp / (PHASES.length - 1) * 100, 100)
+
   return (
-    <div className="space-y-1">
-      {PHASES.map((phase, idx) => {
-        const status     = getPhaseStatus(project, phase.no)
-        const date       = getPhaseCompletedDate(project, phase.no)
-        const isSelected = selectedPhase === phase.no
-        const isLast     = idx === PHASES.length - 1
-        const isCheckbox = phase.no <= 3
-        const isCompleted = status === 'completed'
+    <div className="space-y-3">
+      {/* ── Horizontal stepper ── */}
+      <div className="relative">
+        {/* Rail bg — spans from center of first to center of last node (node w=32px → offset 16px = 1rem = Tailwind-4) */}
+        <div className="absolute top-4 left-4 right-4 h-px bg-white/8" />
 
-        return (
-          <div key={phase.no} className="relative">
-            {/* Connector line */}
-            {!isLast && (
-              <div
-                className="absolute left-[11px] top-7 w-0.5 h-4 z-0"
-                style={{ background: isCompleted ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)' }}
-              />
-            )}
+        {/* Rail fill */}
+        {fillPct > 0 && (
+          <div
+            className="absolute top-4 left-4 h-px bg-gradient-to-r from-emerald-500/60 via-emerald-400/40 to-emerald-400/10 transition-[width] duration-700 ease-out"
+            style={{ width: `calc((100% - 2rem) * ${fillPct / 100})` }}
+          />
+        )}
 
-            {/* Phase 1-3: checkbox row */}
-            {isCheckbox ? (
-              <button
-                onClick={() => onTogglePhase?.(phase.no as 1|2|3, isCompleted)}
-                className="relative z-10 w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-white/4 border border-transparent transition-all group"
-              >
-                <span className="shrink-0">
-                  {isCompleted ? (
-                    <CheckSquare size={20} className="text-emerald-400" />
+        {/* Nodes */}
+        <div className="relative flex justify-between">
+          {PHASES.map((phase) => {
+            const status = getPhaseStatus(project, phase.no)
+            const date = getPhaseCompletedDate(project, phase.no)
+            const isSelected = selectedPhase === phase.no
+            const isCompleted = status === 'completed'
+            const isActive = status === 'active'
+            const isPending = status === 'pending'
+            const isCheckbox = phase.no <= 3
+            const missing = getMissingFields(project, phase.no)
+            const hasMissing = missing.length > 0
+
+            const circleColor = isCompleted && !hasMissing
+              ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-400'
+              : isCompleted && hasMissing
+              ? 'bg-amber-500/15 border-amber-400/70 text-amber-400'
+              : isActive
+              ? 'bg-cyan-500/15 border-cyan-400 text-cyan-300'
+              : 'bg-white/4 border-white/10 text-white/18'
+
+            const labelColor = isCompleted && !hasMissing ? 'text-white/45'
+              : isCompleted && hasMissing ? 'text-amber-400/80'
+              : isActive ? 'text-cyan-400'
+              : 'text-white/18'
+
+            return (
+              <div key={phase.no} className="flex flex-col items-center gap-1.5 z-10">
+                {/* Node circle */}
+                <button
+                  onClick={() => {
+                    if (isPending) return
+                    if (isCheckbox) onTogglePhase?.(phase.no as 1 | 2 | 3, isCompleted)
+                    else onSelectPhase(phase.no)
+                  }}
+                  disabled={isPending}
+                  aria-label={`ขั้นตอน ${phase.no}: ${phase.label}`}
+                  className={[
+                    'relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-200',
+                    circleColor,
+                    isSelected
+                      ? 'ring-2 ring-cyan-400/40 ring-offset-2 ring-offset-[#0d1b2a] scale-110 shadow-[0_0_14px_rgba(34,211,238,0.25)]'
+                      : '',
+                    isPending ? 'cursor-not-allowed' : isCheckbox || !isPending ? 'hover:scale-105 active:scale-95' : '',
+                  ].join(' ')}
+                >
+                  {isCompleted && !hasMissing ? (
+                    <Check size={13} strokeWidth={3} />
                   ) : (
-                    <Square size={20} className="text-white/20 group-hover:text-white/40 transition-colors" />
+                    <span className="font-mono text-[11px]">{phase.no}</span>
                   )}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${isCompleted ? 'text-emerald-400' : 'text-white/40'}`}>
-                    {phase.no}. {phase.label}
-                  </p>
-                  {date && <p className="text-[11px] text-white/30 mt-0.5">{formatDate(date)}</p>}
-                </div>
-                {isCompleted && (
-                  <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
-                    เสร็จ
+
+                  {/* Cyan pulse ring when active */}
+                  {isActive && (
+                    <span className="absolute inset-[-3px] rounded-full border border-cyan-400/30 animate-ping pointer-events-none" />
+                  )}
+
+                  {/* Amber warning dot — only phases 4 & 6 */}
+                  {hasMissing && (
+                    <span className="absolute -top-[3px] -right-[3px] w-[11px] h-[11px] rounded-full bg-amber-400 flex items-center justify-center shadow-md">
+                      <AlertTriangle size={6} className="text-amber-900" />
+                    </span>
+                  )}
+                </button>
+
+                {/* Label + completion date */}
+                <div className="flex flex-col items-center gap-0.5 text-center" style={{ maxWidth: 52 }}>
+                  <span className={`leading-tight font-medium ${labelColor}`} style={{ fontSize: 9 }}>
+                    {phase.label}
                   </span>
-                )}
-              </button>
-            ) : (
-              /* Phase 4-6: expand form row */
-              <button
-                onClick={() => onSelectPhase(phase.no)}
-                className={`relative z-10 w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all ${
-                  isSelected
-                    ? 'bg-cyan-500/10 border border-cyan-500/30'
-                    : 'hover:bg-white/4 border border-transparent'
-                }`}
-              >
-                <span className="shrink-0">
-                  {isCompleted ? (
-                    <CheckCircle2 size={20} className="text-emerald-400" />
-                  ) : status === 'active' ? (
-                    <Circle size={20} className="text-cyan-400" style={{ fill: 'rgba(34,211,238,0.2)' }} />
-                  ) : (
-                    <Circle size={20} className="text-white/20" />
+                  {date && (
+                    <span className="text-white/25 leading-none" style={{ fontSize: 8 }}>
+                      {formatDateShort(date)}
+                    </span>
                   )}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${
-                    isCompleted ? 'text-emerald-400' : status === 'active' ? 'text-cyan-300' : 'text-white/35'
-                  }`}>
-                    {phase.no}. {phase.label}
-                  </p>
-                  {date && <p className="text-[11px] text-white/30 mt-0.5">{formatDate(date)}</p>}
-                  {phase.no === 5 && status !== 'pending' && progressPct !== null && projectType === 'pipe' && (
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-cyan-400 transition-all" style={{ width: `${Math.min(progressPct, 100)}%` }} />
-                      </div>
-                      <span className="text-[11px] text-cyan-400 num shrink-0">{progressPct}%</span>
-                    </div>
+                  {/* Dot under selected node */}
+                  {isSelected && (
+                    <span className="w-1 h-1 rounded-full bg-cyan-400 mt-0.5 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
                   )}
                 </div>
-                <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full ${
-                  isCompleted ? 'bg-emerald-500/15 text-emerald-400'
-                  : status === 'active' ? 'bg-cyan-500/15 text-cyan-400'
-                  : 'bg-white/5 text-white/20'
-                }`}>
-                  {isCompleted ? 'เสร็จ' : status === 'active' ? 'กำลังดำเนิน' : 'รอ'}
-                </span>
-              </button>
-            )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Phase 5 pipe-length progress bar ── */}
+      {progressPct !== null && projectType === 'pipe' && cp >= 5 && (
+        <div className="bg-white/3 rounded-lg px-3 py-2.5 border border-white/6">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-white/35 font-medium tracking-wide">ความคืบหน้าก่อสร้าง</span>
+            <span className="text-[11px] text-cyan-400 font-bold num">{progressPct}%</span>
           </div>
-        )
-      })}
+          <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${Math.min(progressPct, 100)}%`,
+                background: progressPct >= 100
+                  ? 'linear-gradient(90deg, rgb(52,211,153), rgb(16,185,129))'
+                  : 'linear-gradient(90deg, rgb(34,211,238), rgb(6,182,212))',
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

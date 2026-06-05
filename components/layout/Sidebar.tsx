@@ -118,7 +118,7 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
               <p className="text-[13px] font-bold leading-tight tracking-wide" style={{ color: '#E4ECFF' }}>
                 WSC-R10
               </p>
-              <p className="text-[9px] tracking-[.18em] uppercase mt-px" style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[9px] tracking-[.18em] uppercase mt-px" style={{ color: '#6B8DB8', fontFamily: 'var(--font-mono)' }}>
                 NRW Tracker
               </p>
             </div>
@@ -163,12 +163,12 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
               </div>
             </div>
             <div>
-              <p className="text-[9px] mb-0.5 uppercase tracking-[.12em]" style={{ color: '#243254', fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[9px] mb-0.5 uppercase tracking-[.12em]" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)' }}>
                 ส่งรายงาน
               </p>
               <p style={{ color: '#E4ECFF', fontSize: '15px', fontFamily: 'var(--font-mono)', fontWeight: 700, lineHeight: 1 }}>
                 {submitted}
-                <span style={{ color: '#3D5380', fontSize: '11px', fontWeight: 400 }}> / {total}</span>
+                <span style={{ color: '#6B8DB8', fontSize: '11px', fontWeight: 400 }}> / {total}</span>
               </p>
             </div>
           </div>
@@ -192,13 +192,13 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
           {/* Stats row */}
           <div className="px-3 py-2.5 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#243254', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
+              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
               <p style={{ color: pending > 0 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {pending}
               </p>
             </div>
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#243254', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
+              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
               <p style={{ color: obstacles > 0 ? '#FCD34D' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {obstacles}
               </p>
@@ -215,7 +215,7 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
               <div className="flex items-center gap-2 px-4 mb-1 pt-1">
                 <span
                   className="text-[9px] font-bold tracking-[.18em] uppercase shrink-0"
-                  style={{ color: '#243254', fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#4A6490', fontFamily: 'var(--font-mono)' }}
                 >
                   {group.label}
                 </span>
@@ -242,20 +242,20 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
                     boxShadow: 'inset 3px 0 0 #3B82F6, 0 0 20px rgba(59,130,246,.08)',
                   } : {
                     border: '1px solid transparent',
-                    color: '#3D5380',
+                    color: '#6B8DB8',
                   }}
                   onMouseEnter={e => {
                     if (!isActive) {
                       const el = e.currentTarget as HTMLElement
                       el.style.background = 'rgba(71,130,255,.07)'
-                      el.style.color = '#7B9CCC'
+                      el.style.color = '#8DB4D8'
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isActive) {
                       const el = e.currentTarget as HTMLElement
                       el.style.background = ''
-                      el.style.color = '#3D5380'
+                      el.style.color = '#6B8DB8'
                     }
                   }}
                 >
@@ -289,9 +289,9 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
         onClick={toggleSidebar}
         title={sidebarCollapsed ? 'ขยาย' : 'ย่อ'}
         className="flex items-center justify-center h-10 shrink-0 transition-all"
-        style={{ borderTop: '1px solid rgba(71,130,255,.09)', color: '#243254' }}
+        style={{ borderTop: '1px solid rgba(71,130,255,.09)', color: '#4A6490' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#4782FF' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#243254' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#4A6490' }}
       >
         {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
