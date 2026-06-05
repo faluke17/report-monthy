@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Plus, X, Trash2, AlertTriangle, Paperclip, ExternalLink, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { BudgetProject, Branch } from '@/lib/types'
-import { PhaseTimeline } from '@/components/dashboard/PhaseTimeline'
+import { PhaseTimeline, getMissingFields, PHASES } from '@/components/dashboard/PhaseTimeline'
 import {
   createProject, deleteProject, updateProjectPhase, upsertProjectContract,
   updateCurrentPhase, addProgressUpdate, updateProjectCompletion, saveCertificateUrl,
 } from '@/app/actions/project-progress'
-import { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 interface Props {
   projects: BudgetProject[]
@@ -335,6 +334,38 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
   )
 }
 
+// ─── Incomplete Data Banner ───────────────────────────────────────────────────
+
+function IncompleteDataBanner({ project }: { project: BudgetProject }) {
+  const issues: { phaseLabel: string; fields: string[] }[] = []
+
+  for (const ph of PHASES) {
+    const missing = getMissingFields(project, ph.no)
+    if (missing.length > 0) {
+      issues.push({ phaseLabel: ph.label, fields: missing.map(m => m.label) })
+    }
+  }
+
+  if (issues.length === 0) return null
+
+  return (
+    <div className="flex items-start gap-2.5 bg-amber-500/8 border border-amber-500/20 rounded-xl px-3.5 py-3">
+      <AlertTriangle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-amber-400 mb-1.5">ข้อมูลยังไม่ครบถ้วน</p>
+        <ul className="space-y-1">
+          {issues.map(iss => (
+            <li key={iss.phaseLabel} className="text-[11px] text-amber-400/70 leading-relaxed">
+              <span className="font-semibold text-amber-400/90">{iss.phaseLabel}:</span>{' '}
+              {iss.fields.join(', ')}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 // ─── Detail Body ──────────────────────────────────────────────────────────────
 
 function DetailBody({
@@ -378,6 +409,58 @@ function DetailBody({
         )}
       </div>
 
+      {/* ── Phase Stepper — primary visual ── */}
+      <div className="bg-white/3 rounded-xl px-4 pt-4 pb-3 border border-white/6">
+        <p className="text-[10px] text-white/25 uppercase tracking-widest mb-3 font-medium">ขั้นตอนการดำเนินงาน</p>
+        <PhaseTimeline
+          project={project}
+          selectedPhase={expandedPhase}
+          onSelectPhase={onSelectPhase}
+          onTogglePhase={onTogglePhase}
+          progressPct={pct}
+          projectType={project.project_type}
+        />
+      </div>
+
+      {/* Incomplete data banner */}
+      <IncompleteDataBanner project={project} />
+
+      {/* Phase Edit Form — appears right below stepper when a phase is selected */}
+      {expandedPhase !== null && (() => {
+        const missing = getMissingFields(project, expandedPhase)
+        const hasMissing = missing.length > 0
+        return (
+          <div className={`rounded-xl border overflow-hidden ${
+            hasMissing
+              ? 'border-amber-500/25 bg-amber-500/4'
+              : 'border-cyan-500/20 bg-cyan-500/4'
+          }`}>
+            <div className={`px-4 py-2.5 border-b flex items-center gap-2 ${
+              hasMissing ? 'border-amber-500/15' : 'border-cyan-500/12'
+            }`}>
+              {hasMissing && <AlertTriangle size={12} className="text-amber-400" />}
+              <span className={`text-[11px] font-semibold ${hasMissing ? 'text-amber-400' : 'text-cyan-400'}`}>
+                ขั้นตอนที่ {expandedPhase} — {PHASES.find(p => p.no === expandedPhase)?.label}
+              </span>
+              {hasMissing && (
+                <span className="ml-auto text-[10px] text-amber-400/60">
+                  กรุณากรอกข้อมูลให้ครบ
+                </span>
+              )}
+            </div>
+            <div className="p-4">
+              <PhaseEditForm
+                project={project}
+                phase={expandedPhase}
+                isPending={isPending}
+                startTransition={startTransition}
+                onSuccess={() => router.refresh()}
+              />
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Budget */}
       <div>
         <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">งบประมาณ</p>
@@ -396,32 +479,6 @@ function DetailBody({
       {/* Certificate (phase 6 only) */}
       {project.current_phase === 6 && (
         <CertificateSection project={project} onRefresh={() => router.refresh()} />
-      )}
-
-      {/* Phase Timeline */}
-      <div>
-        <p className="text-[10px] text-white/30 uppercase tracking-widest mb-3">ขั้นตอนการดำเนินงาน</p>
-        <PhaseTimeline
-          project={project}
-          selectedPhase={expandedPhase}
-          onSelectPhase={onSelectPhase}
-          onTogglePhase={onTogglePhase}
-          progressPct={pct}
-          projectType={project.project_type}
-        />
-      </div>
-
-      {/* Phase Edit Form */}
-      {expandedPhase !== null && (
-        <div className="bg-white/4 rounded-xl p-4 border border-white/8">
-          <PhaseEditForm
-            project={project}
-            phase={expandedPhase}
-            isPending={isPending}
-            startTransition={startTransition}
-            onSuccess={() => router.refresh()}
-          />
-        </div>
       )}
 
       {/* Delete */}
@@ -588,14 +645,11 @@ function PhaseEditForm({
     })
   }
 
-  const LABEL = `แก้ไข — ${LABEL_MAP[phase] ?? `Phase ${phase}`}`
-
   if (phase >= 1 && phase <= 3) {
     const dateKey  = `phase${phase}_completed_at` as keyof BudgetProject
     const notesKey = `phase${phase}_notes` as keyof BudgetProject
     return (
       <form onSubmit={handlePhase123} className="space-y-3">
-        <p className="text-xs font-semibold text-white/60">{LABEL}</p>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-[11px] text-white/40 mb-1">วันที่เสร็จสิ้น</label>
@@ -618,7 +672,6 @@ function PhaseEditForm({
     const isPipe = project.project_type === 'pipe'
     return (
       <form onSubmit={handlePhase4} className="space-y-3">
-        <p className="text-xs font-semibold text-white/60">{LABEL}</p>
         <div className="grid grid-cols-2 gap-2">
           {isPipe && <InputField name="estimated_pipe_length" label="ความยาวประมาณการ (ม.)" type="number" defaultValue={c?.estimated_pipe_length ?? ''} />}
           <InputField name="contractor_name" label="ชื่อผู้รับจ้าง" defaultValue={c?.contractor_name ?? ''} />
@@ -650,7 +703,6 @@ function PhaseEditForm({
     const est = project.project_contracts?.estimated_pipe_length
     return (
       <div className="space-y-4">
-        <p className="text-xs font-semibold text-white/60">{LABEL}</p>
         {project.current_phase < 5 && (
           <button onClick={handlePhase5Start} disabled={isPending || project.current_phase < 4}
             className="w-full py-2 rounded-lg text-sm font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 disabled:opacity-30 transition-colors">
@@ -706,7 +758,6 @@ function PhaseEditForm({
     return (
       <div className="space-y-3">
         <form onSubmit={handleCompletion} className="space-y-3">
-          <p className="text-xs font-semibold text-white/60">{LABEL}</p>
           <div className="grid grid-cols-2 gap-2">
             <InputField name="completion_submission_date" label="วันส่งงาน" type="date"
               defaultValue={project.completion_submission_date ?? ''} />
@@ -737,12 +788,6 @@ function CertificateSection({ project, onRefresh }: {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  function extractStoragePath(url: string): string | null {
-    const marker = '/object/public/project-certificates/'
-    const idx = url.indexOf(marker)
-    return idx !== -1 ? decodeURIComponent(url.slice(idx + marker.length)) : null
-  }
-
   const handleUpload = async (file: File) => {
     if (file.type !== 'application/pdf') {
       toast.error('รองรับเฉพาะไฟล์ PDF เท่านั้น')
@@ -750,23 +795,18 @@ function CertificateSection({ project, onRefresh }: {
     }
     setUploading(true)
     try {
-      const supabase = createBrowserClient()
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('projectId', project.id)
+      if (project.certificate_url) fd.append('oldUrl', project.certificate_url)
 
-      if (project.certificate_url) {
-        const oldPath = extractStoragePath(project.certificate_url)
-        if (oldPath) await supabase.storage.from('project-certificates').remove([oldPath])
-      }
+      const res = await fetch('/api/upload/certificate', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'upload failed')
 
-      const path = `projects/${project.id}/${Date.now()}.pdf`
-      const { error: upErr } = await supabase.storage
-        .from('project-certificates')
-        .upload(path, file, { upsert: true })
-      if (upErr) throw upErr
-
-      const { data: { publicUrl } } = supabase.storage.from('project-certificates').getPublicUrl(path)
-      const res = await saveCertificateUrl(project.id, publicUrl)
-      if (res.success) { toast.success('แนบใบรับรองสำเร็จ'); onRefresh() }
-      else toast.error(res.error)
+      const saveRes = await saveCertificateUrl(project.id, json.publicUrl)
+      if (saveRes.success) { toast.success('แนบใบรับรองสำเร็จ'); onRefresh() }
+      else toast.error(saveRes.error)
     } catch {
       toast.error('อัปโหลดไม่สำเร็จ กรุณาลองใหม่')
     } finally {
