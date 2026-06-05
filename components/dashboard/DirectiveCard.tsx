@@ -9,7 +9,7 @@ import { DirectiveTrafficMatrix } from './DirectiveTrafficMatrix'
 import { DirectiveProgressTimeline } from './DirectiveProgressTimeline'
 import {
   ChevronDown, ChevronUp, Clock, AlertCircle, CheckCircle2,
-  TrendingUp, Activity, Target,
+  TrendingUp, Activity, Target, CheckCircle,
 } from 'lucide-react'
 import type { DirectiveSummary } from '@/lib/types'
 
@@ -23,10 +23,9 @@ interface Props {
 }
 
 export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }: Props) {
-  const { resolution: r, branch_statuses, latest_log } = summary
+  const { resolution: r, branch_statuses, logs } = summary
 
   const [expanded, setExpanded] = useState(false)
-  const [showUpdate, setShowUpdate] = useState(false)
   const [pct, setPct] = useState(r.progress_pct)
   const [note, setNote] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -37,9 +36,12 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
   const overdue = isOverdue(r.due_date) && !done
   const days = r.due_date ? daysUntil(r.due_date) : null
 
-  // Determine if current branch can update
   const myBranchStatus = branch_statuses.find(bs => bs.branch_costcenter === branchCostcenter)
   const canUpdate = isAdmin || !!myBranchStatus
+
+  const totalBranches = branch_statuses.length
+  const doneBranches = branch_statuses.filter(bs => bs.action_status === 'แล้วเสร็จ').length
+  const delayedBranches = branch_statuses.filter(bs => bs.traffic_light === 'red').length
 
   const borderColor = done
     ? 'border-l-emerald-500/50'
@@ -50,11 +52,6 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
     : r.priority === 'กลาง'
     ? 'border-l-amber-400/60'
     : 'border-l-cyan-500/40'
-
-  // Overall completion stats
-  const totalBranches = branch_statuses.length
-  const doneBranches = branch_statuses.filter(bs => bs.action_status === 'แล้วเสร็จ').length
-  const delayedBranches = branch_statuses.filter(bs => bs.traffic_light === 'red').length
 
   function handleSave() {
     setSaveError(null)
@@ -77,7 +74,6 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
       } else {
         setSaveOk(true)
         setNote('')
-        setShowUpdate(false)
       }
     })
   }
@@ -86,9 +82,10 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
     <div className={cn(
       'rounded-xl border border-white/10 border-l-4 overflow-hidden transition-opacity',
       borderColor,
-      done ? 'opacity-70' : ''
+      done && !myBranchStatus ? 'opacity-70' : '',
     )}>
-      {/* ── Header (always visible) ── */}
+
+      {/* ── Header ── */}
       <div className="px-5 pt-4 pb-3 bg-white/2">
         <div className="flex items-start gap-3">
           <span className="num text-xs font-bold text-cyan-400 w-7 shrink-0 text-right pt-0.5">
@@ -96,7 +93,6 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
           </span>
 
           <div className="flex-1 min-w-0 space-y-2">
-            {/* Badges row */}
             <div className="flex items-center gap-1.5 flex-wrap">
               {r.priority && (
                 <span className={cn(
@@ -113,22 +109,20 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                   {r.source}
                 </span>
               )}
-              {totalBranches > 0 && (
+              {isAdmin && totalBranches > 0 && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/35 border-white/10">
                   <span className="num">{doneBranches}/{totalBranches}</span> สาขา
                 </span>
               )}
-              {delayedBranches > 0 && (
+              {isAdmin && delayedBranches > 0 && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full border bg-red-500/10 text-red-400 border-red-500/20">
                   ล่าช้า <span className="num">{delayedBranches}</span> สาขา
                 </span>
               )}
             </div>
 
-            {/* Title */}
             <p className="text-sm font-semibold text-white leading-snug">{r.title}</p>
 
-            {/* Meta row */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
               {r.responsible_dept && (
                 <span className="px-2 py-0.5 rounded bg-white/6 border border-white/10 text-white/45">
@@ -154,20 +148,27 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
               )}
             </div>
 
-            {/* Traffic light matrix */}
-            <DirectiveTrafficMatrix branchStatuses={branch_statuses} dueDate={r.due_date} />
+            {/* Traffic dots — admin compact view */}
+            {isAdmin && (
+              <DirectiveTrafficMatrix
+                branchStatuses={branch_statuses}
+                dueDate={r.due_date}
+                expanded={false}
+              />
+            )}
           </div>
 
-          {/* Status + expand */}
           <div className="shrink-0 flex flex-col items-end gap-2">
             <StatusPill status={r.status} />
-            <button
-              onClick={() => setExpanded(v => !v)}
-              className="flex items-center gap-1 text-[10px] text-white/30 hover:text-cyan-400 transition-colors"
-            >
-              {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              <span>{expanded ? 'ซ่อน' : 'รายละเอียด'}</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-cyan-400 transition-colors"
+              >
+                {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                <span>{expanded ? 'ซ่อน' : 'รายละเอียด'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -190,17 +191,100 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
               {r.progress_pct}%
             </span>
           </div>
-          {r.progress_note && !expanded && (
-            <p className="text-[10px] text-white/25 mt-0.5 truncate">{r.progress_note}</p>
-          )}
         </div>
       </div>
 
-      {/* ── Expanded detail ── */}
-      {expanded && (
+      {/* ── Inline update form — branch users (visible by default) ── */}
+      {!isAdmin && canUpdate && (
+        <div className={cn(
+          'px-5 py-3 border-t border-white/8',
+          done ? 'bg-emerald-500/5' : 'bg-white/2'
+        )}>
+          {done ? (
+            <div className="flex items-center gap-2 text-sm text-emerald-400">
+              <CheckCircle size={14} />
+              <span>แล้วเสร็จ</span>
+              {r.progress_updated_at && (
+                <span className="text-[10px] text-emerald-400/50 ml-1">
+                  · อัปเดต {formatThaiDate(r.progress_updated_at, true)}
+                  {r.progress_updated_by && ` โดย ${r.progress_updated_by}`}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider">
+                อัปเดตความก้าวหน้า
+              </p>
+
+              {/* Progress step buttons */}
+              <div className="flex gap-1.5">
+                {PROGRESS_STEPS.map(step => (
+                  <button
+                    key={step}
+                    onClick={() => { setPct(step); setSaveOk(false) }}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg text-xs font-semibold border transition-all',
+                      pct === step
+                        ? step === 100
+                          ? 'bg-emerald-500/25 text-emerald-400 border-emerald-500/50'
+                          : 'bg-cyan-500/25 text-cyan-400 border-cyan-500/50'
+                        : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                    )}
+                  >
+                    {step}%
+                  </button>
+                ))}
+              </div>
+
+              {/* Note + save */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={note}
+                  onChange={e => { setNote(e.target.value); setSaveOk(false) }}
+                  onKeyDown={e => e.key === 'Enter' && !isPending && handleSave()}
+                  placeholder="หมายเหตุ (optional)..."
+                  className="flex-1 bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40"
+                />
+                <button
+                  onClick={handleSave}
+                  disabled={isPending}
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0',
+                    isPending
+                      ? 'bg-white/8 text-white/25 cursor-not-allowed'
+                      : saveOk
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
+                  )}
+                >
+                  {isPending ? '...' : saveOk ? '✓ บันทึกแล้ว' : 'บันทึก'}
+                </button>
+              </div>
+
+              {saveError && (
+                <p className="flex items-center gap-1 text-[11px] text-red-400">
+                  <AlertCircle size={11} /> {saveError}
+                </p>
+              )}
+
+              {/* Last update info */}
+              {r.progress_updated_at && (
+                <p className="text-[10px] text-white/20">
+                  อัปเดตล่าสุด: {formatThaiDate(r.progress_updated_at, true)}
+                  {r.progress_updated_by && ` · ${r.progress_updated_by}`}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Admin expanded detail ── */}
+      {isAdmin && expanded && (
         <div className="border-t border-white/8 bg-white/1 px-5 py-4 space-y-5">
 
-          {/* Detail text */}
           {r.detail && (
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider">รายละเอียด</p>
@@ -208,132 +292,86 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
             </div>
           )}
 
-          {/* Per-branch status rows */}
+          {/* Per-branch list (expanded traffic) */}
           {branch_statuses.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
                 <Target size={10} />
                 ความก้าวหน้าต่อสาขา
               </div>
-              {branch_statuses.map(bs => (
-                <div
-                  key={bs.action_item_id ?? bs.branch_costcenter}
-                  className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/3 border border-white/6"
-                >
-                  {/* Traffic dot */}
-                  <div className={cn('w-2 h-2 rounded-full shrink-0', {
-                    'bg-emerald-400': bs.traffic_light === 'green',
-                    'bg-amber-400': bs.traffic_light === 'yellow',
-                    'bg-red-400': bs.traffic_light === 'red',
-                    'bg-white/20': bs.traffic_light === 'grey',
-                  })} />
-                  <span className="text-xs text-white/70 w-28 shrink-0 truncate">{bs.branch_name}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
-                    <div
-                      className={cn('h-full rounded-full', {
-                        'bg-emerald-500': bs.progress_pct === 100,
-                        'bg-cyan-500/70': bs.progress_pct < 100,
-                      })}
-                      style={{ width: `${bs.progress_pct}%` }}
-                    />
-                  </div>
-                  <span className="num text-[10px] text-white/45 w-8 text-right shrink-0">{bs.progress_pct}%</span>
-                  {bs.days_overdue !== null && bs.days_overdue > 0 && (
-                    <span className="text-[9px] text-red-400 shrink-0">เกิน {bs.days_overdue}ว</span>
-                  )}
-                  {bs.last_updated_at && (
-                    <span className="text-[9px] text-white/25 shrink-0 hidden sm:block">
-                      {formatThaiDate(bs.last_updated_at, true)}
-                    </span>
-                  )}
-                </div>
-              ))}
+              <DirectiveTrafficMatrix
+                branchStatuses={branch_statuses}
+                dueDate={r.due_date}
+                expanded={true}
+              />
             </div>
           )}
 
-          {/* Progress update form */}
-          <div className="border-t border-white/8 pt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider flex items-center gap-1.5">
-                <TrendingUp size={10} />
-                ความก้าวหน้ารวม — {r.progress_pct}%
-              </span>
-              {canUpdate && !done && (
-                <button
-                  onClick={() => { setShowUpdate(v => !v); setSaveError(null); setSaveOk(false) }}
-                  className="text-[10px] text-cyan-400/70 hover:text-cyan-400 transition-colors flex items-center gap-1"
-                >
-                  {showUpdate ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
-                  {showUpdate ? 'ซ่อนฟอร์ม' : 'อัพเดทความก้าวหน้า'}
-                </button>
-              )}
+          {/* Admin update form */}
+          <div className="border-t border-white/8 pt-4 space-y-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+              <TrendingUp size={10} />
+              อัปเดตความก้าวหน้า (Admin)
             </div>
 
-            {showUpdate && (
-              <div className="space-y-3 pt-2">
-                <div className="flex gap-1.5">
-                  {PROGRESS_STEPS.map(step => (
-                    <button
-                      key={step}
-                      onClick={() => setPct(step)}
-                      className={cn(
-                        'flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all',
-                        pct === step
-                          ? step === 100
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                            : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                          : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
-                      )}
-                    >
-                      {step}%
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  rows={2}
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  placeholder="รายละเอียดความก้าวหน้า..."
-                  className="w-full bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40 resize-none"
-                />
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    {saveError && (
-                      <span className="flex items-center gap-1 text-[11px] text-red-400">
-                        <AlertCircle size={11} /> {saveError}
-                      </span>
-                    )}
-                    {saveOk && (
-                      <span className="flex items-center gap-1 text-[11px] text-emerald-400">
-                        <CheckCircle2 size={11} /> บันทึกแล้ว
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleSave}
-                    disabled={isPending}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                      isPending
-                        ? 'bg-white/8 text-white/25 cursor-not-allowed'
-                        : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
-                    )}
-                  >
-                    {isPending ? 'กำลังบันทึก...' : 'บันทึกความก้าวหน้า'}
-                  </button>
-                </div>
-              </div>
+            <div className="flex gap-1.5">
+              {PROGRESS_STEPS.map(step => (
+                <button
+                  key={step}
+                  onClick={() => { setPct(step); setSaveOk(false) }}
+                  className={cn(
+                    'flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                    pct === step
+                      ? step === 100
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                        : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                      : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                  )}
+                >
+                  {step}%
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <textarea
+                rows={2}
+                value={note}
+                onChange={e => { setNote(e.target.value); setSaveOk(false) }}
+                placeholder="รายละเอียดความก้าวหน้า..."
+                className="flex-1 bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40 resize-none"
+              />
+              <button
+                onClick={handleSave}
+                disabled={isPending}
+                className={cn(
+                  'px-3 py-2 rounded-lg text-xs font-semibold self-end transition-all shrink-0',
+                  isPending
+                    ? 'bg-white/8 text-white/25 cursor-not-allowed'
+                    : saveOk
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
+                )}
+              >
+                {isPending ? '...' : saveOk ? <CheckCircle2 size={14} /> : 'บันทึก'}
+              </button>
+            </div>
+
+            {saveError && (
+              <p className="flex items-center gap-1 text-[11px] text-red-400">
+                <AlertCircle size={11} /> {saveError}
+              </p>
             )}
           </div>
 
           {/* Progress timeline */}
-          {latest_log && (
+          {logs.length > 0 && (
             <div className="border-t border-white/8 pt-4 space-y-2">
               <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
                 <Activity size={10} />
                 ประวัติการอัพเดต
               </div>
-              <DirectiveProgressTimeline logs={[latest_log]} />
+              <DirectiveProgressTimeline logs={logs} />
             </div>
           )}
 

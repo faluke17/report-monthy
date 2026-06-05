@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — มติ/ข้อสั่งการ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #061327;
+    color: #fff;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .num { font-family: 'Courier New', monospace; }
+
+  /* ── KPI ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    border-radius: 16px; padding: 20px; cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card:hover { transform: scale(1.02); }
+  .kpi-card.active { outline: 2px solid; }
+  .kpi-card .blob {
+    position: absolute; top: -32px; right: -32px;
+    width: 128px; height: 128px; border-radius: 50%; pointer-events: none;
+  }
+  .kpi-card .label {
+    font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: #5B7AAF; margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+  }
+  .kpi-card .val { font-size: 40px; font-weight: 700; font-family: 'Courier New', monospace; }
+  .kpi-card .unit { font-size: 14px; font-weight: 600; opacity: .6; margin-left: 6px; }
+  .kpi-card .sub { font-size: 11px; color: #7B9CCC; margin-top: 10px; }
+  .kpi-cyan   { background: linear-gradient(135deg,rgba(8,18,44,.96) 55%,rgba(6,100,120,.22) 100%); border: 1px solid rgba(34,211,238,.20); }
+  .kpi-cyan   .val { color: #22D3EE; text-shadow: 0 0 28px rgba(34,211,238,.4); }
+  .kpi-teal   { background: linear-gradient(135deg,rgba(8,18,44,.96) 55%,rgba(17,94,89,.22) 100%);  border: 1px solid rgba(45,212,191,.20); }
+  .kpi-teal   .val { color: #2DD4BF; text-shadow: 0 0 28px rgba(45,212,191,.4); }
+  .kpi-red    { background: linear-gradient(135deg,rgba(8,18,44,.96) 55%,rgba(100,15,15,.28) 100%); border: 1px solid rgba(248,113,113,.22); }
+  .kpi-red    .val { color: #F87171; text-shadow: 0 0 28px rgba(248,113,113,.4); }
+  .kpi-green  { background: linear-gradient(135deg,rgba(8,18,44,.96) 55%,rgba(20,83,45,.22) 100%);  border: 1px solid rgba(74,222,128,.20); }
+  .kpi-green  .val { color: #4ADE80; text-shadow: 0 0 28px rgba(74,222,128,.4); }
+  .kpi-amber  { background: linear-gradient(135deg,rgba(8,18,44,.96) 55%,rgba(120,76,0,.24) 100%);  border: 1px solid rgba(252,211,77,.22); }
+  .kpi-amber  .val { color: #FCD34D; text-shadow: 0 0 28px rgba(252,211,77,.4); }
+  .kpi-red.active { outline-color: rgba(248,113,113,.6); box-shadow: 0 0 20px rgba(248,113,113,.2); }
+  .active-badge { font-size: 9px; margin-left: 6px; opacity: .7; }
+
+  /* ── Banner ── */
+  .banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(34,211,238,.05); border: 1px solid rgba(34,211,238,.2);
+    border-radius: 12px; padding: 10px 16px; margin-bottom: 16px;
+  }
+  .banner-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,.6); }
+  .banner-left span.hi { color: #22D3EE; font-weight: 600; }
+  .banner-btn {
+    font-size: 11px; font-weight: 700; color: rgba(34,211,238,.7);
+    background: none; border: none; cursor: pointer;
+  }
+  .banner-btn:hover { color: #22D3EE; }
+
+  /* ── Filter ── */
+  .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .pill {
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    border: 1px solid transparent; cursor: pointer; transition: all .15s;
+    color: rgba(255,255,255,.35);
+  }
+  .pill:hover { color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.15); }
+  .pill.active-pill { color: #F87171; background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.3); }
+
+  /* ── Cards ── */
+  .card-list { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    border-radius: 12px; border: 1px solid rgba(255,255,255,.10);
+    border-left: 4px solid; overflow: hidden;
+  }
+  .card.red-border  { border-left-color: rgba(248,113,113,.6); }
+  .card.amber-border{ border-left-color: rgba(251,191,36,.5); }
+  .card.cyan-border { border-left-color: rgba(34,211,238,.5); }
+  .card.green-border{ border-left-color: rgba(74,222,128,.5); }
+  .card.done        { opacity: .7; }
+
+  .card-head { padding: 16px 20px 12px; background: rgba(255,255,255,.02); }
+  .card-row  { display: flex; gap: 12px; align-items: flex-start; }
+  .seq       { font-size: 11px; font-weight: 700; color: #22D3EE; width: 28px; text-align: right; padding-top: 2px; flex-shrink: 0; }
+  .card-body { flex: 1; min-width: 0; }
+  .badges    { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid;
+  }
+  .badge-red    { background: rgba(248,113,113,.15); color: #F87171; border-color: rgba(248,113,113,.3); }
+  .badge-amber  { background: rgba(251,191,36,.15);  color: #FCD34D; border-color: rgba(251,191,36,.3); }
+  .badge-white  { background: rgba(255,255,255,.05); color: rgba(255,255,255,.4); border-color: rgba(255,255,255,.12); }
+  .badge-branch { background: rgba(255,255,255,.06); color: rgba(255,255,255,.35); border-color: rgba(255,255,255,.10); }
+  .title   { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 6px; }
+  .meta    { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 11px; color: rgba(255,255,255,.4); }
+  .meta-dept { padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); }
+
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .dot  { width: 28px; height: 28px; border-radius: 50%; border: 1px solid; font-size: 9px; font-weight: 700; color: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; }
+  .dot-g  { background: #10b981; border-color: rgba(16,185,129,.5); }
+  .dot-y  { background: #f59e0b; border-color: rgba(245,158,11,.5); }
+  .dot-r  { background: #ef4444; border-color: rgba(239,68,68,.5); }
+  .dot-gr { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.2); }
+
+  .progress-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; margin-left: 40px; }
+  .progress-bar { flex: 1; height: 4px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+  .fill-cyan  { background: rgba(34,211,238,.7); }
+  .fill-green { background: #10b981; }
+  .pct-label  { font-size: 10px; font-weight: 700; width: 32px; text-align: right; color: rgba(255,255,255,.4); }
+  .pct-green  { color: #4ADE80; }
+
+  /* status pill */
+  .status-pill {
+    font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  }
+  .status-doing   { background: rgba(34,211,238,.12); color: #22D3EE; border: 1px solid rgba(34,211,238,.25); }
+  .status-done    { background: rgba(74,222,128,.12); color: #4ADE80; border: 1px solid rgba(74,222,128,.25); }
+  .status-wait    { background: rgba(255,255,255,.07); color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.12); }
+  .status-late    { background: rgba(248,113,113,.12); color: #F87171; border: 1px solid rgba(248,113,113,.25); }
+
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+  .expand-btn { font-size: 10px; color: rgba(255,255,255,.3); cursor: pointer; display: flex; align-items: center; gap: 4px; background: none; border: none; }
+  .expand-btn:hover { color: #22D3EE; }
+
+  /* ── Inline update (branch view) ── */
+  .inline-update {
+    padding: 12px 20px 14px; border-top: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.02);
+  }
+  .update-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
+  .pct-btns { display: flex; gap: 6px; margin-bottom: 10px; }
+  .pct-btn {
+    flex: 1; padding: 8px 0; border-radius: 8px; font-size: 12px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.35); cursor: pointer; transition: all .15s;
+  }
+  .pct-btn:hover { border-color: rgba(255,255,255,.25); color: rgba(255,255,255,.6); }
+  .pct-btn.selected { background: rgba(34,211,238,.2); color: #22D3EE; border-color: rgba(34,211,238,.5); }
+  .pct-btn.selected-100 { background: rgba(74,222,128,.2); color: #4ADE80; border-color: rgba(74,222,128,.5); }
+  .note-row { display: flex; gap: 8px; }
+  .note-input {
+    flex: 1; background: #0c1a30; border: 1px solid rgba(255,255,255,.15);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #fff;
+    outline: none;
+  }
+  .note-input:focus { border-color: rgba(34,211,238,.4); }
+  .note-input::placeholder { color: rgba(255,255,255,.2); }
+  .save-btn {
+    padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    background: rgba(34,211,238,.2); color: #22D3EE; border: 1px solid rgba(34,211,238,.3);
+    cursor: pointer; white-space: nowrap; transition: all .15s;
+  }
+  .save-btn:hover { background: rgba(34,211,238,.3); }
+  .save-btn.saved { background: rgba(74,222,128,.2); color: #4ADE80; border-color: rgba(74,222,128,.3); }
+  .last-update { font-size: 10px; color: rgba(255,255,255,.2); margin-top: 8px; }
+
+  /* done row */
+  .done-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4ADE80; }
+  .done-meta { font-size: 10px; color: rgba(74,222,128,.5); margin-left: 4px; }
+
+  /* ── Expanded (admin) ── */
+  .expanded-panel { border-top: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.01); padding: 16px 20px; }
+  .section-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+  .branch-list { display: flex; flex-direction: column; gap: 4px; }
+  .branch-row { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
+  .branch-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .bg-g  { background: #10b981; }
+  .bg-y  { background: #f59e0b; }
+  .bg-r  { background: #ef4444; }
+  .branch-name { font-size: 12px; width: 112px; flex-shrink: 0; }
+  .branch-name.text-g { color: #4ADE80; }
+  .branch-name.text-y { color: #FCD34D; }
+  .branch-name.text-r { color: #F87171; }
+  .branch-bar  { flex: 1; height: 6px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .branch-fill { height: 100%; border-radius: 999px; }
+  .branch-pct  { font-size: 10px; color: rgba(255,255,255,.5); width: 32px; text-align: right; flex-shrink: 0; font-family: 'Courier New', monospace; }
+  .branch-late { font-size: 9px; color: #F87171; flex-shrink: 0; }
+  .branch-date { font-size: 9px; color: rgba(255,255,255,.25); flex-shrink: 0; }
+
+  /* timeline */
+  .timeline { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .tl-row    { display: flex; gap: 12px; align-items: flex-start; }
+  .tl-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .tl-content { flex: 1; min-width: 0; }
+  .tl-meta   { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tl-branch { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.1); }
+  .tl-pct    { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: rgba(34,211,238,.15); color: #22D3EE; }
+  .tl-pct.pct100 { background: rgba(74,222,128,.15); color: #4ADE80; }
+  .tl-time   { font-size: 10px; color: rgba(255,255,255,.25); }
+  .tl-note   { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+
+  /* view toggle */
+  .view-toggle { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 12px; }
+  .tab-btn { font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; background: none; color: rgba(255,255,255,.4); transition: all .15s; }
+  .tab-btn.active { background: rgba(34,211,238,.15); color: #22D3EE; border-color: rgba(34,211,238,.3); }
+  .tab-btn:hover:not(.active) { color: rgba(255,255,255,.7); }
+
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: rgba(255,255,255,.4); margin-bottom: 20px; }
+  .view-label { font-size: 11px; color: rgba(255,255,255,.3); font-style: italic; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Action Tracker</h1>
+<p class="subtitle">ติดตามมติสั่งการและความก้าวหน้าต่อสาขา</p>
+
+<!-- View toggle (mockup) -->
+<div class="view-toggle">
+  <button class="tab-btn active" onclick="switchView('branch')">👤 ฝั่งสาขา</button>
+  <button class="tab-btn" onclick="switchView('admin')">🏢 ฝั่ง Admin/ผู้บริหาร</button>
+</div>
+
+<!-- ════ BRANCH VIEW ════ -->
+<div id="view-branch">
+  <p class="view-label">มุมมอง: สาขาสกลนคร (branch user)</p>
+
+  <!-- My tasks banner -->
+  <div class="banner" style="margin-bottom:16px">
+    <div class="banner-left">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+      แสดงเฉพาะงานของ <span class="hi">สาขาสกลนคร</span>&nbsp;(2 รายการ)
+    </div>
+    <button class="banner-btn">ดูทั้งหมด</button>
+  </div>
+
+  <div class="card-list">
+
+    <!-- Card 1: in progress (branch can update) -->
+    <div class="card red-border">
+      <div class="card-head">
+        <div class="card-row">
+          <span class="seq num">#1</span>
+          <div class="card-body">
+            <div class="badges">
+              <span class="badge badge-red">สูง</span>
+              <span class="badge badge-white">ข้อสั่งการจากผู้บริหารเขต</span>
+            </div>
+            <p class="title">ตรวจสอบและซ่อมท่อรั่วใน DMA-01 ทุกจุด</p>
+            <div class="meta">
+              <span class="meta-dept">งานบริการ</span>
+              <span style="color:#F87171">🕐 ครบ 30 มิ.ย. (เกิน 5 วัน)</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-pill status-late">ระหว่างดำเนินการ</span>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:50%"></div></div>
+          <span class="pct-label num">50%</span>
+        </div>
+      </div>
+      <!-- INLINE UPDATE (branch) -->
+      <div class="inline-update">
+        <p class="update-label">อัปเดตความก้าวหน้า</p>
+        <div class="pct-btns">
+          <button class="pct-btn" onclick="selectPct(this,0,'c1')">0%</button>
+          <button class="pct-btn" onclick="selectPct(this,25,'c1')">25%</button>
+          <button class="pct-btn selected" onclick="selectPct(this,50,'c1')">50%</button>
+          <button class="pct-btn" onclick="selectPct(this,75,'c1')">75%</button>
+          <button class="pct-btn" onclick="selectPct(this,100,'c1')">100%</button>
+        </div>
+        <div class="note-row">
+          <input class="note-input" placeholder="หมายเหตุ (optional)..." id="note-c1">
+          <button class="save-btn" onclick="save('c1')">บันทึก</button>
+        </div>
+        <p class="last-update">อัปเดตล่าสุด: 25 มิ.ย. · somsak</p>
+      </div>
+    </div>
+
+    <!-- Card 2: pending (not started) -->
+    <div class="card amber-border">
+      <div class="card-head">
+        <div class="card-row">
+          <span class="seq num">#3</span>
+          <div class="card-body">
+            <div class="badges">
+              <span class="badge badge-amber">กลาง</span>
+              <span class="badge badge-white">วาระการประชุม</span>
+            </div>
+            <p class="title">ทำความสะอาดวาล์ว PRV และตรวจสอบแรงดัน</p>
+            <div class="meta">
+              <span class="meta-dept">งานผลิต</span>
+              <span>🕐 ครบ 15 ก.ค. (อีก 10 วัน)</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-pill status-wait">รอดำเนินการ</span>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:0%"></div></div>
+          <span class="pct-label num">0%</span>
+        </div>
+      </div>
+      <div class="inline-update">
+        <p class="update-label">อัปเดตความก้าวหน้า</p>
+        <div class="pct-btns">
+          <button class="pct-btn selected" onclick="selectPct(this,0,'c3')">0%</button>
+          <button class="pct-btn" onclick="selectPct(this,25,'c3')">25%</button>
+          <button class="pct-btn" onclick="selectPct(this,50,'c3')">50%</button>
+          <button class="pct-btn" onclick="selectPct(this,75,'c3')">75%</button>
+          <button class="pct-btn" onclick="selectPct(this,100,'c3')">100%</button>
+        </div>
+        <div class="note-row">
+          <input class="note-input" placeholder="หมายเหตุ (optional)...">
+          <button class="save-btn" onclick="save('c3')">บันทึก</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: done (collapsed) -->
+    <div class="card green-border done">
+      <div class="card-head">
+        <div class="card-row">
+          <span class="seq num">#2</span>
+          <div class="card-body">
+            <p class="title" style="color:rgba(255,255,255,.5)">ส่งรายงาน NRW เดือน มิ.ย. 2568</p>
+            <div class="meta">
+              <span class="meta-dept" style="opacity:.5">งานอำนวยการ</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-pill status-done">แล้วเสร็จ</span>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill fill-green" style="width:100%"></div></div>
+          <span class="pct-label pct-green num">100%</span>
+        </div>
+      </div>
+      <!-- Done state -->
+      <div class="inline-update" style="background:rgba(74,222,128,.05);border-top:1px solid rgba(74,222,128,.1)">
+        <div class="done-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          แล้วเสร็จ
+          <span class="done-meta">· อัปเดต 20 มิ.ย. โดย somsak</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ ADMIN VIEW ════ -->
+<div id="view-admin" style="display:none">
+  <p class="view-label">มุมมอง: Admin / ผู้บริหารเขต</p>
+
+  <!-- KPI (clickable) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-cyan" onclick="filterKpi('all')">
+      <div class="blob" style="background:radial-gradient(circle,rgba(34,211,238,.09) 0%,transparent 70%)"></div>
+      <p class="label">ทั้งหมด</p>
+      <div><span class="val num">12</span><span class="unit">ข้อ</span></div>
+      <p class="sub">มติสั่งการ</p>
+    </div>
+    <div class="kpi-card kpi-teal" onclick="filterKpi('doing')">
+      <div class="blob" style="background:radial-gradient(circle,rgba(45,212,191,.09) 0%,transparent 70%)"></div>
+      <p class="label">กำลังดำเนินการ</p>
+      <div><span class="val num">7</span><span class="unit">ข้อ</span></div>
+      <p class="sub">ตามกำหนดเวลา</p>
+    </div>
+    <div class="kpi-card kpi-red active" onclick="filterKpi('late')" id="kpi-late">
+      <div class="blob" style="background:radial-gradient(circle,rgba(248,113,113,.10) 0%,transparent 70%)"></div>
+      <p class="label">ล่าช้า <span class="active-badge">● กรอง</span></p>
+      <div><span class="val num">3</span><span class="unit">ข้อ</span></div>
+      <p class="sub">เกินกำหนดวัน</p>
+    </div>
+    <div class="kpi-card kpi-green" onclick="filterKpi('done')">
+      <div class="blob" style="background:radial-gradient(circle,rgba(74,222,128,.09) 0%,transparent 70%)"></div>
+      <p class="label">แล้วเสร็จ</p>
+      <div><span class="val num">2</span><span class="unit">ข้อ</span></div>
+      <p class="sub">ปิดประเด็นแล้ว</p>
+    </div>
+    <div class="kpi-card kpi-amber" onclick="filterKpi('unresponsive')">
+      <div class="blob" style="background:radial-gradient(circle,rgba(252,211,77,.10) 0%,transparent 70%)"></div>
+      <p class="label">ไม่ตอบสนอง</p>
+      <div><span class="val num">2</span><span class="unit">ข้อ</span></div>
+      <p class="sub">ไม่อัพเดต >7 วัน</p>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:16px">แสดง <b style="color:rgba(255,255,255,.5)">3</b> จาก <b style="color:rgba(255,255,255,.5)">12</b> รายการ (กรองโดย: ล่าช้า)</p>
+
+  <!-- Admin card (collapsed) -->
+  <div class="card-list">
+    <div class="card red-border">
+      <div class="card-head">
+        <div class="card-row">
+          <span class="seq num">#1</span>
+          <div class="card-body">
+            <div class="badges">
+              <span class="badge badge-red">สูง</span>
+              <span class="badge badge-white">ข้อสั่งการจากผู้บริหารเขต</span>
+              <span class="badge badge-branch">2/3 สาขา</span>
+              <span class="badge" style="background:rgba(248,113,113,.1);color:#F87171;border-color:rgba(248,113,113,.2)">ล่าช้า 1 สาขา</span>
+            </div>
+            <p class="title">ตรวจสอบและซ่อมท่อรั่วใน DMA-01 ทุกจุด</p>
+            <div class="meta">
+              <span class="meta-dept">งานบริการ</span>
+              <span style="color:#F87171">🕐 ครบ 30 มิ.ย. (เกิน 5 วัน)</span>
+            </div>
+            <!-- Traffic dots (compact) -->
+            <div class="dots" style="margin-top:8px">
+              <div class="dot dot-g">สก</div>
+              <div class="dot dot-y">นค</div>
+              <div class="dot dot-r">มห</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-pill status-late">ระหว่างดำเนินการ</span>
+            <button class="expand-btn" onclick="toggleExpand('admin-card-1')">▼ รายละเอียด</button>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:58%"></div></div>
+          <span class="pct-label num">58%</span>
+        </div>
+      </div>
+
+      <!-- Expanded panel -->
+      <div class="expanded-panel" id="admin-card-1">
+        <p class="section-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          ความก้าวหน้าต่อสาขา
+        </p>
+        <div class="branch-list">
+          <div class="branch-row">
+            <div class="branch-dot bg-g"></div>
+            <span class="branch-name text-g">สาขาสกลนคร</span>
+            <div class="branch-bar"><div class="branch-fill" style="width:75%;background:#10b981"></div></div>
+            <span class="branch-pct">75%</span>
+            <span class="branch-date">25 มิ.ย.</span>
+          </div>
+          <div class="branch-row">
+            <div class="branch-dot bg-y"></div>
+            <span class="branch-name text-y">สาขานครพนม</span>
+            <div class="branch-bar"><div class="branch-fill" style="width:50%;background:rgba(34,211,238,.7)"></div></div>
+            <span class="branch-pct">50%</span>
+            <span class="branch-date">20 มิ.ย.</span>
+          </div>
+          <div class="branch-row">
+            <div class="branch-dot bg-r"></div>
+            <span class="branch-name text-r">สาขามุกดาหาร</span>
+            <div class="branch-bar"><div class="branch-fill" style="width:25%;background:rgba(34,211,238,.7)"></div></div>
+            <span class="branch-pct">25%</span>
+            <span class="branch-late">เกิน 5 ว</span>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <p class="section-label" style="margin-top:16px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          ประวัติการอัพเดต
+        </p>
+        <div class="timeline">
+          <div class="tl-row">
+            <div class="tl-dot" style="background:#10b981;margin-top:4px"></div>
+            <div class="tl-content">
+              <div class="tl-meta">
+                <span class="tl-branch">สาขาสกลนคร</span>
+                <span class="tl-pct">75%</span>
+                <span class="tl-time">25 มิ.ย. · somsak</span>
+              </div>
+              <p class="tl-note">ซ่อมแล้ว 9 จุด เหลืออีก 3 จุดกำลังดำเนินการ</p>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-dot" style="background:#22D3EE;margin-top:4px"></div>
+            <div class="tl-content">
+              <div class="tl-meta">
+                <span class="tl-branch">สาขานครพนม</span>
+                <span class="tl-pct">50%</span>
+                <span class="tl-time">20 มิ.ย. · prawit</span>
+              </div>
+              <p class="tl-note">ตรวจสอบแล้วครึ่งพื้นที่</p>
+            </div>
+          </div>
+          <div class="tl-row">
+            <div class="tl-dot" style="background:rgba(255,255,255,.3);margin-top:4px"></div>
+            <div class="tl-content">
+              <div class="tl-meta">
+                <span class="tl-branch">สาขามุกดาหาร</span>
+                <span class="tl-pct">25%</span>
+                <span class="tl-time">15 มิ.ย. · narin</span>
+              </div>
+              <p class="tl-note">เริ่มสำรวจพื้นที่แล้ว</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 collapsed -->
+    <div class="card amber-border">
+      <div class="card-head">
+        <div class="card-row">
+          <span class="seq num">#4</span>
+          <div class="card-body">
+            <div class="badges">
+              <span class="badge badge-amber">กลาง</span>
+              <span class="badge badge-white">Obstacle Tracker</span>
+              <span class="badge badge-branch">0/2 สาขา</span>
+              <span class="badge" style="background:rgba(248,113,113,.1);color:#F87171;border-color:rgba(248,113,113,.2)">ล่าช้า 2 สาขา</span>
+            </div>
+            <p class="title">ติดตั้งมาตรวัดน้ำจุดอ่อนไหวสูง</p>
+            <div class="meta">
+              <span class="meta-dept">งานจัดเก็บ</span>
+              <span style="color:#FCD34D">🕐 ครบ 5 ก.ค. (เกิน 2 วัน)</span>
+            </div>
+            <div class="dots" style="margin-top:8px">
+              <div class="dot dot-r">นค</div>
+              <div class="dot dot-r">กส</div>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="status-pill status-late">รอดำเนินการ</span>
+            <button class="expand-btn">▼ รายละเอียด</button>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:0%"></div></div>
+          <span class="pct-label num">0%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchView(v) {
+  document.getElementById('view-branch').style.display = v==='branch' ? 'block' : 'none'
+  document.getElementById('view-admin').style.display  = v==='admin'  ? 'block' : 'none'
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&v==='branch')||(i===1&&v==='admin')))
+}
+
+function selectPct(btn, pct, cardId) {
+  const parent = btn.closest('.pct-btns')
+  parent.querySelectorAll('.pct-btn').forEach(b => b.classList.remove('selected','selected-100'))
+  if (pct === 100) btn.classList.add('selected-100')
+  else btn.classList.add('selected')
+}
+
+function save(cardId) {
+  const btn = document.querySelector(`#view-branch .card:nth-child(${cardId==='c1'?1:2}) .save-btn`)
+  if (!btn) return
+  btn.textContent = '✓ บันทึกแล้ว'
+  btn.classList.add('saved')
+  setTimeout(() => { btn.textContent = 'บันทึก'; btn.classList.remove('saved') }, 2000)
+}
+
+function filterKpi(type) {
+  document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'))
+  if (type !== 'all') event.currentTarget.classList.add('active')
+}
+
+function toggleExpand(id) {
+  const panel = document.getElementById(id)
+  const btn = panel.previousElementSibling.querySelector('.expand-btn')
+  const visible = panel.style.display !== 'none'
+  panel.style.display = visible ? 'none' : 'block'
+  btn.textContent = visible ? '▼ รายละเอียด' : '▲ ซ่อน'
+}
+
+// Default: hide admin card expand
+document.getElementById('admin-card-1').style.display = 'none'
+</script>
+</body>
+</html>

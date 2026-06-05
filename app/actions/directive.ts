@@ -36,15 +36,32 @@ export async function logDirectiveProgress(
 
   if (logErr) return { success: false, error: logErr.message }
 
+  // คำนวณ progress_pct รวม = average ของทุก branch (ป้องกันการทับกัน)
+  const { data: allLogs } = await supabase
+    .from('resolution_progress_log')
+    .select('branch_costcenter, progress_pct, created_at')
+    .eq('resolution_id', data.resolution_id)
+    .order('created_at', { ascending: false })
+
+  const latestPerBranch = Object.values(
+    (allLogs ?? []).reduce((acc: Record<string, { progress_pct: number }>, log) => {
+      if (!acc[log.branch_costcenter]) acc[log.branch_costcenter] = log
+      return acc
+    }, {}),
+  )
+  const avgPct = latestPerBranch.length > 0
+    ? Math.round(latestPerBranch.reduce((sum, l) => sum + l.progress_pct, 0) / latestPerBranch.length)
+    : data.progress_pct
+
   const newStatus =
-    data.progress_pct === 100 ? 'แล้วเสร็จ' :
-    data.progress_pct === 0   ? 'รอดำเนินการ' :
-                                 'ระหว่างดำเนินการ'
+    avgPct === 100 ? 'แล้วเสร็จ' :
+    avgPct === 0   ? 'รอดำเนินการ' :
+                     'ระหว่างดำเนินการ'
 
   await supabase
     .from('meeting_resolutions')
     .update({
-      progress_pct: data.progress_pct,
+      progress_pct: avgPct,
       progress_note: data.note?.trim() ?? null,
       progress_updated_at: new Date().toISOString(),
       progress_updated_by: session.username,
@@ -232,6 +249,7 @@ export async function getDirectiveSummaries(
       resolution,
       branch_statuses: branchStatuses,
       latest_log: resLogs[0] ?? null,
+      logs: resLogs,
       steps: resSteps,
     }
   })

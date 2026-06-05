@@ -648,6 +648,7 @@ export interface DirectiveSummary {
   resolution: MeetingResolution
   branch_statuses: DirectiveBranchStatus[]
   latest_log: ResolutionProgressLog | null
+  logs: ResolutionProgressLog[]
   steps: ResolutionStep[]
 }
 

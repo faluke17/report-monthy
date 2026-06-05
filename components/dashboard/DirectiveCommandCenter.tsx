@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DirectiveKpiHeader } from './DirectiveKpiHeader'
 import { DirectiveCard } from './DirectiveCard'
-import { Search, Calendar, MapPin } from 'lucide-react'
+import { Search, Calendar, MapPin, ListFilter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatThaiDate } from '@/lib/utils/date-th'
 import type { DirectiveSummary, DirectiveKpis, Meeting } from '@/lib/types'
@@ -39,31 +39,19 @@ export function DirectiveCommandCenter({
   defaultMeetingId,
 }: Props) {
   const router = useRouter()
-  const [summaries, setSummaries] = useState(initialSummaries)
-  const [kpis, setKpis] = useState(initialKpis)
   const [filterMeeting, setFilterMeeting] = useState<string>(defaultMeetingId ?? 'all')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
   const [filterPriority, setFilterPriority] = useState<PriorityFilter>('all')
   const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    setSummaries(initialSummaries)
-    setKpis(initialKpis)
-  }, [initialSummaries, initialKpis])
+  const [showOnlyMine, setShowOnlyMine] = useState(!isAdmin)
 
   const setupRealtime = useCallback(() => {
     const supabase = createClient()
     const channel = supabase
       .channel('directive-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_resolutions' }, () => {
-        router.refresh()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resolution_progress_log' }, () => {
-        router.refresh()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'action_items' }, () => {
-        router.refresh()
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_resolutions' }, () => router.refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'resolution_progress_log' }, () => router.refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'action_items' }, () => router.refresh())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [router])
@@ -77,8 +65,14 @@ export function DirectiveCommandCenter({
     ? meetings.find(m => m.id === filterMeeting) ?? null
     : null
 
-  const filtered = summaries.filter(s => {
+  const filtered = initialSummaries.filter(s => {
     const r = s.resolution
+
+    // Branch: show only mine by default
+    if (!isAdmin && showOnlyMine && branchCostcenter) {
+      const mine = s.branch_statuses.some(bs => bs.branch_costcenter === branchCostcenter)
+      if (!mine) return false
+    }
 
     if (filterMeeting !== 'all' && r.meeting_id !== filterMeeting) return false
 
@@ -115,10 +109,15 @@ export function DirectiveCommandCenter({
     { key: 'แล้วเสร็จ',        label: 'แล้วเสร็จ' },
   ]
 
+  // Count mine (for branch user badge)
+  const myCount = !isAdmin && branchCostcenter
+    ? initialSummaries.filter(s => s.branch_statuses.some(bs => bs.branch_costcenter === branchCostcenter)).length
+    : 0
+
   return (
     <div className="space-y-5">
 
-      {/* Meeting context banner — shown when a specific meeting is selected */}
+      {/* Meeting context banner */}
       {activeMeeting && (
         <div className="glass-card-sm px-4 py-3 border-l-4 border-cyan-500/50 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
@@ -150,13 +149,36 @@ export function DirectiveCommandCenter({
         </div>
       )}
 
-      {/* KPI header */}
-      <DirectiveKpiHeader kpis={kpis} />
+      {/* Branch: my tasks banner */}
+      {!isAdmin && branchCostcenter && myCount > 0 && (
+        <div className="flex items-center justify-between gap-3 bg-cyan-500/5 border border-cyan-500/20 rounded-xl px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <ListFilter size={13} className="text-cyan-400 shrink-0" />
+            <span className="text-xs text-white/60">
+              {showOnlyMine
+                ? <>แสดงเฉพาะงานของ <span className="text-cyan-400 font-medium">{branchName}</span> ({myCount} รายการ)</>
+                : <span className="text-white/40">แสดงมติทั้งหมด</span>
+              }
+            </span>
+          </div>
+          <button
+            onClick={() => setShowOnlyMine(v => !v)}
+            className="text-[11px] font-semibold text-cyan-400/70 hover:text-cyan-400 transition-colors whitespace-nowrap"
+          >
+            {showOnlyMine ? 'ดูทั้งหมด' : 'แสดงแค่งานของฉัน'}
+          </button>
+        </div>
+      )}
+
+      {/* KPI header — clickable */}
+      <DirectiveKpiHeader
+        kpis={initialKpis}
+        activeFilter={filterStatus}
+        onFilterChange={f => setFilterStatus(f)}
+      />
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-2 items-center">
-
-        {/* Meeting selector */}
         {meetings.length > 0 && (
           <select
             value={filterMeeting}
@@ -170,12 +192,11 @@ export function DirectiveCommandCenter({
           </select>
         )}
 
-        {/* Status pills */}
         <div className="flex gap-1">
           {STATUS_FILTERS.map(f => (
             <button
               key={f.key}
-              onClick={() => setFilterStatus(f.key)}
+              onClick={() => setFilterStatus(filterStatus === f.key ? 'all' : f.key)}
               className={cn(
                 'px-3 py-1 rounded-full text-xs font-medium border transition-all',
                 filterStatus === f.key
@@ -192,12 +213,11 @@ export function DirectiveCommandCenter({
           ))}
         </div>
 
-        {/* Priority pills */}
         <div className="flex gap-1">
           {(['all', 'สูง', 'กลาง'] as PriorityFilter[]).map(p => (
             <button
               key={p}
-              onClick={() => setFilterPriority(p)}
+              onClick={() => setFilterPriority(filterPriority === p ? 'all' : p)}
               className={cn(
                 'px-2.5 py-1 rounded-full text-xs border transition-all',
                 filterPriority === p
@@ -214,7 +234,6 @@ export function DirectiveCommandCenter({
           ))}
         </div>
 
-        {/* Search */}
         <div className="relative ml-auto">
           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30" />
           <input
@@ -230,14 +249,18 @@ export function DirectiveCommandCenter({
       {/* Result count */}
       {(filterStatus !== 'all' || filterPriority !== 'all' || search || filterMeeting !== 'all') && (
         <p className="text-xs text-white/30">
-          แสดง <span className="num text-white/50">{filtered.length}</span> จาก <span className="num text-white/50">{summaries.length}</span> รายการ
+          แสดง <span className="num text-white/50">{filtered.length}</span> จาก{' '}
+          <span className="num text-white/50">{initialSummaries.length}</span> รายการ
         </p>
       )}
 
-      {/* Directive cards */}
+      {/* Cards */}
       {filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <p className="text-white/30 text-sm">ไม่พบมติสั่งการที่ตรงกับเงื่อนไข</p>
+          {!isAdmin && showOnlyMine && myCount === 0 && (
+            <p className="text-xs text-white/20 mt-1">ยังไม่มีมติที่ถูกมอบหมายให้สาขาของคุณ</p>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

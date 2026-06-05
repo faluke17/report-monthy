@@ -19,13 +19,13 @@ interface Props {
 }
 
 const PHASES = [
-  { label: 'ยังไม่เริ่ม', bar: 'bg-white/20',        pill: 'bg-white/8 text-white/40' },
-  { label: 'ราคากลาง',    bar: 'bg-violet-500',      pill: 'bg-violet-500/20 text-violet-300' },
-  { label: 'TOR',         bar: 'bg-blue-500',        pill: 'bg-blue-500/20 text-blue-300' },
-  { label: 'พิจารณาผล',  bar: 'bg-indigo-400',      pill: 'bg-indigo-500/20 text-indigo-300' },
-  { label: 'เซ็นสัญญา',  bar: 'bg-amber-400',       pill: 'bg-amber-500/20 text-amber-300' },
-  { label: 'ดำเนินงาน',  bar: 'bg-cyan-400',        pill: 'bg-cyan-500/20 text-cyan-300' },
-  { label: 'แล้วเสร็จ',  bar: 'bg-emerald-400',     pill: 'bg-emerald-500/20 text-emerald-300' },
+  { label: 'ยังไม่เริ่ม', bar: 'bg-white/20',    pill: 'bg-white/6 text-white/35',          border: 'border-white/10' },
+  { label: 'ราคากลาง',    bar: 'bg-violet-500',   pill: 'bg-violet-500/15 text-violet-300',  border: 'border-violet-500/25' },
+  { label: 'TOR',         bar: 'bg-blue-500',     pill: 'bg-blue-500/15 text-blue-300',      border: 'border-blue-500/25' },
+  { label: 'พิจารณาผล',  bar: 'bg-indigo-400',   pill: 'bg-indigo-500/15 text-indigo-300',  border: 'border-indigo-500/25' },
+  { label: 'เซ็นสัญญา',  bar: 'bg-amber-400',    pill: 'bg-amber-500/15 text-amber-300',    border: 'border-amber-500/25' },
+  { label: 'ดำเนินงาน',  bar: 'bg-cyan-400',     pill: 'bg-cyan-500/15 text-cyan-300',      border: 'border-cyan-500/25' },
+  { label: 'แล้วเสร็จ',  bar: 'bg-emerald-400',  pill: 'bg-emerald-500/15 text-emerald-300',border: 'border-emerald-500/25' },
 ]
 
 function fmtMillion(n: number) {
@@ -80,7 +80,6 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
 
   const q = searchQuery.trim().toLowerCase()
 
-  // Autocomplete results — flat list from all groups, max 10
   const dropdownResults = useMemo(() => {
     if (!q) return []
     const results: Array<{ id: string; project_name: string; code: string | null; groupId: string; groupName: string }> = []
@@ -94,7 +93,6 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
     return results.slice(0, 10)
   }, [budgetGroups, q])
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -105,19 +103,16 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Type-filtered groups: groups that have at least one project of the selected type
   const typeFilteredGroups = useMemo(() => {
     if (activeType === 'all') return budgetGroups
     return budgetGroups.filter(g => (g.budget_projects ?? []).some(p => p.project_type === activeType))
   }, [budgetGroups, activeType])
 
-  // Reset active group when type changes, if current group has no projects of that type
   const activeGroupValid = useMemo(() => {
     if (activeGroup === 'all') return true
     return typeFilteredGroups.some(g => g.id === activeGroup)
   }, [activeGroup, typeFilteredGroups])
 
-  // Dashboard display
   const typeProjects = (activeType === 'all')
     ? budgetGroups.flatMap(g => g.budget_projects ?? [])
     : budgetGroups.flatMap(g => (g.budget_projects ?? []).filter(p => p.project_type === activeType))
@@ -129,10 +124,8 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
   })()
 
   const visibleGroups = typeFilteredGroups
-
   const s = computeStats(filteredProjects)
 
-  // Count pipe vs dma across all groups
   const allProjects = budgetGroups.flatMap(g => g.budget_projects ?? [])
   const pipeCount   = allProjects.filter(p => p.project_type === 'pipe').length
   const dmaCount    = allProjects.filter(p => p.project_type === 'dma').length
@@ -168,7 +161,6 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           <p className="text-sm text-white/40 mt-1">ภาพรวมโครงการก่อสร้าง / วางท่อ</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Search with autocomplete */}
           <div className="relative" ref={searchRef}>
             <input
               type="text"
@@ -184,8 +176,6 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                 <X size={12} />
               </button>
             )}
-
-            {/* Dropdown */}
             {showDropdown && q && (
               <div className="absolute top-full left-0 mt-1.5 w-80 bg-[#141824] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
                 {dropdownResults.length === 0 ? (
@@ -246,9 +236,9 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {(pipeCount > 0 && dmaCount > 0) && (
             <div className="flex items-center gap-2 p-1 bg-white/4 rounded-xl w-fit border border-white/8">
               {([
-                { key: 'all',  label: 'ทั้งหมด',       count: pipeCount + dmaCount, color: 'text-white' },
-                { key: 'pipe', label: 'ปรับปรุงท่อ',   count: pipeCount,             color: 'text-cyan-300' },
-                { key: 'dma',  label: 'DMA / PRV',      count: dmaCount,              color: 'text-violet-300' },
+                { key: 'all',  label: 'ทั้งหมด',     count: pipeCount + dmaCount },
+                { key: 'pipe', label: 'ปรับปรุงท่อ', count: pipeCount },
+                { key: 'dma',  label: 'DMA / PRV',   count: dmaCount },
               ] as const).map(t => (
                 <button
                   key={t.key}
@@ -264,9 +254,9 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                   }`}
                 >
                   <span>{t.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    activeType === t.key ? 'bg-white/15' : 'bg-white/8'
-                  } num`}>{t.count}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full num ${activeType === t.key ? 'bg-white/15' : 'bg-white/8'}`}>
+                    {t.count}
+                  </span>
                 </button>
               ))}
             </div>
@@ -275,7 +265,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {/* ── Group filter tabs ────────────────────────────────────────── */}
           <div className="flex flex-wrap gap-2">
             {(['all', ...visibleGroups.map(g => g.id)] as string[]).map((id) => {
-              const label = id === 'all' ? 'ทุกกลุ่ม' : visibleGroups.find(g => g.id === id)!.name
+              const label  = id === 'all' ? 'ทุกกลุ่ม' : visibleGroups.find(g => g.id === id)!.name
               const active = (activeGroupValid ? activeGroup : 'all') === id
               return (
                 <button
@@ -296,31 +286,35 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {/* ── KPI Strip ────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <KpiCard
-              icon={<Layers size={17} className="text-white/60" />}
+              icon={<Layers size={16} className="text-white/70" />}
               iconBg="bg-white/8"
+              accentColor="border-l-white/20"
               label="โครงการทั้งหมด"
               value={String(s.total)}
               sub={`เสร็จแล้ว ${s.byPhase[6]} (${s.donePct}%)`}
               subColor="text-emerald-400/80"
             />
             <KpiCard
-              icon={<Banknote size={17} className="text-amber-400" />}
-              iconBg="bg-amber-500/10"
+              icon={<Banknote size={16} className="text-amber-400" />}
+              iconBg="bg-amber-500/12"
+              accentColor="border-l-amber-500/50"
               label="งบประมาณ (ไม่รวม VAT)"
               value={fmtMillion(s.budget)}
               sub="บาท"
             />
             <KpiCard
-              icon={<Receipt size={17} className="text-orange-400" />}
-              iconBg="bg-orange-500/10"
+              icon={<Receipt size={16} className="text-orange-400" />}
+              iconBg="bg-orange-500/12"
+              accentColor="border-l-orange-500/50"
               label="งบจัดจ้าง (รวม VAT)"
               value={fmtMillion(s.contract)}
               sub="บาท"
             />
             {activeType !== 'dma' && (
               <KpiCard
-                icon={<Ruler size={17} className="text-cyan-400" />}
-                iconBg="bg-cyan-500/10"
+                icon={<Ruler size={16} className="text-cyan-400" />}
+                iconBg="bg-cyan-500/12"
+                accentColor="border-l-cyan-500/50"
                 label="ความยาวท่อประมาณการ"
                 value={fmtMeter(s.estPipe)}
                 sub="เมตร"
@@ -328,8 +322,9 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
             )}
             {activeType !== 'dma' && (
               <KpiCard
-                icon={<CheckCircle2 size={17} className="text-emerald-400" />}
-                iconBg="bg-emerald-500/10"
+                icon={<CheckCircle2 size={16} className="text-emerald-400" />}
+                iconBg="bg-emerald-500/12"
+                accentColor="border-l-emerald-500/50"
                 label="ความยาวท่อแล้วเสร็จ"
                 value={fmtMeter(s.donePipe)}
                 sub="เมตร"
@@ -341,23 +336,23 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {/* ── Phase Distribution ──────────────────────────────────────── */}
           <div className="glass-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">ความก้าวหน้าตาม Phase</p>
+              <p className="text-xs font-semibold text-white/45 uppercase tracking-widest">ความก้าวหน้าตาม Phase</p>
               {s.overdue > 0 && (
-                <span className="flex items-center gap-1.5 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full font-medium">
                   <AlertTriangle size={11} /> เกินกำหนด {s.overdue} โครงการ
                 </span>
               )}
             </div>
 
-            {/* Segmented bar */}
             {s.total > 0 ? (
               <>
-                <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
+                {/* Segmented bar — taller, with subtle glow on active segments */}
+                <div className="flex h-4 rounded-lg overflow-hidden gap-px">
                   {s.byPhase.map((count, i) =>
                     count > 0 ? (
                       <div
                         key={i}
-                        className={`${PHASES[i].bar} transition-all rounded-sm`}
+                        className={`${PHASES[i].bar} transition-all`}
                         style={{ width: `${(count / s.total) * 100}%` }}
                         title={`${PHASES[i].label}: ${count}`}
                       />
@@ -366,11 +361,14 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                 </div>
 
                 {/* Phase counts grid */}
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 pt-1">
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {PHASES.map((ph, i) => (
-                    <div key={i} className={`rounded-xl px-2 py-2 text-center ${s.byPhase[i] > 0 ? ph.pill : 'opacity-30'}`}>
-                      <p className="text-base font-bold num">{s.byPhase[i]}</p>
-                      <p className="text-[10px] mt-0.5 leading-tight opacity-80">{ph.label}</p>
+                    <div
+                      key={i}
+                      className={`rounded-xl px-2 py-2.5 text-center border transition-opacity ${ph.pill} ${ph.border} ${s.byPhase[i] > 0 ? 'opacity-100' : 'opacity-25'}`}
+                    >
+                      <p className="text-lg font-bold num leading-none">{s.byPhase[i]}</p>
+                      <p className="text-[10px] mt-1 leading-tight opacity-75">{ph.label}</p>
                     </div>
                   ))}
                 </div>
@@ -384,15 +382,23 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           <div className="space-y-2">
             <p className="text-[11px] text-white/30 uppercase tracking-widest px-1">ชื่องบประมาณ</p>
             {visibleGroups.map(group => {
-              const gProjects = group.budget_projects ?? []
-              const gs = computeStats(gProjects)
+              const gProjects       = group.budget_projects ?? []
+              const gs              = computeStats(gProjects)
               const isConfirmDelete = confirmDeleteId === group.id
+              const allDone         = gs.total > 0 && gs.byPhase[6] === gs.total
+              const hasOverdue      = gs.overdue > 0
+
+              const stripColor = hasOverdue
+                ? 'bg-gradient-to-b from-red-400/70 to-red-500/15'
+                : allDone
+                  ? 'bg-gradient-to-b from-emerald-400/70 to-emerald-500/15'
+                  : 'bg-gradient-to-b from-cyan-500/60 to-cyan-500/10'
 
               return (
-                <div key={group.id} className="glass-card overflow-hidden hover:border-white/15 transition-all group/row">
+                <div key={group.id} className="glass-card overflow-hidden hover:border-white/20 hover:bg-white/[0.02] transition-all group/row">
                   <div className="flex items-stretch">
-                    {/* Color accent strip */}
-                    <div className="w-1 shrink-0 bg-gradient-to-b from-cyan-500/60 to-cyan-500/10" />
+                    {/* Status accent strip */}
+                    <div className={`w-1 shrink-0 ${stripColor}`} />
 
                     {/* Main content */}
                     <button
@@ -404,37 +410,43 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-semibold text-white leading-snug truncate">{group.name}</p>
                             {(() => {
-                              const gps = group.budget_projects ?? []
+                              const gps     = group.budget_projects ?? []
                               const hasPipe = gps.some(p => p.project_type === 'pipe')
                               const hasDma  = gps.some(p => p.project_type === 'dma')
                               return (
                                 <>
-                                  {hasPipe && !hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 shrink-0">ท่อ</span>}
-                                  {hasDma && !hasPipe && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 shrink-0">DMA</span>}
-                                  {hasPipe && hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50 shrink-0">ท่อ+DMA</span>}
+                                  {hasPipe && !hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 shrink-0">ท่อ</span>}
+                                  {hasDma && !hasPipe && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 shrink-0">DMA</span>}
+                                  {hasPipe && hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/45 border border-white/12 shrink-0">ท่อ+DMA</span>}
                                 </>
                               )
                             })()}
                           </div>
 
-                          {/* Stats row */}
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">
                             <span className="text-[11px] text-white/40 num">{gs.total} โครงการ</span>
-                            {gs.byPhase[6] > 0 && <span className="text-[11px] text-emerald-400 num">✓ เสร็จ {gs.byPhase[6]}</span>}
+                            {gs.byPhase[6] > 0 && (
+                              <span className="text-[11px] text-emerald-400 num font-medium">✓ เสร็จ {gs.byPhase[6]}</span>
+                            )}
                             {(gs.byPhase[4] + gs.byPhase[5]) > 0 && (
                               <span className="text-[11px] text-cyan-400 num">↺ ดำเนิน {gs.byPhase[4] + gs.byPhase[5]}</span>
                             )}
-                            {gs.overdue > 0 && <span className="text-[11px] text-red-400 num">⚠ เกิน {gs.overdue}</span>}
-                            {gs.budget > 0 && <span className="text-[11px] text-amber-300/70 num">{fmtMillion(gs.budget)}</span>}
-                            {gs.estPipe > 0 && <span className="text-[11px] text-white/25 num">{fmtMeter(gs.estPipe)} ม.</span>}
+                            {gs.overdue > 0 && (
+                              <span className="text-[11px] text-red-400 num font-semibold">⚠ เกิน {gs.overdue}</span>
+                            )}
+                            {gs.budget > 0 && (
+                              <span className="text-[11px] text-amber-300/60 num">{fmtMillion(gs.budget)}</span>
+                            )}
+                            {gs.estPipe > 0 && (
+                              <span className="text-[11px] text-white/25 num">{fmtMeter(gs.estPipe)} ม.</span>
+                            )}
                           </div>
 
-                          {/* Mini phase bar */}
                           {gs.total > 0 && (
-                            <div className="flex h-1 rounded-full overflow-hidden gap-px mt-2.5 opacity-70">
+                            <div className="flex h-1 rounded-full overflow-hidden gap-px mt-2.5 opacity-60">
                               {gs.byPhase.map((count, i) =>
                                 count > 0 ? (
-                                  <div key={i} className={`${PHASES[i].bar}`}
+                                  <div key={i} className={gs.byPhase[i].toString() && PHASES[i].bar}
                                     style={{ width: `${(count / gs.total) * 100}%` }} />
                                 ) : null
                               )}
@@ -442,7 +454,14 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                           )}
                         </div>
 
-                        <ChevronRight size={16} className="text-white/20 group-hover/row:text-cyan-400 transition-colors mt-0.5 shrink-0" />
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <ChevronRight size={16} className="text-white/20 group-hover/row:text-cyan-400 group-hover/row:translate-x-0.5 transition-all" />
+                          {gs.total > 0 && (
+                            <span className={`text-[10px] font-bold num ${
+                              allDone ? 'text-emerald-400' : hasOverdue ? 'text-red-400/70' : 'text-white/25'
+                            }`}>{gs.donePct}%</span>
+                          )}
+                        </div>
                       </div>
                     </button>
 
@@ -532,9 +551,10 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ icon, iconBg, label, value, sub, subColor = 'text-white/30', highlight = false }: {
+function KpiCard({ icon, iconBg, accentColor, label, value, sub, subColor = 'text-white/30', highlight = false }: {
   icon: React.ReactNode
   iconBg: string
+  accentColor: string
   label: string
   value: string
   sub?: string
@@ -542,14 +562,14 @@ function KpiCard({ icon, iconBg, label, value, sub, subColor = 'text-white/30', 
   highlight?: boolean
 }) {
   return (
-    <div className={`glass-card p-4 flex flex-col gap-3 ${highlight ? 'border-emerald-500/20' : ''}`}>
+    <div className={`glass-card p-4 flex flex-col gap-3 border-l-2 ${accentColor} ${highlight ? 'border-emerald-500/25' : ''}`}>
       <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center`}>
         {icon}
       </div>
       <div>
         <p className="text-[10px] text-white/35 mb-1 leading-tight">{label}</p>
-        <p className="text-xl font-bold text-white num leading-none">{value}</p>
-        {sub && <p className={`text-[11px] mt-1 ${subColor}`}>{sub}</p>}
+        <p className="text-2xl font-bold text-white num leading-none">{value}</p>
+        {sub && <p className={`text-[11px] mt-1.5 ${subColor}`}>{sub}</p>}
       </div>
     </div>
   )
