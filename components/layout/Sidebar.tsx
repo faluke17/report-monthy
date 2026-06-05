@@ -11,10 +11,12 @@ import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
 
 interface SidebarStats {
-  totalBranches: number
-  submitted:     number
-  pending:       number
-  openObstacles: number
+  totalBranches:  number
+  submitted:      number
+  pending:        number
+  openObstacles:  number
+  overdueActions: number
+  mnfRedCount:    number
 }
 interface SidebarProps {
   stats?:       SidebarStats
@@ -63,10 +65,12 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useAppStore()
 
-  const total      = stats?.totalBranches ?? 26
-  const submitted  = stats?.submitted     ?? 0
-  const pending    = stats?.pending       ?? 0
-  const obstacles  = stats?.openObstacles ?? 0
+  const total          = stats?.totalBranches  ?? 26
+  const submitted      = stats?.submitted      ?? 0
+  const pending        = stats?.pending        ?? 0
+  const obstacles      = stats?.openObstacles  ?? 0
+  const overdueActions = stats?.overdueActions ?? 0
+  const mnfRedCount    = stats?.mnfRedCount    ?? 0
   const pct        = total > 0 ? Math.round((submitted / total) * 100) : 0
   const arcColor   = pct === 100 ? '#4ADE80' : pct >= 60 ? '#38BDF8' : pct >= 30 ? '#FCD34D' : '#F87171'
   const r          = 20
@@ -189,8 +193,8 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
 
           <div className="h-px mx-3" style={{ background: 'rgba(71,130,255,.08)' }} />
 
-          {/* Stats row */}
-          <div className="px-3 py-2.5 grid grid-cols-2 gap-2">
+          {/* Stats row 1 */}
+          <div className="px-3 pt-2.5 pb-2 grid grid-cols-2 gap-2">
             <div>
               <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
               <p style={{ color: pending > 0 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
@@ -201,6 +205,22 @@ export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
               <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
               <p style={{ color: obstacles > 0 ? '#FCD34D' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {obstacles}
+              </p>
+            </div>
+          </div>
+          <div className="h-px mx-3" style={{ background: 'rgba(71,130,255,.06)' }} />
+          {/* Stats row 2 */}
+          <div className="px-3 pt-2 pb-2.5 grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>Action🔴</p>
+              <p style={{ color: overdueActions > 0 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+                {overdueActions}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>MNF🔴</p>
+              <p style={{ color: mnfRedCount > 0 ? '#FB923C' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+                {mnfRedCount}
               </p>
             </div>
           </div>

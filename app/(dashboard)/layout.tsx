@@ -23,7 +23,7 @@ export default async function DashboardLayout({
   // branch_name-based check (consistent with monthly/page.tsx)
   const isBranchUser = !!session?.branch_name
 
-  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes, requirementMeetings] = await Promise.all([
+  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes, requirementMeetings, overdueActionsRes, mnfRedRes] = await Promise.all([
     supabase.from('branches').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('monthly_reports').select('id', { count: 'exact', head: true })
       .eq('report_year', now.getFullYear()).eq('report_month', now.getMonth() + 1),
@@ -42,6 +42,11 @@ export default async function DashboardLayout({
       : Promise.resolve({ data: [] as { id: string }[] }),
     // Requirements with fulfillment status
     getMeetingsWithRequirements({ branchCostcenter: branchCostcenter }),
+    supabase.from('action_items').select('id', { count: 'exact', head: true })
+      .lt('due_date', today)
+      .not('status', 'in', '("แล้วเสร็จ","ยกเลิก")'),
+    (supabase as any).from('mnf_ema_latest').select('logger_id', { count: 'exact', head: true })
+      .in('alert_status', ['red_spike', 'red_accumulated']),
   ])
 
   // Count unacknowledged meetings for branch users
@@ -69,6 +74,8 @@ export default async function DashboardLayout({
     submitted,
     pending: total - submitted,
     openObstacles: obstaclesRes.count ?? 0,
+    overdueActions: overdueActionsRes.count ?? 0,
+    mnfRedCount: (mnfRedRes as any)?.count ?? 0,
   }
 
   return (
