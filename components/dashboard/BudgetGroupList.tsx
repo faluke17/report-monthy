@@ -38,14 +38,24 @@ function fmtMeter(n: number) {
   return n.toLocaleString('th-TH', { maximumFractionDigits: 0 })
 }
 
+function getLatestPipeCompleted(p: BudgetProjectSummary): number {
+  const updates = p.project_progress_updates ?? []
+  if (updates.length === 0) return 0
+  const sorted = [...updates].sort(
+    (a, b) => new Date(b.reported_date).getTime() - new Date(a.reported_date).getTime()
+  )
+  return sorted[0].pipe_length_completed ?? 0
+}
+
 function computeStats(projects: BudgetProjectSummary[]) {
   const total    = projects.length
   const byPhase  = Array.from({ length: 7 }, (_, i) => projects.filter(p => p.current_phase === i).length)
   const budget   = projects.reduce((s, p) => s + (p.budget_excl_vat ?? 0), 0)
   const contract = projects.reduce((s, p) => s + (p.contract_incl_vat ?? 0), 0)
   const estPipe  = projects.reduce((s, p) => s + (p.project_contracts?.estimated_pipe_length ?? 0), 0)
-  const donePipe = projects.filter(p => p.current_phase === 6)
-    .reduce((s, p) => s + (p.project_contracts?.estimated_pipe_length ?? 0), 0)
+  const donePipe = projects
+    .filter(p => p.project_type !== 'dma')
+    .reduce((s, p) => s + getLatestPipeCompleted(p), 0)
   const today    = new Date(); today.setHours(0, 0, 0, 0)
   const overdue  = projects.filter(p => {
     if (p.current_phase === 6) return false

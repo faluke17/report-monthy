@@ -714,6 +714,10 @@ export interface BudgetProjectSummary {
     contract_end_date: string | null
     estimated_pipe_length: number | null
   } | null
+  project_progress_updates?: {
+    reported_date: string
+    pipe_length_completed: number | null
+  }[]
 }
 
 export interface BudgetProject {
