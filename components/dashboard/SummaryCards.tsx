@@ -52,6 +52,49 @@ interface Props {
 
 type PanelKey = 'monthly' | 'five' | 'obstacle' | 'action'
 
+// ─── CardBtn — defined outside to avoid re-creation on every parent render ────
+
+const CARD_BORDER: Record<PanelKey, string> = {
+  monthly:  'border-t-cyan-500/60',
+  five:     'border-t-green-500/60',
+  obstacle: 'border-t-amber-500/60',
+  action:   'border-t-red-500/60',
+}
+const CARD_ACTIVE_RING: Record<PanelKey, string> = {
+  monthly:  'ring-1 ring-cyan-500/40  shadow-[0_0_20px_rgba(125,211,252,0.10)]',
+  five:     'ring-1 ring-green-500/40 shadow-[0_0_20px_rgba(74,222,128,0.10)]',
+  obstacle: 'ring-1 ring-amber-500/40 shadow-[0_0_20px_rgba(246,196,83,0.10)]',
+  action:   'ring-1 ring-red-500/40   shadow-[0_0_20px_rgba(251,113,133,0.10)]',
+}
+
+function CardBtn({
+  id, label, sub, children, isOpen, onOpen,
+}: {
+  id: PanelKey; label: string; sub: string; children: React.ReactNode
+  isOpen: boolean; onOpen: (id: PanelKey) => void
+}) {
+  return (
+    <button
+      onClick={() => onOpen(id)}
+      className={cn(
+        'glass-card-sm px-4 pt-3 pb-3 border-t-2 text-left transition-all duration-200 w-full group cursor-pointer flex flex-col h-full',
+        CARD_BORDER[id], isOpen && CARD_ACTIVE_RING[id],
+      )}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 leading-tight min-h-[2rem] flex items-start">
+        {label}
+      </p>
+      <div className="flex-1 flex items-end mt-1">
+        {children}
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <p className="text-[10px] text-white/25">{sub}</p>
+        <ChevronDown size={11} className="text-white/20 group-hover:text-white/50 transition-colors" />
+      </div>
+    </button>
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function nrwColor(pct: number | null) {
@@ -859,46 +902,6 @@ export function SummaryCards({
     return `${getThaiMonthName(month)} ${toThaiYear(year)} · กปภ. เขต 10`
   })()
 
-  const BORDER: Record<PanelKey, string> = {
-    monthly:  'border-t-cyan-500/60',
-    five:     'border-t-green-500/60',
-    obstacle: 'border-t-amber-500/60',
-    action:   'border-t-red-500/60',
-  }
-  const ACTIVE_RING: Record<PanelKey, string> = {
-    monthly:  'ring-1 ring-cyan-500/40  shadow-[0_0_20px_rgba(125,211,252,0.10)]',
-    five:     'ring-1 ring-green-500/40 shadow-[0_0_20px_rgba(74,222,128,0.10)]',
-    obstacle: 'ring-1 ring-amber-500/40 shadow-[0_0_20px_rgba(246,196,83,0.10)]',
-    action:   'ring-1 ring-red-500/40   shadow-[0_0_20px_rgba(251,113,133,0.10)]',
-  }
-
-  function CardBtn({ id, label, sub, children }: { id: PanelKey; label: string; sub: string; children: React.ReactNode }) {
-    const isOpen = openPanel === id
-    return (
-      <button
-        onClick={() => openDrawer(id)}
-        className={cn(
-          'glass-card-sm px-4 pt-3 pb-3 border-t-2 text-left transition-all duration-200 w-full group cursor-pointer flex flex-col h-full',
-          BORDER[id], isOpen && ACTIVE_RING[id],
-        )}
-      >
-        {/* Label — fixed height 2 lines */}
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 leading-tight min-h-[2rem] flex items-start">
-          {label}
-        </p>
-        {/* Numbers — bottom-aligned so baseline matches across all cards */}
-        <div className="flex-1 flex items-end mt-1">
-          {children}
-        </div>
-        {/* Footer + chevron */}
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-[10px] text-white/25">{sub}</p>
-          <ChevronDown size={11} className="text-white/20 group-hover:text-white/50 transition-colors" />
-        </div>
-      </button>
-    )
-  }
-
   return (
     <>
       {/* Card row */}
@@ -918,7 +921,7 @@ export function SummaryCards({
           <p className="text-[10px] text-white/25 mt-2">จาก {reportsWithNrwCount} สาขา</p>
         </div>
 
-        <CardBtn id="monthly" label="รายงานประจำเดือน / PDCA" sub={`จาก ${totalBranches} สาขา`}>
+        <CardBtn id="monthly" label="รายงานประจำเดือน / PDCA" sub={`จาก ${totalBranches} สาขา`} isOpen={openPanel === 'monthly'} onOpen={openDrawer}>
           <div className="flex items-end gap-3">
             <div>
               <p className="num text-2xl font-bold text-green-400">{reports.length}</p>
@@ -932,7 +935,7 @@ export function SummaryCards({
           </div>
         </CardBtn>
 
-        <CardBtn id="five" label="5 หัวข้อ NRW" sub={`จาก ${totalBranches} สาขา`}>
+        <CardBtn id="five" label="5 หัวข้อ NRW" sub={`จาก ${totalBranches} สาขา`} isOpen={openPanel === 'five'} onOpen={openDrawer}>
           <div className="flex items-end gap-3">
             <div>
               <p className="num text-2xl font-bold text-green-400">{fiveTopics.length}</p>
@@ -946,7 +949,7 @@ export function SummaryCards({
           </div>
         </CardBtn>
 
-        <CardBtn id="obstacle" label="อุปสรรคเร่งด่วน" sub="ล่าช้า / รอสนับสนุน">
+        <CardBtn id="obstacle" label="อุปสรรคเร่งด่วน" sub="ล่าช้า / รอสนับสนุน" isOpen={openPanel === 'obstacle'} onOpen={openDrawer}>
           <div className="w-full flex justify-center">
             <div className="text-center">
               <p className="num text-2xl font-bold text-amber-400">{obstacles.length}</p>
@@ -955,7 +958,7 @@ export function SummaryCards({
           </div>
         </CardBtn>
 
-        <CardBtn id="action" label="Action เกินกำหนด" sub="เกินกำหนดการ">
+        <CardBtn id="action" label="Action เกินกำหนด" sub="เกินกำหนดการ" isOpen={openPanel === 'action'} onOpen={openDrawer}>
           <div className="w-full flex justify-center">
             <div className="text-center">
               <p className="num text-2xl font-bold text-red-400">{overdueActions.length}</p>

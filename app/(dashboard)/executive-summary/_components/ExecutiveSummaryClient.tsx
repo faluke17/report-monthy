@@ -164,7 +164,7 @@ function RadarEmpty({ isOver }: { isOver: boolean }) {
       </div>
       <div style={{ marginTop: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 10, color: 'rgba(34,211,238,0.7)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2 }}>
-          // STAND BY · NO TARGET ACQUIRED
+          {'// STAND BY · NO TARGET ACQUIRED'}
         </div>
         <div style={{ marginTop: 14, fontSize: 20, color: '#E2E8F0', fontWeight: 300 }}>
           {isOver ? 'วางได้เลย — กำลังเล็งเป้าหมาย' : 'ลากสาขาที่ต้องการมาวางที่นี่'}
@@ -332,7 +332,7 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
         }}>
           <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(34,211,238,0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 10, color: 'rgba(34,211,238,0.7)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.4 }}>// DOCK · BRANCH REGISTRY</span>
+              <span style={{ fontSize: 10, color: 'rgba(34,211,238,0.7)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.4 }}>{'// DOCK · BRANCH REGISTRY'}</span>
               <span style={{ fontSize: 10, color: '#64748B', fontFamily: 'IBM Plex Mono, monospace' }}>{filteredBranches.length}/26</span>
             </div>
             <div style={{ marginTop: 8, fontSize: 14, color: '#E2E8F0', fontWeight: 500 }}>หน่วยปฏิบัติการสาขา</div>
@@ -386,7 +386,7 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
           {/* Stage label bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 10, color: 'rgba(34,211,238,0.7)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.4 }}>// HOLOGRAPHIC DISPLAY · พื้นที่วิเคราะห์</span>
+              <span style={{ fontSize: 10, color: 'rgba(34,211,238,0.7)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.4 }}>{'// HOLOGRAPHIC DISPLAY · พื้นที่วิเคราะห์'}</span>
               {draggingId && (
                 <span className="anim-blink-crit" style={{ fontSize: 10, color: '#F59E0B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.4 }}>◆ TARGET INBOUND · กำลังลากเป้าหมาย</span>
               )}

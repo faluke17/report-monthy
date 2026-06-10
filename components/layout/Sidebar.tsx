@@ -56,7 +56,7 @@ const NAV_GROUPS = [
     items: [
       ...(process.env.NODE_ENV !== 'production' ? [{ href: '/plans', label: 'แผนลดน้ำสูญเสีย', icon: Target }] : []),
       { href: '/km',     label: 'KM Best Practice', icon: BookOpen },
-      { href: '/export', label: 'Export ข้อมูล',    icon: Download },
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/export', label: 'Export ข้อมูล', icon: Download }] : []),
     ],
   },
 ]

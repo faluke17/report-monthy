@@ -42,7 +42,7 @@ export default async function MeetingSchedulePage() {
   const pastRows = (past ?? []) as Meeting[]
   const allIds = [...upcomingRows, ...pastRows].map((m) => m.id)
 
-  let acksByMeeting: Record<string, MeetingAcknowledgment[]> = {}
+  const acksByMeeting: Record<string, MeetingAcknowledgment[]> = {}
   let myAcks: MeetingAcknowledgment[] = []
 
   if (allIds.length > 0) {

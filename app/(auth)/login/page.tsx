@@ -173,7 +173,7 @@ export default function LoginPage() {
         {/* Left — tactical display */}
         <section className={s.left}>
           <div className={s.leftHead}>
-            <div className={s.kicker}>// Distribution System Division</div>
+            <div className={s.kicker}>{'// Distribution System Division'}</div>
             <h1 className={s.title}>เขต 10<small>ZONE_10 · OPERATIONS COMMAND</small></h1>
             <p className={s.sub}>
               ระบบบริหารจัดการและติดตามเครือข่ายระบบประปา การประปาส่วนภูมิภาค
@@ -235,7 +235,7 @@ export default function LoginPage() {
             <div className={s.authHead}>
               <div className={s.authMark}><span>◢</span></div>
               <div className={s.ht}>
-                <div className={s.authK}>// Secure Sign-in</div>
+                <div className={s.authK}>{'// Secure Sign-in'}</div>
                 <h2>{HEAD[tab].h}</h2>
                 <p>{HEAD[tab].p}</p>
               </div>
