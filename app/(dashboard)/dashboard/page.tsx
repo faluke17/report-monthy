@@ -1,12 +1,9 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { KpiCard } from '@/components/dashboard/KpiCard'
-import { BranchTable } from '@/components/dashboard/BranchTable'
-import { NrwTrendChart } from '@/components/dashboard/NrwTrendChart'
 import { TrafficLightGrid } from '@/components/dashboard/TrafficLightGrid'
 import { MeetingBanner } from '@/components/dashboard/MeetingBanner'
 import { AlertPanel } from '@/components/dashboard/AlertPanel'
-import { DashboardSkeleton } from '@/components/shared/skeletons'
 import { Branch, Meeting, MonthlyReport, Obstacle, RequirementWithStatus } from '@/lib/types'
 import { UnsubmittedPanel } from '@/components/dashboard/UnsubmittedPanel'
 import { ObstacleSummaryPanel } from '@/components/dashboard/ObstacleSummaryPanel'
@@ -191,14 +188,10 @@ export default async function DashboardPage() {
 
       {/* Main content */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6">
-          <Suspense fallback={<DashboardSkeleton />}>
-            <BranchTable branches={branches} />
-          </Suspense>
-          <NrwTrendChart />
-        </div>
-        <div className="space-y-6">
+        <div className="xl:col-span-2">
           <TrafficLightGrid reports={reports} branches={branches} />
+        </div>
+        <div>
           <Suspense fallback={<div className="glass-card p-5 h-48 animate-pulse" />}>
             <AlertPanel />
           </Suspense>
