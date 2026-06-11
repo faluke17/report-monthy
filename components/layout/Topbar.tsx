@@ -9,6 +9,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NotificationBell } from '@/components/layout/NotificationBell'
+import { OnlineIndicator } from '@/components/layout/OnlineIndicator'
 import type { MeetingWithRequirements } from '@/lib/types'
 
 interface TopbarProps {
@@ -96,6 +97,13 @@ export function Topbar({
             สาขา{session.branch_name}
           </span>
         )}
+
+        <OnlineIndicator
+          username={session.username}
+          name={session.name}
+          surname={session.surname}
+          branch_name={session.branch_name ?? ''}
+        />
 
         <NotificationBell
           notifyCount={notifyCount}
