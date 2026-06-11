@@ -517,7 +517,7 @@ export function AreaReportForm({
                 <section>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest">
-                      ส่วนที่ 2 — ก่อนดำเนินการ
+                      ส่วนที่ 2 — ก่อนดำเนินการ <span className="normal-case text-amber-400/40">(ผลดำเนินการปี {toThaiYear(reportYear - 1)})</span>
                     </p>
                     <div className="flex items-center gap-3">
                       {!area.manual_input && area.area_code && (
@@ -698,7 +698,7 @@ export function AreaReportForm({
                 <section>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest">
-                      ส่วนที่ 4 — หลังดำเนินการ
+                      ส่วนที่ 4 — หลังดำเนินการ <span className="normal-case text-green-400/40">(ผลดำเนินการปี {toThaiYear(reportYear)})</span>
                     </p>
                     <div className="flex items-center gap-3">
                       {area.nrw_after_data_month && !area.manual_input_after && (

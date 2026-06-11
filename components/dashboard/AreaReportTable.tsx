@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { ChevronRight, AlertTriangle, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ChevronRight, AlertTriangle, Trash2, Pencil } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { toast } from 'sonner'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import { deleteAreaReport } from '@/app/actions/reports'
+import { AreaReportEditInline } from './AreaReportEditInline'
 
 interface StepTestResult {
   step_no: number
@@ -31,8 +33,10 @@ export interface AreaReport {
   area_name: string
   water_dist_before?: number | null
   water_sold_before?: number | null
+  mnf_before?: number | null
   water_dist_after?: number | null
   water_sold_after?: number | null
+  mnf_after?: number | null
   pdca_do?: string | null
   pdca_act?: string | null
   status: string
@@ -68,8 +72,10 @@ export function AreaDetailSheetBody({
   reports: AreaReport[]
   canDelete?: boolean
 }) {
+  const router = useRouter()
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletePending, startDeleteTransition] = useTransition()
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const branchName = reports[0]?.branches?.name_th ?? ''
   const reportPeriod = reports[0]
@@ -109,6 +115,21 @@ export function AreaDetailSheetBody({
           const obstCount = report.area_obstacles?.length ?? 0
           const hasHighPriority = report.area_obstacles?.some((o) => o.priority_order === 1)
           const isConfirmingDelete = confirmDeleteId === report.id
+          const isEditing = editingId === report.id
+
+          if (isEditing) {
+            return (
+              <AreaReportEditInline
+                key={report.id}
+                report={report}
+                onCancel={() => setEditingId(null)}
+                onSaved={() => {
+                  setEditingId(null)
+                  router.refresh()
+                }}
+              />
+            )
+          }
 
           return (
             <div key={report.id} className="p-5 space-y-4">
@@ -133,6 +154,14 @@ export function AreaDetailSheetBody({
                 }`}>
                   {report.status === 'submitted' ? 'ส่งแล้ว' : report.status}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(report.id)}
+                  className="flex items-center gap-1 text-[10px] font-semibold text-white/40 hover:text-cyan-400 hover:bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-transparent hover:border-cyan-500/20 transition-all"
+                >
+                  <Pencil size={10} />
+                  แก้ไข
+                </button>
               </div>
 
               {/* NRW comparison */}

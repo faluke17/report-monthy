@@ -4,6 +4,28 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { ActionResult } from '@/lib/types'
+import type { AreaObstacleInput } from '@/app/actions/area-reports'
+
+export type UpdateAreaReportInput = {
+  water_dist_before?: number | null
+  water_sold_before?: number | null
+  mnf_before?: number | null
+  water_dist_after?: number | null
+  water_sold_after?: number | null
+  mnf_after?: number | null
+  leaks_repaired?: number | null
+  leaks_pending?: number | null
+  pdca_do?: string | null
+  pdca_act?: string | null
+  step_tests: Array<{
+    step_no: number
+    estimated_loss: number | null
+    leaks_found: number
+    leaks_repaired: number | null
+    repair_status: string | null
+  }>
+  obstacles: AreaObstacleInput[]
+}
 
 export async function submitMonthlyReport(formData: FormData): Promise<ActionResult> {
   const session = await getPwaSession()
@@ -51,6 +73,67 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   revalidatePath('/')
   revalidatePath('/ranking')
   revalidatePath('/monthly')
+  return { success: true }
+}
+
+export async function updateAreaReport(id: string, data: UpdateAreaReportInput): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+
+  const { error: updateError } = await supabase
+    .from('area_monthly_reports')
+    .update({
+      water_dist_before: data.water_dist_before ?? null,
+      water_sold_before: data.water_sold_before ?? null,
+      mnf_before: data.mnf_before ?? null,
+      water_dist_after: data.water_dist_after ?? null,
+      water_sold_after: data.water_sold_after ?? null,
+      mnf_after: data.mnf_after ?? null,
+      leaks_repaired: data.leaks_repaired ?? null,
+      leaks_pending: data.leaks_pending ?? null,
+      pdca_do: data.pdca_do || null,
+      pdca_act: data.pdca_act || null,
+    })
+    .eq('id', id)
+
+  if (updateError) return { success: false, error: updateError.message }
+
+  await supabase.from('step_test_results').delete().eq('area_report_id', id)
+  if (data.step_tests.length > 0) {
+    const { error: stepError } = await supabase.from('step_test_results').insert(
+      data.step_tests.map((s) => ({
+        area_report_id: id,
+        step_no: s.step_no,
+        estimated_loss: s.estimated_loss,
+        leaks_found: s.leaks_found,
+        leaks_repaired: s.leaks_repaired,
+        repair_status: s.repair_status,
+      }))
+    )
+    if (stepError) return { success: false, error: stepError.message }
+  }
+
+  await supabase.from('area_obstacles').delete().eq('area_report_id', id)
+  if (data.obstacles.length > 0) {
+    const { error: obstError } = await supabase.from('area_obstacles').insert(
+      data.obstacles.map((o) => ({
+        area_report_id: id,
+        obstacle_type: o.obstacle_type,
+        other_description: o.other_description || null,
+        obstacle_detail: o.obstacle_detail || null,
+        resolution_plan: o.resolution_plan || null,
+        impact: o.impact || null,
+        region_support_needed: o.region_support_needed || null,
+        priority_order: o.priority_order ?? 2,
+      }))
+    )
+    if (obstError) return { success: false, error: obstError.message }
+  }
+
+  revalidatePath('/monthly')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
