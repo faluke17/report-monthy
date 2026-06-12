@@ -86,7 +86,14 @@ export async function POST(req: NextRequest) {
     branch_name:   profile.branch_name_th ?? branchObj?.name_th ?? '',
   }
 
-  const response = NextResponse.json({ ok: true, username: session.username, branch_name: session.branch_name })
+  const response = NextResponse.json({
+    ok: true,
+    username: session.username,
+    branch_name: session.branch_name,
+    // ส่ง token กลับให้ browser client ใช้ set Supabase session (Realtime/Presence)
+    supabase_access_token:  authData.session?.access_token  ?? null,
+    supabase_refresh_token: authData.session?.refresh_token ?? null,
+  })
   response.cookies.set(PWA_SESSION_COOKIE, JSON.stringify(session), {
     httpOnly: true,
     sameSite: 'lax',

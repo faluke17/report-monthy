@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
+import { createClient } from '@/lib/supabase/client'
 import s from './login.module.css'
 
 type Tab = 'login' | 'reg'
@@ -118,6 +119,14 @@ export default function LoginPage() {
           toast.error(data.error ?? 'เข้าสู่ระบบไม่สำเร็จ')
         }
       } else {
+        // ตั้ง Supabase session ใน browser เพื่อให้ Realtime Presence ทำงานได้
+        if (data.supabase_access_token && data.supabase_refresh_token) {
+          const supabase = createClient()
+          await supabase.auth.setSession({
+            access_token:  data.supabase_access_token,
+            refresh_token: data.supabase_refresh_token,
+          })
+        }
         setSuccess(true)
         setTimeout(() => { window.location.href = '/dashboard' }, 1400)
       }
