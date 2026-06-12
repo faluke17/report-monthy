@@ -45,7 +45,7 @@ export function useOnlinePresence(me: UseOnlinePresenceOptions) {
           })
         setOnlineUsers(users)
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({
             username: me.username,
@@ -54,6 +54,8 @@ export function useOnlinePresence(me: UseOnlinePresenceOptions) {
             branch_name: me.branch_name,
             joined_at: new Date().toISOString(),
           })
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error('[OnlinePresence] channel status:', status, err)
         }
       })
 
