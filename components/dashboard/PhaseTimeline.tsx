@@ -172,12 +172,12 @@ export function PhaseTimeline({
                 </button>
 
                 {/* Label + completion date */}
-                <div className="flex flex-col items-center gap-0.5 text-center" style={{ maxWidth: 52 }}>
-                  <span className={`leading-tight font-medium ${labelColor}`} style={{ fontSize: 9 }}>
+                <div className="flex flex-col items-center gap-0.5 text-center" style={{ maxWidth: 56 }}>
+                  <span className={`leading-tight font-semibold text-[10px] ${labelColor}`}>
                     {phase.label}
                   </span>
                   {date && (
-                    <span className="text-white/25 leading-none" style={{ fontSize: 8 }}>
+                    <span className="text-white/35 leading-none text-[9px]">
                       {formatDateShort(date)}
                     </span>
                   )}
@@ -196,10 +196,10 @@ export function PhaseTimeline({
       {progressPct !== null && projectType === 'pipe' && cp >= 5 && (
         <div className="bg-white/3 rounded-lg px-3 py-2.5 border border-white/6">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-white/35 font-medium tracking-wide">ความคืบหน้าก่อสร้าง</span>
-            <span className="text-[11px] text-cyan-400 font-bold num">{progressPct}%</span>
+            <span className="text-xs text-white/50 font-semibold">ความคืบหน้าก่อสร้าง</span>
+            <span className="text-sm text-cyan-300 font-bold num">{progressPct}%</span>
           </div>
-          <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">
+          <div className="h-2 rounded-full bg-white/6 overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
               style={{

@@ -51,6 +51,33 @@ function progressPct(project: BudgetProject) {
   if (!latest || !est || est === 0 || latest.pipe_length_completed == null) return null
   return Math.round((latest.pipe_length_completed / est) * 100)
 }
+function deadlineDaysLabel(project: BudgetProject): { text: string; level: 'overdue' | 'near' | 'ok' } | null {
+  if (project.current_phase === 6) return null
+  const end = project.project_contracts?.contract_end_date
+  if (!end) return null
+  const today = new Date(); today.setHours(0,0,0,0)
+  const diff = Math.round((new Date(end).getTime() - today.getTime()) / 86400000)
+  if (diff < 0)  return { text: `เกิน ${Math.abs(diff)} วัน`, level: 'overdue' }
+  if (diff === 0) return { text: 'ครบกำหนดวันนี้', level: 'near' }
+  if (diff <= 30) return { text: `เหลือ ${diff} วัน`, level: 'near' }
+  return {
+    text: new Date(end).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }),
+    level: 'ok',
+  }
+}
+
+function getAutoExpandPhase(project: BudgetProject): number | null {
+  const cp = project.current_phase
+  if (cp === 0) return null
+  // First: phase with missing required data
+  for (const ph of PHASES) {
+    if (ph.no <= cp && getMissingFields(project, ph.no).length > 0) return ph.no
+  }
+  // Otherwise: current active phase (to make next update easy)
+  if (cp < 6) return cp
+  return null
+}
+
 function phase6Missing(project: BudgetProject) {
   if (project.current_phase !== 6) return null
   return {
@@ -73,7 +100,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
   useEffect(() => {
     if (defaultProjectId && projects.length > 0) {
       const target = projects.find(p => p.id === defaultProjectId)
-      if (target) { setSelected(target); setExpandedPhase(null) }
+      if (target) { setSelected(target); setExpandedPhase(getAutoExpandPhase(target)) }
     }
   }, [defaultProjectId, projects])
 
@@ -130,15 +157,15 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
       {/* Summary bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'ทั้งหมด',     value: total,       color: 'text-white' },
-          { label: 'กำลังดำเนิน', value: inProgress,  color: 'text-cyan-400' },
-          { label: 'เสร็จแล้ว',   value: completed,   color: 'text-emerald-400' },
-          { label: 'รอข้อมูล',    value: incomplete6, color: 'text-amber-400' },
-          { label: 'เกินกำหนด',   value: overdue,     color: 'text-red-400' },
+          { label: 'ทั้งหมด',     value: total,       color: 'text-white',        bg: '' },
+          { label: 'กำลังดำเนิน', value: inProgress,  color: 'text-cyan-300',     bg: 'border-l-2 border-cyan-500/40' },
+          { label: 'เสร็จแล้ว',   value: completed,   color: 'text-emerald-300',  bg: 'border-l-2 border-emerald-500/40' },
+          { label: 'รอข้อมูล',    value: incomplete6, color: 'text-amber-300',    bg: 'border-l-2 border-amber-500/40' },
+          { label: 'เกินกำหนด',   value: overdue,     color: 'text-red-400',      bg: 'border-l-2 border-red-500/40' },
         ].map(s => (
-          <div key={s.label} className="glass-card px-4 py-3">
-            <p className="text-[11px] text-white/40 mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold num ${s.color}`}>{s.value}</p>
+          <div key={s.label} className={`glass-card px-4 py-4 ${s.bg}`}>
+            <p className="text-xs text-white/50 mb-1.5 font-medium">{s.label}</p>
+            <p className={`text-3xl font-bold num ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -153,7 +180,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่อโครงการ หรือรหัส..."
-              className="w-full bg-white/5 border border-white/12 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-cyan-500/40"
+              className="w-full bg-white/5 border border-white/12 rounded-lg pl-8 pr-3 py-2 text-sm text-white/85 placeholder-white/35 focus:outline-none focus:border-cyan-500/40"
             />
             <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             {searchQuery && (
@@ -168,7 +195,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
             <select
               value={filterBranchId}
               onChange={e => setFilterBranchId(e.target.value)}
-              className="flex-1 min-w-[140px] max-w-[200px] bg-white/5 border border-white/12 rounded-lg px-3 py-1.5 text-xs text-white/70 focus:outline-none focus:border-cyan-500/40"
+              className="flex-1 min-w-[140px] max-w-[200px] bg-white/5 border border-white/12 rounded-lg px-3 py-2 text-sm text-white/75 focus:outline-none focus:border-cyan-500/40"
             >
               <option value="">ทุกสาขา</option>
               {activeBranches.map(b => (
@@ -178,11 +205,11 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
           )}
 
           <div className="flex items-center justify-between flex-1 min-w-0">
-            <p className="text-xs text-white/40 truncate">
+            <p className="text-sm text-white/55 truncate font-medium">
               {groupName}
               {(q || filterBranchId)
                 ? <span className="text-cyan-400 ml-1">· {total} โครงการ (กรอง)</span>
-                : <span className="ml-1">· {total} โครงการ</span>
+                : <span className="text-white/40 ml-1">· {total} โครงการ</span>
               }
             </p>
             <button
@@ -205,69 +232,80 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[11px] text-white/30 uppercase tracking-wider border-b border-white/6">
-                  <th className="text-center px-4 py-2.5 font-medium w-10">#</th>
-                  <th className="text-left px-4 py-2.5 font-medium">สาขา</th>
-                  <th className="text-left px-4 py-2.5 font-medium">ชื่อโครงการ</th>
-                  <th className="text-center px-4 py-2.5 font-medium">สถานะ</th>
+                <tr className="text-xs text-white/45 uppercase tracking-wider border-b border-white/8">
+                  <th className="text-center px-4 py-3 font-semibold w-10">#</th>
+                  <th className="text-left px-4 py-3 font-semibold">สาขา</th>
+                  <th className="text-left px-4 py-3 font-semibold">ชื่อโครงการ</th>
+                  <th className="text-center px-4 py-3 font-semibold">สถานะ</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((project, idx) => {
                   const phase   = project.current_phase
                   const ds      = deadlineStatus(project)
+                  const dl      = deadlineDaysLabel(project)
                   const pct     = progressPct(project)
                   const missing = phase6Missing(project)
                   const incomplete = missing && (missing.dates || missing.certificate)
+                  const missingCount = PHASES.reduce((n, ph) =>
+                    n + (ph.no <= phase ? getMissingFields(project, ph.no).length : 0), 0)
                   return (
                     <tr
                       key={project.id}
-                      onClick={() => { setSelected(project); setExpandedPhase(null); setConfirmDelete(false) }}
+                      onClick={() => { setSelected(project); setExpandedPhase(getAutoExpandPhase(project)); setConfirmDelete(false) }}
                       className="border-b border-white/4 hover:bg-white/3 cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-3 text-center text-white/25 text-xs num">{idx + 1}</td>
-                      <td className="px-4 py-3 text-white/50 text-xs whitespace-nowrap">
+                      <td className="px-4 py-4 text-center text-white/40 text-sm num">{idx + 1}</td>
+                      <td className="px-4 py-4 text-white/65 text-sm whitespace-nowrap font-medium">
                         {project.branches?.name_th ?? '-'}
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="text-white font-medium leading-snug">{project.project_name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {project.code && <p className="text-[10px] text-white/25 font-mono">{project.code}</p>}
+                      <td className="px-4 py-4">
+                        <p className="text-white font-semibold leading-snug text-sm">{project.project_name}</p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {project.code && <p className="text-xs text-white/40 font-mono">{project.code}</p>}
                           {project.project_type === 'dma' && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400">DMA</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20">DMA</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className={`text-[11px] px-2.5 py-0.5 rounded-full whitespace-nowrap ${
-                            phase === 6 && !incomplete ? 'bg-emerald-500/15 text-emerald-400'
-                            : phase === 6 &&  incomplete ? 'bg-amber-500/15 text-amber-400'
-                            : phase > 0                  ? 'bg-cyan-500/15 text-cyan-400'
-                            :                              'bg-white/5 text-white/30'
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          {/* Phase badge */}
+                          <span className={`text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap border ${
+                            phase === 6 && !incomplete ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                            : phase === 6 &&  incomplete ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                            : phase > 0                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                            :                              'bg-white/5 text-white/40 border-white/10'
                           }`}>
                             {phase === 6 && incomplete ? 'รอข้อมูล' : PHASE_LABELS[phase]}
                           </span>
+
+                          {/* Progress % — phase 5 pipe */}
                           {phase === 5 && pct !== null && (
-                            <span className="text-[10px] text-cyan-400 num">{pct}%</span>
+                            <div className="w-20 space-y-1">
+                              <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
+                                <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-300 transition-all" style={{ width: `${Math.min(pct,100)}%` }} />
+                              </div>
+                              <p className="text-xs text-cyan-400 num text-center font-semibold">{pct}%</p>
+                            </div>
                           )}
-                          {missing?.dates && (
-                            <span className="text-[10px] text-amber-400/80 flex items-center gap-0.5">
-                              <Calendar size={9} /> ขาดวันส่ง/ตรวจ
+
+                          {/* Contract deadline */}
+                          {dl && (
+                            <span className={`text-xs flex items-center gap-1 font-medium ${
+                              dl.level === 'overdue' ? 'text-red-400'
+                              : dl.level === 'near'  ? 'text-amber-400'
+                              :                        'text-white/40'
+                            }`}>
+                              <Calendar size={10} /> {dl.text}
                             </span>
                           )}
-                          {missing?.certificate && (
-                            <span className="text-[10px] text-amber-400/80 flex items-center gap-0.5">
-                              <Paperclip size={9} /> ไม่มีใบรับรอง
+
+                          {/* Missing data indicator */}
+                          {missingCount > 0 && (
+                            <span className="text-xs text-amber-400 flex items-center gap-1 font-medium">
+                              <AlertTriangle size={10} /> ขาด {missingCount} รายการ
                             </span>
-                          )}
-                          {ds === 'overdue' && (
-                            <span className="text-[10px] text-red-400 flex items-center gap-0.5">
-                              <AlertTriangle size={9} /> เกินกำหนด
-                            </span>
-                          )}
-                          {ds === 'near' && (
-                            <span className="text-[10px] text-amber-400">ใกล้ครบกำหนด</span>
                           )}
                         </div>
                       </td>
@@ -336,31 +374,44 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
 
 // ─── Incomplete Data Banner ───────────────────────────────────────────────────
 
-function IncompleteDataBanner({ project }: { project: BudgetProject }) {
-  const issues: { phaseLabel: string; fields: string[] }[] = []
+function IncompleteDataBanner({
+  project,
+  onSelectPhase,
+}: {
+  project: BudgetProject
+  onSelectPhase: (phase: number) => void
+}) {
+  const issues: { phaseNo: number; phaseLabel: string; fields: string[] }[] = []
 
   for (const ph of PHASES) {
     const missing = getMissingFields(project, ph.no)
     if (missing.length > 0) {
-      issues.push({ phaseLabel: ph.label, fields: missing.map(m => m.label) })
+      issues.push({ phaseNo: ph.no, phaseLabel: ph.label, fields: missing.map(m => m.label) })
     }
   }
 
   if (issues.length === 0) return null
 
   return (
-    <div className="flex items-start gap-2.5 bg-amber-500/8 border border-amber-500/20 rounded-xl px-3.5 py-3">
-      <AlertTriangle size={14} className="text-amber-400 shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-amber-400 mb-1.5">ข้อมูลยังไม่ครบถ้วน</p>
-        <ul className="space-y-1">
-          {issues.map(iss => (
-            <li key={iss.phaseLabel} className="text-[11px] text-amber-400/70 leading-relaxed">
-              <span className="font-semibold text-amber-400/90">{iss.phaseLabel}:</span>{' '}
-              {iss.fields.join(', ')}
-            </li>
-          ))}
-        </ul>
+    <div className="bg-amber-500/8 border border-amber-500/25 rounded-xl overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-500/15">
+        <AlertTriangle size={14} className="text-amber-400 shrink-0" />
+        <p className="text-sm font-semibold text-amber-400 flex-1">ข้อมูลยังไม่ครบ — กดกรอกได้เลย</p>
+      </div>
+      <div className="divide-y divide-amber-500/8">
+        {issues.map(iss => (
+          <button
+            key={iss.phaseNo}
+            onClick={() => onSelectPhase(iss.phaseNo)}
+            className="w-full text-left flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-amber-500/10 transition-colors group"
+          >
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-amber-400">{iss.phaseLabel}:</span>{' '}
+              <span className="text-xs text-amber-400/70">{iss.fields.join(', ')}</span>
+            </div>
+            <span className="text-xs text-amber-400/50 group-hover:text-amber-400 shrink-0 transition-colors font-medium">กรอก →</span>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -391,19 +442,19 @@ function DetailBody({
     : null
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-5">
       {/* Meta row */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-white/40 bg-white/5 px-2.5 py-1 rounded-full">
+        <span className="text-sm text-white/60 bg-white/6 px-3 py-1 rounded-full font-medium border border-white/8">
           {project.branches?.name_th ?? '-'}
         </span>
         {project.code && (
-          <span className="text-xs text-white/30 font-mono bg-white/4 px-2.5 py-1 rounded-full">
+          <span className="text-xs text-white/45 font-mono bg-white/5 px-2.5 py-1 rounded-full border border-white/8">
             {project.code}
           </span>
         )}
         {ds === 'overdue' && (
-          <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">
+          <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/25 px-2.5 py-1 rounded-full font-semibold">
             <AlertTriangle size={11} /> เกินกำหนดสัญญา
           </span>
         )}
@@ -411,7 +462,7 @@ function DetailBody({
 
       {/* ── Phase Stepper — primary visual ── */}
       <div className="bg-white/3 rounded-xl px-4 pt-4 pb-3 border border-white/6">
-        <p className="text-[10px] text-white/25 uppercase tracking-widest mb-3 font-medium">ขั้นตอนการดำเนินงาน</p>
+        <p className="text-xs text-white/45 uppercase tracking-widest mb-3 font-semibold">ขั้นตอนการดำเนินงาน</p>
         <PhaseTimeline
           project={project}
           selectedPhase={expandedPhase}
@@ -423,7 +474,7 @@ function DetailBody({
       </div>
 
       {/* Incomplete data banner */}
-      <IncompleteDataBanner project={project} />
+      <IncompleteDataBanner project={project} onSelectPhase={onSelectPhase} />
 
       {/* Phase Edit Form — appears right below stepper when a phase is selected */}
       {expandedPhase !== null && (() => {
@@ -435,15 +486,15 @@ function DetailBody({
               ? 'border-amber-500/25 bg-amber-500/4'
               : 'border-cyan-500/20 bg-cyan-500/4'
           }`}>
-            <div className={`px-4 py-2.5 border-b flex items-center gap-2 ${
-              hasMissing ? 'border-amber-500/15' : 'border-cyan-500/12'
+            <div className={`px-4 py-3 border-b flex items-center gap-2 ${
+              hasMissing ? 'border-amber-500/20' : 'border-cyan-500/15'
             }`}>
-              {hasMissing && <AlertTriangle size={12} className="text-amber-400" />}
-              <span className={`text-[11px] font-semibold ${hasMissing ? 'text-amber-400' : 'text-cyan-400'}`}>
+              {hasMissing && <AlertTriangle size={13} className="text-amber-400" />}
+              <span className={`text-sm font-semibold ${hasMissing ? 'text-amber-400' : 'text-cyan-400'}`}>
                 ขั้นตอนที่ {expandedPhase} — {PHASES.find(p => p.no === expandedPhase)?.label}
               </span>
               {hasMissing && (
-                <span className="ml-auto text-[10px] text-amber-400/60">
+                <span className="ml-auto text-xs text-amber-400/70 font-medium">
                   กรุณากรอกข้อมูลให้ครบ
                 </span>
               )}
@@ -463,7 +514,7 @@ function DetailBody({
 
       {/* Budget */}
       <div>
-        <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">งบประมาณ</p>
+        <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">งบประมาณ</p>
         <div className="grid grid-cols-3 gap-2">
           <BudgetCell label="งบประมาณ (ไม่รวม VAT)" value={project.budget_excl_vat} />
           <BudgetCell label="งบจัดจ้าง (รวม VAT)" value={project.contract_incl_vat} />
@@ -474,6 +525,11 @@ function DetailBody({
       {/* Contract Info (phase 4+) */}
       {project.current_phase >= 4 && project.project_contracts && (
         <ContractInfo contract={project.project_contracts} deadlineSt={ds} />
+      )}
+
+      {/* Completion Info (phase 6 only) */}
+      {project.current_phase === 6 && (
+        <CompletionInfo project={project} />
       )}
 
       {/* Certificate (phase 6 only) */}
@@ -542,16 +598,59 @@ function ContractInfo({ contract: c, deadlineSt }: {
 
   return (
     <div>
-      <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">รายละเอียดสัญญา</p>
+      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">รายละเอียดสัญญา</p>
       <div className="bg-white/4 rounded-xl divide-y divide-white/5">
         {rows.map(r => (
-          <div key={r.label} className="flex items-start justify-between gap-3 px-3 py-2">
-            <span className="text-[11px] text-white/35 shrink-0">{r.label}</span>
-            <span className={`text-[11px] text-right font-medium break-all ${
+          <div key={r.label} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
+            <span className="text-xs text-white/55 shrink-0">{r.label}</span>
+            <span className={`text-xs text-right font-semibold break-all ${
               r.highlight
                 ? deadlineSt === 'overdue' ? 'text-red-400' : 'text-amber-400'
-                : 'text-white/70'
+                : 'text-white/80'
             }`}>
+              {r.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Completion Info ──────────────────────────────────────────────────────────
+
+function CompletionInfo({ project }: { project: BudgetProject }) {
+  const isPipe = project.project_type === 'pipe'
+  const latest = latestProgress(project)
+
+  function fmtDate(d: string | null) {
+    if (!d) return null
+    try { return new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    catch { return d }
+  }
+
+  const rows: Array<{ label: string; value: string; highlight?: boolean }> = [
+    ...(fmtDate(project.completion_submission_date)
+      ? [{ label: 'วันส่งงาน', value: fmtDate(project.completion_submission_date)! }]
+      : []),
+    ...(fmtDate(project.completion_inspection_date)
+      ? [{ label: 'วันตรวจรับงาน', value: fmtDate(project.completion_inspection_date)! }]
+      : []),
+    ...(isPipe && latest?.pipe_length_completed != null
+      ? [{ label: 'ความยาวท่อแล้วเสร็จ', value: `${latest.pipe_length_completed.toLocaleString('th-TH')} ม.`, highlight: true }]
+      : []),
+  ]
+
+  if (rows.length === 0) return null
+
+  return (
+    <div>
+      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">ข้อมูลการแล้วเสร็จ</p>
+      <div className="bg-white/4 rounded-xl divide-y divide-white/5">
+        {rows.map(r => (
+          <div key={r.label} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
+            <span className="text-xs text-white/55 shrink-0">{r.label}</span>
+            <span className={`text-xs text-right font-semibold ${r.highlight ? 'text-emerald-400' : 'text-white/80'}`}>
               {r.value}
             </span>
           </div>
@@ -565,12 +664,12 @@ function ContractInfo({ contract: c, deadlineSt }: {
 
 function BudgetCell({ label, value, note }: { label: string; value: number | null | undefined; note?: string }) {
   return (
-    <div className="bg-white/4 rounded-xl p-3">
-      <p className="text-[10px] text-white/30 mb-1.5 leading-tight">{label}</p>
+    <div className="bg-white/4 rounded-xl p-3.5">
+      <p className="text-xs text-white/50 mb-2 leading-tight font-medium">{label}</p>
       <p className="text-sm font-bold text-white num">
         {value != null ? `฿${value.toLocaleString('th-TH', { maximumFractionDigits: 2 })}` : '-'}
       </p>
-      {note && <p className="text-[10px] text-white/20 mt-0.5">{note}</p>}
+      {note && <p className="text-xs text-white/35 mt-0.5">{note}</p>}
     </div>
   )
 }
@@ -652,12 +751,12 @@ function PhaseEditForm({
       <form onSubmit={handlePhase123} className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">วันที่เสร็จสิ้น</label>
+            <label className="block text-xs text-white/55 mb-1 font-medium">วันที่เสร็จสิ้น</label>
             <input type="date" name={dateKey} defaultValue={project[dateKey] as string ?? ''}
               className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">หมายเหตุ</label>
+            <label className="block text-xs text-white/55 mb-1 font-medium">หมายเหตุ</label>
             <input type="text" name={notesKey} defaultValue={project[notesKey] as string ?? ''}
               className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
           </div>
@@ -683,8 +782,8 @@ function PhaseEditForm({
             value={startDate} onChange={e => setStartDate(e.target.value)} />
         </div>
         {computedEnd && (
-          <div className="bg-cyan-500/10 rounded-lg px-3 py-2">
-            <p className="text-[11px] text-white/40">วันหมดสัญญา (คำนวณอัตโนมัติ)</p>
+          <div className="bg-cyan-500/10 rounded-lg px-3.5 py-2.5">
+            <p className="text-xs text-white/55 font-medium">วันหมดสัญญา (คำนวณอัตโนมัติ)</p>
             <p className="text-sm text-cyan-300 font-medium mt-0.5">
               {new Date(computedEnd).toLocaleDateString('th-TH', { dateStyle: 'long' })}
             </p>
@@ -711,25 +810,25 @@ function PhaseEditForm({
         )}
         {updates.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] text-white/30">ประวัติอัปเดต</p>
+            <p className="text-xs text-white/50 font-semibold">ประวัติอัปเดต</p>
             {updates.map(u => {
               const p = isPipe && est && est > 0 && u.pipe_length_completed != null
                 ? Math.round((u.pipe_length_completed / est) * 100)
                 : null
               return (
-                <div key={u.id} className="bg-white/4 rounded-lg px-3 py-2 text-xs">
+                <div key={u.id} className="bg-white/4 rounded-lg px-3.5 py-2.5 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-white/50">{new Date(u.reported_date).toLocaleDateString('th-TH')}</span>
+                    <span className="text-white/60 font-medium">{new Date(u.reported_date).toLocaleDateString('th-TH')}</span>
                     {isPipe && u.pipe_length_completed != null ? (
-                      <span className="text-cyan-400 font-semibold num">
+                      <span className="text-cyan-300 font-semibold num">
                         {u.pipe_length_completed.toLocaleString('th-TH')} ม.
-                        {p !== null && <span className="text-white/30 ml-1">({p}%)</span>}
+                        {p !== null && <span className="text-white/40 ml-1">({p}%)</span>}
                       </span>
                     ) : (
-                      <span className="text-cyan-400/60 text-[10px]">บันทึกแล้ว</span>
+                      <span className="text-cyan-400/70 text-xs">บันทึกแล้ว</span>
                     )}
                   </div>
-                  {u.notes && <p className="text-white/35 mt-0.5">{u.notes}</p>}
+                  {u.notes && <p className="text-white/55 mt-1">{u.notes}</p>}
                 </div>
               )
             })}
@@ -737,7 +836,7 @@ function PhaseEditForm({
         )}
         {project.current_phase >= 5 && (
           <form onSubmit={handleAddProgress} className="space-y-2 border-t border-white/8 pt-3">
-            <p className="text-[11px] text-white/40">เพิ่มอัปเดต</p>
+            <p className="text-xs text-white/55 font-semibold">เพิ่มอัปเดต</p>
             <div className="grid grid-cols-2 gap-2">
               <InputField name="reported_date" label="วันที่" type="date"
                 defaultValue={new Date().toISOString().split('T')[0]} />
@@ -765,7 +864,7 @@ function PhaseEditForm({
               defaultValue={project.completion_inspection_date ?? ''} />
           </div>
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">หมายเหตุ</label>
+            <label className="block text-xs text-white/55 mb-1 font-medium">หมายเหตุ</label>
             <textarea name="completion_notes" defaultValue={project.completion_notes ?? ''} rows={2}
               className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50" />
           </div>
@@ -817,7 +916,7 @@ function CertificateSection({ project, onRefresh }: {
 
   return (
     <div>
-      <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">ใบรับรองผลงาน</p>
+      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">ใบรับรองผลงาน</p>
       <div className="bg-white/4 rounded-xl p-3">
         {project.certificate_url ? (
           <div className="flex items-center gap-2 flex-wrap">
@@ -893,7 +992,7 @@ function NewProjectModal({ yearId, groupId, branches, sessionBranchId, isRegion,
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           {isRegion && (
             <div>
-              <label className="block text-xs text-white/40 mb-1">สาขา</label>
+              <label className="block text-xs text-white/55 mb-1 font-medium">สาขา</label>
               <select name="branch_id" required
                 className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50">
                 <option value="">เลือกสาขา...</option>
@@ -926,12 +1025,12 @@ function NewProjectModal({ yearId, groupId, branches, sessionBranchId, isRegion,
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-white/40 mb-1">งบประมาณ (ไม่รวม VAT)</label>
+              <label className="block text-xs text-white/55 mb-1 font-medium">งบประมาณ (ไม่รวม VAT)</label>
               <input type="number" name="budget_excl_vat" step="0.01" min="0" placeholder="0.00"
                 className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-xs text-white/40 mb-1">งบจัดจ้าง (รวม VAT)</label>
+              <label className="block text-xs text-white/55 mb-1 font-medium">งบจัดจ้าง (รวม VAT)</label>
               <input type="number" name="contract_incl_vat" step="0.01" min="0" placeholder="0.00"
                 className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
             </div>
@@ -961,7 +1060,7 @@ function InputField({ name, label, type = 'text', defaultValue, value, onChange,
   const props = value !== undefined ? { value, onChange } : { defaultValue }
   return (
     <div>
-      <label className="block text-[11px] text-white/40 mb-1">{label}</label>
+      <label className="block text-xs text-white/55 mb-1 font-medium">{label}</label>
       <input type={type} name={name} step={step} {...props}
         className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
     </div>
