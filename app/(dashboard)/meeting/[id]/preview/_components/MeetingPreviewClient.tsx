@@ -1633,21 +1633,33 @@ function SubItemCard({ item }: { item: MeetingAgendaSubItem }) {
       )}
       {item.detail_table && item.detail_table.rows.length > 0 && (
         <div className="pl-7 overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
+          <table
+            className="text-xs border-collapse"
+            style={{
+              tableLayout: 'fixed',
+              width: (item.detail_table.colWidths ?? []).reduce((s: number, w: number) => s + w, 0) + 'px',
+              minWidth: '100%',
+            }}
+          >
+            <colgroup>
+              {(item.detail_table.colWidths ?? item.detail_table.headers.map(() => 160)).map((w: number, i: number) => (
+                <col key={i} style={{ width: w + 'px' }} />
+              ))}
+            </colgroup>
             <thead>
               <tr className="bg-white/5">
-                {item.detail_table.headers.map((h, i) => (
-                  <th key={i} className="text-left px-2 py-1.5 text-white/40 font-medium border border-white/8">
+                {item.detail_table.headers.map((h: string, i: number) => (
+                  <th key={i} className="text-left px-2 py-1.5 text-white/40 font-medium border border-white/8 leading-snug">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {item.detail_table.rows.map((row, ri) => (
+              {item.detail_table.rows.map((row: string[], ri: number) => (
                 <tr key={ri} className="hover:bg-white/3">
-                  {row.map((cell, ci) => (
-                    <td key={ci} className="px-2 py-1.5 text-white/70 border border-white/8">{cell}</td>
+                  {row.map((cell: string, ci: number) => (
+                    <td key={ci} className="px-2 py-1.5 text-white/70 border border-white/8 whitespace-pre-wrap break-words align-middle">{cell}</td>
                   ))}
                 </tr>
               ))}

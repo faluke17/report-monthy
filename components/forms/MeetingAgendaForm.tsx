@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown, AlertCircle, Brain } from 'lucide-react'
+import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown, AlertCircle, Brain, ClipboardPaste } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
 import { saveAgenda } from '@/app/actions/meeting-agenda'
@@ -70,6 +70,88 @@ function emptyTable(): DetailTable {
 
 function emptySubItem(): SubItem {
   return { title: '', detail: '', showTable: false, detailTable: emptyTable(), resolution: 'รับทราบ', resolutionDetail: '' }
+}
+
+function detectAndParseTable(text: string): DetailTable | null {
+  const lines = text.split('\n').map(l => l.trimEnd()).filter(l => l.trim())
+  if (lines.length < 2) return null
+
+  const hasTab = lines.some(l => l.includes('\t'))
+  if (!hasTab) {
+    const withSpaces = lines.filter(l => /    /.test(l)).length
+    if (withSpaces < Math.ceil(lines.length * 0.4)) return null
+  }
+
+  const splitLine = (line: string): string[] => {
+    if (hasTab) return line.split('\t').map(c => c.trim())
+    return line.split(/    +/).map(c => c.trim())
+  }
+
+  const rawRows = lines.map(splitLine)
+  const maxCols = Math.max(...rawRows.map(r => r.length))
+  if (maxCols < 2) return null
+
+  // Find headerEnd: rows before first row where col[0] starts with a digit
+  let headerEnd = 1
+  for (let i = 0; i < Math.min(4, rawRows.length); i++) {
+    if (/^\d+/.test(rawRows[i][0]?.trim() ?? '')) { headerEnd = i; break }
+    headerEnd = i + 1
+  }
+  if (headerEnd === 0) headerEnd = 1
+
+  // Build headers; right-align secondary header rows (handles merged-cell Excel/Word headers)
+  const headerRawRows = rawRows.slice(0, headerEnd)
+  const headerRows = headerRawRows.map((row, hi) => {
+    const padded = [...row]
+    while (padded.length < maxCols) padded.push('')
+    if (hi > 0 && row.length < maxCols) {
+      const diff = maxCols - row.length
+      return [...Array(diff).fill(''), ...row]
+    }
+    return padded
+  })
+  const headers = Array.from({ length: maxCols }, (_, ci) => {
+    const parts = headerRows.map(hr => hr[ci]).filter(Boolean)
+    return parts.join(' ').trim() || `คอลัมน์ ${ci + 1}`
+  })
+
+  // Process data rows: merge continuation rows into preceding row
+  const merged: string[][] = []
+  for (let ri = headerEnd; ri < rawRows.length; ri++) {
+    const rawRow = rawRows[ri]
+    const firstTrimmed = rawRow[0]?.trim() ?? ''
+    if (!rawRow.some(c => c.trim())) continue
+
+    const row = [...rawRow]
+    while (row.length < maxCols) row.push('')
+
+    const startsWithDigit = /^\d+/.test(firstTrimmed)
+    const emptyFirstCol = !firstTrimmed && rawRow.length > 1
+    const singleColContinuation = !startsWithDigit && rawRow.length === 1
+
+    if (emptyFirstCol && merged.length > 0) {
+      const prev = merged[merged.length - 1]
+      for (let ci = 0; ci < maxCols; ci++) {
+        if (row[ci].trim()) prev[ci] = prev[ci] ? `${prev[ci]}\n${row[ci]}` : row[ci]
+      }
+    } else if (singleColContinuation && merged.length > 0) {
+      // Word-wrapped single cell: append to last non-empty cell of last merged row
+      const prev = merged[merged.length - 1]
+      for (let ci = maxCols - 1; ci >= 0; ci--) {
+        if (prev[ci]?.trim()) { prev[ci] = `${prev[ci]} ${rawRow[0]}`; break }
+      }
+    } else {
+      merged.push(row)
+    }
+  }
+
+  if (merged.length === 0) return null
+
+  return {
+    headers,
+    colWidths: headers.map((_, i) => i === 0 ? 70 : i === maxCols - 1 ? 240 : 160),
+    rows: merged,
+  }
 }
 
 function initState(
@@ -276,26 +358,85 @@ function TableEditor({ table, onChange }: { table: DetailTable; onChange: (t: De
 }
 
 function DetailEditor({
-  text, table, showTable, onChangeText, onToggleTable, onChangeTable,
+  text, table, showTable, onChangeText, onToggleTable, onChangeTable, onApplyTable,
 }: {
   text: string; table: DetailTable; showTable: boolean
-  onChangeText: (v: string) => void; onToggleTable: (s: boolean) => void; onChangeTable: (t: DetailTable) => void
+  onChangeText: (v: string) => void; onToggleTable: (s: boolean) => void
+  onChangeTable: (t: DetailTable) => void; onApplyTable: (t: DetailTable) => void
 }) {
+  const [showPasteZone, setShowPasteZone] = useState(false)
+  const [pasteError, setPasteError] = useState(false)
+  const pasteRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (showPasteZone && pasteRef.current) pasteRef.current.focus()
+  }, [showPasteZone])
+
+  function handlePasteZone(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text')
+    const parsed = detectAndParseTable(pasted)
+    if (parsed) {
+      onApplyTable(parsed)   // atomic: sets detailTable + showTable in one update
+      setShowPasteZone(false)
+      setPasteError(false)
+    } else {
+      setPasteError(true)
+    }
+  }
+
   return (
     <div className="space-y-2">
       <textarea className={TEXTAREA} rows={3} placeholder="รายละเอียด..." value={text}
         onChange={e => onChangeText(e.target.value)} />
-      <button type="button"
-        onClick={() => onToggleTable(!showTable)}
-        className={cn(
-          'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors',
-          showTable
-            ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
-            : 'text-white/35 border-white/12 hover:text-white/60 hover:border-white/20',
-        )}>
-        <Table2 size={11} />
-        {showTable ? 'ซ่อนตาราง' : 'เพิ่มตาราง'}
-      </button>
+
+      {/* Paste zone */}
+      {showPasteZone && (
+        <div className="rounded-xl border border-dashed border-cyan-500/40 bg-cyan-500/5 p-3 space-y-2">
+          <p className="text-[11px] text-cyan-400/70 font-medium">
+            วางข้อมูลจาก Excel / Word ด้านล่าง — ระบบจะแปลงเป็นตารางให้อัตโนมัติ
+          </p>
+          <textarea
+            ref={pasteRef}
+            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/60 resize-none font-mono"
+            rows={5}
+            placeholder="กด Ctrl+V (หรือ ⌘V) เพื่อวางข้อมูลที่นี่..."
+            onPaste={handlePasteZone}
+            onChange={() => {}}
+          />
+          {pasteError && (
+            <p className="text-[11px] text-red-400/80">
+              ไม่พบข้อมูลตาราง — ลองคัดลอกจาก Excel/Word โดยเลือกเฉพาะช่วงตาราง
+            </p>
+          )}
+          <button type="button" onClick={() => { setShowPasteZone(false); setPasteError(false) }}
+            className="text-[11px] text-white/30 hover:text-white/60 transition-colors">
+            ยกเลิก
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <button type="button"
+          onClick={() => onToggleTable(!showTable)}
+          className={cn(
+            'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors',
+            showTable
+              ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
+              : 'text-white/35 border-white/12 hover:text-white/60 hover:border-white/20',
+          )}>
+          <Table2 size={11} />
+          {showTable ? 'ซ่อนตาราง' : 'เพิ่มตาราง'}
+        </button>
+        {!showPasteZone && (
+          <button type="button"
+            onClick={() => setShowPasteZone(true)}
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border border-cyan-500/40 text-cyan-400/70 hover:text-cyan-300 hover:border-cyan-500/70 hover:bg-cyan-500/8 transition-colors">
+            <ClipboardPaste size={11} />
+            วางข้อมูลเป็นตาราง
+          </button>
+        )}
+      </div>
       {showTable && <TableEditor table={table} onChange={onChangeTable} />}
     </div>
   )
@@ -334,6 +475,7 @@ function SubItemGroup({
               onChangeText={v => update(idx, { detail: v })}
               onToggleTable={s => update(idx, { showTable: s })}
               onChangeTable={t => update(idx, { detailTable: t })}
+              onApplyTable={t => update(idx, { detailTable: t, showTable: true })}
             />
           </div>
           <ResolutionBlock value={item.resolution} detail={item.resolutionDetail}
@@ -514,14 +656,21 @@ function TableView({ table }: { table: DetailTable }) {
   const rows = [...table.rows]
   while (rows.length > 0 && rows[rows.length - 1].every(c => !c.trim())) rows.pop()
 
+  const totalW = table.colWidths.reduce((s, w) => s + w, 0)
+
   return (
-    <div className="overflow-x-auto overflow-hidden rounded-xl border border-white/10 mt-1">
-      <table className="w-full text-sm border-collapse">
+    <div className="overflow-x-auto rounded-xl border border-white/10 mt-1">
+      <table
+        className="text-sm border-collapse"
+        style={{ tableLayout: 'fixed', width: totalW + 'px', minWidth: '100%' }}
+      >
+        <colgroup>
+          {table.colWidths.map((w, i) => <col key={i} style={{ width: w + 'px' }} />)}
+        </colgroup>
         <thead>
           <tr className="border-b border-white/12" style={{ background: 'rgba(6,147,227,0.09)' }}>
             {table.headers.map((h, i) => (
               <th key={i}
-                style={{ minWidth: Math.max(table.colWidths[i] ?? 100, 60) + 'px' }}
                 className="px-3 py-2.5 text-left text-xs font-bold text-cyan-300/90 border-r border-white/8 last:border-r-0 leading-snug">
                 {h}
               </th>
