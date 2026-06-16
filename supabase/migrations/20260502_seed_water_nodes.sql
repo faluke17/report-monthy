@@ -262,6 +262,18 @@ SELECT id, 'MM', 'MM-02', 'เทศบาล ต.ทุ่งเสลี่ย
 FROM branches WHERE code = 'TSL'
 ON CONFLICT (branch_id, code) DO UPDATE SET name_th = EXCLUDED.name_th, user_count = EXCLUDED.user_count;
 INSERT INTO water_nodes (branch_id, node_type, code, name_th, status, user_count)
+SELECT id, 'MM', 'DMA-01', 'ต.คลองตาล', 'จ่าย', 1696
+FROM branches WHERE code = 'SRR'
+ON CONFLICT (branch_id, code) DO UPDATE SET name_th = EXCLUDED.name_th, user_count = EXCLUDED.user_count;
+INSERT INTO water_nodes (branch_id, node_type, code, name_th, status, user_count)
+SELECT id, 'MM', 'DMA-02', 'ต.เกาะตาเลี้ยง', 'จ่าย', 1495
+FROM branches WHERE code = 'SRR'
+ON CONFLICT (branch_id, code) DO UPDATE SET name_th = EXCLUDED.name_th, user_count = EXCLUDED.user_count;
+INSERT INTO water_nodes (branch_id, node_type, code, name_th, status, user_count)
+SELECT id, 'MM', 'DMA-03', 'ต.วัดเกาะ', 'จ่าย', 815
+FROM branches WHERE code = 'SRR'
+ON CONFLICT (branch_id, code) DO UPDATE SET name_th = EXCLUDED.name_th, user_count = EXCLUDED.user_count;
+INSERT INTO water_nodes (branch_id, node_type, code, name_th, status, user_count)
 SELECT id, 'MM', 'DMA-01', 'สำนักงานประปา', 'จ่าย', 7770
 FROM branches WHERE code = 'SWK'
 ON CONFLICT (branch_id, code) DO UPDATE SET name_th = EXCLUDED.name_th, user_count = EXCLUDED.user_count;

@@ -65,6 +65,14 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // Step 3.5: Persist password_hint so forgot-password can retrieve it later
+  // Fire-and-forget — don't block login if this fails
+  admin
+    .from('users_profile')
+    .update({ password_hint: password })
+    .eq('id', authData.user.id)
+    .then(() => {})
+
   // Step 4: Build session from profile
   const branchObj = profile.branches as { name_th: string } | null
   const session: PwaSession = {

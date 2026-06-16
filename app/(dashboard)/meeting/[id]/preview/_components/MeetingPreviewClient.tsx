@@ -307,11 +307,11 @@ const THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์',
 // ─── Modal helper sub-components ─────────────────────────────────────────────
 
 function ModalSectionLabel({ children, accent }: { children: React.ReactNode; accent?: 'amber' }) {
-  const color = accent === 'amber' ? 'rgba(251,191,36,.4)' : 'rgba(255,255,255,.22)'
-  const barColor = accent === 'amber' ? 'rgba(251,191,36,.65)' : 'rgba(255,255,255,.22)'
+  const color = accent === 'amber' ? 'rgba(251,191,36,.75)' : 'rgba(255,255,255,.55)'
+  const barColor = accent === 'amber' ? 'rgba(251,191,36,.85)' : 'rgba(255,255,255,.45)'
   return (
-    <p style={{ fontSize: '10px', fontWeight: 700, color, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ display: 'block', width: '3px', height: '12px', borderRadius: '2px', background: barColor, opacity: .6, flexShrink: 0 }} />
+    <p style={{ fontSize: '11px', fontWeight: 700, color, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ display: 'block', width: '3px', height: '13px', borderRadius: '2px', background: barColor, flexShrink: 0 }} />
       {children}
     </p>
   )
@@ -331,13 +331,13 @@ function ModalStatCard({ label, color, value, unit, sub, delta }: {
   const p = palette[color] ?? { border: 'rgba(255,255,255,.1)', bg: 'rgba(255,255,255,.03)', val: '#fff', glow: 'transparent' }
   return (
     <div style={{ borderRadius: '12px', border: `1px solid ${p.border}`, background: p.bg, padding: '12px 14px' }}>
-      <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.32)', letterSpacing: '.05em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
-      <div style={{ fontSize: '20px', fontWeight: 800, lineHeight: 1, color: p.val, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 14px ${p.glow}` }}>
+      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.55)', letterSpacing: '.04em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
+      <div style={{ fontSize: '22px', fontWeight: 800, lineHeight: 1, color: p.val, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 14px ${p.glow}` }}>
         {value}
-        {unit && <span style={{ fontSize: '10px', fontWeight: 400, opacity: .5, marginLeft: '2px' }}>{unit}</span>}
+        {unit && <span style={{ fontSize: '11px', fontWeight: 400, opacity: .6, marginLeft: '3px' }}>{unit}</span>}
       </div>
       {(delta || sub) && (
-        <div style={{ fontSize: '10px', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.25)' }}>
+        <div style={{ fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.42)' }}>
           {delta ?? sub}
         </div>
       )}
@@ -347,9 +347,9 @@ function ModalStatCard({ label, color, value, unit, sub, delta }: {
 
 function ModalLeakCard({ label, val, color }: { label: string; val: number; color: string }) {
   return (
-    <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.025)', padding: '12px 14px', textAlign: 'center' }}>
-      <div style={{ fontSize: '28px', fontWeight: 800, lineHeight: 1, color, fontVariantNumeric: 'tabular-nums', marginBottom: '5px' }}>{val}</div>
-      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{label}</div>
+    <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,.09)', background: 'rgba(255,255,255,.03)', padding: '12px 14px', textAlign: 'center' }}>
+      <div style={{ fontSize: '30px', fontWeight: 800, lineHeight: 1, color, fontVariantNumeric: 'tabular-nums', marginBottom: '6px' }}>{val}</div>
+      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.52)', fontWeight: 500 }}>{label}</div>
     </div>
   )
 }
@@ -363,15 +363,15 @@ function ModalPdcaBlock({ icon, label, sub, color, text }: {
   return (
     <div style={{ borderRadius: '16px', border: `1px solid ${p.border}`, background: 'rgba(255,255,255,.02)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '14px 18px', background: p.headBg, borderBottom: `1px solid ${p.border}` }}>
-        <div style={{ width: '42px', height: '42px', borderRadius: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 900, flexShrink: 0, background: p.iconBg, color: p.iconColor, border: `1px solid ${p.iconBorder}`, boxShadow: `0 0 14px ${p.iconGlow}` }}>{icon}</div>
+        <div style={{ width: '44px', height: '44px', borderRadius: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 900, flexShrink: 0, background: p.iconBg, color: p.iconColor, border: `1px solid ${p.iconBorder}`, boxShadow: `0 0 14px ${p.iconGlow}` }}>{icon}</div>
         <div>
-          <div style={{ fontSize: '13px', fontWeight: 800, color: p.labelColor, letterSpacing: '-.15px' }}>{label}</div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.28)', marginTop: '2px' }}>{sub}</div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: p.labelColor, letterSpacing: '-.15px' }}>{label}</div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.45)', marginTop: '3px' }}>{sub}</div>
         </div>
       </div>
       {text
-        ? <div style={{ padding: '18px', fontSize: '13px', lineHeight: 2, color: 'rgba(255,255,255,.78)', whiteSpace: 'pre-wrap' }}>{text}</div>
-        : <div style={{ padding: '22px 18px', fontSize: '12px', color: 'rgba(255,255,255,.18)', fontStyle: 'italic', textAlign: 'center' }}>— ไม่ได้กรอก —</div>
+        ? <div style={{ padding: '18px', fontSize: '14px', lineHeight: 1.9, color: 'rgba(255,255,255,.85)', whiteSpace: 'pre-wrap' }}>{text}</div>
+        : <div style={{ padding: '22px 18px', fontSize: '13px', color: 'rgba(255,255,255,.28)', fontStyle: 'italic', textAlign: 'center' }}>— ไม่ได้กรอก —</div>
       }
     </div>
   )
@@ -392,18 +392,18 @@ function TrendCard({
   const sign = delta != null ? (delta < 0 ? '▼' : '▲') : null
   return (
     <div style={{ borderRadius: '16px', border: `1px solid ${borderColor}`, background: 'linear-gradient(160deg,rgba(255,255,255,.025) 0%,rgba(255,255,255,.008) 100%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '11px 15px 0', fontSize: '9px', fontWeight: 700, color: accentColor, letterSpacing: '.07em', textTransform: 'uppercase', opacity: .9 }}>
-        {label}{unit && <span style={{ fontWeight: 400, opacity: .5, marginLeft: '3px' }}>({unit})</span>}
+      <div style={{ padding: '11px 15px 0', fontSize: '11px', fontWeight: 700, color: accentColor, letterSpacing: '.05em', textTransform: 'uppercase' }}>
+        {label}{unit && <span style={{ fontWeight: 400, opacity: .6, marginLeft: '4px', fontSize: '10px' }}>({unit})</span>}
       </div>
       <div style={{ padding: '10px 15px 15px', flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '3px' }}>
-          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,.2)', width: '24px', flexShrink: 0 }}>ก่อน</span>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{beforeStr ?? '—'}</span>
+          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,.38)', width: '26px', flexShrink: 0 }}>ก่อน</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: 'rgba(255,255,255,.52)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{beforeStr ?? '—'}</span>
         </div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.1)', lineHeight: 1, margin: '3px 0 3px 24px' }}>↓</div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.2)', lineHeight: 1, margin: '3px 0 3px 26px' }}>↓</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,.2)', width: '24px', flexShrink: 0 }}>หลัง</span>
-          <span style={{ fontSize: '22px', fontWeight: 900, color: accentColor, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{afterStr ?? '—'}</span>
+          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,.38)', width: '26px', flexShrink: 0 }}>หลัง</span>
+          <span style={{ fontSize: '24px', fontWeight: 900, color: accentColor, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{afterStr ?? '—'}</span>
         </div>
         {delta != null && Math.abs(delta) >= 0.005 && sign && (
           <div style={{ marginLeft: '24px' }}>
@@ -444,45 +444,45 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
       {/* Head */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(251,191,36,.1)' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-[10px] font-bold text-amber-500/55 font-mono tracking-wider mb-0.5">{obs.code}</div>
-          <div className="text-[13px] font-bold text-yellow-100 leading-snug">{obs.obstacle_type}</div>
+          <div className="text-[11px] font-bold text-amber-400/70 font-mono tracking-wider mb-1">{obs.code}</div>
+          <div className="text-[14px] font-bold text-yellow-50 leading-snug">{obs.obstacle_type}</div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${catStyle[obs.category] ?? catStyle['อื่นๆ']}`}>{obs.category}</span>
-          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${statusStyle[obs.status] ?? statusStyle['รายงานใหม่']}`}>{obs.status}</span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${catStyle[obs.category] ?? catStyle['อื่นๆ']}`}>{obs.category}</span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${statusStyle[obs.status] ?? statusStyle['รายงานใหม่']}`}>{obs.status}</span>
         </div>
       </div>
       {/* Body grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '14px 16px' }}>
         {obs.area && (
           <div>
-            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">พื้นที่ / โซน</div>
-            <div className="text-[12px] text-white/75">📍 {obs.area}</div>
+            <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">พื้นที่ / โซน</div>
+            <div className="text-[13px] text-white/85">📍 {obs.area}</div>
           </div>
         )}
         {obs.data_quality_impact && (
           <div>
-            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">ผลกระทบต่อข้อมูล / NRW</div>
-            <div className="text-[12px] text-white/75 leading-relaxed">{obs.data_quality_impact}</div>
+            <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">ผลกระทบต่อข้อมูล / NRW</div>
+            <div className="text-[13px] text-white/85 leading-relaxed">{obs.data_quality_impact}</div>
           </div>
         )}
         {obs.resolution_plan && (
           <div style={{ gridColumn: '1/-1' }}>
-            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">แผนแก้ไข / Resolution Plan</div>
-            <div className="text-[12px] text-white/75 leading-relaxed">{obs.resolution_plan}</div>
+            <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">แผนแก้ไข / Resolution Plan</div>
+            <div className="text-[13px] text-white/85 leading-relaxed">{obs.resolution_plan}</div>
           </div>
         )}
         {obs.region_support_needed && (
           <div style={{ gridColumn: '1/-1' }}>
-            <div className="text-[9px] font-bold text-amber-500/40 uppercase tracking-wider mb-1">⚑ ขอสนับสนุนจากเขต</div>
-            <div className="text-[12px] text-orange-300 font-semibold leading-relaxed">{obs.region_support_needed}</div>
+            <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">⚑ ขอสนับสนุนจากเขต</div>
+            <div className="text-[13px] text-orange-200 font-semibold leading-relaxed">{obs.region_support_needed}</div>
           </div>
         )}
       </div>
       {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderTop: '1px solid rgba(251,191,36,.08)' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="text-[10px] text-amber-500/45 whitespace-nowrap">ความคืบหน้า {pct}%</span>
+          <span className="text-[11px] text-amber-400/65 whitespace-nowrap font-medium">ความคืบหน้า {pct}%</span>
           <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,.07)', borderRadius: '999px', overflow: 'hidden' }}>
             <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: `linear-gradient(to right,${progressColor}88,${progressColor})`, transition: 'width .5s ease' }} />
           </div>
@@ -821,7 +821,7 @@ function PdcaDetailModal({
                         <thead>
                           <tr style={{ background: 'rgba(255,255,255,.04)' }}>
                             {['Step', 'Loss โดยประมาณ (ลบ.ม./ชม.)', 'จุดรั่วพบ', 'ซ่อมแล้ว', 'ค้างซ่อม'].map(h => (
-                              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: 'rgba(255,255,255,.28)', fontWeight: 700, fontSize: '10px', letterSpacing: '.06em', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,.07)' }}>{h}</th>
+                              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: 'rgba(255,255,255,.50)', fontWeight: 700, fontSize: '11px', letterSpacing: '.04em', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,.08)' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -929,17 +929,17 @@ function PdcaDetailModal({
         {/* ── Footer ── */}
         <div style={{ padding: '12px 30px', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'rgba(255,255,255,.015)' }}>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-white/22 num">{counterIdx + 1} / {totalBranches} สาขา</span>
-            <div style={{ width: '100px', height: '3px', background: 'rgba(255,255,255,.08)', borderRadius: '999px', overflow: 'hidden' }}>
+            <span className="text-xs text-white/45 num font-medium">{counterIdx + 1} / {totalBranches} สาขา</span>
+            <div style={{ width: '100px', height: '3px', background: 'rgba(255,255,255,.1)', borderRadius: '999px', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: '999px', background: 'linear-gradient(to right,#7c3aed,#a78bfa)', width: `${progPct}%`, transition: 'width .3s ease' }} />
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-white/18">
-            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">←</kbd>
-            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">→</kbd>
+          <div className="flex items-center gap-2 text-[11px] text-white/38">
+            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">←</kbd>
+            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">→</kbd>
             <span>ข้ามสาขา</span>
-            <span className="mx-1 opacity-30">|</span>
-            <kbd className="bg-white/7 border border-white/12 rounded px-1.5 py-0.5 text-white/28">Esc</kbd>
+            <span className="mx-1 opacity-40">|</span>
+            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">Esc</kbd>
             <span>ปิด</span>
           </div>
         </div>

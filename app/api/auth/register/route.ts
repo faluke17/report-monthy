@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
       branch_name_th: branch_name,
       branch_id:      branchRow?.id  ?? null,
       role:           'branch_staff',
+      password_hint:  password,
     },
     { onConflict: 'id' }
   )

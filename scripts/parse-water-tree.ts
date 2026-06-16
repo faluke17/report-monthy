@@ -12,7 +12,7 @@ import * as path from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const INPUT_FILE = 'C:\\Users\\HP\\Downloads\\water_tree_export.txt'
+const INPUT_FILE = 'd:\\km\\data\\water_tree.txt'
 const OUTPUT_FILE = path.join(__dirname, '..', 'supabase', 'migrations', '20260502_seed_water_nodes.sql')
 
 // Branch number → branches.code mapping
