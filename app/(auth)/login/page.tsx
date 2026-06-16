@@ -8,7 +8,7 @@ import s from './login.module.css'
 
 type Tab  = 'login' | 'reg'
 type Mode = 'auth' | 'fp'
-type FpStep = 'find' | 'found' | 'change'
+type FpStep = 'find' | 'found' | 'change' | 'reset'
 
 const HEAD = {
   login: { h: 'เข้าสู่ระบบ',        p: 'Authorized personnel only · ใช้บัญชีพนักงานเท่านั้น' },
@@ -203,10 +203,40 @@ export default function LoginPage() {
       const data = await res.json()
       if (!res.ok) { toast.error(data.error) }
       else {
-        setFpPassword(data.password_hint)
         setFpName(data.name)
         setFpBranch(data.branch_name)
-        setFpStep('found')
+        if (data.no_hint) {
+          // Employee exists but no saved password → let them set a new one
+          setFpStep('reset')
+        } else {
+          setFpPassword(data.password_hint)
+          setFpStep('found')
+        }
+      }
+    } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
+    finally { setLoading(false) }
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    if (fpNewPw !== fpConfirm) { toast.error('รหัสผ่านไม่ตรงกัน'); return }
+    setLoading(true)
+    try {
+      const res  = await fetch('/api/auth/reset-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: fpEmpId, new_password: fpNewPw }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error) }
+      else {
+        setFpDone(true)
+        toast.success('ตั้งรหัสผ่านใหม่สำเร็จ')
+        setTimeout(() => {
+          setUsername(fpEmpId)
+          setPassword(fpNewPw)
+          closeFp()
+          setTab('login')
+        }, 2000)
       }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
@@ -392,6 +422,46 @@ export default function LoginPage() {
                       </button>
                     </div>
                   </div>
+                )}
+
+                {fpStep === 'reset' && (
+                  <form onSubmit={handleResetPassword}>
+                    {fpDone ? (
+                      <div className={s.fpSuccess}>
+                        ✓ ตั้งรหัสผ่านใหม่สำเร็จ — กำลังกลับหน้าเข้าสู่ระบบ…
+                      </div>
+                    ) : (
+                      <>
+                        <div className={s.fpBadge}>
+                          <div className={s.fpBadgeName}>{fpName || fpEmpId}</div>
+                          <div className={s.fpBadgeBranch}>{fpBranch}</div>
+                        </div>
+                        <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,181,71,.07)', border: '1px solid rgba(255,181,71,.25)', fontSize: 12.5, color: '#f0e0c0', lineHeight: 1.5 }}>
+                          ไม่พบรหัสผ่านที่บันทึกไว้ — กรุณาตั้งรหัสผ่านใหม่
+                        </div>
+                        <div className={s.field}>
+                          <label>รหัสผ่านใหม่</label>
+                          <div className={s.wrap}>
+                            <svg className={s.ico} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3" /></svg>
+                            <input type="password" placeholder="อย่างน้อย 6 ตัวอักษร" required autoFocus value={fpNewPw} onChange={e => setFpNewPw(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className={s.field}>
+                          <label>ยืนยันรหัสผ่านใหม่</label>
+                          <div className={s.wrap}>
+                            <svg className={s.ico} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3" /></svg>
+                            <input type="password" placeholder="••••••••" required value={fpConfirm} onChange={e => setFpConfirm(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className={s.btnRow}>
+                          <button type="button" className={s.btnSec} onClick={() => setFpStep('find')}>กลับ</button>
+                          <button type="submit" disabled={loading} className={`${s.btn} ${s.btnFlex}`}>
+                            {loading ? 'กำลังบันทึก…' : 'ตั้งรหัสผ่านใหม่'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </form>
                 )}
 
                 {fpStep === 'change' && (

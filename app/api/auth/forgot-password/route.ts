@@ -27,17 +27,13 @@ export async function POST(req: NextRequest) {
   if (!profile) {
     return NextResponse.json({ error: 'ไม่พบรหัสพนักงานนี้ในระบบ' }, { status: 404 })
   }
+  const name = `${profile.name_first ?? ''} ${profile.name_last ?? ''}`.trim()
+  const branch_name = profile.branch_name_th ?? ''
+
   if (!profile.password_hint) {
-    return NextResponse.json(
-      { error: 'ยังไม่มีรหัสผ่านที่บันทึกไว้ — ลองล็อกอินปกติก่อน หรือติดต่อผู้ดูแลระบบ' },
-      { status: 404 }
-    )
+    // Employee exists but no hint stored → let them set a new password
+    return NextResponse.json({ ok: true, no_hint: true, name, branch_name })
   }
 
-  return NextResponse.json({
-    ok: true,
-    name: `${profile.name_first ?? ''} ${profile.name_last ?? ''}`.trim(),
-    branch_name: profile.branch_name_th ?? '',
-    password_hint: profile.password_hint,
-  })
+  return NextResponse.json({ ok: true, no_hint: false, name, branch_name, password_hint: profile.password_hint })
 }
