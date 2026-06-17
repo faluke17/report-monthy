@@ -97,13 +97,6 @@ function CardBtn({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function nrwColor(pct: number | null) {
-  if (pct === null) return 'text-white/30'
-  if (pct > 23)    return 'text-red-400'
-  if (pct > 20)    return 'text-amber-400'
-  return 'text-green-400'
-}
-
 function calcNrw(dist?: number | null, sold?: number | null) {
   if (!dist) return null
   return ((dist - (sold ?? 0)) / dist) * 100
@@ -112,12 +105,6 @@ function calcNrw(dist?: number | null, sold?: number | null) {
 function fmtNum(n: number | null | undefined, dec = 1) {
   if (n == null) return '—'
   return n.toLocaleString('th-TH', { minimumFractionDigits: dec, maximumFractionDigits: dec })
-}
-
-function NrwChip({ pct }: { pct: number | null }) {
-  if (pct == null) return <span className="text-white/25 text-sm num">—</span>
-  const cls = pct <= 20 ? 'text-green-400' : pct <= 25 ? 'text-amber-400' : 'text-red-400'
-  return <span className={`num text-lg font-bold ${cls}`}>{fmtNum(pct)}%</span>
 }
 
 // ─── Drawer shell ─────────────────────────────────────────────────────────────

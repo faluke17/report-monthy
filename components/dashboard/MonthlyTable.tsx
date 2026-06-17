@@ -1,7 +1,6 @@
 'use client'
 
 import { DataTable, ColumnDef } from '@/components/shared/DataTable'
-import { StatusPill } from '@/components/shared/StatusPill'
 import { MonthlyReport, Branch } from '@/lib/types'
 import { formatThaiMonthYear, formatThaiNumber } from '@/lib/utils/date-th'
 

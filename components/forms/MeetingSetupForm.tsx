@@ -183,7 +183,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
       fd.append('report_year', String(Number(reportYearBe) - 543)) // BE → AD
     }
     // แนบ requirements เป็น JSON
-    const reqPayload = requirements.map(({ id: _id, ...r }) => ({
+    const reqPayload = requirements.map(({ id: _, ...r }) => ({
       ...r,
       target_year:  r.target_year  === '' ? null : r.target_year,
       target_month: r.target_month === '' ? null : r.target_month,

@@ -110,8 +110,6 @@ export function AreaDetailSheetBody({
       {/* All area reports */}
       <div className="divide-y divide-white/5">
         {reports.map((report) => {
-          const before = nrw(report.water_dist_before, report.water_sold_before)
-          const after  = nrw(report.water_dist_after,  report.water_sold_after)
           const obstCount = report.area_obstacles?.length ?? 0
           const hasHighPriority = report.area_obstacles?.some((o) => o.priority_order === 1)
           const isConfirmingDelete = confirmDeleteId === report.id

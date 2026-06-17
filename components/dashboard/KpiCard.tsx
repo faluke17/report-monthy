@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils'
 
 type AccentColor = 'cyan' | 'teal' | 'amber' | 'red' | 'green' | 'purple' | 'blue' | 'sky'
 

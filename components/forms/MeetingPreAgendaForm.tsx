@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useCallback } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Plus, Trash2, ChevronDown, AlertCircle, Brain, X, Save, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'

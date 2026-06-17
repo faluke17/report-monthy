@@ -25,10 +25,6 @@ interface Props {
 
 const PHASE_LABELS = ['ยังไม่เริ่ม','ราคากลาง','TOR','พิจารณาผล','เซ็นสัญญา','ดำเนินงาน','แล้วเสร็จ']
 
-function formatMoney(val: number | null | undefined) {
-  if (val == null) return '-'
-  return val.toLocaleString('th-TH', { maximumFractionDigits: 2 })
-}
 function deadlineStatus(project: BudgetProject): 'overdue' | 'near' | 'ok' | null {
   if (project.current_phase === 6) return null
   const end = project.project_contracts?.contract_end_date
@@ -242,7 +238,6 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
               <tbody>
                 {filtered.map((project, idx) => {
                   const phase   = project.current_phase
-                  const ds      = deadlineStatus(project)
                   const dl      = deadlineDaysLabel(project)
                   const pct     = progressPct(project)
                   const missing = phase6Missing(project)
@@ -682,10 +677,6 @@ function PhaseEditForm({
   project: BudgetProject; phase: number; isPending: boolean
   startTransition: (fn: () => void) => void; onSuccess: () => void
 }) {
-  const LABEL_MAP: Record<number, string> = {
-    1: 'ราคากลาง', 2: 'TOR', 3: 'พิจารณาผล', 4: 'เซ็นสัญญา', 5: 'ดำเนินงานก่อสร้าง', 6: 'งานแล้วเสร็จ',
-  }
-
   const [startDate, setStartDate] = useState(project.project_contracts?.contract_start_date ?? '')
   const [conDays,   setConDays]   = useState(String(project.project_contracts?.construction_days ?? ''))
   const computedEnd = (() => {

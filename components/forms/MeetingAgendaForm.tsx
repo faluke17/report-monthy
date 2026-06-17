@@ -741,55 +741,6 @@ function SubItemsView({ agendaNo, items }: { agendaNo: number; items: SubItem[] 
   )
 }
 
-// ─── accordion card ───────────────────────────────────────────────────────────
-
-function AccordionCard({
-  n, title, expanded, onToggle, isAdmin, onEdit, children,
-}: {
-  n: number; title: React.ReactNode; expanded: boolean
-  onToggle: () => void; isAdmin: boolean; onEdit: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <div className="glass-card overflow-hidden">
-      {/* Compact header — always visible */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/3 transition-colors"
-      >
-        <AgendaNumBadge n={n} />
-        <div className="flex-1 min-w-0">
-          <span className="text-[10px] text-white/30 uppercase tracking-widest font-medium">วาระที่ {n}</span>
-          <div className="text-sm font-semibold text-white leading-snug truncate">{title}</div>
-        </div>
-        <ChevronDown
-          size={14}
-          className={cn('text-white/35 transition-transform duration-200 shrink-0', expanded && 'rotate-180')}
-        />
-      </button>
-
-      {/* Expandable detail */}
-      {expanded && (
-        <div className="border-t border-white/8">
-          <div className="px-5 py-4">{children}</div>
-          {isAdmin && (
-            <div className="px-5 pb-4 flex justify-end border-t border-white/6 pt-3">
-              <button
-                type="button"
-                onClick={onEdit}
-                className="flex items-center gap-1.5 text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <Pencil size={11} /> แก้ไขวาระทั้งหมด
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── view mode layout ─────────────────────────────────────────────────────────
 
 function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
@@ -1013,7 +964,7 @@ function PrevMeetingReportPanel({
 
 // ─── edit mode layout ─────────────────────────────────────────────────────────
 
-function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, onCancel, previousMeetings, openResolutions, pdcaSummaries }: {
+function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin, isPending, onSave, onCancel, previousMeetings, openResolutions, pdcaSummaries }: {
   state: FormState
   setState: React.Dispatch<React.SetStateAction<FormState>>
   meeting: Meeting

@@ -397,7 +397,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className={s.fpPwBox}>
-                      <div className={s.fpPwLabel}>// รหัสผ่านที่บันทึกไว้</div>
+                      <div className={s.fpPwLabel}>{'// รหัสผ่านที่บันทึกไว้'}</div>
                       <div className={s.fpPwRow}>
                         <span className={s.fpPwText}>
                           {fpShowPw ? fpPassword : '•'.repeat(fpPassword.length)}

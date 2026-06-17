@@ -69,7 +69,7 @@ function StageTrack({ pct, status }: { pct: number; status: string }) {
       {STAGES.map((label, i) => {
         const isPast   = i < active
         const isActive = i === active
-        const isFuture = i > active
+        const _isFuture = i > active
 
         return (
           <div key={label} className="flex items-start flex-1">

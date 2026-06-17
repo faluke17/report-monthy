@@ -69,7 +69,6 @@ export function NrwYoyTable({ rows, fiscalYear, monthCount }: Props) {
 
   // District averages
   const withCurr = rows.filter(r => r.curr_loss !== null)
-  const withPrev = rows.filter(r => r.prev_loss !== null)
   const totCurrLoss = rows.reduce((s, r) => s + (r.curr_loss ?? 0), 0)
   const totPrevLoss = rows.reduce((s, r) => s + (r.prev_loss ?? 0), 0)
   const totCurrProd = rows.reduce((s, r) => s + (r.curr_produced ?? 0), 0)

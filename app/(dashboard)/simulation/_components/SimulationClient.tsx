@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, FileText,
   CheckCircle, Clock, AlertCircle, ArrowRight,
-  Users, Bell, BarChart2,
+  Bell, BarChart2,
 } from 'lucide-react'
 
 // ─── Mock Data ────────────────────────────────────────────────────

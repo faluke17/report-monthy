@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Obstacle, ActionItem, KmCase, Branch } from '@/lib/types'
-import { formatThaiDate, formatThaiMonthYearShort, isOverdue } from '@/lib/utils/date-th'
+import { formatThaiDate, formatThaiMonthYearShort } from '@/lib/utils/date-th'
 import { cn } from '@/lib/utils'
 import { TrendingDown } from 'lucide-react'
 import { MonthYearPicker } from '@/components/shared/MonthYearPicker'

@@ -502,7 +502,7 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
 function PdcaDetailModal({
   branchName,
   detail,
-  prevDetail,
+  prevDetail: _prevDetail,
   branchObstacles,
   oldObsCount,
   branchAreaRows,
@@ -585,18 +585,6 @@ function PdcaDetailModal({
   )
   const hasStepTests = activeAreaRow && activeAreaRow.step_tests.length > 0
   const areaDaysInMonth = activeAreaRow ? new Date(activeAreaRow.report_year, activeAreaRow.report_month, 0).getDate() : null
-
-  function Delta({ curr, prev, decimals = 1 }: { curr: number | null; prev: number | null; decimals?: number }) {
-    if (curr == null || prev == null) return null
-    const d = curr - prev
-    if (Math.abs(d) < 0.005) return <span style={{ color: 'rgba(255,255,255,.25)' }}>— เท่าเดิม</span>
-    const good = d < 0
-    return (
-      <span style={{ color: good ? '#34d399' : '#f87171' }}>
-        {d < 0 ? '▼' : '▲'} {Math.abs(d).toFixed(decimals)}
-      </span>
-    )
-  }
 
   const progPct = totalBranches > 0 ? ((counterIdx + 1) / totalBranches) * 100 : 0
 
@@ -1660,56 +1648,6 @@ function SubItemCard({ item }: { item: MeetingAgendaSubItem }) {
   )
 }
 
-function ObstacleCard({ obs }: { obs: Obstacle }) {
-  const pct = obs.progress_pct ?? 0
-  const barColor = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
-  const statusClass = OBSTACLE_STATUS_COLOR[obs.status] ?? 'text-white/40 bg-white/5 border-white/15'
-  const catClass = CATEGORY_COLOR[obs.category] ?? 'bg-white/10 text-white/40 border-white/15'
-
-  return (
-    <div className="glass-card-sm p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${catClass}`}>{obs.category}</span>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusClass}`}>{obs.status}</span>
-          </div>
-          <p className="text-sm font-semibold text-white leading-snug">{obs.obstacle_type}</p>
-          {obs.area && <p className="text-xs text-white/40">{obs.area}</p>}
-        </div>
-        <span className="num text-lg font-bold text-white/70 shrink-0">{pct}%</span>
-      </div>
-
-      <div className="space-y-1">
-        <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
-        </div>
-        <p className="text-[10px] text-white/30">ความคืบหน้า</p>
-      </div>
-
-      {obs.resolution_plan && (
-        <div className="border-t border-white/8 pt-2">
-          <p className="text-[10px] text-white/30 mb-0.5">แนวทางแก้ไข</p>
-          <p className="text-xs text-white/60 leading-relaxed">{obs.resolution_plan}</p>
-        </div>
-      )}
-
-      {obs.region_support_needed && (
-        <div className="flex items-start gap-1.5 bg-amber-500/8 border border-amber-500/20 rounded-lg px-3 py-2">
-          <AlertCircle size={11} className="text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-amber-300/80 leading-relaxed">{obs.region_support_needed}</p>
-        </div>
-      )}
-
-      {obs.due_date && (
-        <div className="flex items-center gap-1.5 text-[10px] text-white/30">
-          <Clock size={10} />
-          กำหนด {formatThaiDate(obs.due_date, true)}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ─── Past-meeting report modal (Mac-style window) ────────────────────────────
 
@@ -2174,7 +2112,6 @@ export function MeetingPreviewClient({
       {/* ══ วาระ 2 ══ */}
       {activeTab === 2 && (() => {
         const selectedEntry = pastMeetings.find(e => e.meeting.id === selectedPrevId) ?? pastMeetings[0] ?? null
-        const prevResolutions = selectedEntry?.resolutions ?? []
         return (
           <div className="space-y-4">
             <div className="flex items-start gap-3">

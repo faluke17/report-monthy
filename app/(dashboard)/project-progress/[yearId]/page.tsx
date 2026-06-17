@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import { BudgetGroupList } from '@/components/dashboard/BudgetGroupList'
 import { BudgetGroup } from '@/lib/types'
 

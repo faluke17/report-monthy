@@ -116,7 +116,7 @@ function CustomLabel({ x, y, width, height, value }: any) {
   )
 }
 
-function CustomTooltip({ active, payload, label, fiscalYear }: any) {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const v = Number(payload[0]?.value ?? 0)
   const isImproved = v < 0

@@ -61,7 +61,7 @@ const NAV_GROUPS = [
   },
 ]
 
-export function Sidebar({ stats, notifyCount = 0 }: SidebarProps) {
+export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useAppStore()
 

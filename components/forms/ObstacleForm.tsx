@@ -57,7 +57,7 @@ interface Props {
   plans: Partial<Plan>[]
 }
 
-export function ObstacleForm({ branches, profile, plans }: Props) {
+export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const { m: defaultMonth, y: defaultYear } = prevMonthYear()

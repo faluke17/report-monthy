@@ -14,7 +14,7 @@ import { formatThaiDate, isOverdue, daysUntil } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import {
   Plus, Calendar, MapPin, Link2, Users, FileText, CheckCircle, Pencil, Eye,
-  ClipboardList, ChevronRight, Trash2, FileCheck,
+  ClipboardList, ChevronRight, Trash2,
 } from 'lucide-react'
 import { deleteMeeting } from '@/app/actions/meetings'
 
@@ -197,7 +197,7 @@ interface Props {
 
 export function MeetingView({
   allMeetings,
-  preAgendaFilledIds,
+  preAgendaFilledIds: _preAgendaFilledIds,
   reportFilledIds,
   latestMeeting,
   prevMeeting,
@@ -210,7 +210,7 @@ export function MeetingView({
   myAcks,
   isAdmin,
   branchName,
-  branchCostcenter,
+  branchCostcenter: _branchCostcenter,
 }: Props) {
   const [tab, setTab] = useState<Tab>('schedule')
   const [showResolutionForm, setShowResolutionForm] = useState(false)

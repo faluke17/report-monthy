@@ -19,7 +19,7 @@ function nodeLabel(n: WaterNodeOption): string {
   return n.name_th ? `${n.code}  ${n.name_th}` : n.code
 }
 
-export function WaterNodeSelect({ branchId, initialMmNodes, onChange, value }: Props) {
+export function WaterNodeSelect({ branchId, initialMmNodes, onChange, value: _value }: Props) {
   const [selectedMmId, setSelectedMmId] = useState('')
   const [selectedDmaId, setSelectedDmaId] = useState('')
   const [selectedSubId, setSelectedSubId] = useState('')

@@ -299,7 +299,7 @@ export function ObstacleTable({
                     )}
                     {row.last_log_message && !isClosed && (
                       <span className="text-xs text-[#3D5380] italic truncate max-w-[220px]">
-                        "{row.last_log_message}"
+                        &quot;{row.last_log_message}&quot;
                       </span>
                     )}
                     {isClosed && (
