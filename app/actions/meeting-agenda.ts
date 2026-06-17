@@ -46,3 +46,21 @@ export async function saveAgenda(
   revalidatePath('/meeting')
   return { success: true }
 }
+
+export async function getPrevMeetingReport(meetingId: string): Promise<{
+  header: MeetingAgendaHeader | null
+  subitems: MeetingAgendaSubItem[]
+} | null> {
+  const session = await getPwaSession()
+  if (!session) return null
+  const supabase = await createClient()
+  const [headerRes, subitemsRes] = await Promise.all([
+    supabase.from('meeting_agenda_headers').select('*').eq('meeting_id', meetingId).maybeSingle(),
+    supabase.from('meeting_agenda_subitems').select('*').eq('meeting_id', meetingId).order('agenda_no').order('sort_order'),
+  ])
+  if (!headerRes.data && !subitemsRes.data?.length) return null
+  return {
+    header: (headerRes.data ?? null) as MeetingAgendaHeader | null,
+    subitems: (subitemsRes.data ?? []) as MeetingAgendaSubItem[],
+  }
+}

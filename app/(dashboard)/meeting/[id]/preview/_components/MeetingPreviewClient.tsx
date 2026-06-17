@@ -1282,20 +1282,16 @@ function PdcaBranchPanel({
     )
   }, [allRows, currentKey])
 
-  // Ref-month obstacles count per branch (badge matches what modal shows)
+  // count per branch from pre-filtered obstacles prop (already split upstream)
   const obsByBranch = useMemo(() => {
     const map = new Map<string, number>()
-    if (!refMonth || !refYear) return map
-    const start = new Date(refYear, refMonth - 1, 1)
-    const end = new Date(refYear, refMonth, 1)
     for (const obs of obstacles) {
       const name = obs.branches?.name_th ?? ''
       if (!name) continue
-      const d = new Date(obs.created_at)
-      if (d >= start && d < end) map.set(name, (map.get(name) ?? 0) + 1)
+      map.set(name, (map.get(name) ?? 0) + 1)
     }
     return map
-  }, [obstacles, refMonth, refYear])
+  }, [obstacles])
 
   // Prev month map for delta comparison
   const prevMap = useMemo(() => {
@@ -1352,26 +1348,14 @@ function PdcaBranchPanel({
     return areaRows.filter(r => r.branch_name === modalBranchName)
   }, [modalBranchName, currentKey, areaRows])
 
-  // Modal obstacles: only those created IN the ref month (new issues for this PDCA period)
-  // Old/continuing obstacles belong in วาระ 4, not here
+  // Modal obstacles: all obstacles for the selected branch (prop already pre-filtered upstream)
   const { modalObstacles, oldObsCount } = useMemo(() => {
     if (!modalBranchName) return { modalObstacles: [], oldObsCount: 0 }
-    const branchObs = obstacles.filter(obs => obs.branches?.name_th === modalBranchName)
-    if (!refMonth || !refYear) {
-      return { modalObstacles: [], oldObsCount: branchObs.length }
+    return {
+      modalObstacles: obstacles.filter(obs => obs.branches?.name_th === modalBranchName),
+      oldObsCount: 0,
     }
-    const start = new Date(refYear, refMonth - 1, 1)
-    const end = new Date(refYear, refMonth, 1)
-    const refMonthObs = branchObs.filter(obs => {
-      const d = new Date(obs.created_at)
-      return d >= start && d < end
-    })
-    const oldObs = branchObs.filter(obs => {
-      const d = new Date(obs.created_at)
-      return d < start
-    })
-    return { modalObstacles: refMonthObs, oldObsCount: oldObs.length }
-  }, [modalBranchName, obstacles, refMonth, refYear])
+  }, [modalBranchName, obstacles])
 
   return (
     <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
@@ -1398,7 +1382,7 @@ function PdcaBranchPanel({
         {obsByBranch.size > 0 && (
           <span className="text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/25 px-2 py-0.5 rounded-full flex items-center gap-1">
             <TriangleAlert size={9} />
-            {obsByBranch.size} สาขามีอุปสรรคค้าง
+            {obsByBranch.size} สาขามีอุปสรรคใหม่
           </span>
         )}
         <div className="ml-auto flex items-center gap-1.5">
@@ -1553,7 +1537,7 @@ function PdcaBranchPanel({
         )}
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(251,191,36,.5)]" />
-          อุปสรรคค้าง
+          อุปสรรคใหม่เดือนนี้
         </span>
         <span className="ml-auto text-violet-400/35">กดสาขาเพื่อดูรายละเอียด</span>
       </div>
@@ -1999,6 +1983,7 @@ interface Props {
   pdcaAreaRows: PdcaAreaRow[]
   pdcaRefMonth: number | null
   pdcaRefYear: number | null
+  prevMeetingDate: string | null
 }
 
 export function MeetingPreviewClient({
@@ -2017,6 +2002,7 @@ export function MeetingPreviewClient({
   pdcaAreaRows,
   pdcaRefMonth,
   pdcaRefYear,
+  prevMeetingDate,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AgendaTab>(1)
   const [selectedPrevId, setSelectedPrevId] = useState<string | null>(() => {
@@ -2046,11 +2032,17 @@ export function MeetingPreviewClient({
   const agenda4Label = agendaHeader?.agenda4_type ?? 'เรื่องสืบเนื่อง'
   const hasAgenda6 = agenda4Label === 'เรื่องสืบเนื่อง'
 
-  // วาระ 4 (สืบเนื่อง): อุปสรรคที่เปิดก่อนวันประชุม
+  // วาระ 5 (ผลการดำเนินการ): อุปสรรคที่สร้างหลังประชุมครั้งก่อน = อุปสรรคใหม่
+  const currentMonthObstacles = useMemo(() => {
+    if (!prevMeetingDate) return obstacles  // ถ้าไม่มีประชุมก่อนหน้า = ทั้งหมดเป็นใหม่
+    return obstacles.filter(obs => obs.created_at > prevMeetingDate)
+  }, [obstacles, prevMeetingDate])
+
+  // วาระ 4 (สืบเนื่อง): อุปสรรคที่สร้างก่อนหรือในวันประชุมครั้งก่อน = ค้างเก่า
   const continuingObstacles = useMemo(() => {
-    const cutoff = new Date(meeting.scheduled_date)
-    return obstacles.filter(obs => new Date(obs.created_at) < cutoff)
-  }, [obstacles, meeting.scheduled_date])
+    if (!prevMeetingDate) return []
+    return obstacles.filter(obs => obs.created_at <= prevMeetingDate)
+  }, [obstacles, prevMeetingDate])
 
   const items = (no: number) => agendaSubitems.filter((s) => s.agenda_no === no)
 
@@ -2171,23 +2163,11 @@ export function MeetingPreviewClient({
             </div>
           </div>
 
-          {agendaHeader?.agenda1_detail ? (
-            <div className="glass-card-sm p-4 space-y-3">
-              <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">
-                {agendaHeader.agenda1_detail}
-              </p>
-              <div className="border-t border-white/8 pt-3">
-                <ResolutionBadge
-                  type={agendaHeader.agenda1_resolution ?? 'รับทราบ'}
-                  detail={agendaHeader.agenda1_resolution_detail}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-              ยังไม่ได้กรอกรายละเอียดวาระที่ 1
-            </div>
-          )}
+          <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+            {agendaHeader?.agenda1_detail
+              ? 'รายละเอียดวาระนี้บันทึกไว้ในรายงานการประชุมแล้ว'
+              : 'ยังไม่ได้กรอกรายละเอียดวาระที่ 1'}
+          </div>
         </div>
       )}
 
@@ -2200,12 +2180,7 @@ export function MeetingPreviewClient({
             <div className="flex items-start gap-3">
               <AgendaBadge no={2} />
               <div>
-                <p className="font-bold text-white">
-                  รับรองรายงานการประชุม
-                  {agendaHeader?.agenda2_meeting_no && (
-                    <span className="text-white/60"> ครั้งที่ {agendaHeader.agenda2_meeting_no}</span>
-                  )}
-                </p>
+                <p className="font-bold text-white">รับรองรายงานการประชุม</p>
                 <p className="text-xs text-white/40 mt-0.5">วาระที่ 2</p>
               </div>
             </div>
@@ -2216,25 +2191,23 @@ export function MeetingPreviewClient({
               </div>
             ) : (
               <div className="space-y-3">
-                {/* Meeting selector */}
-                <div className="flex items-start gap-2 flex-wrap">
-                  <span className="text-[10px] text-white/30 shrink-0 mt-1.5">รับรองรายงาน</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {pastMeetings.map(e => {
-                      const isRef = agenda2RefCode ? e.meeting.code === agenda2RefCode : false
-                      const isSelected = selectedPrevId === e.meeting.id
-                      return (
-                        <button
-                          key={e.meeting.id}
-                          type="button"
-                          onClick={() => openReportModal(e)}
-                          className={cn(
-                            'text-[11px] px-3 py-1 rounded-lg border transition-all flex items-center gap-1.5',
-                            isSelected
-                              ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                              : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
-                          )}
-                        >
+                {/* Meeting selector — show only meetings with a filed report */}
+                <div className="flex flex-wrap gap-1.5">
+                  {pastMeetings.filter(e => e.hasReport).map(e => {
+                    const isRef = agenda2RefCode ? e.meeting.code === agenda2RefCode : false
+                    const isSelected = selectedPrevId === e.meeting.id
+                    return (
+                      <button
+                        key={e.meeting.id}
+                        type="button"
+                        onClick={() => openReportModal(e)}
+                        className={cn(
+                          'text-[11px] px-3 py-1 rounded-lg border transition-all flex items-center gap-1.5',
+                          isSelected
+                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                            : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                        )}
+                      >
                           <span className="font-mono text-[10px] opacity-70">{e.meeting.code}</span>
                           <span>{e.meeting.title}</span>
                           <span className="text-[10px] opacity-60">
@@ -2264,62 +2237,9 @@ export function MeetingPreviewClient({
                       )
                     })}
                   </div>
-                </div>
-
-                {prevResolutions.length === 0 ? (
-                  <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-                    ไม่มีมติบันทึกไว้จากการประชุมครั้งนี้
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {prevResolutions.map((r) => {
-                      const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
-                      return (
-                        <div
-                          key={r.id}
-                          className={cn('glass-card-sm p-4 space-y-2', done && 'opacity-50')}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-2 flex-1 min-w-0">
-                              <span className="num text-xs font-bold text-cyan-400 shrink-0 mt-0.5">
-                                #{r.sequence_no}
-                              </span>
-                              <div className="min-w-0 space-y-1">
-                                <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
-                                {r.detail && (
-                                  <p className="text-xs text-white/50 leading-relaxed">{r.detail}</p>
-                                )}
-                              </div>
-                            </div>
-                            <StatusPill status={r.status} />
-                          </div>
-
-                          <div className="flex items-center gap-3 text-[11px] text-white/35 pl-5">
-                            {r.responsible_branch && <span>สาขา: {r.responsible_branch}</span>}
-                            {r.due_date && (
-                              <span className="flex items-center gap-1">
-                                <Clock size={10} />
-                                {formatThaiDate(r.due_date, true)}
-                              </span>
-                            )}
-                            {r.progress_pct > 0 && (
-                              <span className="text-amber-400">{r.progress_pct}%</span>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
               </div>
             )}
 
-            {agendaHeader && (
-              <ResolutionBadge
-                type={agendaHeader.agenda2_resolution ?? 'รับทราบ'}
-                detail={agendaHeader.agenda2_resolution_detail}
-              />
-            )}
           </div>
         )
       })()}
@@ -2335,15 +2255,11 @@ export function MeetingPreviewClient({
             </div>
           </div>
 
-          {items(3).length === 0 ? (
-            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
-              ยังไม่มีรายการเรื่องเพื่อทราบ
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {items(3).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
-            </div>
-          )}
+          <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+            {items(3).length > 0
+              ? 'รายการวาระนี้บันทึกไว้ในรายงานการประชุมแล้ว'
+              : 'ยังไม่มีรายการเรื่องเพื่อทราบ'}
+          </div>
 
           {/* NRW YoY Comparison */}
           {(() => {
@@ -2481,17 +2397,10 @@ export function MeetingPreviewClient({
             </div>
           </div>
 
-          {/* Agenda sub-items from form (if any) */}
-          {items(4).length > 0 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-1">รายการในวาระ</p>
-              {items(4).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
-            </div>
-          )}
 
           {/* PDCA panel — show here when วาระ 4 = ติดตามผลการดำเนินการ */}
           {!hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={currentMonthObstacles} />
           )}
 
           <ObstacleBranchPanel obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
@@ -2513,16 +2422,12 @@ export function MeetingPreviewClient({
 
           {/* PDCA panel — show here when วาระ 5 = ติดตามผลการดำเนินการ, sorted by วาระ 3 chart */}
           {hasAgenda6 && (
-            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={continuingObstacles} yoyRows={nrwYoyRows} />
+            <PdcaBranchPanel allRows={pdcaAllRows} prevRows={pdcaPrevRows} areaRows={pdcaAreaRows} refMonth={pdcaRefMonth} refYear={pdcaRefYear} meetingId={meeting.id} obstacles={currentMonthObstacles} yoyRows={nrwYoyRows} />
           )}
 
-          {items(5).length === 0 ? (
+          {items(5).length === 0 && (
             <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่มีรายการในวาระที่ 5
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {items(5).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
             </div>
           )}
         </div>
@@ -2539,13 +2444,9 @@ export function MeetingPreviewClient({
             </div>
           </div>
 
-          {items(6).length === 0 ? (
+          {items(6).length === 0 && (
             <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
               ยังไม่มีรายการในวาระที่ 6
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {items(6).map((item) => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
             </div>
           )}
         </div>

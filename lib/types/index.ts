@@ -111,6 +111,8 @@ export interface Obstacle {
   send_to_meeting: boolean
   show_in_monthly_alert: boolean
   priority_order: number | null
+  report_month: number | null
+  report_year: number | null
   created_by: string | null
   resolved_by: string | null
   resolved_at: string | null

@@ -2,10 +2,10 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown, AlertCircle, Brain, ClipboardPaste } from 'lucide-react'
+import { Plus, Trash2, Table2, X, Pencil, CheckCircle, ChevronDown, AlertCircle, Brain, ClipboardPaste, FileCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
-import { saveAgenda } from '@/app/actions/meeting-agenda'
+import { saveAgenda, getPrevMeetingReport } from '@/app/actions/meeting-agenda'
 import { formatThaiDate } from '@/lib/utils/date-th'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from '@/app/(dashboard)/meeting/[id]/agenda/_components/MeetingAgendaFormSetup'
@@ -934,6 +934,83 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
   )
 }
 
+// ─── prev meeting report panel ───────────────────────────────────────────────
+
+const AGENDA_LABELS: Record<number, string> = {
+  3: 'เรื่องแจ้งเพื่อทราบ',
+  4: 'เรื่องสืบเนื่อง / ติดตามผล',
+  5: 'เรื่องเสนอเพื่อพิจารณา',
+  6: 'อื่นๆ',
+}
+
+function PrevMeetingReportPanel({
+  header,
+  subitems,
+}: {
+  header: MeetingAgendaHeader | null
+  subitems: MeetingAgendaSubItem[]
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  const byAgenda = new Map<number, MeetingAgendaSubItem[]>()
+  for (const s of subitems) {
+    if (!byAgenda.has(s.agenda_no)) byAgenda.set(s.agenda_no, [])
+    byAgenda.get(s.agenda_no)!.push(s)
+  }
+
+  return (
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/3 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-emerald-500/5 transition-colors"
+      >
+        <span className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
+          <FileCheck size={12} />
+          ดูรายงานการประชุมครั้งที่อ้างอิง
+        </span>
+        <ChevronDown size={13} className={cn('text-emerald-400/60 transition-transform', expanded && 'rotate-180')} />
+      </button>
+
+      {expanded && (
+        <div className="border-t border-emerald-500/15 divide-y divide-white/6 text-xs">
+          {header?.agenda1_detail && (
+            <div className="px-4 py-3 space-y-1">
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ 1 — ประธานแจ้งที่ประชุมทราบ</p>
+              <p className="text-white/70 whitespace-pre-wrap leading-relaxed">{header.agenda1_detail}</p>
+              <p className="text-cyan-400">มติ: {header.agenda1_resolution}{header.agenda1_resolution_detail ? ` — ${header.agenda1_resolution_detail}` : ''}</p>
+            </div>
+          )}
+
+          {header?.agenda2_meeting_no && (
+            <div className="px-4 py-3 space-y-1">
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ 2 — รับรองรายงาน {header.agenda2_meeting_no}</p>
+              <p className="text-cyan-400">มติ: {header.agenda2_resolution}{header.agenda2_resolution_detail ? ` — ${header.agenda2_resolution_detail}` : ''}</p>
+            </div>
+          )}
+
+          {[3, 4, 5, 6].map(n => {
+            const items = byAgenda.get(n) ?? []
+            if (items.length === 0) return null
+            return (
+              <div key={n} className="px-4 py-3 space-y-2">
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ {n} — {AGENDA_LABELS[n]}</p>
+                {items.map((item, idx) => (
+                  <div key={idx} className="space-y-0.5">
+                    <p className="text-white/70 font-medium">{item.item_no}. {item.title}</p>
+                    {item.detail && <p className="text-white/45 pl-4 leading-relaxed">{item.detail}</p>}
+                    <p className="text-cyan-400 pl-4">มติ: {item.resolution}{item.resolution_detail ? ` — ${item.resolution_detail}` : ''}</p>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── edit mode layout ─────────────────────────────────────────────────────────
 
 function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, onCancel, previousMeetings, openResolutions, pdcaSummaries }: {
@@ -951,6 +1028,23 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
   function set<K extends keyof FormState>(key: K, val: FormState[K]) {
     setState(prev => ({ ...prev, [key]: val }))
   }
+
+  const [prevReport, setPrevReport] = useState<{
+    header: MeetingAgendaHeader | null
+    subitems: MeetingAgendaSubItem[]
+  } | null>(null)
+  const [loadingPrev, setLoadingPrev] = useState(false)
+  const prevMeetingId = previousMeetings?.find(m => m.code === state.agenda2MeetingNo)?.id ?? null
+
+  useEffect(() => {
+    if (!prevMeetingId) { setPrevReport(null); return }
+    let cancelled = false
+    setLoadingPrev(true)
+    getPrevMeetingReport(prevMeetingId).then(result => {
+      if (!cancelled) { setPrevReport(result); setLoadingPrev(false) }
+    })
+    return () => { cancelled = true }
+  }, [prevMeetingId])
 
   const agenda5Label = state.agenda4Type === 'เรื่องสืบเนื่อง' ? 'เรื่องติดตามผลการดำเนินการ' : 'เรื่องอื่นๆ'
   const showAgenda6 = state.agenda4Type === 'เรื่องสืบเนื่อง'
@@ -1012,6 +1106,16 @@ function AgendaEditMode({ state, setState, meeting, isAdmin, isPending, onSave, 
         </div>
         <ResolutionBlock value={state.agenda2Resolution} detail={state.agenda2ResolutionDetail}
           onChange={(v, d) => { set('agenda2Resolution', v); set('agenda2ResolutionDetail', d) }} />
+
+        {prevMeetingId && (
+          loadingPrev ? (
+            <p className="text-xs text-white/30 py-1">กำลังโหลดรายงาน...</p>
+          ) : prevReport ? (
+            <PrevMeetingReportPanel header={prevReport.header} subitems={prevReport.subitems} />
+          ) : (
+            <p className="text-xs text-white/25 italic py-1">การประชุมครั้งนี้ยังไม่มีรายงานที่บันทึกไว้</p>
+          )
+        )}
       </div>
 
       {/* Agenda 3 */}

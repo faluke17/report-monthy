@@ -6,6 +6,16 @@ import { toast } from 'sonner'
 import { Branch, Plan, UserProfile } from '@/lib/types'
 import { submitObstacle } from '@/app/actions/obstacles'
 
+const THAI_MONTHS_FULL = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+
+function prevMonthYear() {
+  const now = new Date()
+  const m = now.getMonth() === 0 ? 12 : now.getMonth()
+  const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  return { m, y }
+}
+
 const OBSTACLE_TYPES = [
   'MM/DMA Zero Test ไม่ผ่าน',
   'Step Test Zero Test ไม่ผ่าน',
@@ -50,6 +60,7 @@ interface Props {
 export function ObstacleForm({ branches, profile, plans }: Props) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
+  const { m: defaultMonth, y: defaultYear } = prevMonthYear()
   const [form, setForm] = useState({
     branch_id: profile?.branch_id ?? '',
     obstacle_type: '',
@@ -65,6 +76,8 @@ export function ObstacleForm({ branches, profile, plans }: Props) {
     auto_create_action: 'true',
     send_to_meeting: 'true',
     show_in_monthly_alert: 'true',
+    report_month: String(defaultMonth),
+    report_year: String(defaultYear),
   })
 
   function set(field: string, value: string) {
@@ -105,6 +118,8 @@ export function ObstacleForm({ branches, profile, plans }: Props) {
     fd.append('auto_create_action', form.auto_create_action)
     fd.append('send_to_meeting', form.send_to_meeting)
     fd.append('show_in_monthly_alert', form.show_in_monthly_alert)
+    fd.append('report_month', form.report_month)
+    fd.append('report_year', form.report_year)
 
     const result = await submitObstacle(fd)
     if (result.success) {
@@ -163,6 +178,23 @@ export function ObstacleForm({ branches, profile, plans }: Props) {
             />
           </div>
         )}
+
+        <div>
+          <label className={LABEL}>เดือนที่รายงาน</label>
+          <div className="flex gap-2">
+            <select className={SELECT} value={form.report_month} onChange={e => set('report_month', e.target.value)}>
+              {THAI_MONTHS_FULL.slice(1).map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name}</option>
+              ))}
+            </select>
+            <select className={SELECT} value={form.report_year} onChange={e => set('report_year', e.target.value)}>
+              {[-1, 0, 1].map(d => {
+                const y = new Date().getFullYear() + d
+                return <option key={y} value={y}>{y + 543}</option>
+              })}
+            </select>
+          </div>
+        </div>
 
         <div>
           <label className={LABEL}>ระดับความเร่งด่วน</label>

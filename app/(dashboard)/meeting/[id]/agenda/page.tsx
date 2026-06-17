@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Meeting, MeetingPreAgenda } from '@/lib/types'
 import { MeetingAgendaFormSetup } from './_components/MeetingAgendaFormSetup'
-import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from './_components/MeetingAgendaFormSetup'
+import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow, ObstacleSummaryRow } from './_components/MeetingAgendaFormSetup'
 import { Calendar, CheckCircle2, Circle } from 'lucide-react'
 import { formatThaiDate } from '@/lib/utils/date-th'
 
@@ -30,8 +30,32 @@ export default async function MeetingAgendaPage({
   if (!meetingData) notFound()
   const meeting = meetingData as Meeting
 
-  const [preAgendaRes, prevMeetingsRes, openResRes, monthlyRes] = await Promise.all([
-    supabase.from('meeting_pre_agenda').select('*').eq('meeting_id', id).maybeSingle(),
+  const preAgendaRes = await supabase.from('meeting_pre_agenda').select('*').eq('meeting_id', id).maybeSingle()
+
+  const refMonth: number | null = (preAgendaRes.data as any)?.pdca_ref_month ?? null
+  const refYear: number | null  = (preAgendaRes.data as any)?.pdca_ref_year  ?? null
+
+  const monthlyQuery = supabase
+    .from('monthly_reports')
+    .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th)')
+    .order('report_year', { ascending: false })
+    .order('report_month', { ascending: false })
+    .limit(200)
+  if (refMonth && refYear) {
+    monthlyQuery.eq('report_month', refMonth).eq('report_year', refYear)
+  }
+
+  const obstacleQuery = supabase
+    .from('obstacles')
+    .select('id, branch_id, obstacle_type, category, data_quality_impact, resolution_plan, status, priority_order, report_month, report_year, branches(name_th)')
+    .neq('status', 'ปิดประเด็น')
+  if (refMonth && refYear) {
+    obstacleQuery.eq('report_month', refMonth).eq('report_year', refYear)
+  } else {
+    obstacleQuery.limit(0)
+  }
+
+  const [prevMeetingsRes, openResRes, monthlyRes, obstacleRes] = await Promise.all([
     supabase
       .from('meetings')
       .select('id, code, title, scheduled_date')
@@ -46,12 +70,8 @@ export default async function MeetingAgendaPage({
       .neq('status', 'ปิดประเด็น')
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(30),
-    supabase
-      .from('monthly_reports')
-      .select('branch_id, pdca_do, pdca_act, report_month, report_year, branches(name_th)')
-      .order('report_year', { ascending: false })
-      .order('report_month', { ascending: false })
-      .limit(200),
+    monthlyQuery,
+    obstacleQuery,
   ])
 
   const initialData = (preAgendaRes.data ?? null) as MeetingPreAgenda | null
@@ -71,6 +91,18 @@ export default async function MeetingAgendaPage({
     }
   }
   const pdcaSummaries: PdcaSummaryRow[] = Array.from(branchMap.values())
+
+  const obstacleSummaries: ObstacleSummaryRow[] = ((obstacleRes.data ?? []) as any[]).map(row => ({
+    branch_name: row.branches?.name_th ?? '',
+    obstacle_type: row.obstacle_type ?? '',
+    category: row.category ?? '',
+    data_quality_impact: row.data_quality_impact ?? null,
+    resolution_plan: row.resolution_plan ?? null,
+    status: row.status ?? '',
+    priority_order: row.priority_order ?? 2,
+    report_month: row.report_month ?? 0,
+    report_year: row.report_year ?? 0,
+  }))
 
   return (
     <div className="max-w-4xl mx-auto space-y-5 animate-fadein">
@@ -117,6 +149,7 @@ export default async function MeetingAgendaPage({
         previousMeetings={previousMeetings}
         openResolutions={openResolutions}
         pdcaSummaries={pdcaSummaries}
+        obstacleSummaries={obstacleSummaries}
       />
     </div>
   )

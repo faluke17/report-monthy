@@ -37,6 +37,18 @@ export interface PdcaSummaryRow {
   report_year: number
 }
 
+export interface ObstacleSummaryRow {
+  branch_name: string
+  obstacle_type: string
+  category: string
+  data_quality_impact: string | null
+  resolution_plan: string | null
+  status: string
+  priority_order: number
+  report_month: number
+  report_year: number
+}
+
 // ─── style constants ──────────────────────────────────────────────────────────
 
 const INPUT =
@@ -151,16 +163,36 @@ function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[
 
 const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
-function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
+const OBSTACLE_STATUS_COLOR: Record<string, string> = {
+  'รายงานใหม่':       'text-blue-400 bg-blue-500/10 border-blue-500/25',
+  'ระหว่างแก้':       'text-cyan-400 bg-cyan-500/10 border-cyan-500/25',
+  'รอสนับสนุน':       'text-amber-400 bg-amber-500/10 border-amber-500/25',
+  'ล่าช้า':           'text-orange-400 bg-orange-500/10 border-orange-500/25',
+  'เกินกำหนด':        'text-red-400 bg-red-500/10 border-red-500/25',
+}
+
+function PdcaBranchPanel({ summaries, obstacles = [] }: { summaries: PdcaSummaryRow[], obstacles?: ObstacleSummaryRow[] }) {
   const [selected, setSelected] = useState<string | null>(null)
   const summaryMap = new Map(summaries.map(s => [s.branch_name, s]))
+  const obstacleMap = new Map<string, ObstacleSummaryRow[]>()
+  for (const obs of obstacles) {
+    if (!obstacleMap.has(obs.branch_name)) obstacleMap.set(obs.branch_name, [])
+    obstacleMap.get(obs.branch_name)!.push(obs)
+  }
+
   const detail = selected ? summaryMap.get(selected) : null
+  const branchObstacles = selected ? (obstacleMap.get(selected) ?? []) : []
 
   return (
     <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-violet-500/15">
         <Brain size={13} className="text-violet-400 shrink-0" />
-        <span className="text-xs font-semibold text-violet-300">ผลการดำเนินการรายสาขา (PDCA)</span>
+        <span className="text-xs font-semibold text-violet-300">ผลการดำเนินการรายสาขา (PDCA + อุปสรรค)</span>
+        {obstacles.length > 0 && (
+          <span className="ml-1 text-[10px] bg-red-500/15 text-red-400 border border-red-500/25 px-1.5 py-0.5 rounded-full">
+            อุปสรรค {obstacles.length}
+          </span>
+        )}
         {selected && (
           <button type="button" onClick={() => setSelected(null)} className="ml-auto text-[10px] text-white/30 hover:text-white/60 transition-colors">
             <X size={12} />
@@ -169,7 +201,8 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
       </div>
       <div className="px-4 py-3 flex flex-wrap gap-1.5">
         {PWA_BRANCHES.map(b => {
-          const has = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
+          const hasPdca = summaryMap.has(b.name_th) && (summaryMap.get(b.name_th)?.pdca_do || summaryMap.get(b.name_th)?.pdca_act)
+          const hasObs = obstacleMap.has(b.name_th)
           const active = selected === b.name_th
           return (
             <button
@@ -177,21 +210,23 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
               type="button"
               onClick={() => setSelected(active ? null : b.name_th)}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border transition-all',
+                'text-[10px] px-2 py-0.5 rounded-full border transition-all relative',
                 active
                   ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
-                  : has
+                  : hasPdca || hasObs
                     ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
                     : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
               )}
             >
               {b.name_th}
+              {hasObs && <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-red-400" />}
             </button>
           )
         })}
       </div>
       {selected && (
         <div className="border-t border-violet-500/15 px-4 py-3 space-y-3">
+          {/* PDCA */}
           {detail && (detail.pdca_do || detail.pdca_act) ? (
             <>
               <p className="text-[10px] text-violet-400/70 font-semibold uppercase tracking-wider">
@@ -212,6 +247,32 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
             </>
           ) : (
             <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
+          )}
+
+          {/* Obstacles */}
+          {branchObstacles.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-white/8">
+              <p className="text-[10px] text-red-400/70 font-semibold uppercase tracking-wider">อุปสรรค — {branchObstacles.length} รายการ</p>
+              {branchObstacles.map((obs, i) => {
+                const statusCls = OBSTACLE_STATUS_COLOR[obs.status] ?? 'text-white/40 bg-white/5 border-white/15'
+                return (
+                  <div key={i} className="bg-white/3 rounded-lg px-3 py-2 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-white/85">{obs.obstacle_type}</p>
+                      <span className={cn('shrink-0 text-[10px] px-2 py-0.5 rounded-full border', statusCls)}>
+                        {obs.status}
+                      </span>
+                    </div>
+                    {obs.data_quality_impact && (
+                      <p className="text-[11px] text-white/50 leading-relaxed">{obs.data_quality_impact}</p>
+                    )}
+                    {obs.resolution_plan && (
+                      <p className="text-[11px] text-cyan-400/70 leading-relaxed">แนวทาง: {obs.resolution_plan}</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       )}
@@ -364,6 +425,7 @@ interface Props {
   previousMeetings: PreviousMeetingRow[]
   openResolutions: OpenResolutionRow[]
   pdcaSummaries: PdcaSummaryRow[]
+  obstacleSummaries?: ObstacleSummaryRow[]
   onSaved?: (meetingId: string) => void
   onDraftSaved?: (meetingId: string) => void
 }
@@ -374,6 +436,7 @@ export function MeetingPreAgendaForm({
   previousMeetings,
   openResolutions,
   pdcaSummaries,
+  obstacleSummaries = [],
   onSaved,
   onDraftSaved,
 }: Props) {
@@ -513,7 +576,7 @@ export function MeetingPreAgendaForm({
               onChangeYear={v => set('pdcaRefYear', v)}
               onChangeDeadline={v => set('pdcaDeadline', v)}
             />
-            <PdcaBranchPanel summaries={pdcaSummaries} />
+            <PdcaBranchPanel summaries={pdcaSummaries} obstacles={obstacleSummaries} />
           </>
         )}
         <div>
@@ -537,7 +600,7 @@ export function MeetingPreAgendaForm({
               onChangeYear={v => set('pdcaRefYear', v)}
               onChangeDeadline={v => set('pdcaDeadline', v)}
             />
-            <PdcaBranchPanel summaries={pdcaSummaries} />
+            <PdcaBranchPanel summaries={pdcaSummaries} obstacles={obstacleSummaries} />
           </>
         )}
         <div>

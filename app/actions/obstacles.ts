@@ -25,6 +25,8 @@ export async function submitObstacle(formData: FormData): Promise<ActionResult> 
   const auto_create_action    = formData.get('auto_create_action') === 'true'
   const send_to_meeting       = formData.get('send_to_meeting') === 'true'
   const show_in_monthly_alert = formData.get('show_in_monthly_alert') === 'true'
+  const report_month          = parseInt(formData.get('report_month') as string) || null
+  const report_year           = parseInt(formData.get('report_year') as string) || null
 
   if (!branch_id || !obstacle_type || !category) {
     return { success: false, error: 'กรุณากรอกข้อมูลให้ครบ' }
@@ -40,6 +42,7 @@ export async function submitObstacle(formData: FormData): Promise<ActionResult> 
     data_quality_impact, resolution_plan, region_support_needed,
     priority_order, progress_pct, due_date, status,
     auto_create_action, send_to_meeting, show_in_monthly_alert,
+    report_month, report_year,
     created_by: session.username,
   })
 

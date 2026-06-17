@@ -49,8 +49,8 @@ export function MeetingReportFormSetup({
 }: Props) {
   const router = useRouter()
 
-  function handleSaved(meetingId: string) {
-    router.push(`/meeting/${meetingId}/preview`)
+  function handleSaved() {
+    router.push('/meeting')
   }
 
   return (

@@ -84,6 +84,9 @@ export default async function MeetingPreviewPage({
   const pdcaRefYear: number | null = preAgendaRes.data?.pdca_ref_year ?? null
   const agenda2RefCode: string | null = preAgendaRes.data?.agenda2_ref_meeting_no ?? null
 
+  // วันประชุมครั้งก่อน — ใช้แบ่งอุปสรรคใหม่ vs ค้าง
+  const prevMeetingDate: string | null = pastMeetingList[0]?.scheduled_date ?? null
+
   // ดึง resolutions + agenda headers/subitems ของ past meetings
   let allPastResolutions: MeetingResolution[] = []
   let pastHeaders: MeetingAgendaHeader[] = []
@@ -269,6 +272,7 @@ export default async function MeetingPreviewPage({
       pdcaAreaRows={pdcaAreaRows}
       pdcaRefMonth={pdcaRefMonth}
       pdcaRefYear={pdcaRefYear}
+      prevMeetingDate={prevMeetingDate}
     />
   )
 }

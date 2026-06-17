@@ -7,9 +7,10 @@ import type {
   PreviousMeetingRow,
   OpenResolutionRow,
   PdcaSummaryRow,
+  ObstacleSummaryRow,
 } from '@/components/forms/MeetingPreAgendaForm'
 
-export type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow }
+export type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow, ObstacleSummaryRow }
 
 interface Props {
   meeting: Meeting
@@ -17,6 +18,7 @@ interface Props {
   previousMeetings: PreviousMeetingRow[]
   openResolutions: OpenResolutionRow[]
   pdcaSummaries: PdcaSummaryRow[]
+  obstacleSummaries: ObstacleSummaryRow[]
 }
 
 export function MeetingAgendaFormSetup({
@@ -25,6 +27,7 @@ export function MeetingAgendaFormSetup({
   previousMeetings,
   openResolutions,
   pdcaSummaries,
+  obstacleSummaries,
 }: Props) {
   const router = useRouter()
 
@@ -43,6 +46,7 @@ export function MeetingAgendaFormSetup({
       previousMeetings={previousMeetings}
       openResolutions={openResolutions}
       pdcaSummaries={pdcaSummaries}
+      obstacleSummaries={obstacleSummaries}
       onSaved={handleSaved}
       onDraftSaved={handleDraftSaved}
     />
