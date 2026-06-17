@@ -7,8 +7,15 @@ import {
   ResponsiveContainer, Cell,
 } from 'recharts'
 import type { MnfAlertStatus, MnfEmaLatest } from '@/lib/types'
-import type { BranchGroup } from '@/components/dashboard/MnfBranchAccordion'
 import { getMnfSeriesForBranch, type MnfSeriesPoint } from '@/app/actions/mnf-monitor'
+
+export type BranchGroup = {
+  dmama_branch_id: number
+  branch_name_th: string
+  nodes: MnfEmaLatest[]
+  worstStatus: MnfAlertStatus
+  counts: Record<MnfAlertStatus, number>
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

@@ -2,11 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { MnfMonitorGrid } from '@/components/dashboard/MnfMonitorGrid'
-import type { BranchGroup } from '@/components/dashboard/MnfBranchAccordion'
+import type { BranchGroup } from '@/components/dashboard/MnfMonitorGrid'
 import type { MnfAlertStatus, MnfEmaLatest } from '@/lib/types'
 import type { MnfSeriesPoint } from '@/app/actions/mnf-monitor'
 
 export const dynamic = 'force-dynamic'
+
+function fmtThaiDate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${d}/${m}/${y + 543}`
+}
 
 export default async function MnfMonitorPage() {
   const supabase = await createClient()
@@ -38,6 +43,22 @@ export default async function MnfMonitorPage() {
 
   const lastComputed = rows[0]?.computed_at
     ? new Date(rows[0].computed_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
+    : null
+
+  // Sync status: query latest record_date from mnf_daily
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: latestSyncRow } = await (supabase as any)
+    .from('mnf_daily')
+    .select('record_date')
+    .order('record_date', { ascending: false })
+    .limit(1)
+    .single() as { data: { record_date: string } | null }
+
+  const nowBkk    = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+  const yestBkk   = new Date(nowBkk.getTime() - 86400_000).toISOString().split('T')[0]
+  const latestDate = latestSyncRow?.record_date ?? null
+  const daysBehind = latestDate
+    ? Math.max(0, Math.round((new Date(yestBkk).getTime() - new Date(latestDate).getTime()) / 86400_000))
     : null
 
   // Region: จัดกลุ่มตามสาขา เรียงจาก worst ก่อน
@@ -95,9 +116,32 @@ export default async function MnfMonitorPage() {
             }
           </p>
         </div>
-        {lastComputed && (
-          <p className="text-xs text-white/30 shrink-0">คำนวณล่าสุด: {lastComputed}</p>
-        )}
+        <div className="shrink-0 text-right space-y-1.5">
+          {daysBehind === null ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 text-white/30 text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              ไม่มีข้อมูล
+            </span>
+          ) : daysBehind === 0 ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              สำเร็จ · ข้อมูลวันที่ {fmtThaiDate(latestDate!)}
+            </span>
+          ) : daysBehind === 1 ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/8 text-amber-400 text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              ยังไม่ sync วันนี้ · ล่าสุด {fmtThaiDate(latestDate!)}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-red-500/30 bg-red-500/8 text-red-400 text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+              ข้อมูลค้าง {daysBehind} วัน · ตรวจสอบ Cron
+            </span>
+          )}
+          {lastComputed && (
+            <p className="text-[10px] text-white/25">คำนวณ EMA: {lastComputed}</p>
+          )}
+        </div>
       </div>
 
       {rows.length === 0 ? (

@@ -10,6 +10,7 @@ import { ObstacleSummaryPanel } from '@/components/dashboard/ObstacleSummaryPane
 import { LeakSummaryPanel } from '@/components/dashboard/LeakSummaryPanel'
 import { RatsReadingPanel } from '@/components/dashboard/RatsReadingPanel'
 import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
+import { getThaiMonthName } from '@/lib/utils/date-th'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,12 +21,14 @@ export default async function DashboardPage() {
   const month = now.getMonth() + 1
   const yearBe = year + 543
   const today = now.toISOString().split('T')[0]
+  const currentFiscalYear = month >= 10 ? year + 543 + 1 : year + 543
 
   const [
     branchesResult,
     meetingsResult,
     overdueActionsResult,
     obstaclesResult,
+    latestNrwPeriodResult,
   ] = await Promise.all([
     supabase.from('branches').select('*').eq('is_active', true).order('province_th'),
     supabase
@@ -43,12 +46,59 @@ export default async function DashboardPage() {
       .from('obstacles')
       .select('id, status, category')
       .not('status', 'eq', 'ปิดประเด็น'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('month, water_produced')
+      .eq('fiscal_year', currentFiscalYear) as Promise<{ data: { month: number; water_produced: number | null }[] | null; error: unknown }>,
   ])
 
   const branches = (branchesResult.data ?? []) as Branch[]
   const upcomingMeetings = (meetingsResult.data ?? []) as Meeting[]
   const overdueCount = overdueActionsResult.count ?? 0
   const obstacles = (obstaclesResult.data ?? []) as Pick<Obstacle, 'id' | 'status' | 'category'>[]
+
+  // หาเดือนล่าสุดในปีงบฯ ปัจจุบัน โดยเรียง fiscal order (ต.ค.=0 … ธ.ค.=2 … พ.ค.=7 … ก.ย.=11)
+  const fiscalPos = (m: number) => m >= 10 ? m - 10 : m + 2
+  const monthsWithData = [...new Set(
+    (latestNrwPeriodResult.data ?? [])
+      .filter((r) => (r.water_produced ?? 0) > 0)
+      .map((r) => r.month)
+  )].sort((a, b) => fiscalPos(b) - fiscalPos(a))
+  const latestMonth = monthsWithData[0] ?? null
+
+  let districtNrwAvg: number | null = null
+  let districtNrwCount = 0
+  let districtNrwPeriodLabel = ''
+  let branchesOnTarget = 0
+
+  if (latestMonth !== null) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: nrwRowsData } = await (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('water_produced, water_sold, water_free, blow_off')
+      .eq('fiscal_year', currentFiscalYear)
+      .eq('month', latestMonth)
+
+    const nrwRows = (nrwRowsData ?? []) as { water_produced: number | null; water_sold: number | null; water_free: number | null; blow_off: number | null }[]
+    const totalProduced = nrwRows.reduce((s, r) => s + (r.water_produced ?? 0), 0)
+    const totalSold     = nrwRows.reduce((s, r) => s + (r.water_sold     ?? 0), 0)
+    const totalFree     = nrwRows.reduce((s, r) => s + (r.water_free     ?? 0), 0)
+    const totalBlowOff  = nrwRows.reduce((s, r) => s + (r.blow_off       ?? 0), 0)
+    const totalLoss     = Math.max(0, totalProduced - totalSold - totalFree - totalBlowOff)
+    if (totalProduced > 0) {
+      districtNrwAvg   = (totalLoss / totalProduced) * 100
+      districtNrwCount = nrwRows.filter((r) => (r.water_produced ?? 0) > 0).length
+    }
+    districtNrwPeriodLabel = `${getThaiMonthName(latestMonth, true)} ${currentFiscalYear}`
+
+    branchesOnTarget = nrwRows.filter((r) => {
+      const p = r.water_produced ?? 0
+      if (!p) return false
+      const loss = Math.max(0, p - (r.water_sold ?? 0) - (r.water_free ?? 0) - (r.blow_off ?? 0))
+      return (loss / p) * 100 <= 20
+    }).length
+  }
 
   // หา meeting ที่ระบุ report period ไว้ → ใช้เป็น source of truth ว่านับรายงานเดือนไหน
   const periodMeeting = upcomingMeetings.find(
@@ -98,7 +148,6 @@ export default async function DashboardPage() {
   const avgNrw = withNrw.length
     ? withNrw.reduce((s, r) => s + (r.nrw_pct ?? 0), 0) / withNrw.length
     : null
-  const branchesOnTarget = withNrw.filter((r) => (r.nrw_pct ?? 100) <= 20).length
   const avgMnf = withNrw.length
     ? withNrw.reduce((s, r) => s + (r.mnf_factor ?? 0), 0) / withNrw.length
     : null
@@ -129,9 +178,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
           label="NRW เฉลี่ยเขต"
-          value={avgNrw !== null ? avgNrw.toFixed(2) : '—'}
+          value={districtNrwAvg !== null ? districtNrwAvg.toFixed(2) : '—'}
           unit="%"
-          sub={`จาก ${withNrw.length} สาขาที่ส่งข้อมูล`}
+          sub={districtNrwAvg !== null
+            ? `${districtNrwPeriodLabel} · ${districtNrwCount} สาขา`
+            : 'ยังไม่มีข้อมูล'}
           accentColor="cyan"
         />
         <KpiCard

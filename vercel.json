@@ -8,7 +8,11 @@
     },
     {
       "path": "/api/dmama/mnf-sync?mode=daily",
-      "schedule": "0 1 * * *"
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/dmama/mnf-sync?mode=daily",
+      "schedule": "0 7 * * *"
     }
   ],
   "headers": [

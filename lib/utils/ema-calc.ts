@@ -13,12 +13,14 @@ export const SPIKE_LIMIT    = 200   // % above EMA → red_spike (emergency)
 export const DAYS_TO_ALERT  = 3     // consecutive days above WARNING → red_accumulated
 
 // Node classification filters (based on percentile analysis of real data)
-export const MIN_NODE_MEDIAN = 1.0  // m³/hr — nodes below this are too small to alert on
-export const BIMODAL_RATIO   = 0.10 // q1 < median × this → bimodal node (unreliable EMA)
+export const MIN_NODE_MEDIAN  = 1.0  // m³/hr — nodes below this are too small to alert on
+export const BIMODAL_RATIO    = 0.10 // q1 < median × this → bimodal node (unreliable EMA)
+export const NULL_RATIO_LIMIT = 0.60 // >60% null readings → logger unreliable, skip
+export const RECENT_NULL_DAYS = 7    // all-null last N days → logger currently offline, skip
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AlertStatus  = 'green' | 'yellow' | 'red_spike' | 'red_accumulated'
-export type NodeCategory = 'normal' | 'tiny' | 'bimodal'
+export type NodeCategory = 'normal' | 'tiny' | 'bimodal' | 'sparse' | 'offline'
 
 export interface DailyFlowInput {
   record_date: string   // 'YYYY-MM-DD'
@@ -66,7 +68,7 @@ export function classifyNode(validFlows: number[]): NodeClassification {
 // ─── Alert Status Derivation ─────────────────────────────────────────────────
 
 export function deriveAlertStatus(diffPct: number, consecutiveCount: number): AlertStatus {
-  if (Math.abs(diffPct) >= SPIKE_LIMIT)  return 'red_spike'
+  if (diffPct >= SPIKE_LIMIT)             return 'red_spike'
   if (consecutiveCount >= DAYS_TO_ALERT) return 'red_accumulated'
   if (diffPct >= WARNING_LIMIT)          return 'yellow'
   return 'green'
@@ -233,12 +235,19 @@ export async function computeEmaForDateRange(
       .map(i => i.mnf_flow)
       .filter((f): f is number => f !== null && f > 0)
 
-    const { category } = classifyNode(validFlows)
+    // Skip loggers that are chronically unreliable (too many nulls overall)
+    const nullRatio = inputs.length > 0 ? 1 - validFlows.length / inputs.length : 1
+    if (nullRatio > NULL_RATIO_LIMIT) { skipped++; continue }
 
-    if (category !== 'normal') {
-      skipped++
-      continue
-    }
+    // Skip loggers that are currently offline (last N days all null)
+    const recentInputs = [...inputs]
+      .sort((a, b) => b.record_date.localeCompare(a.record_date))
+      .slice(0, RECENT_NULL_DAYS)
+    const recentAllNull = recentInputs.length > 0 && recentInputs.every(r => r.mnf_flow === null)
+    if (recentAllNull) { skipped++; continue }
+
+    const { category } = classifyNode(validFlows)
+    if (category !== 'normal') { skipped++; continue }
 
     const series  = computeEmaSeries(inputs)
     const inRange = series.filter(r => r.record_date >= fromDate && r.record_date <= toDate)

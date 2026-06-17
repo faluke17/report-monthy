@@ -7,6 +7,14 @@ const DMAMA_API = 'https://dmama.pwa.co.th/api'
 const SECTOR_ID = process.env.DMAMA_SECTOR_ID ?? '1'
 const DISTRICT_ID = process.env.DMAMA_DISTRICT_ID ?? '10'
 
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn() } catch (e) { lastError = e }
+  }
+  throw lastError
+}
+
 function parseNumber(val: string | null | undefined): number | null {
   if (!val) return null
   const n = parseFloat(val.replace(/,/g, ''))
@@ -189,10 +197,10 @@ async function handler(req: NextRequest) {
   let months: ReturnType<typeof getFiscalMonths>
 
   if (isDaily) {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const y = yesterday.getFullYear()
-    const m = yesterday.getMonth() + 1
+    const nowBkk = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+    nowBkk.setDate(nowBkk.getDate() - 1)
+    const y = nowBkk.getFullYear()
+    const m = nowBkk.getMonth() + 1
     months = getFiscalMonths(y, m, y, m)
   } else {
     let body: Record<string, number> = {}
@@ -207,22 +215,24 @@ async function handler(req: NextRequest) {
         : getFiscalMonths(body.from_year, body.from_month, body.to_year, body.to_month)
   }
 
-  // Login to DMAMA
+  // Login to DMAMA (retry 3 ครั้ง)
   let token: string
   try {
-    const res = await fetch(`${DMAMA_API}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: process.env.DMAMA_USERNAME,
-        password: process.env.DMAMA_PASSWORD,
-        accept: true,
-      }),
+    token = await withRetry(async () => {
+      const res = await fetch(`${DMAMA_API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: process.env.DMAMA_USERNAME,
+          password: process.env.DMAMA_PASSWORD,
+          accept: true,
+        }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (!data.access_token) throw new Error('no access_token')
+      return data.access_token as string
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
-    token = data.access_token
-    if (!token) throw new Error('no access_token')
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown'
     return NextResponse.json({ error: `dmama login: ${msg}` }, { status: 502 })
@@ -234,10 +244,12 @@ async function handler(req: NextRequest) {
   let totalSynced = 0
   const allErrors: string[] = []
 
-  // Process months sequentially, branches in parallel per month
+  // Process months sequentially, branches in parallel per month (retry 3 ครั้งต่อสาขา)
   for (const { year, month, from, to } of months) {
     const results = await Promise.allSettled(
-      PWA_BRANCHES.map((branch) => fetchMnfRaw(token, branch.dmama_branch_id, from, to)),
+      PWA_BRANCHES.map((branch) =>
+        withRetry(() => fetchMnfRaw(token, branch.dmama_branch_id, from, to)),
+      ),
     )
 
     const records: MnfRecord[] = []
