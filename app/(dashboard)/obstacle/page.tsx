@@ -82,7 +82,7 @@ export default async function ObstaclePage({
       />
 
       <div className="glass-card overflow-hidden">
-        <ObstacleTable data={rows} canDelete={!isBranchUser} />
+        <ObstacleTable data={rows} canDelete={!isBranchUser} isRegion={!isBranchUser} />
       </div>
     </div>
   )

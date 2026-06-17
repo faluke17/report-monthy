@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { generateRunningCode } from '@/lib/utils/code-gen'
-import { ActionResult } from '@/lib/types'
+import { ActionResult, ObstacleProgressLog } from '@/lib/types'
 
 export async function submitObstacle(formData: FormData): Promise<ActionResult> {
   const session = await getPwaSession()
@@ -37,16 +37,30 @@ export async function submitObstacle(formData: FormData): Promise<ActionResult> 
 
   const code = await generateRunningCode('OBS', branch.code, supabase)
 
-  const { error } = await supabase.from('obstacles').insert({
+  const { data: inserted, error } = await supabase.from('obstacles').insert({
     code, branch_id, category, obstacle_type, area,
     data_quality_impact, resolution_plan, region_support_needed,
     priority_order, progress_pct, due_date, status,
     auto_create_action, send_to_meeting, show_in_monthly_alert,
     report_month, report_year,
     created_by: session.username,
-  })
+  }).select('id').single()
 
   if (error) return { success: false, error: error.message }
+
+  // Auto-create system log entry เมื่อเปิดประเด็นใหม่
+  const initMessage = `เปิดประเด็น: ${obstacle_type}`
+  await supabase.from('obstacle_progress_logs').insert({
+    obstacle_id: inserted.id,
+    message: initMessage,
+    is_closed: false,
+    entry_type: 'system',
+    created_by: session.username,
+  })
+  await supabase.from('obstacles').update({
+    last_log_at: new Date().toISOString(),
+    last_log_message: initMessage,
+  }).eq('id', inserted.id)
 
   revalidatePath('/obstacle')
   revalidatePath('/dashboard')
@@ -98,6 +112,69 @@ export async function deleteObstacle(id: string): Promise<ActionResult> {
   const supabase = await createClient()
   const { error } = await supabase.from('obstacles').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  revalidatePath('/obstacle')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function getProgressLogs(
+  obstacleId: string,
+): Promise<{ data: ObstacleProgressLog[] }> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('obstacle_progress_logs')
+    .select('*')
+    .eq('obstacle_id', obstacleId)
+    .order('created_at', { ascending: false })
+  return { data: (data ?? []) as ObstacleProgressLog[] }
+}
+
+export async function addProgressLog(
+  obstacleId: string,
+  message: string,
+  progressPct: number | null,
+  isClosed: boolean,
+  entryType: 'branch_update' | 'region_note',
+): Promise<ActionResult> {
+  const session = await getPwaSession()
+  if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+
+  // สาขาแก้ได้เฉพาะอุปสรรคของตัวเอง
+  if (session.costcenter) {
+    const { data: obs } = await supabase
+      .from('obstacles')
+      .select('branches!inner(name_th)')
+      .eq('id', obstacleId)
+      .single()
+    if (!obs) return { success: false, error: 'ไม่พบรายการ' }
+    const ownerName = (obs.branches as unknown as { name_th: string }).name_th
+    if (ownerName !== session.branch_name) {
+      return { success: false, error: 'ไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น' }
+    }
+  }
+
+  const { error: logError } = await supabase.from('obstacle_progress_logs').insert({
+    obstacle_id: obstacleId,
+    message,
+    progress_pct: progressPct,
+    is_closed: isClosed,
+    entry_type: entryType,
+    created_by: session.username,
+  })
+  if (logError) return { success: false, error: logError.message }
+
+  // อัพเดท denormalized fields + progress_pct + status ถ้าปิดประเด็น
+  const patch: Record<string, unknown> = {
+    last_log_at: new Date().toISOString(),
+    last_log_message: message,
+  }
+  if (progressPct !== null) patch.progress_pct = progressPct
+  if (isClosed) patch.status = 'ปิดประเด็น'
+
+  await supabase.from('obstacles').update(patch).eq('id', obstacleId)
 
   revalidatePath('/obstacle')
   revalidatePath('/dashboard')

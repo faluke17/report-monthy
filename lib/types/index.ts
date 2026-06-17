@@ -113,6 +113,8 @@ export interface Obstacle {
   priority_order: number | null
   report_month: number | null
   report_year: number | null
+  last_log_at: string | null
+  last_log_message: string | null
   created_by: string | null
   resolved_by: string | null
   resolved_at: string | null
@@ -120,6 +122,17 @@ export interface Obstacle {
   updated_at: string
   // joined
   branches?: Branch
+}
+
+export interface ObstacleProgressLog {
+  id: string
+  obstacle_id: string
+  message: string
+  progress_pct: number | null
+  is_closed: boolean
+  entry_type: 'branch_update' | 'region_note' | 'system'
+  created_by: string
+  created_at: string
 }
 
 export interface ActionItem {
