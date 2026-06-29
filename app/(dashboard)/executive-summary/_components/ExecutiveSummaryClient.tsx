@@ -299,14 +299,6 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {loadedBranch && (
-            <button
-              onClick={() => { setLoadedBranch(null); setSummaryData(null) }}
-              style={{ padding: '5px 12px', fontSize: 10, letterSpacing: 1, color: 'rgba(34,211,238,0.8)', background: 'transparent', border: '1px solid rgba(34,211,238,0.35)', cursor: 'pointer', fontFamily: 'IBM Plex Mono, monospace', display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              ✕ ปลดเป้าหมาย
-            </button>
-          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <span className="anim-blink-crit" style={{ width: 7, height: 7, borderRadius: '50%', background: '#10D9B0', boxShadow: '0 0 8px #10D9B0', display: 'inline-block' }} />
             <span style={{ fontSize: 10, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>SYS · ONLINE</span>
@@ -426,10 +418,7 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.35, backgroundImage: `linear-gradient(rgba(34,211,238,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.04) 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
 
             {!loadedBranch && !scanning && <RadarEmpty isOver={isOver} />}
-            {scanning && <CyberScan branch={scanning} />}
-            {loadedBranch && !scanning && summaryData && (
-              <BranchSummaryPanel data={summaryData} animKey={animKey} />
-            )}
+            {scanning && !loadedBranch && <CyberScan branch={scanning} />}
 
             {/* Drop target frame when dragging */}
             {(isOver || draggingId) && !loadedBranch && !scanning && (
@@ -462,6 +451,22 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
           </div>
         </main>
       </div>
+
+      {/* ── Fullscreen Branch Panel ── */}
+      {(scanning || (loadedBranch && summaryData)) && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 300, overflow: 'hidden',
+        }}>
+          {scanning && <CyberScan branch={scanning} />}
+          {!scanning && summaryData && (
+            <BranchSummaryPanel
+              data={summaryData}
+              animKey={animKey}
+              onBack={() => { setLoadedBranch(null); setSummaryData(null) }}
+            />
+          )}
+        </div>
+      )}
     </div>
   )
 }

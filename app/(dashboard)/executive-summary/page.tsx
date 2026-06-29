@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
 import { ExecutiveSummaryClient } from './_components/ExecutiveSummaryClient'
@@ -14,8 +14,6 @@ export interface BranchNrwSnap {
 }
 
 export default async function ExecutiveSummaryPage() {
-  if (process.env.NODE_ENV === 'production') notFound()
-
   const session = await getPwaSession()
   if (!session) redirect('/login')
 

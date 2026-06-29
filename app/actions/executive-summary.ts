@@ -2,11 +2,46 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
+import { getDmamabranchId } from '@/lib/utils/pwa-branches'
 
 export interface NrwTrendPoint {
   month: number
   year: number
   nrw_pct: number | null
+}
+
+export interface DmaStatRow {
+  id: string
+  dmama_branch_id: number
+  report_year: number
+  report_month: number
+  area_label: string
+  area_name: string
+  outbound: number | null
+  distribute_all: number | null
+  water_loss: number
+}
+
+export interface MnfNodeRow {
+  node_label: string
+  record_date: string
+  mnf_flow: number | null
+  ema_value: number
+  diff_percent: number
+  consecutive_count: number
+  alert_status: string
+}
+
+export interface ObstacleRow {
+  id: string
+  code: string
+  category: string
+  obstacle_type: string
+  status: string
+  progress_pct: number
+  due_date: string | null
+  last_log_message: string | null
+  priority_order: number | null
 }
 
 export interface BranchExecutiveSummary {
@@ -19,6 +54,11 @@ export interface BranchExecutiveSummary {
   nrw: {
     current_pct: number | null
     prev_month_pct: number | null
+    yoy_pct: number | null
+    water_produced: number | null
+    water_sold: number | null
+    yoy_produced: number | null
+    yoy_sold: number | null
     trend_12m: NrwTrendPoint[]
     leaks_found: number
     leaks_repaired: number
@@ -42,6 +82,9 @@ export interface BranchExecutiveSummary {
     done_pct: number
     projects: { name: string; phase: number; overdue: boolean }[]
   } | null
+  dmaStats: DmaStatRow[]
+  obstacles: ObstacleRow[]
+  mnfNodes: MnfNodeRow[]
 }
 
 const FISCAL_YEAR = 2569
@@ -105,8 +148,10 @@ export async function getExecutiveBranchSummary(
     return { data: null, error: 'ไม่พบข้อมูลสาขา' }
   }
 
-  // Phase 2 — parallel: operational data + NRW official + budget
-  const [reportsRes, nrwMonthlyRes, budgetYearRes] = await Promise.all([
+  const dmamaId = getDmamabranchId(branchRes.data.name_th) ?? null
+
+  // Phase 2 — parallel: operational data + NRW official + budget + new panels
+  const [reportsRes, nrwMonthlyRes, budgetYearRes, dmaRaw, obstaclesRes, mnfRes] = await Promise.all([
     // monthly_reports: operational data (leaks, MNF, PDCA, status)
     supabase
       .from('monthly_reports')
@@ -123,7 +168,7 @@ export async function getExecutiveBranchSummary(
       .eq('branch_name', branchRes.data.name_th)
       .order('fiscal_year', { ascending: false })
       .order('month', { ascending: false })
-      .limit(13),
+      .limit(14),
 
     // budget year id
     (supabase as any)
@@ -131,6 +176,38 @@ export async function getExecutiveBranchSummary(
       .select('id')
       .eq('fiscal_year', FISCAL_YEAR)
       .maybeSingle(),
+
+    // DMA area stats — latest synced period
+    dmamaId != null
+      ? supabase
+          .from('nrw_area_stats')
+          .select('id,dmama_branch_id,report_year,report_month,area_label,area_name,outbound,distribute_all')
+          .eq('dmama_branch_id', dmamaId)
+          .order('report_year', { ascending: false })
+          .order('report_month', { ascending: false })
+          .limit(200)
+      : Promise.resolve({ data: [] }),
+
+    // Open obstacles
+    supabase
+      .from('obstacles')
+      .select('id,code,category,obstacle_type,status,progress_pct,due_date,last_log_message,priority_order')
+      .eq('branch_id', branchId)
+      .neq('status', 'ปิดประเด็น')
+      .order('priority_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(10),
+
+    // MNF per-node (latest EMA)
+    dmamaId != null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (supabase as any)
+          .from('mnf_ema_latest')
+          .select('node_label,record_date,mnf_flow,ema_value,diff_percent,consecutive_count,alert_status')
+          .eq('dmama_branch_id', dmamaId)
+          .order('diff_percent', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] }),
   ])
 
   const reports = reportsRes.data ?? []
@@ -152,11 +229,44 @@ export async function getExecutiveBranchSummary(
   const current_pct     = calcNrwPct(latestNrw)
   const prev_month_pct  = calcNrwPct(prevNrw)
 
+  // YoY — same month last fiscal year
+  const yoyNrw = latestNrw
+    ? nrwRows.find((r) => r.month === latestNrw.month && r.fiscal_year === latestNrw.fiscal_year - 1) ?? null
+    : null
+  const yoy_pct = calcNrwPct(yoyNrw)
+
   // report month/year ใช้จาก nrw_branch_monthly ก่อน fallback monthly_reports
   const reportMonth = latestNrw?.month ?? latestReport?.report_month ?? null
   const reportYear  = latestNrw
     ? fyToGregorianYear(latestNrw.fiscal_year, latestNrw.month)
     : (latestReport?.report_year ?? null)
+
+  // DMA stats — find latest period and keep only those rows
+  const allDmaRaw = (dmaRaw.data ?? []) as (DmaStatRow & { fetched_at?: string })[]
+  const latestDmaPeriod = allDmaRaw[0]
+    ? { year: allDmaRaw[0].report_year, month: allDmaRaw[0].report_month }
+    : null
+  const dmaStats: DmaStatRow[] = latestDmaPeriod
+    ? allDmaRaw
+        .filter((r) => r.report_year === latestDmaPeriod.year && r.report_month === latestDmaPeriod.month)
+        .map((r) => ({
+          id: r.id,
+          dmama_branch_id: r.dmama_branch_id,
+          report_year: r.report_year,
+          report_month: r.report_month,
+          area_label: r.area_label,
+          area_name: r.area_name,
+          outbound: r.outbound,
+          distribute_all: r.distribute_all,
+          water_loss: Math.max(0, (r.outbound ?? 0) - (r.distribute_all ?? 0)),
+        }))
+        .sort((a, b) => b.water_loss - a.water_loss)
+    : []
+
+  // MNF nodes — sort by severity
+  const ALERT_ORDER: Record<string, number> = { red_spike: 0, red_accumulated: 1, yellow: 2, green: 3 }
+  const mnfNodes: MnfNodeRow[] = ((mnfRes.data ?? []) as MnfNodeRow[])
+    .sort((a, b) => (ALERT_ORDER[a.alert_status] ?? 9) - (ALERT_ORDER[b.alert_status] ?? 9))
 
   // PDCA — from latest monthly_report that has pdca text
   const pdcaReport = reports.find((r) => r.pdca_do || r.pdca_act) ?? null
@@ -227,6 +337,11 @@ export async function getExecutiveBranchSummary(
       nrw: {
         current_pct,
         prev_month_pct,
+        yoy_pct,
+        water_produced: latestNrw?.water_produced ?? null,
+        water_sold: latestNrw?.water_sold ?? null,
+        yoy_produced: yoyNrw?.water_produced ?? null,
+        yoy_sold: yoyNrw?.water_sold ?? null,
         trend_12m,
         leaks_found: latestReport?.leaks_found ?? 0,
         leaks_repaired: latestReport?.leaks_repaired ?? 0,
@@ -239,6 +354,9 @@ export async function getExecutiveBranchSummary(
       },
       pdca,
       budget_2569,
+      dmaStats,
+      obstacles: (obstaclesRes.data ?? []) as ObstacleRow[],
+      mnfNodes,
     },
     error: null,
   }

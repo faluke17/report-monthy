@@ -39,8 +39,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/meeting',  label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
       { href: '/action',   label: 'Action Tracker',       icon: Crosshair },
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary',           label: 'Executive Summary', icon: FileText, badge: 'new' as const }] : []),
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/executive-summary', label: 'บทสรุปผู้บริหาร',   icon: Presentation }] : []),
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary', label: 'Executive Summary', icon: FileText, badge: 'new' as const }] : []),
+      { href: '/executive-summary', label: 'บทสรุปผู้บริหาร', icon: Presentation },
     ],
   },
   {
