@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
@@ -8,6 +8,7 @@ import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import { Branch, WaterNodeOption } from '@/lib/types'
 import { submitAreaReports } from '@/app/actions/area-reports'
 import type { AreaReportInput } from '@/app/actions/area-reports'
+import { getNodeNrwStats, getNodeMnfStats } from '@/app/actions/water-nodes'
 import { WaterNodeSelect } from '@/components/forms/WaterNodeSelect'
 
 const OBSTACLE_TYPES = [
@@ -21,12 +22,12 @@ const OBSTACLE_TYPES = [
   'อื่น',
 ]
 
-export interface NrwAreaLookup {
-  area_name: string
-  outbound: number | null
-  distribute_all: number | null
+export interface NodeNrwLookup {
   report_year: number
   report_month: number
+  gross_flow: number | null
+  net_flow: number | null
+  distribute_all: number | null
 }
 
 interface StepRow {
@@ -68,6 +69,8 @@ interface AreaSet {
   expanded: boolean
   area_name: string
   area_code: string
+  node_id: string
+  logger_id: string | null
   nrw_data_month: { year: number; month: number } | null
   nrw_after_data_month: { year: number; month: number } | null
   manual_input: boolean
@@ -91,6 +94,8 @@ function newArea(index: number): AreaSet {
     expanded: true,
     area_name: '',
     area_code: '',
+    node_id: '',
+    logger_id: null,
     nrw_data_month: null,
     nrw_after_data_month: null,
     manual_input: false,
@@ -121,35 +126,21 @@ function fmt(n: number | null, dec = 2) {
   return n.toLocaleString('th-TH', { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
-function lookupNrwStat(
-  nrwStatsByBranchId: Record<number, NrwAreaLookup[]>,
-  dmamabranchId: number | undefined,
-  code: string,
-  year: number,
-  month: number,
-): NrwAreaLookup | undefined {
-  if (!dmamabranchId || !code) return undefined
-  const stats = nrwStatsByBranchId[dmamabranchId] ?? []
-  return stats.find(
-    (s) =>
-      s.report_year === year &&
-      s.report_month === month &&
-      (s.area_name.startsWith(code + '-') || s.area_name === code),
-  )
-}
 
 const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
 const SELECT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer'
 const LABEL = 'block text-xs font-semibold text-white/40 uppercase tracking-wide mb-2'
 const CALC_BOX = 'w-full bg-white/3 border border-dashed border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white/50 min-h-[46px] flex items-center'
 
+type MnfLookup = { report_year: number; report_month: number; avg_mnf: number }
+
 interface Props {
   branches: Branch[]
   userBranchId?: string
   isAdmin: boolean
   mmNodesByBranch: Record<string, WaterNodeOption[]>
-  nrwStatsByBranchId: Record<number, NrwAreaLookup[]>
-  branchUuidToDmamaId: Record<string, number>
+  nrwStatsByNodeId: Record<string, NodeNrwLookup[]>
+  mnfStatsByLoggerId?: Record<string, MnfLookup[]>
   defaultYear?: number
   defaultMonth?: number
 }
@@ -159,8 +150,8 @@ export function AreaReportForm({
   userBranchId,
   isAdmin,
   mmNodesByBranch,
-  nrwStatsByBranchId,
-  branchUuidToDmamaId,
+  nrwStatsByNodeId,
+  mnfStatsByLoggerId: mnfStatsByLoggerIdProp = {},
   defaultYear,
   defaultMonth,
 }: Props) {
@@ -174,33 +165,74 @@ export function AreaReportForm({
   const [reportMonth, setReportMonth] = useState(defaultMonth ?? prevMonth)
   const [areas, setAreas] = useState<AreaSet[]>([newArea(0)])
   const [submitting, setSubmitting] = useState(false)
+  const [nrwStats, setNrwStats] = useState(nrwStatsByNodeId)
+  const [mnfStats, setMnfStats] = useState<Record<string, MnfLookup[]>>(mnfStatsByLoggerIdProp)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    Promise.all([
+      getNodeNrwStats(reportYear, reportMonth),
+      getNodeMnfStats(reportYear, reportMonth),
+    ]).then(([nrwRows, mnfRows]) => {
+      const nrwMap: typeof nrwStatsByNodeId = {}
+      for (const r of nrwRows) {
+        if (!nrwMap[r.water_node_id]) nrwMap[r.water_node_id] = []
+        nrwMap[r.water_node_id].push(r)
+      }
+      setNrwStats(nrwMap)
+
+      const mnfMap: Record<string, MnfLookup[]> = {}
+      for (const r of mnfRows) {
+        const key = String(r.logger_id)
+        if (!mnfMap[key]) mnfMap[key] = []
+        mnfMap[key].push({ report_year: r.report_year, report_month: r.report_month, avg_mnf: r.avg_mnf })
+      }
+      setMnfStats(mnfMap)
+    })
+  }, [reportYear, reportMonth])
 
   function patchArea(key: string, patch: Partial<AreaSet>) {
     setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...patch } : a)))
   }
 
-  function handleAreaSelect(areaKey: string, label: string, code: string) {
+  function handleAreaSelect(areaKey: string, label: string, code: string, nodeId: string, loggerId: string | null) {
     const area = areas.find((a) => a.key === areaKey)
     if (area?.manual_input) {
-      patchArea(areaKey, { area_name: label, area_code: code })
+      patchArea(areaKey, { area_name: label, area_code: code, node_id: nodeId, logger_id: loggerId })
       return
     }
-    const dmamabranchId = branchUuidToDmamaId[branchId]
-    const yoyStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code, reportYear - 1, reportMonth)
+    const nodeRows = nrwStats[nodeId] ?? []
+    const yoyStat = nodeRows.find((r) => r.report_year === reportYear - 1 && r.report_month === reportMonth)
+    const distBefore = yoyStat?.net_flow ?? yoyStat?.gross_flow
+
+    // MNF: before = เดือนก่อนหน้า, after = เดือนปัจจุบัน
+    const mnfPrevMonth = reportMonth === 1 ? 12 : reportMonth - 1
+    const mnfPrevYear  = reportMonth === 1 ? reportYear - 1 : reportYear
+    const mnfRows  = loggerId ? (mnfStats[loggerId] ?? []) : []
+    const mnfBefore = mnfRows.find((r) => r.report_year === mnfPrevYear && r.report_month === mnfPrevMonth)
+    const mnfAfter  = mnfRows.find((r) => r.report_year === reportYear  && r.report_month === reportMonth)
+
     const afterPatch = area?.manual_input_after ? {} : (() => {
-      const currentStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, code, reportYear, reportMonth)
+      const currentStat = nodeRows.find((r) => r.report_year === reportYear && r.report_month === reportMonth)
+      const distAfter = currentStat?.net_flow ?? currentStat?.gross_flow
       return {
         nrw_after_data_month: currentStat ? { year: currentStat.report_year, month: currentStat.report_month } : null,
-        water_dist_after: currentStat?.outbound != null ? String(currentStat.outbound) : '',
+        water_dist_after: distAfter != null ? String(distAfter) : '',
         water_sold_after: currentStat?.distribute_all != null ? String(currentStat.distribute_all) : '',
+        mnf_after: mnfAfter != null ? String(mnfAfter.avg_mnf) : '',
       }
     })()
+
     patchArea(areaKey, {
       area_name: label,
       area_code: code,
+      node_id: nodeId,
+      logger_id: loggerId,
       nrw_data_month: yoyStat ? { year: yoyStat.report_year, month: yoyStat.report_month } : null,
-      water_dist_before: yoyStat?.outbound != null ? String(yoyStat.outbound) : '',
+      water_dist_before: distBefore != null ? String(distBefore) : '',
       water_sold_before: yoyStat?.distribute_all != null ? String(yoyStat.distribute_all) : '',
+      mnf_before: mnfBefore != null ? String(mnfBefore.avg_mnf) : '',
       ...afterPatch,
     })
   }
@@ -216,12 +248,13 @@ export function AreaReportForm({
         water_sold_before: '',
       })
     } else {
-      const dmamabranchId = branchUuidToDmamaId[branchId]
-      const yoyStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code, reportYear - 1, reportMonth)
+      const nodeRows = nrwStats[area.node_id] ?? []
+      const yoyStat = nodeRows.find((r) => r.report_year === reportYear - 1 && r.report_month === reportMonth)
+      const distBefore = yoyStat?.net_flow ?? yoyStat?.gross_flow
       patchArea(areaKey, {
         manual_input: false,
         nrw_data_month: yoyStat ? { year: yoyStat.report_year, month: yoyStat.report_month } : null,
-        water_dist_before: yoyStat?.outbound != null ? String(yoyStat.outbound) : '',
+        water_dist_before: distBefore != null ? String(distBefore) : '',
         water_sold_before: yoyStat?.distribute_all != null ? String(yoyStat.distribute_all) : '',
       })
     }
@@ -238,12 +271,13 @@ export function AreaReportForm({
         water_sold_after: '',
       })
     } else {
-      const dmamabranchId = branchUuidToDmamaId[branchId]
-      const currentStat = lookupNrwStat(nrwStatsByBranchId, dmamabranchId, area.area_code, reportYear, reportMonth)
+      const nodeRows = nrwStats[area.node_id] ?? []
+      const currentStat = nodeRows.find((r) => r.report_year === reportYear && r.report_month === reportMonth)
+      const distAfter = currentStat?.net_flow ?? currentStat?.gross_flow
       patchArea(areaKey, {
         manual_input_after: false,
         nrw_after_data_month: currentStat ? { year: currentStat.report_year, month: currentStat.report_month } : null,
-        water_dist_after: currentStat?.outbound != null ? String(currentStat.outbound) : '',
+        water_dist_after: distAfter != null ? String(distAfter) : '',
         water_sold_after: currentStat?.distribute_all != null ? String(currentStat.distribute_all) : '',
       })
     }
@@ -386,7 +420,7 @@ export function AreaReportForm({
     const result = await submitAreaReports(payload)
     if (result.success) {
       toast.success('บันทึกรายงานสำเร็จ')
-      router.push('/monthly')
+      router.push('/pdca')
     } else {
       toast.error(result.error ?? 'เกิดข้อผิดพลาด')
     }
@@ -509,7 +543,7 @@ export function AreaReportForm({
                     branchId={branchId}
                     initialMmNodes={mmNodesByBranch[branchId] ?? []}
                     value={area.area_name}
-                    onChange={(label, code) => handleAreaSelect(area.key, label, code)}
+                    onChange={(label, code, nodeId, loggerId) => handleAreaSelect(area.key, label, code, nodeId, loggerId)}
                   />
                 </section>
 
@@ -517,7 +551,7 @@ export function AreaReportForm({
                 <section>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest">
-                      ส่วนที่ 2 — ก่อนดำเนินการ <span className="normal-case text-amber-400/40">(ผลดำเนินการปี {toThaiYear(reportYear - 1)})</span>
+                      ส่วนที่ 2 — ก่อนดำเนินการ <span className="normal-case text-amber-400/40">(NRW: ปีก่อน · MNF: {getThaiMonthName(reportMonth === 1 ? 12 : reportMonth - 1)} {toThaiYear(reportMonth === 1 ? reportYear - 1 : reportYear)})</span>
                     </p>
                     <div className="flex items-center gap-3">
                       {!area.manual_input && area.area_code && (

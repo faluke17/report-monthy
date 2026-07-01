@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { Branch, WaterNodeOption } from '@/lib/types'
-import { AreaReportForm, type NrwAreaLookup } from '@/components/forms/AreaReportForm'
-import { sortByPwaBranches, getDmamabranchId } from '@/lib/utils/pwa-branches'
+import { AreaReportForm, type NodeNrwLookup } from '@/components/forms/AreaReportForm'
+import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
+import { getNodeMnfStats } from '@/app/actions/water-nodes'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 
@@ -29,11 +30,10 @@ export default async function NewMonthlyPage({
   const defaultYear = rawYear ? (rawYear > 2100 ? rawYear - 543 : rawYear) : fallbackYear
   const defaultMonth = rawMonth ?? fallbackMonth
 
-  // YoY comparison: fetch same month, one year prior (~265 rows — well within any limit)
+  // YoY comparison: fetch same month, one year prior
   const yoyYear = defaultYear - 1
-  const yoyMonth = defaultMonth
 
-  const [{ data: branchData }, { data: mmData }, { data: yoyData }, { data: currentData }] = await Promise.all([
+  const [{ data: branchData }, { data: mmData }, { data: nrwNodeData }, mnfData] = await Promise.all([
     supabase
       .from('branches')
       .select('id, code, name_th, province_th')
@@ -41,20 +41,16 @@ export default async function NewMonthlyPage({
       .order('name_th'),
     supabase
       .from('water_nodes')
-      .select('id, branch_id, code, name_th, node_type, user_count')
+      .select('id, branch_id, code, name_th, node_type, user_count, logger_id')
       .eq('node_type', 'MM')
       .eq('is_active', true)
       .order('code'),
-    supabase
-      .from('nrw_area_stats')
-      .select('dmama_branch_id, report_year, report_month, area_name, outbound, distribute_all')
-      .eq('report_year', yoyYear)
-      .eq('report_month', yoyMonth),
-    supabase
-      .from('nrw_area_stats')
-      .select('dmama_branch_id, report_year, report_month, area_name, outbound, distribute_all')
-      .eq('report_year', defaultYear)
+    (supabase as any)
+      .from('node_nrw_monthly')
+      .select('water_node_id, report_year, report_month, gross_flow, net_flow, distribute_all')
+      .in('report_year', [yoyYear, defaultYear])
       .eq('report_month', defaultMonth),
+    getNodeMnfStats(defaultYear, defaultMonth),
   ])
 
   const branches = sortByPwaBranches((branchData ?? []) as Branch[])
@@ -67,34 +63,32 @@ export default async function NewMonthlyPage({
     mmNodesByBranch[node.branch_id].push(node)
   }
 
-  // Map branch UUID → dmama_branch_id
-  const branchUuidToDmamaId: Record<string, number> = {}
-  for (const b of branches) {
-    const dmamaId = getDmamabranchId(b.name_th)
-    if (dmamaId) branchUuidToDmamaId[b.id] = dmamaId
-  }
-
-  // Combine YoY (before) + current month (after) into one lookup map
-  type RawRow = { dmama_branch_id: number; report_year: number; report_month: number; area_name: string; outbound: number | null; distribute_all: number | null }
-  const allRows = [...(yoyData ?? []), ...(currentData ?? [])] as RawRow[]
-
-  const nrwStatsByBranchId: Record<number, NrwAreaLookup[]> = {}
-  for (const row of allRows) {
-    if (!nrwStatsByBranchId[row.dmama_branch_id]) nrwStatsByBranchId[row.dmama_branch_id] = []
-    nrwStatsByBranchId[row.dmama_branch_id].push({
-      area_name: row.area_name,
-      outbound: row.outbound,
-      distribute_all: row.distribute_all,
+  type NrwNodeRow = { water_node_id: string; report_year: number; report_month: number; gross_flow: number | null; net_flow: number | null; distribute_all: number | null }
+  const nrwStatsByNodeId: Record<string, NodeNrwLookup[]> = {}
+  for (const row of (nrwNodeData ?? []) as NrwNodeRow[]) {
+    if (!nrwStatsByNodeId[row.water_node_id]) nrwStatsByNodeId[row.water_node_id] = []
+    nrwStatsByNodeId[row.water_node_id].push({
       report_year: row.report_year,
       report_month: row.report_month,
+      gross_flow: row.gross_flow,
+      net_flow: row.net_flow,
+      distribute_all: row.distribute_all,
     })
+  }
+
+  // MNF stats keyed by logger_id (string) → [{report_year, report_month, avg_mnf}]
+  const mnfStatsByLoggerId: Record<string, { report_year: number; report_month: number; avg_mnf: number }[]> = {}
+  for (const row of mnfData) {
+    const key = String(row.logger_id)
+    if (!mnfStatsByLoggerId[key]) mnfStatsByLoggerId[key] = []
+    mnfStatsByLoggerId[key].push({ report_year: row.report_year, report_month: row.report_month, avg_mnf: row.avg_mnf })
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Link
-          href="/monthly"
+          href="/pdca"
           className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors"
         >
           <ChevronLeft size={16} />
@@ -116,8 +110,8 @@ export default async function NewMonthlyPage({
         userBranchId={matchedBranch?.id}
         isAdmin={isAdmin}
         mmNodesByBranch={mmNodesByBranch}
-        nrwStatsByBranchId={nrwStatsByBranchId}
-        branchUuidToDmamaId={branchUuidToDmamaId}
+        nrwStatsByNodeId={nrwStatsByNodeId}
+        mnfStatsByLoggerId={mnfStatsByLoggerId}
         defaultYear={defaultYear}
         defaultMonth={defaultMonth}
       />

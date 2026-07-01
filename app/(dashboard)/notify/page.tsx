@@ -146,7 +146,7 @@ export default async function NotifyPage() {
                       )}
                       {!isRegion && req.requirement_type === 'monthly_report' && !req.is_fulfilled_by_me && req.target_year && req.target_month && (
                         <a
-                          href={`/monthly/new?year=${req.target_year}&month=${req.target_month}`}
+                          href={`/pdca/new?year=${req.target_year}&month=${req.target_month}`}
                           className="flex items-center gap-1 text-[12px] font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
                         >
                           ส่งรายงาน <ArrowRight size={11} />
@@ -154,7 +154,7 @@ export default async function NotifyPage() {
                       )}
                       {!isRegion && req.requirement_type === 'pdca_monthly' && !req.is_fulfilled_by_me && req.target_year && req.target_month && (
                         <a
-                          href={`/monthly/new?year=${req.target_year}&month=${req.target_month}&for_meeting=1`}
+                          href={`/pdca/new?year=${req.target_year}&month=${req.target_month}&for_meeting=1`}
                           className="flex items-center gap-1 text-[12px] font-semibold text-violet-400 hover:text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
                         >
                           กรอก PDCA <ArrowRight size={11} />
@@ -331,7 +331,7 @@ export default async function NotifyPage() {
           <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">Checklist ก่อนประชุม</h2>
           <div className="glass-card p-5 space-y-2">
             {[
-              { icon: FileText,      label: 'รายงานรายเดือนล่าสุด',    href: '/monthly/new' },
+              { icon: FileText,      label: 'กรอกผล / PDCA',           href: '/pdca/new' },
               { icon: AlertTriangle, label: 'อัปเดตสถานะอุปสรรค',      href: '/obstacle' },
               { icon: CheckCircle,   label: 'อัปเดต Action Items',      href: '/action' },
               { icon: BookOpen,      label: 'เตรียม KM Case (ถ้ามี)',   href: '/km' },

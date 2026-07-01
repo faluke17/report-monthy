@@ -89,7 +89,7 @@ export function BranchTable({ branches }: BranchTableProps) {
                       key={branch.id}
                       className="cursor-pointer transition-colors"
                       style={{ borderBottom: '1px solid rgba(71,130,255,.06)' }}
-                      onClick={() => router.push(`/monthly?branch=${branch.id}`)}
+                      onClick={() => router.push(`/pdca?branch=${branch.id}`)}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(71,130,255,.04)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
                     >

@@ -22,6 +22,24 @@ export interface DmaStatRow {
   water_loss: number
 }
 
+export interface NodeNrwRow {
+  water_node_id: string
+  node_code: string
+  node_name: string | null
+  node_type: string
+  report_year: number
+  report_month: number
+  gross_flow: number | null
+  net_flow: number | null
+  distribute_all: number | null
+  nrw_pct: number | null
+  water_loss: number | null
+  days_data: number | null
+  days_total: number
+  has_device_fail: boolean
+  data_source: string
+}
+
 export interface MnfNodeRow {
   node_label: string
   record_date: string
@@ -42,6 +60,41 @@ export interface ObstacleRow {
   due_date: string | null
   last_log_message: string | null
   priority_order: number | null
+}
+
+export interface PdcaHistoryRow {
+  report_year: number
+  report_month: number
+  status: string | null
+  do_text: string | null
+  act_text: string | null
+}
+
+export interface AreaMonthItem {
+  id: string
+  area_name: string
+  water_dist_before: number | null
+  water_sold_before: number | null
+  water_dist_after: number | null
+  water_sold_after: number | null
+  mnf_before: number | null
+  mnf_after: number | null
+  leaks_repaired: number | null
+  leaks_pending: number | null
+  pdca_do: string | null
+  pdca_act: string | null
+  obstacles: { obstacle_type: string; obstacle_detail: string | null; priority_order: number | null }[]
+}
+
+export interface MonthlyTrackRow {
+  gregorian_year: number
+  month: number
+  nrw_pct: number | null
+  water_produced: number | null
+  water_sold: number | null
+  has_report: boolean
+  area_count: number
+  areas: AreaMonthItem[]
 }
 
 export interface BranchExecutiveSummary {
@@ -83,7 +136,9 @@ export interface BranchExecutiveSummary {
     projects: { name: string; phase: number; overdue: boolean }[]
   } | null
   dmaStats: DmaStatRow[]
+  nodeDmaStats: NodeNrwRow[]
   obstacles: ObstacleRow[]
+  monthly_track: MonthlyTrackRow[]
   mnfNodes: MnfNodeRow[]
 }
 
@@ -151,8 +206,8 @@ export async function getExecutiveBranchSummary(
   const dmamaId = getDmamabranchId(branchRes.data.name_th) ?? null
 
   // Phase 2 — parallel: operational data + NRW official + budget + new panels
-  const [reportsRes, nrwMonthlyRes, budgetYearRes, dmaRaw, obstaclesRes, mnfRes] = await Promise.all([
-    // monthly_reports: operational data (leaks, MNF, PDCA, status)
+  const [reportsRes, nrwMonthlyRes, budgetYearRes, dmaRaw, obstaclesRes, mnfRes, nodesRes, areaReportsRes] = await Promise.all([
+    // monthly_reports: operational data (leaks, MNF, status)
     supabase
       .from('monthly_reports')
       .select('report_year,report_month,mnf_factor,leaks_found,leaks_repaired,leaks_pending,volume_distributed,status,pdca_do,pdca_act')
@@ -208,6 +263,23 @@ export async function getExecutiveBranchSummary(
           .order('diff_percent', { ascending: false })
           .limit(20)
       : Promise.resolve({ data: [] }),
+
+    // water_nodes ของสาขานี้ (สำหรับ node_nrw_monthly)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('water_nodes')
+      .select('id,code,name_th,node_type')
+      .eq('branch_id', branchId)
+      .eq('is_active', true),
+
+    // area_monthly_reports: PDCA + obstacles ต่อพื้นที่ ← แหล่งข้อมูลจริงของหน้า /monthly
+    supabase
+      .from('area_monthly_reports')
+      .select('id,report_year,report_month,area_name,water_dist_before,water_sold_before,water_dist_after,water_sold_after,mnf_before,mnf_after,leaks_repaired,leaks_pending,pdca_do,pdca_act,area_obstacles(obstacle_type,obstacle_detail,priority_order)')
+      .eq('branch_id', branchId)
+      .order('report_year', { ascending: false })
+      .order('report_month', { ascending: false })
+      .limit(130),
   ])
 
   const reports = reportsRes.data ?? []
@@ -278,6 +350,82 @@ export async function getExecutiveBranchSummary(
         report_year: pdcaReport.report_year as number,
       }
     : null
+
+  // ── Node NRW stats (จาก node_nrw_monthly pipeline) ──────────────────────────
+  type WaterNodeBasic = { id: string; code: string; name_th: string | null; node_type: string }
+  const branchNodes = (nodesRes.data ?? []) as WaterNodeBasic[]
+  const nodeIdToInfo = new Map(branchNodes.map((n) => [n.id, n]))
+  const nodeIds = branchNodes.map((n) => n.id)
+
+  let nodeDmaStats: NodeNrwRow[] = []
+  if (nodeIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: nrwRaw } = await (supabase as any)
+      .from('node_nrw_monthly')
+      .select('water_node_id,report_year,report_month,gross_flow,net_flow,distribute_all,nrw_pct,days_data,days_total,has_device_fail,data_source')
+      .in('water_node_id', nodeIds)
+      .neq('data_source', 'no_logger')
+      .order('report_year', { ascending: false })
+      .order('report_month', { ascending: false })
+      .limit(Math.min(nodeIds.length * 2, 800))
+
+    const rawRows = (nrwRaw ?? []) as {
+      water_node_id: string
+      report_year: number
+      report_month: number
+      gross_flow: number | null
+      net_flow: number | null
+      distribute_all: number | null
+      nrw_pct: number | null
+      days_data: number | null
+      days_total: number
+      has_device_fail: boolean
+      data_source: string
+    }[]
+
+    // หาช่วงเวลาล่าสุดที่มีข้อมูล
+    const latestPeriod = rawRows[0]
+      ? { year: rawRows[0].report_year, month: rawRows[0].report_month }
+      : null
+
+    if (latestPeriod) {
+      nodeDmaStats = rawRows
+        .filter((r) => r.report_year === latestPeriod.year && r.report_month === latestPeriod.month)
+        .map((r) => {
+          const node = nodeIdToInfo.get(r.water_node_id)
+          const waterLoss =
+            r.net_flow != null && r.distribute_all != null
+              ? Math.round((r.net_flow - r.distribute_all) * 100) / 100
+              : null
+          return {
+            water_node_id: r.water_node_id,
+            node_code: node?.code ?? '—',
+            node_name: node?.name_th ?? null,
+            node_type: node?.node_type ?? '?',
+            report_year: r.report_year,
+            report_month: r.report_month,
+            gross_flow: r.gross_flow,
+            net_flow: r.net_flow,
+            distribute_all: r.distribute_all,
+            nrw_pct: r.nrw_pct,
+            water_loss: waterLoss,
+            days_data: r.days_data,
+            days_total: r.days_total,
+            has_device_fail: r.has_device_fail,
+            data_source: r.data_source,
+          } satisfies NodeNrwRow
+        })
+        .filter((r) => r.net_flow !== null && r.net_flow > 0)
+        .sort((a, b) => {
+          // nodes ที่มี water_loss จริงขึ้นก่อน เรียงตาม water_loss
+          // nodes ที่ไม่มี distribute_all เรียงตาม net_flow
+          if (a.water_loss !== null && b.water_loss !== null) return b.water_loss - a.water_loss
+          if (a.water_loss !== null) return -1
+          if (b.water_loss !== null) return 1
+          return (b.net_flow ?? 0) - (a.net_flow ?? 0)
+        })
+    }
+  }
 
   // Budget 2569 projects for this branch
   let budget_2569: BranchExecutiveSummary['budget_2569'] = null
@@ -353,8 +501,68 @@ export async function getExecutiveBranchSummary(
         report_year: reportYear,
       },
       pdca,
+      monthly_track: (() => {
+        type RawArea = {
+          id: string
+          report_year: number
+          report_month: number
+          area_name: string
+          water_dist_before: number | null
+          water_sold_before: number | null
+          water_dist_after: number | null
+          water_sold_after: number | null
+          mnf_before: number | null
+          mnf_after: number | null
+          leaks_repaired: number | null
+          leaks_pending: number | null
+          pdca_do: string | null
+          pdca_act: string | null
+          area_obstacles: { obstacle_type: string; obstacle_detail: string | null; priority_order: number | null }[] | null
+        }
+        const rawAreas = (areaReportsRes.data ?? []) as RawArea[]
+
+        // Group area reports by "YYYY-MM" key
+        const areasByMonth = new Map<string, AreaMonthItem[]>()
+        for (const a of rawAreas) {
+          const key = `${a.report_year}-${String(a.report_month).padStart(2, '0')}`
+          if (!areasByMonth.has(key)) areasByMonth.set(key, [])
+          areasByMonth.get(key)!.push({
+            id: a.id,
+            area_name: a.area_name,
+            water_dist_before: a.water_dist_before ?? null,
+            water_sold_before: a.water_sold_before ?? null,
+            water_dist_after: a.water_dist_after ?? null,
+            water_sold_after: a.water_sold_after ?? null,
+            mnf_before: a.mnf_before ?? null,
+            mnf_after: a.mnf_after ?? null,
+            leaks_repaired: a.leaks_repaired ?? null,
+            leaks_pending: a.leaks_pending ?? null,
+            pdca_do: a.pdca_do || null,
+            pdca_act: a.pdca_act || null,
+            obstacles: (a.area_obstacles ?? []),
+          })
+        }
+
+        // Use nrw_branch_monthly as base for month list
+        return nrwRows.map((r) => {
+          const gy = fyToGregorianYear(r.fiscal_year, r.month)
+          const key = `${gy}-${String(r.month).padStart(2, '0')}`
+          const areas = areasByMonth.get(key) ?? []
+          return {
+            gregorian_year: gy,
+            month: r.month,
+            nrw_pct: calcNrwPct(r),
+            water_produced: r.water_produced ?? null,
+            water_sold: r.water_sold ?? null,
+            has_report: areas.length > 0,
+            area_count: areas.length,
+            areas,
+          } satisfies MonthlyTrackRow
+        })
+      })(),
       budget_2569,
       dmaStats,
+      nodeDmaStats,
       obstacles: (obstaclesRes.data ?? []) as ObstacleRow[],
       mnfNodes,
     },

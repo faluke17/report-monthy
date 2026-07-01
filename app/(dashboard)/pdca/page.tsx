@@ -120,7 +120,7 @@ export default async function MonthlyPage({
           </p>
         </div>
         <Link
-          href="/monthly/new"
+          href="/pdca/new"
           className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
         >
           <Plus size={15} />

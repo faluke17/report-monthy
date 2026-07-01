@@ -11,6 +11,8 @@
     "sync:dmama": "node --env-file=.env.local scripts/sync-dmama.mjs",
     "sync:rats": "node --env-file=.env.local scripts/sync-rats.mjs",
     "backfill:dmama": "node --env-file=.env.local scripts/backfill-dmama.mjs",
+    "backfill:nrw-area": "npx tsx scripts/backfill-nrw-area-stats.ts",
+    "backfill:flow": "npx tsx scripts/backfill-flow.ts",
     "seed:dma69": "node --env-file=.env.local scripts/seed-dma-69.mjs"
   },
   "dependencies": {
@@ -54,11 +56,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "playwright": "^1.60.0",
     "supabase": "^2.96.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

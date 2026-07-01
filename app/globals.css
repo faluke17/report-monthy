@@ -279,19 +279,61 @@
     100% { transform: translateY(110vh); opacity: 0; }
   }
   @keyframes radar-sweep   { from { transform: rotate(0deg); }  to { transform: rotate(360deg); } }
+  @keyframes radar-sweep-slow { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
   @keyframes pulse-ring    { 0%   { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
+  @keyframes radar-ping    { 0%   { transform: scale(0.85); opacity: 0.55; } 75% { transform: scale(1.6); opacity: 0; } 100% { opacity: 0; } }
   @keyframes blink-crit    { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   @keyframes holo-in       { 0%   { opacity: 0; transform: translateY(8px) scale(.985); filter: blur(6px); } 100% { opacity: 1; transform: none; filter: none; } }
   @keyframes data-rise     { 0%   { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: none; } }
   @keyframes flicker       { 0%, 97.4%, 98.1%, 99.4%, 100% { opacity: 1; } 97.5%, 98%, 99% { opacity: .6; } }
   @keyframes slide-down    { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes float-y       { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
-  .anim-scan       { animation: scan-down 1.4s cubic-bezier(.4,0,.2,1) forwards; }
-  .anim-radar      { animation: radar-sweep 4s linear infinite; }
-  .anim-pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
-  .anim-blink-crit { animation: blink-crit 1.2s ease-in-out infinite; }
-  .anim-holo-in    { animation: holo-in .55s cubic-bezier(.2,.8,.2,1) forwards; }
-  .anim-data-rise  { animation: data-rise .5s cubic-bezier(.2,.8,.2,1) both; }
-  .anim-flicker    { animation: flicker 6s linear infinite; }
-  .anim-slide-down { animation: slide-down .18s ease; }
+  .anim-scan            { animation: scan-down 1.4s cubic-bezier(.4,0,.2,1) forwards; }
+  .anim-radar           { animation: radar-sweep 4s linear infinite; }
+  .anim-radar-slow      { animation: radar-sweep-slow 12s linear infinite; }
+  .anim-radar-ping      { animation: radar-ping 2.4s ease-out infinite; }
+  .anim-radar-ping-2    { animation: radar-ping 2.4s ease-out infinite; animation-delay: 1.2s; }
+  .anim-pulse-ring      { animation: pulse-ring 2.4s ease-out infinite; }
+  .anim-blink-crit      { animation: blink-crit 1.2s ease-in-out infinite; }
+  .anim-holo-in         { animation: holo-in .55s cubic-bezier(.2,.8,.2,1) forwards; }
+  .anim-data-rise       { animation: data-rise .5s cubic-bezier(.2,.8,.2,1) both; }
+  .anim-flicker         { animation: flicker 6s linear infinite; }
+  .anim-slide-down      { animation: slide-down .18s ease; }
+  .anim-float           { animation: float-y 4s ease-in-out infinite; }
+
+  /* ── Executive Summary cards ── */
+  .exec-dock-card {
+    cursor: pointer;
+    user-select: none;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .exec-dock-card:hover {
+    transform: translateX(3px);
+    border-color: rgba(34,211,238,0.4) !important;
+    background: rgba(34,211,238,0.05) !important;
+  }
+  .exec-dock-card.is-loaded {
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.45), 0 0 20px rgba(34,211,238,0.2), inset 0 0 12px rgba(34,211,238,0.06) !important;
+  }
+  .exec-branch-tile {
+    cursor: pointer;
+    user-select: none;
+    transition: transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+  }
+  .exec-branch-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(34,211,238,0.1) !important;
+    border-color: rgba(34,211,238,0.35) !important;
+  }
+  .exec-branch-tile.is-selected {
+    box-shadow: 0 0 14px rgba(34,211,238,0.14) !important;
+  }
+  .exec-panel {
+    background: rgba(8,14,26,0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(34,211,238,0.18);
+    position: relative;
+  }
 }

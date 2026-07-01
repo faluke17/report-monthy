@@ -45,3 +45,12 @@ supabase/.temp/
 
 # claude local settings
 .claude/settings.local.json
+
+# dev logs & temp exports
+.next-dev.log
+tsc-output.txt
+tsc2.txt
+executive-summary-preview.html
+water-distribution-cyber.html
+water-nodes-export.tsv
+water-nodes-tree.xlsx

@@ -277,7 +277,7 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
         })}
       </div>
       <div className="shrink-0 border-t border-white/8 px-5 py-3 flex justify-end">
-        <Link href={`/monthly?year=${year}&month=${month}`} className="inline-flex items-center gap-1.5 text-xs text-cyan-400/70 hover:text-cyan-300 transition-colors">
+        <Link href={`/pdca?year=${year}&month=${month}`} className="inline-flex items-center gap-1.5 text-xs text-cyan-400/70 hover:text-cyan-300 transition-colors">
           ดูรายงานทั้งหมด <ArrowRight size={12} />
         </Link>
       </div>

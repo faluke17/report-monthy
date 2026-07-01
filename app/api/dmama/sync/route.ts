@@ -98,7 +98,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `dmama login: ${msg}` }, { status: 502 })
   }
 
-  const { year, month, from, to } = getPrevMonth()
+  // Parse target month from body, fall back to prev month
+  let year: number, month: number, from: string, to: string
+  try {
+    const body = await req.json().catch(() => ({}))
+    if (body.year && body.month) {
+      year = body.year
+      month = body.month
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const daysInMonth = new Date(year, month, 0).getDate()
+      from = `${year}-${pad(month)}-01`
+      to = `${year}-${pad(month)}-${pad(daysInMonth)}`
+    } else {
+      ;({ year, month, from, to } = getPrevMonth())
+    }
+  } catch {
+    ;({ year, month, from, to } = getPrevMonth())
+  }
 
   // Fetch all 26 branches in parallel
   const results = await Promise.allSettled(

@@ -11,7 +11,7 @@ interface Props {
   branchId: string
   initialMmNodes: WaterNodeOption[]
   // code = most specific selected node code (SUB > DMA > MM), empty string if none
-  onChange: (label: string, code: string) => void
+  onChange: (label: string, code: string, nodeId: string, loggerId: string | null) => void
   value?: string
 }
 
@@ -40,12 +40,16 @@ export function WaterNodeSelect({ branchId, initialMmNodes, onChange, value: _va
   }, [branchId])
 
   function emitLabel(mm: WaterNodeOption | undefined, dma: WaterNodeOption | undefined, sub: WaterNodeOption | undefined) {
-    if (!mm) { onChange('', ''); return }
+    if (!mm) { onChange('', '', '', null); return }
     const parts = [nodeLabel(mm)]
     if (dma) parts.push(nodeLabel(dma))
     if (sub) parts.push(nodeLabel(sub))
     const code = sub?.code ?? dma?.code ?? mm.code
-    onChange(parts.join(' / '), code)
+    const nodeId = sub?.id ?? dma?.id ?? mm.id
+    const rawLogger = sub?.logger_id ?? dma?.logger_id ?? mm.logger_id ?? null
+    // water_nodes เก็บเป็น 'logger_2308_usage' — ดึงแค่ตัวเลขให้ตรงกับ mnf_daily.logger_id
+    const loggerId = rawLogger ? (rawLogger.match(/logger_(\d+)/)?.[1] ?? rawLogger) : null
+    onChange(parts.join(' / '), code, nodeId, loggerId)
   }
 
   function handleMmChange(mmId: string) {

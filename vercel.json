@@ -4,7 +4,19 @@
   "crons": [
     {
       "path": "/api/dmama/sync",
+      "schedule": "0 2 2 * *"
+    },
+    {
+      "path": "/api/dmama/flow-sync",
+      "schedule": "0 4 2 * *"
+    },
+    {
+      "path": "/api/dmama/sync",
       "schedule": "0 2 16 * *"
+    },
+    {
+      "path": "/api/dmama/flow-sync",
+      "schedule": "0 4 16 * *"
     },
     {
       "path": "/api/dmama/mnf-sync?mode=daily",

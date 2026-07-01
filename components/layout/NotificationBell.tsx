@@ -9,7 +9,7 @@ const MONTH_TH = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ
   'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
 
 const REQ_TYPE_LINK: Record<string, string> = {
-  monthly_report: '/monthly/new',
+  monthly_report: '/pdca/new',
   five_topics:    '/five-topics',
   km_case:        '/km',
   custom:         '/notify',

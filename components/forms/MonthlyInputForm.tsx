@@ -102,7 +102,7 @@ export function MonthlyInputForm({ branches, profile, plans }: Props) {
     if (result.success) {
       localStorage.removeItem('monthly_draft')
       toast.success('บันทึกรายงานสำเร็จ')
-      router.push('/monthly')
+      router.push('/pdca')
     } else {
       toast.error(result.error ?? 'เกิดข้อผิดพลาด')
     }

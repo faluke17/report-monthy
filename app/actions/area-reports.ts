@@ -164,7 +164,7 @@ export async function submitAreaReports(reports: AreaReportInput[]): Promise<Act
     }
   }
 
-  revalidatePath('/monthly')
+  revalidatePath('/pdca')
   revalidatePath('/obstacle')
   revalidatePath('/dashboard')
   return { success: true }

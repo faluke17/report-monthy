@@ -23,7 +23,7 @@ interface TopbarProps {
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
   '/dashboard':          { kicker: 'Executive View',  title: 'ภาพรวมเขต 10' },
   '/ranking':            { kicker: 'Performance',     title: 'Ranking สาขา' },
-  '/monthly':            { kicker: 'Monthly Report',  title: 'รายงานรายเดือน' },
+  '/pdca':               { kicker: 'PDCA Report',     title: 'กรอกผล / PDCA รายพื้นที่' },
   '/plans':              { kicker: 'Plan Tracker',    title: 'แผนลดน้ำสูญเสีย' },
   '/obstacle':           { kicker: 'Issue Tracker',   title: 'Obstacle Tracker' },
   '/action':             { kicker: 'Action Tracker',  title: 'ข้อสั่งการ / Action Items' },

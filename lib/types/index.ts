@@ -405,6 +405,9 @@ export interface WaterNode {
   user_count: number | null
   is_active: boolean
   created_at: string
+  logger_id?: string | null
+  self_supply?: boolean
+  dmama_area_label?: string | null
 }
 
 export interface WaterNodeOption {
@@ -414,6 +417,7 @@ export interface WaterNodeOption {
   name_th: string | null
   node_type: 'MM' | 'DMA' | 'SUB' | 'VD'
   user_count: number | null
+  logger_id?: string | null
 }
 
 // ============================================================

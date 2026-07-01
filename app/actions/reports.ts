@@ -72,7 +72,7 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   revalidatePath('/dashboard')
   revalidatePath('/')
   revalidatePath('/ranking')
-  revalidatePath('/monthly')
+  revalidatePath('/pdca')
   return { success: true }
 }
 
@@ -132,7 +132,7 @@ export async function updateAreaReport(id: string, data: UpdateAreaReportInput):
     if (obstError) return { success: false, error: obstError.message }
   }
 
-  revalidatePath('/monthly')
+  revalidatePath('/pdca')
   revalidatePath('/dashboard')
   return { success: true }
 }
