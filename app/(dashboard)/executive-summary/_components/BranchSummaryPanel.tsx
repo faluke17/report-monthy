@@ -9,14 +9,14 @@ type Tab = 'overview' | 'dma' | 'obstacle' | 'mnf' | 'budget'
 const MONO = 'IBM Plex Mono, monospace'
 const C = {
   bg:      '#04070F',
-  panel:   'rgba(8,14,26,0.7)',
-  border:  'rgba(34,211,238,0.14)',
-  borderH: 'rgba(34,211,238,0.55)',
-  row:     'rgba(34,211,238,0.04)',
-  text:    '#CBD5E1',
-  bright:  '#E2E8F0',
-  muted:   '#64748B',
-  dim:     '#334155',
+  panel:   'rgba(10,18,34,0.78)',
+  border:  'rgba(34,211,238,0.18)',
+  borderH: 'rgba(34,211,238,0.60)',
+  row:     'rgba(34,211,238,0.06)',
+  text:    '#D2DCE8',
+  bright:  '#EAF0F8',
+  muted:   '#8DAFC8',
+  dim:     '#5A7390',
   accent:  '#22D3EE',
   good:    '#10D9B0',
   warn:    '#F59E0B',
@@ -137,9 +137,9 @@ function OverviewTab({ nrw, delta, pdca, dmaStats, mnfNodes, budget_2569 }: {
           { label: 'น้ำสูญเสีย', val: lossVol > 0 ? lossVol : null, prev: null, unit: 'm³', c: color },
         ].map(({ label, val, prev, unit, c }) => (
           <Card key={label} style={{ padding: '14px 18px' }}>
-            <div style={{ fontSize: 9, color: C.muted, fontFamily: MONO, letterSpacing: 1, marginBottom: 8 }}>{label}</div>
+            <div style={{ fontSize: 10, color: C.text, fontFamily: MONO, letterSpacing: 1, marginBottom: 8 }}>{label}</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: c, fontFamily: MONO, marginBottom: 6 }}>{fmt(val)}</div>
-            <div style={{ fontSize: 10, color: C.dim, marginBottom: 6, fontFamily: MONO }}>{unit}</div>
+            <div style={{ fontSize: 10, color: C.muted, marginBottom: 6, fontFamily: MONO }}>{unit}</div>
             {val != null && prev != null && (
               <DeltaBadge curr={val} prev={prev} lo={false} size="sm" />
             )}
@@ -158,9 +158,9 @@ function OverviewTab({ nrw, delta, pdca, dmaStats, mnfNodes, budget_2569 }: {
           ].map(({ label, val, c }) => (
             <div key={label} style={{ position: 'relative', textAlign: 'center', padding: '12px 8px', background: 'rgba(34,211,238,0.03)', border: `1px solid ${C.border}` }}>
               <Corners s={5} c={`${c}55`} />
-              <div style={{ fontSize: 9, color: C.muted, fontFamily: MONO, marginBottom: 8 }}>{label}</div>
+              <div style={{ fontSize: 10, color: C.text, fontFamily: MONO, marginBottom: 8 }}>{label}</div>
               <div style={{ fontSize: 42, fontWeight: 900, color: c, fontFamily: MONO, lineHeight: 1, textShadow: `0 0 16px ${c}66` }}>{val}</div>
-              <div style={{ fontSize: 9, color: C.dim, marginTop: 5, fontFamily: MONO }}>จุด</div>
+              <div style={{ fontSize: 10, color: C.muted, marginTop: 5, fontFamily: MONO }}>จุด</div>
             </div>
           ))}
         </div>
@@ -485,11 +485,11 @@ function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTrackRow[]
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 {[
                   { l: 'NRW%', v: selected.nrw_pct != null ? `${selected.nrw_pct.toFixed(1)}%` : '—', c: color(selected.nrw_pct) },
-                  { l: 'น้ำจ่าย (m³)', v: selected.water_produced != null ? selected.water_produced.toLocaleString('th-TH') : '—', c: C.muted },
-                  { l: 'จำหน่าย (m³)', v: selected.water_sold != null ? selected.water_sold.toLocaleString('th-TH') : '—', c: C.muted },
+                  { l: 'น้ำจ่าย (m³)', v: selected.water_produced != null ? selected.water_produced.toLocaleString('th-TH') : '—', c: C.accent },
+                  { l: 'จำหน่าย (m³)', v: selected.water_sold != null ? selected.water_sold.toLocaleString('th-TH') : '—', c: C.text },
                 ].map(({ l, v, c }) => (
                   <div key={l} style={{ padding: '10px 12px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 5 }}>{l}</div>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO, marginBottom: 5 }}>{l}</div>
                     <div style={{ fontSize: 18, fontWeight: 800, color: c, fontFamily: MONO }}>{v}</div>
                   </div>
                 ))}
@@ -515,14 +515,14 @@ function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTrackRow[]
                       {/* ตาราง before/after */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 5 }}>
                         {[
-                          { l: 'น้ำจ่าย ก่อน',  v: area.water_dist_before,  c: C.muted },
+                          { l: 'น้ำจ่าย ก่อน',  v: area.water_dist_before,  c: C.text },
                           { l: 'น้ำจ่าย หลัง',  v: area.water_dist_after,   c: C.accent },
                           { l: 'NRW% ก่อน',      v: nrwB != null ? +nrwB.toFixed(1) : null, c: color(nrwB), suffix: '%' },
                           { l: 'NRW% หลัง',      v: nrwA != null ? +nrwA.toFixed(1) : null, c: color(nrwA), suffix: '%' },
-                          { l: 'MNF หลัง',       v: area.mnf_after,          c: C.muted },
+                          { l: 'MNF หลัง',       v: area.mnf_after,          c: C.text },
                         ].map(({ l, v, c, suffix }) => (
                           <div key={l} style={{ padding: '7px 8px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center' }}>
-                            <div style={{ fontSize: 8, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>{l}</div>
+                            <div style={{ fontSize: 9, color: C.muted, fontFamily: MONO, marginBottom: 3 }}>{l}</div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: v != null ? c : C.dim, fontFamily: MONO }}>
                               {v != null ? `${typeof v === 'number' && v > 999 ? v.toLocaleString('th-TH') : v}${suffix ?? ''}` : '—'}
                             </div>
@@ -828,7 +828,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
 
           {/* NRW% KPI */}
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, letterSpacing: 2, marginBottom: 8 }}>NRW% เดือนนี้</div>
+            <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO, letterSpacing: 2, marginBottom: 8 }}>NRW% เดือนนี้</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 8 }}>
               <span style={{ fontSize: 62, fontWeight: 900, fontFamily: MONO, color, lineHeight: 1, textShadow: `0 0 32px ${color}44` }}>
                 {nrw.current_pct != null ? nrw.current_pct.toFixed(1) : '—'}
@@ -853,7 +853,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
                 { label: 'เทียบปีที่แล้ว',  d: yoyDelta },
               ].map(({ label, d }) => (
                 <div key={label}>
-                  <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, letterSpacing: 1, marginBottom: 5 }}>{label}</div>
+                  <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO, letterSpacing: 1, marginBottom: 5 }}>{label}</div>
                   {d != null ? (
                     <>
                       <div style={{ fontSize: 24, fontWeight: 800, fontFamily: MONO, color: d < 0 ? C.good : d > 0 ? C.crit : C.muted, lineHeight: 1, marginBottom: 3 }}>
@@ -873,8 +873,8 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
                 { l: 'จำหน่าย', v: nrw.water_sold },
               ].map(({ l, v }, i) => (
                 <div key={l} style={{ paddingRight: i === 0 ? 12 : 0, borderRight: i === 0 ? `1px solid ${C.border}` : 'none', paddingLeft: i === 1 ? 12 : 0 }}>
-                  <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>{l} (m³)</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: C.muted, fontFamily: MONO }}>{fmt(v)}</div>
+                  <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO, marginBottom: 3 }}>{l} (m³)</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: MONO }}>{fmt(v)}</div>
                 </div>
               ))}
             </div>
@@ -894,11 +894,11 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
                 <div key={label} style={{ padding: '7px 10px', background: alert ? `${c}0D` : 'rgba(8,14,26,0.4)', border: `1px solid ${alert ? `${c}33` : C.border}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
                     <span className={alert ? 'anim-blink-crit' : ''} style={{ width: 5, height: 5, borderRadius: '50%', background: c, flexShrink: 0, display: 'inline-block' }} />
-                    <span style={{ fontSize: 9, color: C.muted, lineHeight: 1 }}>{label}</span>
+                    <span style={{ fontSize: 10, color: C.text, lineHeight: 1 }}>{label}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                     <span style={{ fontSize: 22, fontWeight: 800, color: c, fontFamily: MONO, lineHeight: 1 }}>{val}</span>
-                    <span style={{ fontSize: 9, color: C.dim, fontFamily: MONO }}>{unit}</span>
+                    <span style={{ fontSize: 10, color: C.muted, fontFamily: MONO }}>{unit}</span>
                   </div>
                 </div>
               ))}
