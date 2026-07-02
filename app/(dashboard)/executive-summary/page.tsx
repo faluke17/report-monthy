@@ -47,7 +47,7 @@ export default async function ExecutiveSummaryPage() {
     // Cancel dashboard layout padding to fill the whole viewport
     <div
       className="-m-4 -mb-20 md:-m-6 md:-mb-6 overflow-hidden"
-      style={{ height: 'calc(100vh - 56px)' }}
+      style={{ height: 'calc(100dvh - 56px)' }}
     >
       <ExecutiveSummaryClient
         branches={(branchesRes.data ?? []) as Branch[]}

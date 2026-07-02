@@ -6,6 +6,7 @@ import type { BranchNrwSnap } from '../page'
 import type { BranchExecutiveSummary } from '@/app/actions/executive-summary'
 import { getExecutiveBranchSummary } from '@/app/actions/executive-summary'
 import { BranchSummaryPanel } from './BranchSummaryPanel'
+import { useBreakpoint } from './tabs/shared'
 
 const SCAN_MS = 1400
 
@@ -128,33 +129,35 @@ function BranchDockCard({
 }
 
 // ── Hero Stage (full-screen empty state) ─────────────────────────
-function HeroStage({ critCount, warnCount, okCount, totalCount }: {
-  critCount: number; warnCount: number; okCount: number; totalCount: number
+function HeroStage({ critCount, warnCount, okCount, totalCount, compact, isTouch }: {
+  critCount: number; warnCount: number; okCount: number; totalCount: number; compact: boolean; isTouch: boolean
 }) {
   const greyCount = totalCount - critCount - warnCount - okCount
+  const radarSize = compact ? 130 : 220
+  const ratio = radarSize / 220
 
   return (
     <div style={{
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      padding: '32px 48px',
-      overflow: 'hidden',
+      padding: compact ? '16px 14px' : '32px 48px',
+      overflow: 'hidden auto',
     }}>
       {/* BG radial glow — centered */}
       <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,211,238,0.045) 0%, transparent 65%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.035) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
       {/* ── Radar ── */}
-      <div className="anim-float" style={{ position: 'relative', width: 220, height: 220, marginBottom: 36 }}>
+      <div className="anim-float" style={{ position: 'relative', width: radarSize, height: radarSize, marginBottom: compact ? 20 : 36, flexShrink: 0 }}>
         {/* Outermost dashed ring */}
         <div className="anim-radar-slow" style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px dashed rgba(34,211,238,0.14)' }} />
         {/* Outer ring */}
-        <div style={{ position: 'absolute', inset: 16, borderRadius: '50%', border: '1px solid rgba(34,211,238,0.22)', boxShadow: '0 0 18px rgba(34,211,238,0.06)' }} />
+        <div style={{ position: 'absolute', inset: Math.round(16 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.22)', boxShadow: '0 0 18px rgba(34,211,238,0.06)' }} />
         {/* Mid ring */}
-        <div style={{ position: 'absolute', inset: 38, borderRadius: '50%', border: '1px solid rgba(34,211,238,0.32)', boxShadow: '0 0 12px rgba(34,211,238,0.1)' }} />
+        <div style={{ position: 'absolute', inset: Math.round(38 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.32)', boxShadow: '0 0 12px rgba(34,211,238,0.1)' }} />
         {/* Inner filled */}
-        <div style={{ position: 'absolute', inset: 64, borderRadius: '50%', border: '1px solid rgba(34,211,238,0.5)', background: 'radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', inset: Math.round(64 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.5)', background: 'radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%)' }} />
         {/* Sweep — rotating */}
         <div className="anim-radar" style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', animationDuration: '3.5s' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'conic-gradient(from 270deg, transparent 0deg, rgba(34,211,238,0.0) 0deg, rgba(34,211,238,0.24) 55deg, rgba(34,211,238,0.0) 85deg)' }} />
@@ -169,8 +172,8 @@ function HeroStage({ critCount, warnCount, okCount, totalCount }: {
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22D3EE', boxShadow: '0 0 20px #22D3EE, 0 0 6px #22D3EE, 0 0 40px rgba(34,211,238,0.3)' }} />
         </div>
         {/* Ping rings */}
-        <div className="anim-radar-ping"   style={{ position: 'absolute', inset: -14, borderRadius: '50%', border: '1px solid rgba(34,211,238,0.38)' }} />
-        <div className="anim-radar-ping-2" style={{ position: 'absolute', inset: -14, borderRadius: '50%', border: '1px solid rgba(34,211,238,0.18)' }} />
+        <div className="anim-radar-ping"   style={{ position: 'absolute', inset: -Math.round(14 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.38)' }} />
+        <div className="anim-radar-ping-2" style={{ position: 'absolute', inset: -Math.round(14 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.18)' }} />
         {/* Blips on radar */}
         {([
           { top: '20%', left: '64%', c: '#EF4444', delay: 0 },
@@ -182,7 +185,7 @@ function HeroStage({ critCount, warnCount, okCount, totalCount }: {
           <div key={i} className="anim-blink-crit" style={{ position: 'absolute', top: b.top, left: b.left, width: 5, height: 5, borderRadius: '50%', background: b.c, boxShadow: `0 0 8px ${b.c}`, animationDelay: `${b.delay}s` }} />
         ))}
         {/* Range labels */}
-        {[
+        {!compact && [
           { text: '5', r: 64 }, { text: '10', r: 38 }, { text: '15', r: 16 },
         ].map(({ text, r }) => (
           <div key={text} style={{ position: 'absolute', top: `calc(50% - ${r}px - 7px)`, left: '52%', fontSize: 7, color: 'rgba(34,211,238,0.2)', fontFamily: 'IBM Plex Mono, monospace' }}>{text}</div>
@@ -190,28 +193,36 @@ function HeroStage({ critCount, warnCount, okCount, totalCount }: {
       </div>
 
       {/* ── Main text ── */}
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={{ fontSize: 10, color: 'rgba(34,211,238,0.38)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 3, marginBottom: 12 }}>
-          // BRANCH ACQUISITION SYSTEM · READY
-        </div>
-        <div style={{ fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1.0, marginBottom: 14 }}>
-          <div style={{ fontSize: 42, fontWeight: 800, color: '#CBD5E1', letterSpacing: 1.5, textShadow: '0 0 40px rgba(34,211,238,0.1)' }}>
-            Let&apos;s drag ur
+      <div style={{ textAlign: 'center', marginBottom: compact ? 22 : 48 }}>
+        {!compact && (
+          <div style={{ fontSize: 10, color: 'rgba(34,211,238,0.38)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 3, marginBottom: 12 }}>
+            // BRANCH ACQUISITION SYSTEM · READY
           </div>
+        )}
+        <div style={{ fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1.0, marginBottom: compact ? 10 : 14 }}>
+          {!compact && (
+            <div style={{ fontSize: 42, fontWeight: 800, color: '#CBD5E1', letterSpacing: 1.5, textShadow: '0 0 40px rgba(34,211,238,0.1)' }}>
+              Let&apos;s drag ur
+            </div>
+          )}
           <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 52, fontWeight: 800, color: '#22D3EE', letterSpacing: 2, textShadow: '0 0 32px rgba(34,211,238,0.65), 0 0 80px rgba(34,211,238,0.2)' }}>
+            <span style={{ fontSize: compact ? 30 : 52, fontWeight: 800, color: '#22D3EE', letterSpacing: 2, textShadow: '0 0 32px rgba(34,211,238,0.65), 0 0 80px rgba(34,211,238,0.2)' }}>
               Branch
             </span>
-            <span className="anim-blink-crit" style={{ fontSize: 42, color: 'rgba(34,211,238,0.65)', fontWeight: 200, lineHeight: 1 }}>_</span>
+            <span className="anim-blink-crit" style={{ fontSize: compact ? 26 : 42, color: 'rgba(34,211,238,0.65)', fontWeight: 200, lineHeight: 1 }}>_</span>
           </div>
         </div>
-        <div style={{ fontSize: 10, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.8 }}>
-          ← DRAG FROM REGISTRY  ·  OR CLICK BRANCH IN LEFT PANEL
+        <div style={{ fontSize: compact ? 9 : 10, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.8, padding: compact ? '0 8px' : 0 }}>
+          {isTouch ? 'แตะสาขาในแผงด้านซ้ายเพื่อเลือก' : '← DRAG FROM REGISTRY  ·  OR CLICK BRANCH IN LEFT PANEL'}
         </div>
       </div>
 
       {/* ── Stat cards ── */}
-      <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 680 }}>
+      <div style={{
+        display: compact ? 'grid' : 'flex',
+        gridTemplateColumns: compact ? 'repeat(2, 1fr)' : undefined,
+        gap: compact ? 10 : 14, width: '100%', maxWidth: 680,
+      }}>
         {([
           { key: 'CRIT',   val: critCount,  sub: '> 25% NRW',  c: '#EF4444', bg: 'rgba(239,68,68,0.07)',  bd: 'rgba(239,68,68,0.25)',  top: 'rgba(239,68,68,0.6)' },
           { key: 'WARN',   val: warnCount,  sub: '≤ 25% NRW',  c: '#F59E0B', bg: 'rgba(245,158,11,0.06)', bd: 'rgba(245,158,11,0.22)', top: 'rgba(245,158,11,0.5)' },
@@ -219,7 +230,7 @@ function HeroStage({ critCount, warnCount, okCount, totalCount }: {
           { key: 'N/A',    val: greyCount,  sub: 'ไม่มีข้อมูล', c: '#475569', bg: 'rgba(71,85,105,0.06)', bd: 'rgba(71,85,105,0.2)',   top: 'rgba(71,85,105,0.35)' },
         ] as { key: string; val: number; sub: string; c: string; bg: string; bd: string; top: string }[]).map(({ key, val, sub, c, bg, bd, top }) => (
           <div key={key} style={{
-            flex: 1, position: 'relative', padding: '20px 16px 18px',
+            flex: compact ? undefined : 1, position: 'relative', padding: compact ? '12px 10px 10px' : '20px 16px 18px',
             background: bg, border: `1px solid ${bd}`,
             borderTop: `2px solid ${top}`,
             display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -229,16 +240,16 @@ function HeroStage({ critCount, warnCount, okCount, totalCount }: {
             <div style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)', width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${c}18 0%, transparent 70%)`, pointerEvents: 'none' }} />
             <Corners color={`${c}55`} size={7} />
             {/* Label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: compact ? 6 : 12 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: c, boxShadow: `0 0 6px ${c}`, display: 'inline-block' }} />
               <span style={{ fontSize: 9, color: c, fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2, fontWeight: 700 }}>{key}</span>
             </div>
             {/* Big number */}
-            <div style={{ fontSize: 64, fontWeight: 900, color: c, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1, textShadow: `0 0 24px ${c}55`, marginBottom: 8 }}>
+            <div style={{ fontSize: compact ? 32 : 64, fontWeight: 900, color: c, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1, textShadow: `0 0 24px ${c}55`, marginBottom: compact ? 4 : 8 }}>
               {val}
             </div>
             {/* Sub label */}
-            <div style={{ fontSize: 10, color: '#334155', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>{sub}</div>
+            <div style={{ fontSize: 10, color: '#334155', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1, textAlign: 'center' }}>{sub}</div>
             <div style={{ fontSize: 9, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace', marginTop: 3 }}>สาขา</div>
           </div>
         ))}
@@ -278,6 +289,7 @@ interface Props {
 export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
   const now = useClock()
   const { date, time } = thaiDateTime(now)
+  const { isMobile, isTouch } = useBreakpoint()
 
   const [draggingId, setDraggingId]     = useState<string | null>(null)
   const [isOver, setIsOver]             = useState(false)
@@ -360,58 +372,63 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
 
       {/* ── Header ── */}
       <header style={{
-        height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 20px', flexShrink: 0,
+        height: isMobile ? 46 : 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: isMobile ? '0 10px' : '0 20px', flexShrink: 0,
         borderBottom: '1px solid rgba(34,211,238,0.15)',
         background: 'linear-gradient(180deg, rgba(8,12,24,0.93), rgba(6,10,20,0.78))',
         backdropFilter: 'blur(10px)',
         position: 'relative', zIndex: 20,
       }}>
         {/* Logo + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ position: 'relative', width: 38, height: 38, border: '1px solid rgba(34,211,238,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, minWidth: 0 }}>
+          <div style={{ position: 'relative', width: isMobile ? 30 : 38, height: isMobile ? 30 : 38, flexShrink: 0, border: '1px solid rgba(34,211,238,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'rgba(34,211,238,0.05)',
             boxShadow: '0 0 14px rgba(34,211,238,0.45), inset 0 0 12px rgba(34,211,238,0.12)',
           }}>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(34,211,238,0.9)" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.75))' }}>
+            <svg width={isMobile ? 15 : 19} height={isMobile ? 15 : 19} viewBox="0 0 24 24" fill="none" stroke="rgba(34,211,238,0.9)" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.75))' }}>
               <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
               <path d="M9 12l2 2 4-4" strokeOpacity="0.7" />
             </svg>
             <Corners size={8} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <span style={{ fontSize: 17, color: '#E2E8F0', fontWeight: 600, letterSpacing: 0.3 }}>ระบบ MATE</span>
-              <span style={{ fontSize: 9, color: 'rgba(34,211,238,0.5)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.6 }}>· DIALOG MODE · v3.2</span>
+              <span style={{ fontSize: isMobile ? 14 : 17, color: '#E2E8F0', fontWeight: 600, letterSpacing: 0.3 }}>ระบบ MATE</span>
+              {!isMobile && <span style={{ fontSize: 9, color: 'rgba(34,211,238,0.5)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.6 }}>· DIALOG MODE · v3.2</span>}
             </div>
-            <div style={{ fontSize: 10, color: '#64748B', marginTop: 1 }}>
-              หน้าต่างสรุปสาขา — การประปาส่วนภูมิภาค เขต ๑๐
-            </div>
+            {!isMobile && (
+              <div style={{ fontSize: 10, color: '#64748B', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                หน้าต่างสรุปสาขา — การประปาส่วนภูมิภาค เขต ๑๐
+              </div>
+            )}
           </div>
         </div>
 
         {/* Status + clock */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="anim-blink-crit" style={{ width: 7, height: 7, borderRadius: '50%', background: '#10D9B0', boxShadow: '0 0 8px #10D9B0', display: 'inline-block' }} />
-            <span style={{ fontSize: 9, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>SYS · ONLINE</span>
+            {!isMobile && <span style={{ fontSize: 9, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>SYS · ONLINE</span>}
           </div>
-          <div style={{ width: 1, height: 26, background: 'rgba(34,211,238,0.2)' }} />
+          {!isMobile && <div style={{ width: 1, height: 26, background: 'rgba(34,211,238,0.2)' }} />}
           <div style={{ textAlign: 'right' }}>
-            <div suppressHydrationWarning style={{ fontSize: 9, color: '#64748B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 0.8 }}>{date}</div>
-            <div suppressHydrationWarning style={{ fontSize: 15, color: 'rgba(34,211,238,0.9)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.5, textShadow: '0 0 8px rgba(34,211,238,0.55)' }}>{time}</div>
+            {!isMobile && <div suppressHydrationWarning style={{ fontSize: 9, color: '#64748B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 0.8 }}>{date}</div>}
+            <div suppressHydrationWarning style={{ fontSize: isMobile ? 12 : 15, color: 'rgba(34,211,238,0.9)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.5, textShadow: '0 0 8px rgba(34,211,238,0.55)' }}>{time}</div>
           </div>
         </div>
       </header>
 
       {/* ── Body ── */}
-      <div style={{ flex: 1, display: 'flex', position: 'relative', minHeight: 0, zIndex: 10 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', position: 'relative', minHeight: 0, zIndex: 10 }}>
 
         {/* ── Branch Dock ── */}
         <aside className="exec-panel" style={{
-          width: 264, flexShrink: 0,
-          borderRight: '1px solid rgba(34,211,238,0.15)',
-          borderTop: 'none', borderLeft: 'none', borderBottom: 'none',
+          width: isMobile ? '100%' : 264,
+          maxHeight: isMobile ? '38vh' : undefined,
+          flexShrink: 0,
+          borderRight: isMobile ? 'none' : '1px solid rgba(34,211,238,0.15)',
+          borderBottom: isMobile ? '1px solid rgba(34,211,238,0.15)' : 'none',
+          borderTop: 'none', borderLeft: 'none',
           borderRadius: 0,
           display: 'flex', flexDirection: 'column',
         }}>
@@ -496,13 +513,13 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
           </div>
 
           <div style={{ borderTop: '1px solid rgba(34,211,238,0.08)', padding: '5px 12px', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>DRAG · CLICK TO SELECT</span>
+            <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>{isTouch ? 'TAP TO SELECT' : 'DRAG · CLICK TO SELECT'}</span>
             <span style={{ fontSize: 8, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace' }}>● LIVE</span>
           </div>
         </aside>
 
         {/* ── Main Stage ── */}
-        <main style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', padding: '8px 12px 8px 10px', minWidth: 0 }}>
+        <main style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? '6px 8px' : '8px 12px 8px 10px', minWidth: 0 }}>
           {/* Drop zone */}
           <div
             ref={dropRef}
@@ -533,7 +550,7 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
               backgroundSize: '28px 28px',
             }} />
 
-            <HeroStage critCount={critCount} warnCount={warnCount} okCount={okCount} totalCount={branches.length} />
+            <HeroStage critCount={critCount} warnCount={warnCount} okCount={okCount} totalCount={branches.length} compact={isMobile} isTouch={isTouch} />
 
             {/* Drag-inbound banner */}
             {draggingId && !isOver && (
@@ -559,8 +576,8 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
           </div>
 
           {/* Telemetry bar */}
-          <div style={{ marginTop: 6, padding: '5px 14px', border: '1px solid rgba(34,211,238,0.12)', background: 'rgba(8,12,24,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <div style={{ display: 'flex', gap: 18 }}>
+          <div style={{ marginTop: 6, padding: isMobile ? '5px 10px' : '5px 14px', border: '1px solid rgba(34,211,238,0.12)', background: 'rgba(8,12,24,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, flexWrap: 'wrap', rowGap: 4 }}>
+            <div style={{ display: 'flex', gap: isMobile ? 10 : 18, flexWrap: 'wrap', rowGap: 4 }}>
               {[
                 { l: 'MODE',    v: 'DIALOG',             c: 'rgba(34,211,238,0.7)' },
                 { l: 'CRIT',   v: `${critCount}`,        c: critCount > 0 ? '#EF4444' : '#1E293B' },
@@ -573,7 +590,7 @@ export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
                 </span>
               ))}
             </div>
-            <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>MATE © ๒๕๖๙ · กปภ.เขต ๑๐</span>
+            {!isMobile && <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>MATE © ๒๕๖๙ · กปภ.เขต ๑๐</span>}
           </div>
         </main>
       </div>

@@ -97,6 +97,20 @@ export interface MonthlyTrackRow {
   areas: AreaMonthItem[]
 }
 
+export interface CumulativeLossPoint {
+  fiscal_month_index: number  // 1-12 (ต.ค.=1 ... ก.ย.=12)
+  month_label: string
+  avg_loss: number | null     // น้ำสูญเสียสะสมเฉลี่ยต่อเดือน (m³) นับตั้งแต่ ต.ค. ถึงเดือนนี้
+  months_counted: number
+}
+
+export interface CumulativeLossTrend {
+  fiscal_year_curr: number
+  fiscal_year_prev: number
+  curr: CumulativeLossPoint[]
+  prev: CumulativeLossPoint[]
+}
+
 export interface BranchExecutiveSummary {
   branch: {
     id: string
@@ -110,8 +124,10 @@ export interface BranchExecutiveSummary {
     yoy_pct: number | null
     water_produced: number | null
     water_sold: number | null
+    water_loss: number | null
     yoy_produced: number | null
     yoy_sold: number | null
+    yoy_loss: number | null
     trend_12m: NrwTrendPoint[]
     leaks_found: number
     leaks_repaired: number
@@ -140,9 +156,47 @@ export interface BranchExecutiveSummary {
   obstacles: ObstacleRow[]
   monthly_track: MonthlyTrackRow[]
   mnfNodes: MnfNodeRow[]
+  lossTrend: CumulativeLossTrend
 }
 
 const FISCAL_YEAR = 2569
+
+// ปีงบประมาณ กปภ. เริ่ม ต.ค. จบ ก.ย. — ลำดับเดือนตามปีงบ
+const FISCAL_MONTH_ORDER = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+const FISCAL_MONTH_LABELS = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.']
+
+// น้ำสูญเสียสะสมเฉลี่ย (8M-style) — บวกน้ำจ่าย/จำหน่าย/ฟรี/blow-off ตั้งแต่ ต.ค. ถึงเดือนที่มีข้อมูลล่าสุด แล้วหารด้วยจำนวนเดือน
+// หยุดสะสมที่เดือนแรกที่ยังไม่มีข้อมูล (ข้อมูลรายเดือนจะออกช้ากว่าเดือนปัจจุบันเสมอ)
+function buildCumulativeLossSeries(fiscalYear: number, nrwMap: Map<string, NrwMonthRow>): CumulativeLossPoint[] {
+  let sumProduced = 0
+  let sumSold = 0
+  let sumFree = 0
+  let sumBlowoff = 0
+  let monthsCounted = 0
+  const points: CumulativeLossPoint[] = []
+
+  for (let i = 0; i < FISCAL_MONTH_ORDER.length; i++) {
+    const month = FISCAL_MONTH_ORDER[i]
+    const row = nrwMap.get(`${fiscalYear}-${String(month).padStart(2, '0')}`)
+    if (!row || row.water_produced == null) break
+
+    sumProduced += row.water_produced ?? 0
+    sumSold += row.water_sold ?? 0
+    sumFree += row.water_free ?? 0
+    sumBlowoff += row.blow_off ?? 0
+    monthsCounted += 1
+
+    const cumulativeLoss = sumProduced - sumSold - sumFree - sumBlowoff
+    points.push({
+      fiscal_month_index: i + 1,
+      month_label: FISCAL_MONTH_LABELS[i],
+      avg_loss: cumulativeLoss / monthsCounted,
+      months_counted: monthsCounted,
+    })
+  }
+
+  return points
+}
 
 // nrw_branch_monthly ใช้ fiscal_year (พ.ศ.) กับ month
 // toFiscalYear: Gregorian year + month → fiscal_year พ.ศ.
@@ -171,6 +225,12 @@ function calcNrwPct(row: NrwMonthRow | null): number | null {
     - (row.water_free ?? 0)
     - (row.blow_off ?? 0)
   return loss >= 0 ? (loss / row.water_produced) * 100 : null
+}
+
+// น้ำสูญเสีย (ปริมาตร) — สูตรเดียวกับหน้า /report-nrw
+function calcLossVolume(row: NrwMonthRow | null): number | null {
+  if (!row?.water_produced) return null
+  return Math.max(0, (row.water_produced ?? 0) - (row.water_sold ?? 0) - (row.water_free ?? 0) - (row.blow_off ?? 0))
 }
 
 export async function getExecutiveBranchSummary(
@@ -223,7 +283,7 @@ export async function getExecutiveBranchSummary(
       .eq('branch_name', branchRes.data.name_th)
       .order('fiscal_year', { ascending: false })
       .order('month', { ascending: false })
-      .limit(14),
+      .limit(26),
 
     // budget year id
     (supabase as any)
@@ -287,7 +347,14 @@ export async function getExecutiveBranchSummary(
   const todayStr = now.toISOString().slice(0, 10)
 
   // NRW% + trend จาก nrw_branch_monthly (official source)
-  const nrwRows = (nrwMonthlyRes.data ?? []) as NrwMonthRow[]
+  // หมายเหตุ: query เรียง fiscal_year desc, month desc (เลขเดือนปฏิทินดิบ) ซึ่งผิด เพราะปีงบเริ่ม ต.ค.
+  // ต.ค./พ.ย./ธ.ค. (เดือน 10-12) จะมีเลขเดือนมากกว่า ม.ค.-ก.ย. (เดือน 1-9) ทั้งที่จริงเป็นช่วงต้นปีงบ (เก่ากว่า)
+  // ต้อง sort ใหม่ตามลำดับเวลาจริง (ปี พ.ศ. → ค.ศ. แล้วเทียบเดือนตามปฏิทิน) ก่อนเลือกแถวล่าสุด
+  const nrwRows = ((nrwMonthlyRes.data ?? []) as NrwMonthRow[]).slice().sort((a, b) => {
+    const ak = fyToGregorianYear(a.fiscal_year, a.month) * 12 + a.month
+    const bk = fyToGregorianYear(b.fiscal_year, b.month) * 12 + b.month
+    return bk - ak
+  })
   const nrwMap = new Map(
     nrwRows.map((r) => [`${r.fiscal_year}-${String(r.month).padStart(2, '0')}`, r])
   )
@@ -301,11 +368,22 @@ export async function getExecutiveBranchSummary(
   const current_pct     = calcNrwPct(latestNrw)
   const prev_month_pct  = calcNrwPct(prevNrw)
 
+  // น้ำสูญเสียสะสมเฉลี่ย — ปีงบปัจจุบัน vs ปีงบก่อนหน้า
+  const currentFiscalYear = toFiscalYear(currentYear, currentMonth)
+  const lossTrend: CumulativeLossTrend = {
+    fiscal_year_curr: currentFiscalYear,
+    fiscal_year_prev: currentFiscalYear - 1,
+    curr: buildCumulativeLossSeries(currentFiscalYear, nrwMap),
+    prev: buildCumulativeLossSeries(currentFiscalYear - 1, nrwMap),
+  }
+
   // YoY — same month last fiscal year
   const yoyNrw = latestNrw
     ? nrwRows.find((r) => r.month === latestNrw.month && r.fiscal_year === latestNrw.fiscal_year - 1) ?? null
     : null
   const yoy_pct = calcNrwPct(yoyNrw)
+  const water_loss = calcLossVolume(latestNrw)
+  const yoy_loss    = calcLossVolume(yoyNrw)
 
   // report month/year ใช้จาก nrw_branch_monthly ก่อน fallback monthly_reports
   const reportMonth = latestNrw?.month ?? latestReport?.report_month ?? null
@@ -488,8 +566,10 @@ export async function getExecutiveBranchSummary(
         yoy_pct,
         water_produced: latestNrw?.water_produced ?? null,
         water_sold: latestNrw?.water_sold ?? null,
+        water_loss,
         yoy_produced: yoyNrw?.water_produced ?? null,
         yoy_sold: yoyNrw?.water_sold ?? null,
+        yoy_loss,
         trend_12m,
         leaks_found: latestReport?.leaks_found ?? 0,
         leaks_repaired: latestReport?.leaks_repaired ?? 0,
@@ -543,17 +623,19 @@ export async function getExecutiveBranchSummary(
           })
         }
 
-        // Use nrw_branch_monthly as base for month list
-        return nrwRows.map((r) => {
-          const gy = fyToGregorianYear(r.fiscal_year, r.month)
-          const key = `${gy}-${String(r.month).padStart(2, '0')}`
+        // เฉพาะปีงบปัจจุบัน (2569) เรียงจาก ต.ค. 2568 → ก.ย. 2569
+        const fiscalRows = new Map(nrwRows.filter((r) => r.fiscal_year === FISCAL_YEAR).map((r) => [r.month, r]))
+        return FISCAL_MONTH_ORDER.map((month) => {
+          const r = fiscalRows.get(month) ?? null
+          const gy = fyToGregorianYear(FISCAL_YEAR, month)
+          const key = `${gy}-${String(month).padStart(2, '0')}`
           const areas = areasByMonth.get(key) ?? []
           return {
             gregorian_year: gy,
-            month: r.month,
+            month,
             nrw_pct: calcNrwPct(r),
-            water_produced: r.water_produced ?? null,
-            water_sold: r.water_sold ?? null,
+            water_produced: r?.water_produced ?? null,
+            water_sold: r?.water_sold ?? null,
             has_report: areas.length > 0,
             area_count: areas.length,
             areas,
@@ -565,6 +647,7 @@ export async function getExecutiveBranchSummary(
       nodeDmaStats,
       obstacles: (obstaclesRes.data ?? []) as ObstacleRow[],
       mnfNodes,
+      lossTrend,
     },
     error: null,
   }
