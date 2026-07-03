@@ -98,6 +98,7 @@ export interface Obstacle {
   code: string
   branch_id: string
   plan_id: string | null
+  area_report_id: string | null
   obstacle_type: string
   category: 'MM' | 'DMA' | 'P3' | 'อื่นๆ'
   area: string | null

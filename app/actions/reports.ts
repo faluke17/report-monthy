@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { ActionResult } from '@/lib/types'
 import type { AreaObstacleInput } from '@/app/actions/area-reports'
+import { syncObstaclesToTracker } from '@/app/actions/area-reports'
 
 export type UpdateAreaReportInput = {
   water_dist_before?: number | null
@@ -82,6 +83,12 @@ export async function updateAreaReport(id: string, data: UpdateAreaReportInput):
 
   const supabase = await createClient()
 
+  const { data: areaRow } = await supabase
+    .from('area_monthly_reports')
+    .select('branch_id, area_name, branches(code)')
+    .eq('id', id)
+    .single()
+
   const { error: updateError } = await supabase
     .from('area_monthly_reports')
     .update({
@@ -132,7 +139,18 @@ export async function updateAreaReport(id: string, data: UpdateAreaReportInput):
     if (obstError) return { success: false, error: obstError.message }
   }
 
+  // sync to global obstacles tracker (previously only saved to area_obstacles,
+  // so edits made here never showed up in Obstacle Tracker /obstacle)
+  if (areaRow?.branch_id) {
+    const branchCode = (areaRow.branches as unknown as { code: string } | null)?.code ?? 'UNK'
+    await syncObstaclesToTracker(
+      supabase, id, areaRow.branch_id, branchCode,
+      areaRow.area_name ?? '', data.obstacles, session.username
+    )
+  }
+
   revalidatePath('/pdca')
+  revalidatePath('/obstacle')
   revalidatePath('/dashboard')
   return { success: true }
 }

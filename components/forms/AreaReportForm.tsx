@@ -381,6 +381,18 @@ export function AreaReportForm({
     const missing = areas.find((a) => !a.area_name.trim())
     if (missing) { toast.error('กรุณาระบุชื่อพื้นที่ทุกพื้นที่'); return }
 
+    const incompleteObstacle = areas.find((a) =>
+      a.has_obstacle &&
+      a.obstacles.some((o) =>
+        !o.obstacle_type &&
+        (o.obstacle_detail.trim() || o.resolution_plan.trim() || o.impact.trim() || o.region_support_needed.trim())
+      )
+    )
+    if (incompleteObstacle) {
+      toast.error(`กรุณาเลือก "อุปสรรคเรื่อง" ในพื้นที่ "${incompleteObstacle.area_name || 'ที่ยังไม่ระบุ'}" มิฉะนั้นข้อมูลอุปสรรคจะไม่ถูกบันทึก`)
+      return
+    }
+
     setSubmitting(true)
 
     const payload: AreaReportInput[] = areas.map((a) => ({

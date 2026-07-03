@@ -114,6 +114,16 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
   }
 
   function handleSave() {
+    if (hasObstacle) {
+      const incomplete = obstacles.some((o) =>
+        !o.obstacle_type &&
+        (o.obstacle_detail.trim() || o.resolution_plan.trim() || o.impact.trim() || o.region_support_needed.trim())
+      )
+      if (incomplete) {
+        toast.error('กรุณาเลือก "ประเภท" อุปสรรค มิฉะนั้นข้อมูลอุปสรรคจะไม่ถูกบันทึก')
+        return
+      }
+    }
     startSave(async () => {
       const result = await updateAreaReport(report.id, {
         water_dist_before: parseFloat(waterDistBefore) || null,
