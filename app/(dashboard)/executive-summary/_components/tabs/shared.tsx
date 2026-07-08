@@ -5,9 +5,10 @@ export type Tab = 'overview' | 'dma' | 'obstacle' | 'mnf' | 'budget'
 
 // < 768: มือถือ (สลับ layout เป็นแนวตั้ง), 768–1023: iPad/tablet (คง layout 2 คอลัมน์แต่แน่นกว่า desktop)
 export function useBreakpoint() {
-  const [w, setW] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1280))
+  const [w, setW] = useState(1280)
   useEffect(() => {
     const onResize = () => setW(window.innerWidth)
+    onResize()
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])

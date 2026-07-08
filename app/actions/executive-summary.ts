@@ -60,6 +60,10 @@ export interface ObstacleRow {
   due_date: string | null
   last_log_message: string | null
   priority_order: number | null
+  data_quality_impact: string | null
+  resolution_plan: string | null
+  region_support_needed: string | null
+  area: string | null
 }
 
 export interface PdcaHistoryRow {
@@ -306,7 +310,7 @@ export async function getExecutiveBranchSummary(
     // Open obstacles
     supabase
       .from('obstacles')
-      .select('id,code,category,obstacle_type,status,progress_pct,due_date,last_log_message,priority_order')
+      .select('id,code,category,obstacle_type,status,progress_pct,due_date,last_log_message,priority_order,data_quality_impact,resolution_plan,region_support_needed,area')
       .eq('branch_id', branchId)
       .neq('status', 'ปิดประเด็น')
       .order('priority_order', { ascending: true, nullsFirst: false })

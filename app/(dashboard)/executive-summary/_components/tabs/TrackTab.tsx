@@ -1,8 +1,64 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { AreaMonthItem, MonthlyTrackRow, ObstacleRow } from '@/app/actions/executive-summary'
+import { getProgressLogs } from '@/app/actions/obstacles'
+import type { ObstacleProgressLog } from '@/lib/types'
 import { THAI_MONTHS, C, MONO, Bar, Corners, OBS_STATUS, useBreakpoint } from './shared'
+
+const ENTRY_TYPE_LABEL: Record<string, string> = {
+  branch_update: 'สาขาอัปเดต',
+  region_note: 'บันทึกจากเขต',
+  system: 'ระบบ',
+}
+
+function ObsHistory({ obstacleId }: { obstacleId: string }) {
+  const [logs, setLogs] = useState<ObstacleProgressLog[] | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    getProgressLogs(obstacleId).then(({ data }) => { if (alive) setLogs(data) })
+    return () => { alive = false }
+  }, [obstacleId])
+
+  if (logs === null) return (
+    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>// กำลังโหลดประวัติ...</div>
+  )
+  if (logs.length === 0) return (
+    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>// ยังไม่มีประวัติการอัปเดต</div>
+  )
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {logs.map((log, i) => (
+        <div key={log.id} style={{ display: 'flex', gap: 8, position: 'relative', paddingBottom: i === logs.length - 1 ? 0 : 10 }}>
+          {/* timeline dot + line */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 8, flexShrink: 0 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: log.is_closed ? C.good : C.accent, flexShrink: 0, marginTop: 4 }} />
+            {i !== logs.length - 1 && <span style={{ flex: 1, width: 1, background: C.border, marginTop: 2 }} />}
+          </div>
+          <div style={{ flex: 1, paddingBottom: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 9, color: C.muted, fontFamily: MONO }}>
+                {new Date(log.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </span>
+              <span style={{ fontSize: 8, padding: '1px 6px', border: `1px solid ${C.border}`, color: C.dim, fontFamily: MONO }}>
+                {ENTRY_TYPE_LABEL[log.entry_type] ?? log.entry_type}
+              </span>
+              <span style={{ fontSize: 9, color: C.dim, fontFamily: MONO }}>โดย {log.created_by}</span>
+              {log.progress_pct != null && (
+                <span style={{ fontSize: 9, color: C.accent, fontFamily: MONO, fontWeight: 700 }}>{log.progress_pct}%</span>
+              )}
+              {log.is_closed && (
+                <span style={{ fontSize: 9, color: C.good, fontFamily: MONO, fontWeight: 700 }}>✓ ปิดประเด็น</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: C.text, lineHeight: 1.6 }}>{log.message}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function ObsPanel({ obstacles }: { obstacles: ObstacleRow[] }) {
   const [openId, setOpenId] = useState<string | null>(null)
@@ -65,13 +121,43 @@ function ObsPanel({ obstacles }: { obstacles: ObstacleRow[] }) {
                   </div>
                 )}
 
-                {/* last log */}
-                {obs.last_log_message && (
+                {/* สาเหตุ / รายละเอียดปัญหา */}
+                {obs.data_quality_impact && (
                   <div>
-                    <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 4 }}>อัปเดตล่าสุด</div>
-                    <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, padding: '7px 10px', background: C.row, borderLeft: `2px solid ${sc}` }}>{obs.last_log_message}</div>
+                    <div style={{ fontSize: 9, color: C.warn, fontFamily: MONO, letterSpacing: 1, marginBottom: 4 }}>สาเหตุ / รายละเอียดปัญหา</div>
+                    <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, padding: '7px 10px', background: C.row, borderLeft: `2px solid ${C.warn}` }}>{obs.data_quality_impact}</div>
                   </div>
                 )}
+
+                {/* ผลกระทบ */}
+                {obs.area && (
+                  <div>
+                    <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 4 }}>ผลกระทบที่ได้รับ</div>
+                    <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, padding: '7px 10px', background: C.row, borderLeft: `2px solid ${C.dim}` }}>{obs.area}</div>
+                  </div>
+                )}
+
+                {/* แนวทางแก้ไข */}
+                {obs.resolution_plan && (
+                  <div>
+                    <div style={{ fontSize: 9, color: C.accent, fontFamily: MONO, letterSpacing: 1, marginBottom: 4 }}>แนวทางแก้ไข (ถึงไหนแล้ว)</div>
+                    <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, padding: '7px 10px', background: C.row, borderLeft: `2px solid ${C.accent}` }}>{obs.resolution_plan}</div>
+                  </div>
+                )}
+
+                {/* ต้องการความช่วยเหลือจากเขต */}
+                {obs.region_support_needed && (
+                  <div>
+                    <div style={{ fontSize: 9, color: C.crit, fontFamily: MONO, letterSpacing: 1, marginBottom: 4 }}>ต้องการความช่วยเหลือจากเขต</div>
+                    <div style={{ fontSize: 11, color: C.text, lineHeight: 1.65, padding: '7px 10px', background: C.row, borderLeft: `2px solid ${C.crit}` }}>{obs.region_support_needed}</div>
+                  </div>
+                )}
+
+                {/* ประวัติการอัปเดต */}
+                <div>
+                  <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, letterSpacing: 1, marginBottom: 6 }}>ประวัติการอัปเดต</div>
+                  <ObsHistory obstacleId={obs.id} />
+                </div>
 
               </div>
             )}
