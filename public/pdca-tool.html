@@ -434,7 +434,6 @@
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brand">
@@ -456,7 +455,7 @@
         นำเข้า
       </button>
       <input type="file" id="importInput" accept="application/json" style="display:none">
-      <button class="iconbtn" id="exportBtn" title="คัดลอก/ดาวน์โหลดข้อมูลเป็น .json เพื่อส่งให้เขต">
+      <button class="iconbtn" id="exportBtn" title="คัดลอก/ดาวน์โหลดข้อมูลเป็น CSV (Excel) หรือ JSON">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 3h16"/></svg>
         ส่งออก
       </button>
@@ -631,8 +630,15 @@
 
 <div class="modal-overlay" id="exportModal">
   <div class="modal-card">
-    <h2>ส่งออกข้อมูล (.json)</h2>
-    <p class="modal-sub" id="exportFilename">pdca_data.json</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0">ส่งออกข้อมูล</h2>
+      <div class="segmented" id="exportFormatToggle">
+        <button type="button" class="active" data-fmt="csv">CSV (Excel)</button>
+        <button type="button" data-fmt="json">JSON (นำเข้าใหม่ได้)</button>
+      </div>
+    </div>
+    <p class="modal-sub" id="exportFilename" style="margin-top:8px">pdca_data.csv</p>
+    <p class="modal-sub" id="exportFormatHint">เปิดตรงในโปรแกรมสเปรดชีต (Excel/Google Sheets) — เหมาะกับส่งให้เขตดูข้อมูลสรุป</p>
     <textarea id="exportText" readonly onclick="this.select()"></textarea>
     <div class="modal-actions">
       <span class="copy-status" id="copyStatus">คัดลอกแล้ว ✓</span>
@@ -1286,25 +1292,83 @@
   var exportModal = document.getElementById("exportModal");
   var exportText = document.getElementById("exportText");
   var exportFilenameEl = document.getElementById("exportFilename");
+  var exportFormatHintEl = document.getElementById("exportFormatHint");
+  var exportFormatToggle = document.getElementById("exportFormatToggle");
   var downloadExportBtn = document.getElementById("downloadExportBtn");
   var copyStatus = document.getElementById("copyStatus");
   var lastExportUrl = null;
+  var lastExportData = null;
+  var exportFormat = "csv";
 
-  document.getElementById("exportBtn").addEventListener("click", function () {
-    var data = harvest();
-    var json = JSON.stringify(data, null, 2);
-    var fname = "pdca_" + (data.meta.branch || "สาขา").replace(/\s+/g, "_") + "_" + data.meta.year + "-" + String(data.meta.month).padStart(2, "0") + ".json";
+  function csvEscape(v) {
+    var s = v === null || v === undefined ? "" : String(v);
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
 
-    exportText.value = json;
+  // One row per area — self-contained (branch/period repeated per row) so
+  // rows from several branches can be pasted together into one sheet.
+  function buildCsv(data) {
+    var headers = ["สาขา", "เดือน", "ปี", "พื้นที่", "NRW ก่อน (%)", "NRW หลัง (%)", "MNF ก่อน", "MNF หลัง",
+      "น้ำสูญเสียหลัง (ลบ.ม.)", "จุดรั่วพบ", "ซ่อมแล้ว", "ค้างซ่อม",
+      "ระดับอุปสรรค", "ประเภทอุปสรรค", "รายละเอียดอุปสรรค", "แนวทางแก้ไข", "Do (สรุป)", "Act (สรุป)"];
+    var monthName = MONTHS[data.meta.month - 1] || "";
+    var rows = [headers];
+    data.areas.forEach(function (a) {
+      var pB = metricValue(a, "before", "nrw");
+      var pA = metricValue(a, "after", "nrw");
+      var ob = a.hasObstacle && a.obstacle ? a.obstacle : null;
+      rows.push([
+        data.meta.branch || "", monthName, data.meta.year, a.name,
+        pB !== null ? fmt(pB, 1) : "", pA !== null ? fmt(pA, 1) : "",
+        a.before.mnf != null ? fmt(a.before.mnf, 2) : "", a.after.mnf != null ? fmt(a.after.mnf, 2) : "",
+        fmt(a.after.dist - a.after.sold, 0), a.leaksFound, a.leaksRepaired, Math.max(0, a.leaksFound - a.leaksRepaired),
+        ob ? ob.priority : "", ob ? (ob.type === "อื่น" && ob.other ? ob.other : ob.type) : "",
+        ob ? ob.detail : "", ob ? ob.plan : "",
+        a.pdcaDo.map(function (i) { return i.title; }).filter(Boolean).join(" / "),
+        a.pdcaAct.map(function (i) { return i.title; }).filter(Boolean).join(" / ")
+      ]);
+    });
+    var csv = rows.map(function (r) { return r.map(csvEscape).join(","); }).join("\r\n");
+    return "﻿" + csv; // BOM so Excel opens Thai text as UTF-8, not garbled
+  }
+
+  function renderExportFormat() {
+    var data = lastExportData;
+    var base = "pdca_" + (data.meta.branch || "สาขา").replace(/\s+/g, "_") + "_" + data.meta.year + "-" + String(data.meta.month).padStart(2, "0");
+    var text, fname, mime;
+    if (exportFormat === "csv") {
+      text = buildCsv(data); fname = base + ".csv"; mime = "text/csv;charset=utf-8";
+      exportFormatHintEl.textContent = "เปิดตรงในโปรแกรมสเปรดชีต (Excel/Google Sheets) — เหมาะกับส่งให้เขตดูข้อมูลสรุปรายพื้นที่";
+    } else {
+      text = JSON.stringify(data, null, 2); fname = base + ".json"; mime = "application/json";
+      exportFormatHintEl.textContent = "เก็บข้อมูลครบทุกช่อง (รวม Step Test / มาตร) ใช้กด “นำเข้า” เพื่อโหลดกลับเข้าเครื่องมือนี้ได้";
+    }
+    exportText.value = text;
     exportFilenameEl.textContent = fname;
-    copyStatus.classList.remove("show");
+    Array.prototype.forEach.call(exportFormatToggle.children, function (btn) {
+      btn.classList.toggle("active", btn.dataset.fmt === exportFormat);
+    });
 
     if (lastExportUrl) URL.revokeObjectURL(lastExportUrl);
-    var blob = new Blob([json], { type: "application/json" });
+    var blob = new Blob([text], { type: mime });
     lastExportUrl = URL.createObjectURL(blob);
     downloadExportBtn.href = lastExportUrl;
     downloadExportBtn.download = fname;
+  }
 
+  Array.prototype.forEach.call(exportFormatToggle.children, function (btn) {
+    btn.addEventListener("click", function () {
+      exportFormat = btn.dataset.fmt;
+      renderExportFormat();
+      exportText.focus();
+      exportText.select();
+    });
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    lastExportData = harvest();
+    copyStatus.classList.remove("show");
+    renderExportFormat();
     exportModal.classList.add("show");
     exportText.focus();
     exportText.select();
