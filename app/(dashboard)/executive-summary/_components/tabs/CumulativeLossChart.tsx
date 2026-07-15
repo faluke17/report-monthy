@@ -77,7 +77,11 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
   })
 
   const lastCurr = [...curr].reverse().find((p) => p.avg_loss != null) ?? null
-  const lastPrev = [...prev].reverse().find((p) => p.avg_loss != null) ?? null
+  // เทียบ "เดือนเดียวกัน" กับปีก่อน ไม่ใช่เดือนล่าสุดของปีก่อน — ปีก่อนเป็นปีงบที่จบสมบูรณ์แล้ว (12 เดือน)
+  // ถ้าใช้เดือนล่าสุดของ prev ตรงๆ จะกลายเป็นเทียบสะสม 9 เดือน (ปีนี้) กับสะสม 12 เดือน (ปีก่อน) ซึ่งเทียบกันไม่ได้
+  const lastPrev = lastCurr
+    ? prev.find((p) => p.fiscal_month_index === lastCurr.fiscal_month_index) ?? null
+    : null
 
   return (
     <Card>
@@ -147,7 +151,7 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 24px', marginTop: 4, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
         {[
           { label: `ล่าสุด ปีงบ ${fiscalYearCurr}`, point: lastCurr, c: C.good },
-          { label: `ล่าสุด ปีงบ ${fiscalYearPrev}`, point: lastPrev, c: C.crit },
+          { label: `ช่วงเดียวกัน ปีงบ ${fiscalYearPrev}`, point: lastPrev, c: C.crit },
         ].map(({ label, point, c }) => (
           <div key={label}>
             <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>{label}</div>

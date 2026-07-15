@@ -19,11 +19,11 @@ export interface RegionNrwSnap {
   cum_pct: number | null            // NRW% สะสมทั้งเขตตั้งแต่ ต.ค. ถึงเดือนล่าสุด
   cum_trend_delta: number | null    // ผลต่าง NRW% เดือนล่าสุด เทียบเดือนเดียวกันปีก่อน (YoY, ไม่สะสม) — เท่ากับ latest_month_delta
   cum_months: number
-  cum_loss_total: number | null     // ปริมาณน้ำสูญเสียสะสมรวมทั้งเขต (m³)
-  cum_produced_total: number | null // ปริมาณน้ำจ่ายสะสมรวมทั้งเขต (m³)
   latest_month: number | null       // เดือนปฏิทินล่าสุดที่มีข้อมูลครบ
   latest_month_pct: number | null   // NRW% เฉพาะเดือนล่าสุด (ไม่สะสม)
   latest_month_delta: number | null // ผลต่าง NRW% เดือนล่าสุด เทียบเดือนเดียวกันปีก่อน (YoY, ไม่สะสม)
+  latest_month_produced: number | null // น้ำผลิตจ่ายรวมทั้งเขต เฉพาะเดือนล่าสุด (ไม่สะสม) — ตรงกับผลรวม "รวมเขต" ของหน้า /report-nrw
+  latest_month_sold: number | null     // น้ำจำหน่ายรวมทั้งเขต เฉพาะเดือนล่าสุด (ไม่สะสม)
   branches_reporting: number
   branches_on_target: number
   branches_total: number
@@ -91,7 +91,13 @@ function computeCumulativeTrend(currRows: NrwMonthRow[], prevRows: NrwMonthRow[]
 }
 
 // รวมทุกสาขาต่อเดือนก่อน แล้วคำนวณสะสม/เดือนล่าสุด เทียบช่วงเดียวกันของปีงบก่อนหน้า (YoY) แบบเดียวกับ computeCumulativeTrend
-function computeRegionSnap(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], branchesTotal: number): RegionNrwSnap {
+// getTarget: เป้าหมาย NRW% ต่อสาขา (ตั้งค่าจากหน้า /report-nrw) ใช้แทนเกณฑ์ ≤20% ตายตัวเดิม
+function computeRegionSnap(
+  currRows: NrwMonthRow[],
+  prevRows: NrwMonthRow[],
+  branchesTotal: number,
+  getTarget: (branchName: string) => number,
+): RegionNrwSnap {
   const aggregateByMonth = (rows: NrwMonthRow[]) => {
     const byMonth = new Map<number, { produced: number; sold: number; free: number; blowoff: number }>()
     for (const r of rows) {
@@ -114,6 +120,8 @@ function computeRegionSnap(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], bra
   let currCumPct: number | null = null
   let latestMonth: number | null = null
   let latestMonthPct: number | null = null
+  let latestMonthProduced: number | null = null
+  let latestMonthSold: number | null = null
 
   for (const month of FISCAL_MONTH_ORDER) {
     const agg = byMonth.get(month)
@@ -121,6 +129,8 @@ function computeRegionSnap(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], bra
 
     latestMonthPct = agg.produced > 0 ? ((agg.produced - agg.sold - agg.free - agg.blowoff) / agg.produced) * 100 : null
     latestMonth = month
+    latestMonthProduced = agg.produced
+    latestMonthSold = agg.sold
 
     sumProduced += agg.produced
     sumSold += agg.sold
@@ -142,7 +152,7 @@ function computeRegionSnap(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], bra
     ? currRows.filter((r) => {
         if (r.month !== latestMonth || !r.water_produced) return false
         const pct = ((r.water_produced - (r.water_sold ?? 0) - (r.water_free ?? 0) - (r.blow_off ?? 0)) / r.water_produced) * 100
-        return pct <= 20
+        return pct <= getTarget(r.branch_name)
       }).length
     : 0
 
@@ -154,11 +164,11 @@ function computeRegionSnap(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], bra
     cum_pct: currCumPct,
     cum_trend_delta: latestMonthPct != null && prevMonthPct != null ? latestMonthPct - prevMonthPct : null,
     cum_months: monthsCounted,
-    cum_loss_total: monthsCounted > 0 ? sumProduced - sumSold - sumFree - sumBlowoff : null,
-    cum_produced_total: monthsCounted > 0 ? sumProduced : null,
     latest_month: latestMonth,
     latest_month_pct: latestMonthPct,
     latest_month_delta: latestMonthPct != null && prevMonthPct != null ? latestMonthPct - prevMonthPct : null,
+    latest_month_produced: latestMonthProduced,
+    latest_month_sold: latestMonthSold,
     branches_reporting: branchesReporting,
     branches_on_target: branchesOnTarget,
     branches_total: branchesTotal,
@@ -174,7 +184,7 @@ export default async function ExecutiveSummaryPage() {
   const currentFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)
   const prevFiscalYear = currentFiscalYear - 1
 
-  const [branchesRes, nrwMonthlyRes] = await Promise.all([
+  const [branchesRes, nrwMonthlyRes, targetRes] = await Promise.all([
     supabase
       .from('branches')
       .select('id,code,name_th,province_th,region,is_active,created_at')
@@ -186,12 +196,26 @@ export default async function ExecutiveSummaryPage() {
       .from('nrw_branch_monthly')
       .select('branch_name,fiscal_year,month,water_produced,water_sold,water_free,blow_off')
       .in('fiscal_year', [currentFiscalYear, prevFiscalYear]),
+
+    // เป้าหมาย NRW% ต่อสาขา — ตั้งค่าที่หน้า /report-nrw (ต่อสาขา + ค่า district fallback แถวชื่อ __district__)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('nrw_branch_target')
+      .select('branch_name,target_nrw')
+      .eq('fiscal_year', currentFiscalYear),
   ])
 
   const branches = (branchesRes.data ?? []) as Branch[]
   const allRows = (nrwMonthlyRes.data ?? []) as NrwMonthRow[]
   const currYearRows = allRows.filter((r) => r.fiscal_year === currentFiscalYear)
   const prevYearRows = allRows.filter((r) => r.fiscal_year === prevFiscalYear)
+
+  const allTargets = (targetRes.data ?? []) as { branch_name: string; target_nrw: number | null }[]
+  const districtTarget = allTargets.find((t) => t.branch_name === '__district__')?.target_nrw ?? null
+  const targetMap = new Map(
+    allTargets.filter((t) => t.branch_name !== '__district__').map((t) => [t.branch_name, t.target_nrw])
+  )
+  const getTarget = (branchName: string): number => targetMap.get(branchName) ?? districtTarget ?? 20
 
   const currRowsByBranchName = new Map<string, NrwMonthRow[]>()
   for (const r of currYearRows) {
@@ -212,7 +236,7 @@ export default async function ExecutiveSummaryPage() {
     snapMap[b.id] = { branch_id: b.id, ...trend }
   }
 
-  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length)
+  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length, getTarget)
 
   return (
     // Cancel dashboard layout padding to fill the whole viewport

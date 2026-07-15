@@ -80,7 +80,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
 
         {/* ── LEFT: Summary panels แนวตั้ง ── */}
         <div style={{
-          width: isMobile ? '100%' : 264,
+          width: isMobile ? '100%' : 304,
           maxHeight: isMobile ? '40vh' : undefined,
           flexShrink: 0,
           borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
@@ -112,22 +112,29 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
           {/* ปริมาณน้ำเดือนนี้ + เทียบปีที่แล้ว */}
           <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 11, color: C.accent, fontFamily: SANS, marginBottom: 9, fontWeight: 700 }}>ปริมาณน้ำเดือนนี้ (m³)</div>
-            {/* minmax(0,1fr) กันไม่ให้ track ขยายตามความกว้างเนื้อหา (ตัวเลขหลักล้านของสาขาใหญ่) จนดันล้น sidebar 264px แล้วโดนตัดหาย */}
+            {/* minmax(0,1fr) กันไม่ให้ track ขยายตามความกว้างเนื้อหา (ตัวเลขหลักล้านของสาขาใหญ่) จนดันล้น sidebar 304px แล้วโดนตัดหาย */}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 6, marginBottom: 14 }}>
               {[
                 { l: 'น้ำจ่าย',    v: nrw.water_produced, dot: C.blue },
                 { l: 'จำหน่าย',    v: nrw.water_sold,     dot: C.good },
                 { l: 'สูญเสีย',    v: nrw.water_loss,     dot: C.crit },
-              ].map(({ l, v, dot }) => (
-                <div key={l} style={{ padding: '8px 7px', borderRadius: 7, background: C.row, border: `1px solid ${C.border}`, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0, display: 'inline-block' }} />
-                    <span style={{ fontSize: 9.5, color: C.muted, fontFamily: SANS }}>{l}</span>
+              ].map(({ l, v, dot }) => {
+                const numStr = fmt(v)
+                // sidebar กว้างขึ้นแล้ว (304px) ตัวเลขปกติถึง 9 หลัก (รวม comma) พอดีบรรทัดเดียวที่ 11px — ลดขนาดเฉพาะเคสสาขาใหญ่ผิดปกติจริงๆ
+                const numSize = numStr.length <= 9 ? 11 : numStr.length <= 11 ? 9.5 : 8.5
+                return (
+                  <div key={l} style={{ padding: '8px 7px', borderRadius: 7, background: C.row, border: `1px solid ${C.border}`, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0, display: 'inline-block' }} />
+                      <span style={{ fontSize: 9.5, color: C.muted, fontFamily: SANS }}>{l}</span>
+                    </div>
+                    <div style={{
+                      fontSize: numSize, fontWeight: 800, color: C.bright, fontFamily: MONO, lineHeight: 1.25, letterSpacing: -0.3,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }} title={numStr}>{numStr}</div>
                   </div>
-                  {/* fontSize 11 + letterSpacing ติดลบ ให้ตัวเลข 6-7 หลักส่วนใหญ่พอดีบรรทัดเดียว overflowWrap ยังกันไว้เผื่อสาขาที่ตัวเลขยาวกว่านั้น */}
-                  <div style={{ fontSize: 11, fontWeight: 800, color: C.bright, fontFamily: MONO, lineHeight: 1.25, letterSpacing: -0.3, overflowWrap: 'anywhere' }}>{fmt(v)}</div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <div style={{ fontSize: 11, color: C.accent, fontFamily: SANS, marginBottom: 9, fontWeight: 700 }}>เทียบปีที่แล้ว (เดือนเดียวกัน)</div>

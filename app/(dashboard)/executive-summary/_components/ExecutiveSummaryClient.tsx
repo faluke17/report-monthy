@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useId } from 'react'
 import type { Branch } from '@/lib/types'
 import type { BranchNrwSnap, RegionNrwSnap } from '../page'
 import type { BranchExecutiveSummary } from '@/app/actions/executive-summary'
@@ -88,6 +88,7 @@ function Gauge({ pct, color, height = 8 }: { pct: number | null; color: string; 
 // ── สัญลักษณ์หลักของหน้านี้ — มาตรวัดครึ่งวงกลม (เหมือนหน้าปัดมิเตอร์น้ำ) แสดง NRW% สะสมทั้งเขต ──
 // เป้าหมาย 20% อยู่ตำแหน่ง 12 นาฬิกาพอดี (สเกล 0–40%) ให้เทียบง่ายด้วยตา
 // ขนาดคุมด้วย container ที่ห่อ (width:100% + aspect-ratio) ไม่ตรึงพิกเซล เพราะใช้ทั้งใน sidebar แคบและ hero มือถือกว้าง
+// พื้นหลังแบ่งเป็น 3 โซนสีจาง (ดี/เฝ้าระวัง/วิกฤต) ตามเกณฑ์เดียวกับสีสถานะที่ใช้ทั้งหน้า ให้เทียบตำแหน่งค่าปัจจุบันกับเกณฑ์ได้ด้วยตาโดยไม่ต้องอ่านตัวเลข
 function HeroDial({ pct }: { pct: number | null }) {
   const W = 220, H = 122, CX = 110, CY = 102, R = 82, SW = 18
   const domain = 40
@@ -97,23 +98,63 @@ function HeroDial({ pct }: { pct: number | null }) {
   const valueLen = halfCirc * (value / domain)
   const color = pct == null ? '#C7CFD7' : pct <= 20 ? '#1E7A5A' : pct <= 25 ? '#A8721A' : '#B3392C'
 
+  const ZONES = [
+    { from: 0,  to: 20, color: '#1E7A5A' },
+    { from: 20, to: 25, color: '#A8721A' },
+    { from: 25, to: 40, color: '#B3392C' },
+  ]
+  const dialId = useId()
+
+  // ตำแหน่งปลายเข็ม — angle 180°=9 นาฬิกา (value=0) ไล่ลดลงถึง 0°=3 นาฬิกา (value=domain) ผ่านสุด apex ที่ 90° (12 นาฬิกา)
+  const tipRad = ((180 - (value / domain) * 180) * Math.PI) / 180
+  const tip = { x: CX + R * Math.cos(tipRad), y: CY - R * Math.sin(tipRad) }
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', width: '100%', height: 'auto' }} aria-hidden>
-      <circle
-        cx={CX} cy={CY} r={R} fill="none" stroke="#EBEEF1" strokeWidth={SW}
-        strokeDasharray={`${halfCirc} ${circumference}`} strokeLinecap="round"
-        transform={`rotate(180 ${CX} ${CY})`}
-      />
-      {pct != null && (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', width: '100%', height: 'auto', overflow: 'visible' }} aria-hidden>
+      <defs>
+        <filter id={`${dialId}-shadow`} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2.2" floodColor={color} floodOpacity="0.32" />
+        </filter>
+      </defs>
+
+      {pct == null ? (
         <circle
-          cx={CX} cy={CY} r={R} fill="none" stroke={color} strokeWidth={SW}
-          strokeDasharray={`${valueLen} ${circumference}`} strokeLinecap="round"
+          cx={CX} cy={CY} r={R} fill="none" stroke="#EBEEF1" strokeWidth={SW}
+          strokeDasharray={`${halfCirc} ${circumference}`} strokeLinecap="round"
           transform={`rotate(180 ${CX} ${CY})`}
-          style={{ transition: 'stroke-dasharray .7s ease' }}
         />
+      ) : (
+        ZONES.map(({ from, to, color: zoneColor }) => {
+          const segLen = halfCirc * ((to - from) / domain)
+          const offset = halfCirc * (from / domain)
+          return (
+            <circle
+              key={from}
+              cx={CX} cy={CY} r={R} fill="none" stroke={zoneColor} strokeOpacity={0.13} strokeWidth={SW}
+              strokeLinecap="round"
+              strokeDasharray={`${segLen} ${circumference - segLen}`}
+              strokeDashoffset={-offset}
+              transform={`rotate(180 ${CX} ${CY})`}
+            />
+          )
+        })
       )}
+
       {/* ขีดเป้าหมาย 20% — ตำแหน่ง apex กึ่งกลางสเกล */}
       <line x1={CX} y1={CY - R - SW / 2 - 3} x2={CX} y2={CY - R + SW / 2 + 3} stroke="#B9C2CB" strokeWidth={2} />
+
+      {pct != null && (
+        <>
+          <circle
+            cx={CX} cy={CY} r={R} fill="none" stroke={color} strokeWidth={SW}
+            strokeDasharray={`${valueLen} ${circumference}`} strokeLinecap="round"
+            transform={`rotate(180 ${CX} ${CY})`}
+            filter={`url(#${dialId}-shadow)`}
+            style={{ transition: 'stroke-dasharray .7s ease' }}
+          />
+          <circle cx={tip.x} cy={tip.y} r={SW / 2 - 2} fill="#FFFFFF" stroke={color} strokeWidth={3.5} />
+        </>
+      )}
     </svg>
   )
 }
@@ -200,21 +241,45 @@ function StatChip({ label, value, unit, color, sub }: {
 }
 
 // ── แถวตัวกรองแนวตั้ง — ใช้ใน sidebar ซ้ายบนจอกว้าง ──
-function VFilterRow({ active, label, count, color, onClick }: {
-  active: boolean; label: string; count: number; color: string; onClick: () => void
+// แถว "ทั้งหมด" แสดงเป็น header หนาๆ คั่นเส้นด้านล่าง ส่วนกลุ่มย่อยมีแถบสัดส่วน (count/total) ให้เห็นการกระจายตัวด้วยตาแทนตัวเลขล้วนๆ
+function VFilterRow({ active, label, count, color, total, isTotal, onClick }: {
+  active: boolean; label: string; count: number; color: string; total: number; isTotal?: boolean; onClick: () => void
 }) {
+  if (isTotal) {
+    return (
+      <button onClick={onClick} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+        padding: '7px 10px 10px', borderRadius: 7, width: '100%', textAlign: 'left',
+        background: active ? SURF : 'transparent', boxShadow: active ? '0 1px 2px rgba(18,24,31,0.06)' : 'none',
+        border: 'none', borderBottom: `1px solid ${LINE}`, marginBottom: 6, cursor: 'pointer', fontFamily: SANS,
+      }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 99, background: color, flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{label}</span>
+        </span>
+        <span style={{ fontSize: 12.5, fontFamily: MONO, fontWeight: 700, color: INK }}>{count}</span>
+      </button>
+    )
+  }
+
+  const pct = total > 0 ? (count / total) * 100 : 0
   return (
     <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-      padding: '8px 10px', borderRadius: 7, width: '100%', textAlign: 'left',
+      display: 'flex', flexDirection: 'column', gap: 5,
+      padding: '6px 10px', borderRadius: 7, width: '100%', textAlign: 'left',
       background: active ? SURF : 'transparent', boxShadow: active ? '0 1px 2px rgba(18,24,31,0.06)' : 'none',
       border: 'none', cursor: 'pointer', fontFamily: SANS,
     }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 99, background: color, flexShrink: 0 }} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: INK2 }}>{label}</span>
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 99, background: color, flexShrink: 0 }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: INK2 }}>{label}</span>
+        </span>
+        <span style={{ fontSize: 11, fontFamily: MONO, fontWeight: 700, color }}>{count}</span>
       </span>
-      <span style={{ fontSize: 11, fontFamily: MONO, color: INK3 }}>{count}</span>
+      <div style={{ height: 4, borderRadius: 99, background: '#EBEEF1', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: color, transition: 'width .5s ease' }} />
+      </div>
     </button>
   )
 }
@@ -319,7 +384,6 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
   const [pendingBranch, setPendingBranch] = useState<Branch | null>(null)
   const [loadedBranch, setLoadedBranch]   = useState<Branch | null>(null)
   const [summaryData, setSummaryData]     = useState<BranchExecutiveSummary | null>(null)
-  const [search, setSearch]               = useState('')
   const [animKey, setAnimKey]             = useState(0)
   const [sevFilter, setSevFilter]         = useState<SevFilter>('all')
 
@@ -357,12 +421,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
 
   // เรียง: กลุ่ม (ติดตาม→วิกฤต→เฝ้าระวัง→ทั่วไป) แล้วภายในกลุ่มเรียงแนวโน้มแย่ลงก่อน
   const filteredBranches = branches
-    .filter((b) => {
-      const q = search.trim().toLowerCase()
-      if (q && !b.name_th.toLowerCase().includes(q) && !b.code.toLowerCase().includes(q)) return false
-      if (sevFilter !== 'all' && groupOf(b.code) !== sevFilter) return false
-      return true
-    })
+    .filter((b) => sevFilter === 'all' || groupOf(b.code) === sevFilter)
     .sort((a, b) => {
       const ga = GROUP_ORDER.indexOf(groupOf(a.code)), gb = GROUP_ORDER.indexOf(groupOf(b.code))
       if (ga !== gb) return ga - gb
@@ -380,7 +439,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
     if (!byGroup.has(g)) byGroup.set(g, [])
     byGroup.get(g)!.push(b)
   }
-  const showGrouped = !search.trim() && sevFilter === 'all'
+  const showGrouped = sevFilter === 'all'
 
   const periodLabel = regionSnap.latest_month != null
     ? `ข้อมูลเดือน ${MONTH_SHORT[regionSnap.latest_month]} · รายงานแล้ว ${regionSnap.branches_reporting}/${regionSnap.branches_total} สาขา`
@@ -407,7 +466,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
         )}
 
         {!filteredBranches.length && (
-          <div style={{ textAlign: 'center', color: INK3, fontSize: 12, padding: '28px 0' }}>ไม่พบสาขาที่ค้นหา</div>
+          <div style={{ textAlign: 'center', color: INK3, fontSize: 12, padding: '28px 0' }}>ไม่พบสาขา</div>
         )}
 
         {showGrouped
@@ -517,15 +576,16 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
                 <div style={{ fontSize: 11, color: cumTrendColor, marginTop: 2 }}>{cumTrendLabel}</div>
               </div>
 
-              <h1 style={{ fontSize: 19, fontWeight: 700, color: critCount > 0 ? '#B3392C' : INK, margin: '18px 0 0', lineHeight: 1.35, textAlign: 'center' }}>
-                {critCount} สาขาต้องเร่งแก้ไข · {worsening.length} สาขามีแนวโน้มแย่ลง
+              <h1 style={{ fontSize: 19, fontWeight: 700, color: worsening.length > 0 ? '#B3392C' : INK, margin: '18px 0 0', lineHeight: 1.35, textAlign: 'center' }}>
+                {worsening.length} สาขามีแนวโน้มแย่ลง
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6, textAlign: 'center' }}>{periodLabel}</p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px 28px', marginTop: 16, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
                 <StatChip label="NRW% เดือนล่าสุด" value={regionSnap.latest_month_pct != null ? regionSnap.latest_month_pct.toFixed(1) : '—'} unit="%" color={latestColor} sub={latestTrendLabel} />
-                <StatChip label="น้ำสูญเสียสะสม" value={regionSnap.cum_loss_total != null ? Math.round(regionSnap.cum_loss_total).toLocaleString('th-TH') : '—'} unit="m³" color="#B3392C" />
-                <StatChip label="สาขาผ่านเป้า ≤20%" value={`${regionSnap.branches_on_target}`} unit={`/ ${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
+                <StatChip label="น้ำจ่ายเดือนนี้" value={regionSnap.latest_month_produced != null ? Math.round(regionSnap.latest_month_produced).toLocaleString('th-TH') : '—'} unit="m³" color="#2B5C86" />
+                <StatChip label="น้ำจำหน่ายเดือนนี้" value={regionSnap.latest_month_sold != null ? Math.round(regionSnap.latest_month_sold).toLocaleString('th-TH') : '—'} unit="m³" color="#1E7A5A" />
+                <StatChip label="สาขาผ่านเป้า" value={`${regionSnap.branches_on_target}`} unit={`/ ${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
               </div>
             </div>
 
@@ -533,22 +593,6 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
               {severityFilters.map(({ key, label, count, color }) => (
                 <SevPill key={key} active={sevFilter === key} onClick={() => setSevFilter(sevFilter === key ? 'all' : key)} label={label} count={count} color={color} />
               ))}
-            </div>
-
-            <div style={{ position: 'relative', marginBottom: gap - 8 }}>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาสาขา / รหัส..."
-                style={{
-                  width: '100%', padding: '8px 12px 8px 30px', fontSize: 12.5, borderRadius: 8,
-                  background: SURF, border: `1px solid ${LINE}`, color: INK, outline: 'none', boxSizing: 'border-box',
-                  fontFamily: SANS,
-                }}
-              />
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={INK3} strokeWidth="2" style={{ position: 'absolute', left: 10, top: 10.5 }}>
-                <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
-              </svg>
             </div>
 
             <div style={{ marginBottom: gap }}>{watchSection}</div>
@@ -575,41 +619,26 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
 
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 10, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
                 {severityFilters.map(({ key, label, count, color }) => (
-                  <VFilterRow key={key} active={sevFilter === key} onClick={() => setSevFilter(sevFilter === key ? 'all' : key)} label={label} count={count} color={color} />
+                  <VFilterRow key={key} active={sevFilter === key} onClick={() => setSevFilter(sevFilter === key ? 'all' : key)} label={label} count={count} color={color} total={branches.length} isTotal={key === 'all'} />
                 ))}
               </div>
 
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 14, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
                 <div style={{ fontSize: 9.5, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>สรุปเร็ว</div>
                 <QuickRow label="NRW เดือนนี้" value={regionSnap.latest_month_pct != null ? `${regionSnap.latest_month_pct.toFixed(1)}%` : '—'} color={latestColor} />
-                <QuickRow label="น้ำสูญเสียสะสม" value={fmtLossCompact(regionSnap.cum_loss_total)} color="#B3392C" />
-                <QuickRow label="ผ่านเป้า ≤20%" value={`${regionSnap.branches_on_target}/${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
+                <QuickRow label="น้ำจ่ายเดือนนี้" value={fmtLossCompact(regionSnap.latest_month_produced)} color="#2B5C86" />
+                <QuickRow label="น้ำจำหน่ายเดือนนี้" value={fmtLossCompact(regionSnap.latest_month_sold)} color="#1E7A5A" />
+                <QuickRow label="ผ่านเป้า" value={`${regionSnap.branches_on_target}/${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
               </div>
             </div>
 
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: critCount > 0 ? '#B3392C' : INK, margin: 0, lineHeight: 1.35 }}>
-                {critCount} สาขาต้องเร่งแก้ไข · {worsening.length} สาขามีแนวโน้มแย่ลง
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: worsening.length > 0 ? '#B3392C' : INK, margin: 0, lineHeight: 1.35 }}>
+                {worsening.length} สาขามีแนวโน้มแย่ลง
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6 }}>{periodLabel}</p>
 
-              <div style={{ position: 'relative', width: '100%', margin: '18px 0 14px' }}>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="ค้นหาสาขา / รหัส..."
-                  style={{
-                    width: '100%', padding: '8px 12px 8px 30px', fontSize: 12.5, borderRadius: 8,
-                    background: SURF, border: `1px solid ${LINE}`, color: INK, outline: 'none', boxSizing: 'border-box',
-                    fontFamily: SANS,
-                  }}
-                />
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={INK3} strokeWidth="2" style={{ position: 'absolute', left: 10, top: 10.5 }}>
-                  <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
-                </svg>
-              </div>
-
-              {listSection}
+              <div style={{ marginTop: 18 }}>{listSection}</div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
