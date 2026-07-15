@@ -18,11 +18,11 @@ export function MnfAlertSummaryBar({ counts, totalNodes }: Props) {
       {items.map(({ key, label, color, bg }) => (
         <div key={key} className={`glass-card px-4 py-3 border ${bg} flex flex-col gap-1`}>
           <span className={`text-2xl font-bold ${color}`}>{counts[key] ?? 0}</span>
-          <span className="text-xs text-white/60">{label}</span>
+          <span className="text-xs text-black/60">{label}</span>
         </div>
       ))}
-      <div className="glass-card px-4 py-3 border border-white/10 flex flex-col gap-1 sm:col-span-4">
-        <span className="text-xs text-white/40">ทั้งหมด {totalNodes} node จาก 26 สาขา</span>
+      <div className="glass-card px-4 py-3 border border-black/10 flex flex-col gap-1 sm:col-span-4">
+        <span className="text-xs text-black/40">ทั้งหมด {totalNodes} node จาก 26 สาขา</span>
       </div>
     </div>
   )

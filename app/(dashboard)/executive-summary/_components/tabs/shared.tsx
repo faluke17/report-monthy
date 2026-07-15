@@ -15,22 +15,24 @@ export function useBreakpoint() {
   return { isMobile: w < 768, isTablet: w >= 768 && w < 1024, isTouch: w < 1024, w }
 }
 
-export const MONO = 'IBM Plex Mono, monospace'
+// สาย mono ใช้เฉพาะตัวเลข/รหัสสาขา — sans ตามหลังกันตัวอักษรไทยไม่มี glyph ใน Space Mono
+export const MONO = 'var(--font-mono), var(--font-sans)'
+export const SANS = 'var(--font-sans)'
 export const C = {
-  bg:      '#04070F',
-  panel:   'rgba(10,18,34,0.78)',
-  border:  'rgba(34,211,238,0.18)',
-  borderH: 'rgba(34,211,238,0.60)',
-  row:     'rgba(34,211,238,0.06)',
-  text:    '#D2DCE8',
-  bright:  '#EAF0F8',
-  muted:   '#8DAFC8',
-  dim:     '#5A7390',
-  accent:  '#22D3EE',
-  good:    '#10D9B0',
-  warn:    '#F59E0B',
-  crit:    '#EF4444',
-  blue:    '#3B82F6',
+  bg:      '#F5F6F8',
+  panel:   '#FFFFFF',
+  border:  '#E3E7EC',
+  borderH: '#AFC9C7',
+  row:     '#EFF2F5',
+  text:    '#3F4A56',
+  bright:  '#12181F',
+  muted:   '#6B7686',
+  dim:     '#98A2AF',
+  accent:  '#0B6E76',
+  good:    '#1E7A5A',
+  warn:    '#A8721A',
+  crit:    '#B3392C',
+  blue:    '#2B5C86',
 }
 
 export function fmt(n: number | null, dec = 0) {
@@ -48,22 +50,16 @@ export function nrwLabel(p: number | null): [string, string] {
   return ['วิกฤต', C.crit]
 }
 
-export function Corners({ c = C.borderH, s = 8 }: { c?: string; s?: number }) {
-  const st: React.CSSProperties = { position: 'absolute', width: s, height: s }
-  return (
-    <>
-      <span style={{ ...st, top: -1, left: -1,   borderTop: `1px solid ${c}`, borderLeft: `1px solid ${c}` }} />
-      <span style={{ ...st, top: -1, right: -1,  borderTop: `1px solid ${c}`, borderRight: `1px solid ${c}` }} />
-      <span style={{ ...st, bottom: -1, left: -1,  borderBottom: `1px solid ${c}`, borderLeft: `1px solid ${c}` }} />
-      <span style={{ ...st, bottom: -1, right: -1, borderBottom: `1px solid ${c}`, borderRight: `1px solid ${c}` }} />
-    </>
-  )
+// เดิมเป็นกรอบมุมสไตล์ cyber-HUD — ธีมใหม่ตัดออกเพื่อความสะอาด เหลือไว้เป็น no-op กันพัง call site เดิม
+export function Corners(props: { c?: string; s?: number }) {
+  void props
+  return null
 }
 
 export function Bar({ pct, color = C.accent, thin = false }: { pct: number; color?: string; thin?: boolean }) {
   return (
-    <div style={{ height: thin ? 3 : 5, background: 'rgba(34,211,238,0.07)', position: 'relative' }}>
-      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: color, boxShadow: `0 0 6px ${color}88`, transition: 'width .6s ease' }} />
+    <div style={{ height: thin ? 4 : 6, background: C.row, borderRadius: 99, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: color, borderRadius: 99, transition: 'width .6s ease' }} />
     </div>
   )
 }
@@ -86,26 +82,25 @@ export function DeltaBadge({ curr, prev, lo = true, size = 'md', relative = true
 }
 
 export const TYPE_COLOR: Record<string, string> = {
-  MM: '#22D3EE', DMA: '#10D9B0', SUB: '#A78BFA', VD: '#F59E0B',
+  MM: '#0B6E76', DMA: '#1E7A5A', SUB: '#6B4FA0', VD: '#A8721A',
 }
 
 export const ALERT: Record<string, { color: string; label: string }> = {
   red_spike:       { color: C.crit, label: 'ท่อแตก' },
-  red_accumulated: { color: '#F1948A', label: 'รั่วซึม' },
+  red_accumulated: { color: '#B85A50', label: 'รั่วซึม' },
   yellow:          { color: C.warn, label: 'เฝ้าดู' },
   green:           { color: C.good, label: 'ปกติ' },
 }
 export const PHASES      = ['ยังไม่เริ่ม','ราคากลาง','TOR','พิจารณาผล','เซ็นสัญญา','ดำเนินงาน','แล้วเสร็จ']
-export const PHASE_COLOR = ['#4A5568','#9B59B6','#3498DB','#7F8FBF','#E0A020','#1ABC9C', C.good]
+export const PHASE_COLOR = ['#8A94A3','#6B4FA0','#2B5C86','#4A6FA5','#A8721A','#0B6E76', C.good]
 export const OBS_STATUS: Record<string, string> = {
   'รายงานใหม่': C.accent, 'ระหว่างแก้': C.warn, 'รอสนับสนุน': C.crit,
-  'ล่าช้า': '#E67E22', 'เกินกำหนด': C.crit,
+  'ล่าช้า': '#B5651D', 'เกินกำหนด': C.crit,
 }
 
 export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ position: 'relative', background: C.panel, border: `1px solid ${C.border}`, padding: '14px 16px', ...style }}>
-      <Corners s={6} c={C.border} />
+    <div style={{ position: 'relative', background: C.panel, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: '0 1px 2px rgba(18,24,31,0.05)', padding: '14px 16px', ...style }}>
       {children}
     </div>
   )
@@ -114,10 +109,10 @@ export function Sec({ label, right }: { label: string; right?: React.ReactNode }
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, color: C.accent, fontFamily: MONO, letterSpacing: 1.6, fontWeight: 700 }}>{'// '}{label}</span>
+        <span style={{ fontSize: 11, color: C.dim, fontFamily: SANS, letterSpacing: 1, fontWeight: 700, textTransform: 'uppercase' }}>{label}</span>
         {right}
       </div>
-      <div style={{ height: 1, background: `linear-gradient(90deg,${C.borderH},transparent)`, marginTop: 6 }} />
+      <div style={{ height: 1, background: C.border, marginTop: 6 }} />
     </div>
   )
 }

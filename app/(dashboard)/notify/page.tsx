@@ -66,8 +66,8 @@ export default async function NotifyPage() {
   return (
     <div className="space-y-6 max-w-2xl animate-fadein">
       <div>
-        <h1 className="text-xl font-bold text-white">การแจ้งเตือน</h1>
-        <p className="text-sm text-white/40 mt-0.5">ข้อมูลการประชุมและข้อสั่งการ</p>
+        <h1 className="text-xl font-bold text-[#12181F]">การแจ้งเตือน</h1>
+        <p className="text-sm text-black/40 mt-0.5">ข้อมูลการประชุมและข้อสั่งการ</p>
       </div>
 
       {/* Requirements per meeting */}
@@ -75,11 +75,11 @@ export default async function NotifyPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <ClipboardList size={14} className="text-cyan-400" />
-            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">สิ่งที่ต้องดำเนินการ</h2>
+            <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">สิ่งที่ต้องดำเนินการ</h2>
           </div>
           {requirementMeetings.map((m) => (
             <div key={m.id} className="space-y-2">
-              <p className="text-sm font-semibold text-white/70 px-1">{m.title}</p>
+              <p className="text-sm font-semibold text-black/70 px-1">{m.title}</p>
               {m.requirements.map((req) => {
                 const fulfilledCount = req.fulfilled_costcenters.length
                 const pct = Math.round((fulfilledCount / 26) * 100)
@@ -98,11 +98,11 @@ export default async function NotifyPage() {
                             ? <CheckCircle size={13} className="text-emerald-400 shrink-0" />
                             : <Clock size={13} className="text-amber-400 shrink-0" />
                           }
-                          <span className={`text-sm font-semibold ${done ? 'text-white/50' : 'text-white'}`}>
+                          <span className={`text-sm font-semibold ${done ? 'text-black/50' : 'text-[#12181F]'}`}>
                             {req.title}
                           </span>
                           {req.target_month && (
-                            <span className="text-[11px] bg-white/10 text-white/50 px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] bg-black/10 text-black/50 px-2 py-0.5 rounded-full">
                               {MONTH_TH[req.target_month]}
                             </span>
                           )}
@@ -112,16 +112,16 @@ export default async function NotifyPage() {
                         {isRegion && (
                           <div className="space-y-1.5 pl-5">
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                              <div className="flex-1 h-1.5 bg-black/8 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-amber-400'}`}
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
-                              <span className="text-[11px] text-white/40 shrink-0">{fulfilledCount}/26</span>
+                              <span className="text-[11px] text-black/40 shrink-0">{fulfilledCount}/26</span>
                             </div>
                             {req.pending_count > 0 && (
-                              <p className="text-[11px] text-white/35">
+                              <p className="text-[11px] text-black/35">
                                 ยังไม่ส่ง: {req.pending_count} สาขา
                                 {' · '}
                                 {PWA_BRANCHES
@@ -134,7 +134,7 @@ export default async function NotifyPage() {
                         )}
 
                         {req.due_date && (
-                          <p className="text-[11px] text-white/30 pl-5">
+                          <p className="text-[11px] text-black/30 pl-5">
                             กำหนดส่ง {new Date(req.due_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long' })}
                           </p>
                         )}
@@ -187,7 +187,7 @@ export default async function NotifyPage() {
       {(branchCostcenter || isRegion) && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ข้อสั่งการสำหรับสาขา</h2>
+            <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">ข้อสั่งการสำหรับสาขา</h2>
             {unreadCount > 0 && (
               <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full font-semibold">
                 {unreadCount} ใหม่
@@ -196,7 +196,7 @@ export default async function NotifyPage() {
           </div>
 
           {resolutionNotifs.length === 0 ? (
-            <div className="glass-card-sm p-6 text-center text-white/30 text-sm">
+            <div className="glass-card-sm p-6 text-center text-black/30 text-sm">
               ยังไม่มีข้อสั่งการสำหรับ{isRegion ? 'ทุกสาขา' : `สาขา${branchLabel}`}
             </div>
           ) : (
@@ -205,14 +205,14 @@ export default async function NotifyPage() {
                 <div
                   key={n.id}
                   className={`glass-card-sm p-4 border-l-4 transition-opacity ${
-                    n.is_read ? 'border-white/15 opacity-60' : 'border-cyan-500'
+                    n.is_read ? 'border-black/15 opacity-60' : 'border-cyan-500'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <Bell size={12} className={n.is_read ? 'text-white/25' : 'text-cyan-400'} />
-                        <span className={`text-xs font-semibold ${n.is_read ? 'text-white/50' : 'text-white'}`}>
+                        <Bell size={12} className={n.is_read ? 'text-black/25' : 'text-cyan-400'} />
+                        <span className={`text-xs font-semibold ${n.is_read ? 'text-black/50' : 'text-[#12181F]'}`}>
                           {n.title}
                         </span>
                         {!n.is_read && (
@@ -220,9 +220,9 @@ export default async function NotifyPage() {
                         )}
                       </div>
                       {n.detail && (
-                        <p className="text-xs text-white/45 leading-relaxed pl-5 line-clamp-3">{n.detail}</p>
+                        <p className="text-xs text-black/45 leading-relaxed pl-5 line-clamp-3">{n.detail}</p>
                       )}
-                      <p className="text-[10px] text-white/25 pl-5">
+                      <p className="text-[10px] text-black/25 pl-5">
                         {new Date(n.created_at).toLocaleDateString('th-TH', {
                           day: 'numeric', month: 'long', year: 'numeric',
                           hour: '2-digit', minute: '2-digit',
@@ -233,7 +233,7 @@ export default async function NotifyPage() {
                       <NotificationAckButton notificationId={n.id} />
                     )}
                     {n.is_read && (
-                      <div className="flex items-center gap-1 text-[10px] text-white/25 shrink-0">
+                      <div className="flex items-center gap-1 text-[10px] text-black/25 shrink-0">
                         <CheckCircle size={11} />
                         รับทราบแล้ว
                       </div>
@@ -248,9 +248,9 @@ export default async function NotifyPage() {
 
       {/* Upcoming meetings */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">การประชุมที่จะถึง</h2>
+        <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">การประชุมที่จะถึง</h2>
         {meetings.length === 0 ? (
-          <div className="glass-card-sm p-6 text-center text-white/30 text-sm">
+          <div className="glass-card-sm p-6 text-center text-black/30 text-sm">
             ไม่มีการประชุมที่กำหนดในขณะนี้
           </div>
         ) : (
@@ -264,19 +264,19 @@ export default async function NotifyPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <Calendar size={14} className="text-cyan-400 shrink-0" />
-                      <span className="font-bold text-white text-sm">{m.title}</span>
+                      <span className="font-bold text-[#12181F] text-sm">{m.title}</span>
                       {days !== null && days <= 7 && (
                         <span className="text-[11px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
                           {days === 0 ? 'วันนี้' : `อีก ${days} วัน`}
                         </span>
                       )}
                       {m.meeting_type && (
-                        <span className="text-[11px] bg-white/10 text-white/50 px-2 py-0.5 rounded-full">
+                        <span className="text-[11px] bg-black/10 text-black/50 px-2 py-0.5 rounded-full">
                           {m.meeting_type}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-white/50">
+                    <p className="text-sm text-black/50">
                       {formatThaiDate(m.scheduled_date)} · {m.scheduled_time.slice(0, 5)} น.
                       {m.location && ` · ${m.location}`}
                     </p>
@@ -294,7 +294,7 @@ export default async function NotifyPage() {
                       <p className="text-sm text-amber-400 mt-2">⚠ สิ่งที่ต้องเตรียม: {m.prep_required}</p>
                     )}
                     {m.notification_message && (
-                      <p className="text-sm text-white/50 mt-1">{m.notification_message}</p>
+                      <p className="text-sm text-black/50 mt-1">{m.notification_message}</p>
                     )}
                   </div>
 
@@ -328,7 +328,7 @@ export default async function NotifyPage() {
 
       {meetings.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">Checklist ก่อนประชุม</h2>
+          <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">Checklist ก่อนประชุม</h2>
           <div className="glass-card p-5 space-y-2">
             {[
               { icon: FileText,      label: 'กรอกผล / PDCA',           href: '/pdca/new' },
@@ -339,11 +339,11 @@ export default async function NotifyPage() {
               <a
                 key={label}
                 href={href}
-                className="flex items-center gap-3 p-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-xl border border-black/10 hover:bg-black/5 transition-colors"
               >
                 <Icon size={15} className="text-cyan-400 shrink-0" />
-                <span className="text-sm text-white">{label}</span>
-                <Clock size={12} className="ml-auto text-white/25" />
+                <span className="text-sm text-[#12181F]">{label}</span>
+                <Clock size={12} className="ml-auto text-black/25" />
               </a>
             ))}
           </div>

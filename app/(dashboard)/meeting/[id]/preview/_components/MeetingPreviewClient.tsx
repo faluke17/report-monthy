@@ -62,13 +62,13 @@ function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: s
 
       {showConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-white/15">
+          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-black/15">
             <div className="flex items-start gap-3">
               <Send size={20} className="text-cyan-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-white">ยืนยันส่งแจ้งเตือน?</p>
-                <p className="text-xs text-white/55 leading-relaxed">
-                  สาขาจะเห็นการประชุมนี้ในหน้า <strong className="text-white/80">การแจ้งเตือน</strong> ทันที<br />
+                <p className="text-sm font-bold text-[#12181F]">ยืนยันส่งแจ้งเตือน?</p>
+                <p className="text-xs text-black/55 leading-relaxed">
+                  สาขาจะเห็นการประชุมนี้ในหน้า <strong className="text-black/80">การแจ้งเตือน</strong> ทันที<br />
                   และสามารถกดรับทราบได้
                 </p>
               </div>
@@ -77,7 +77,7 @@ function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: s
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="text-sm text-white/40 hover:text-white/70 px-4 py-2 rounded-lg border border-white/10 transition-colors"
+                className="text-sm text-black/40 hover:text-black/70 px-4 py-2 rounded-lg border border-black/10 transition-colors"
               >
                 ยกเลิก
               </button>
@@ -85,7 +85,7 @@ function SendNotificationButton({ meetingId, initialNotifiedAt }: { meetingId: s
                 type="button"
                 disabled={isPending}
                 onClick={handleSend}
-                className="text-sm bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="text-sm bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#FFFFFF] font-semibold px-4 py-2 rounded-lg transition-colors"
               >
                 {isPending ? 'กำลังส่ง...' : 'ยืนยัน ส่งแจ้งเตือน'}
               </button>
@@ -133,13 +133,13 @@ function CloseMeetingButton({ meetingId }: { meetingId: string }) {
 
       {showConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-white/15">
+          <div className="glass-card p-6 max-w-sm w-full space-y-4 border border-black/15">
             <div className="flex items-start gap-3">
               <XCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-white">ยืนยันปิดการประชุม?</p>
-                <p className="text-xs text-white/55 leading-relaxed">
-                  การประชุมจะถูกเปลี่ยนสถานะเป็น <strong className="text-white/80">เสร็จสิ้น</strong><br />
+                <p className="text-sm font-bold text-[#12181F]">ยืนยันปิดการประชุม?</p>
+                <p className="text-xs text-black/55 leading-relaxed">
+                  การประชุมจะถูกเปลี่ยนสถานะเป็น <strong className="text-black/80">เสร็จสิ้น</strong><br />
                   มติ/ข้อสั่งการที่ยังค้างอยู่จะถูก carry-over ไปยังการประชุมครั้งถัดไปโดยอัตโนมัติ
                 </p>
               </div>
@@ -148,7 +148,7 @@ function CloseMeetingButton({ meetingId }: { meetingId: string }) {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="text-sm text-white/40 hover:text-white/70 px-4 py-2 rounded-lg border border-white/10 transition-colors"
+                className="text-sm text-black/40 hover:text-black/70 px-4 py-2 rounded-lg border border-black/10 transition-colors"
               >
                 ยกเลิก
               </button>
@@ -156,7 +156,7 @@ function CloseMeetingButton({ meetingId }: { meetingId: string }) {
                 type="button"
                 disabled={isPending}
                 onClick={handleClose}
-                className="text-sm bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-[#061327] font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="text-sm bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-[#FFFFFF] font-semibold px-4 py-2 rounded-lg transition-colors"
               >
                 {isPending ? 'กำลังปิด...' : 'ยืนยัน ปิดการประชุม'}
               </button>
@@ -247,7 +247,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   'MM':   'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
   'DMA':  'bg-blue-500/20 text-blue-300 border-blue-500/30',
   'P3':   'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  'อื่นๆ': 'bg-white/10 text-white/50 border-white/20',
+  'อื่นๆ': 'bg-black/10 text-black/50 border-black/20',
 }
 
 // ─── sub-components ──────────────────────────────────────────────────────────
@@ -307,8 +307,8 @@ const THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์',
 // ─── Modal helper sub-components ─────────────────────────────────────────────
 
 function ModalSectionLabel({ children, accent }: { children: React.ReactNode; accent?: 'amber' }) {
-  const color = accent === 'amber' ? 'rgba(251,191,36,.75)' : 'rgba(255,255,255,.55)'
-  const barColor = accent === 'amber' ? 'rgba(251,191,36,.85)' : 'rgba(255,255,255,.45)'
+  const color = accent === 'amber' ? 'rgba(168,114,26,.75)' : 'rgba(0,0,0,.55)'
+  const barColor = accent === 'amber' ? 'rgba(168,114,26,.85)' : 'rgba(0,0,0,.45)'
   return (
     <p style={{ fontSize: '11px', fontWeight: 700, color, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
       <span style={{ display: 'block', width: '3px', height: '13px', borderRadius: '2px', background: barColor, flexShrink: 0 }} />
@@ -321,23 +321,23 @@ function ModalStatCard({ label, color, value, unit, sub, delta }: {
   label: string; color: string; value: string; unit?: string; sub?: string; delta?: React.ReactNode
 }) {
   const palette: Record<string, { border: string; bg: string; val: string; glow: string }> = {
-    blue:   { border: 'rgba(56,189,248,.3)',  bg: 'rgba(56,189,248,.07)',  val: '#38bdf8', glow: 'rgba(56,189,248,.22)' },
-    indigo: { border: 'rgba(129,140,248,.28)',bg: 'rgba(129,140,248,.07)', val: '#818cf8', glow: 'rgba(129,140,248,.2)' },
-    amber:  { border: 'rgba(251,191,36,.3)',  bg: 'rgba(251,191,36,.07)',  val: '#fbbf24', glow: 'rgba(251,191,36,.22)' },
-    red:    { border: 'rgba(248,113,113,.3)', bg: 'rgba(248,113,113,.07)', val: '#f87171', glow: 'rgba(248,113,113,.22)' },
-    green:  { border: 'rgba(52,211,153,.28)', bg: 'rgba(52,211,153,.07)',  val: '#34d399', glow: 'rgba(52,211,153,.2)' },
-    violet: { border: 'rgba(167,139,250,.28)',bg: 'rgba(167,139,250,.07)', val: '#a78bfa', glow: 'rgba(167,139,250,.2)' },
+    blue:   { border: 'rgba(11,110,118,.3)',  bg: 'rgba(11,110,118,.07)',  val: '#0B6E76', glow: 'rgba(11,110,118,.22)' },
+    indigo: { border: 'rgba(74,95,165,.28)',bg: 'rgba(74,95,165,.07)', val: '#4A5FA5', glow: 'rgba(74,95,165,.2)' },
+    amber:  { border: 'rgba(168,114,26,.3)',  bg: 'rgba(168,114,26,.07)',  val: '#A8721A', glow: 'rgba(168,114,26,.22)' },
+    red:    { border: 'rgba(179,57,44,.3)', bg: 'rgba(179,57,44,.07)', val: '#B3392C', glow: 'rgba(179,57,44,.22)' },
+    green:  { border: 'rgba(30,122,90,.28)', bg: 'rgba(30,122,90,.07)',  val: '#1E7A5A', glow: 'rgba(30,122,90,.2)' },
+    violet: { border: 'rgba(107,79,160,.28)',bg: 'rgba(107,79,160,.07)', val: '#6B4FA0', glow: 'rgba(107,79,160,.2)' },
   }
-  const p = palette[color] ?? { border: 'rgba(255,255,255,.1)', bg: 'rgba(255,255,255,.03)', val: '#fff', glow: 'transparent' }
+  const p = palette[color] ?? { border: 'rgba(0,0,0,.1)', bg: 'rgba(0,0,0,.03)', val: '#fff', glow: 'transparent' }
   return (
     <div style={{ borderRadius: '12px', border: `1px solid ${p.border}`, background: p.bg, padding: '12px 14px' }}>
-      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.55)', letterSpacing: '.04em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
+      <div style={{ fontSize: '10px', color: 'rgba(0,0,0,.55)', letterSpacing: '.04em', fontWeight: 600, marginBottom: '6px' }}>{label}</div>
       <div style={{ fontSize: '22px', fontWeight: 800, lineHeight: 1, color: p.val, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 14px ${p.glow}` }}>
         {value}
         {unit && <span style={{ fontSize: '11px', fontWeight: 400, opacity: .6, marginLeft: '3px' }}>{unit}</span>}
       </div>
       {(delta || sub) && (
-        <div style={{ fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(255,255,255,.42)' }}>
+        <div style={{ fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '3px', color: 'rgba(0,0,0,.42)' }}>
           {delta ?? sub}
         </div>
       )}
@@ -347,9 +347,9 @@ function ModalStatCard({ label, color, value, unit, sub, delta }: {
 
 function ModalLeakCard({ label, val, color }: { label: string; val: number; color: string }) {
   return (
-    <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,.09)', background: 'rgba(255,255,255,.03)', padding: '12px 14px', textAlign: 'center' }}>
+    <div style={{ borderRadius: '12px', border: '1px solid rgba(0,0,0,.09)', background: 'rgba(0,0,0,.03)', padding: '12px 14px', textAlign: 'center' }}>
       <div style={{ fontSize: '30px', fontWeight: 800, lineHeight: 1, color, fontVariantNumeric: 'tabular-nums', marginBottom: '6px' }}>{val}</div>
-      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.52)', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '11px', color: 'rgba(0,0,0,.52)', fontWeight: 500 }}>{label}</div>
     </div>
   )
 }
@@ -358,20 +358,20 @@ function ModalPdcaBlock({ icon, label, sub, color, text }: {
   icon: string; label: string; sub: string; color: 'blue' | 'emerald'; text: string | null | undefined
 }) {
   const p = color === 'blue'
-    ? { border: 'rgba(59,130,246,.22)', headBg: 'rgba(59,130,246,.07)', iconBg: 'linear-gradient(135deg,rgba(59,130,246,.38),rgba(59,130,246,.16))', iconBorder: 'rgba(59,130,246,.45)', iconColor: '#93c5fd', iconGlow: 'rgba(59,130,246,.25)', labelColor: '#93c5fd' }
-    : { border: 'rgba(16,185,129,.2)', headBg: 'rgba(16,185,129,.06)', iconBg: 'linear-gradient(135deg,rgba(16,185,129,.35),rgba(16,185,129,.14))', iconBorder: 'rgba(16,185,129,.4)', iconColor: '#6ee7b7', iconGlow: 'rgba(16,185,129,.22)', labelColor: '#6ee7b7' }
+    ? { border: 'rgba(11,110,118,.22)', headBg: 'rgba(11,110,118,.07)', iconBg: 'linear-gradient(135deg,rgba(11,110,118,.38),rgba(11,110,118,.16))', iconBorder: 'rgba(11,110,118,.45)', iconColor: '#0B6E76', iconGlow: 'rgba(11,110,118,.25)', labelColor: '#0B6E76' }
+    : { border: 'rgba(16,185,129,.2)', headBg: 'rgba(16,185,129,.06)', iconBg: 'linear-gradient(135deg,rgba(16,185,129,.35),rgba(16,185,129,.14))', iconBorder: 'rgba(16,185,129,.4)', iconColor: '#1E7A5A', iconGlow: 'rgba(16,185,129,.22)', labelColor: '#1E7A5A' }
   return (
-    <div style={{ borderRadius: '16px', border: `1px solid ${p.border}`, background: 'rgba(255,255,255,.02)', overflow: 'hidden' }}>
+    <div style={{ borderRadius: '16px', border: `1px solid ${p.border}`, background: 'rgba(0,0,0,.02)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '14px 18px', background: p.headBg, borderBottom: `1px solid ${p.border}` }}>
         <div style={{ width: '44px', height: '44px', borderRadius: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 900, flexShrink: 0, background: p.iconBg, color: p.iconColor, border: `1px solid ${p.iconBorder}`, boxShadow: `0 0 14px ${p.iconGlow}` }}>{icon}</div>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: p.labelColor, letterSpacing: '-.15px' }}>{label}</div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.45)', marginTop: '3px' }}>{sub}</div>
+          <div style={{ fontSize: '11px', color: 'rgba(0,0,0,.45)', marginTop: '3px' }}>{sub}</div>
         </div>
       </div>
       {text
-        ? <div style={{ padding: '18px', fontSize: '14px', lineHeight: 1.9, color: 'rgba(255,255,255,.85)', whiteSpace: 'pre-wrap' }}>{text}</div>
-        : <div style={{ padding: '22px 18px', fontSize: '13px', color: 'rgba(255,255,255,.28)', fontStyle: 'italic', textAlign: 'center' }}>— ไม่ได้กรอก —</div>
+        ? <div style={{ padding: '18px', fontSize: '14px', lineHeight: 1.9, color: 'rgba(0,0,0,.85)', whiteSpace: 'pre-wrap' }}>{text}</div>
+        : <div style={{ padding: '22px 18px', fontSize: '13px', color: 'rgba(0,0,0,.28)', fontStyle: 'italic', textAlign: 'center' }}>— ไม่ได้กรอก —</div>
       }
     </div>
   )
@@ -386,23 +386,23 @@ function TrendCard({
 }) {
   const isGood = delta != null && (lowerBetter ? delta < 0 : delta > 0)
   const isBad  = delta != null && (lowerBetter ? delta > 0 : delta < 0)
-  const deltaColor = isGood ? '#34d399' : isBad ? '#f87171' : 'rgba(255,255,255,.3)'
-  const deltaBg    = isGood ? 'rgba(52,211,153,.1)' : isBad ? 'rgba(248,113,113,.1)' : 'rgba(255,255,255,.05)'
-  const deltaBorder= isGood ? 'rgba(52,211,153,.28)' : isBad ? 'rgba(248,113,113,.28)' : 'rgba(255,255,255,.12)'
+  const deltaColor = isGood ? '#1E7A5A' : isBad ? '#B3392C' : 'rgba(0,0,0,.3)'
+  const deltaBg    = isGood ? 'rgba(30,122,90,.1)' : isBad ? 'rgba(179,57,44,.1)' : 'rgba(0,0,0,.05)'
+  const deltaBorder= isGood ? 'rgba(30,122,90,.28)' : isBad ? 'rgba(179,57,44,.28)' : 'rgba(0,0,0,.12)'
   const sign = delta != null ? (delta < 0 ? '▼' : '▲') : null
   return (
-    <div style={{ borderRadius: '16px', border: `1px solid ${borderColor}`, background: 'linear-gradient(160deg,rgba(255,255,255,.025) 0%,rgba(255,255,255,.008) 100%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ borderRadius: '16px', border: `1px solid ${borderColor}`, background: 'linear-gradient(160deg,rgba(0,0,0,.025) 0%,rgba(0,0,0,.008) 100%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '11px 15px 0', fontSize: '11px', fontWeight: 700, color: accentColor, letterSpacing: '.05em', textTransform: 'uppercase' }}>
         {label}{unit && <span style={{ fontWeight: 400, opacity: .6, marginLeft: '4px', fontSize: '10px' }}>({unit})</span>}
       </div>
       <div style={{ padding: '10px 15px 15px', flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '3px' }}>
-          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,.38)', width: '26px', flexShrink: 0 }}>ก่อน</span>
-          <span style={{ fontSize: '16px', fontWeight: 700, color: 'rgba(255,255,255,.52)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{beforeStr ?? '—'}</span>
+          <span style={{ fontSize: '10px', color: 'rgba(0,0,0,.38)', width: '26px', flexShrink: 0 }}>ก่อน</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: 'rgba(0,0,0,.52)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{beforeStr ?? '—'}</span>
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.2)', lineHeight: 1, margin: '3px 0 3px 26px' }}>↓</div>
+        <div style={{ fontSize: '12px', color: 'rgba(0,0,0,.2)', lineHeight: 1, margin: '3px 0 3px 26px' }}>↓</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,.38)', width: '26px', flexShrink: 0 }}>หลัง</span>
+          <span style={{ fontSize: '10px', color: 'rgba(0,0,0,.38)', width: '26px', flexShrink: 0 }}>หลัง</span>
           <span style={{ fontSize: '24px', fontWeight: 900, color: accentColor, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{afterStr ?? '—'}</span>
         </div>
         {delta != null && Math.abs(delta) >= 0.005 && sign && (
@@ -420,12 +420,12 @@ function TrendCard({
 
 function ModalObstacleCard({ obs }: { obs: Obstacle }) {
   const pct = obs.progress_pct ?? 0
-  const progressColor = pct >= 70 ? '#34d399' : pct >= 40 ? '#fbbf24' : '#f87171'
+  const progressColor = pct >= 70 ? '#1E7A5A' : pct >= 40 ? '#A8721A' : '#B3392C'
   const catStyle: Record<string, string> = {
     MM: 'bg-blue-500/15 text-blue-300 border-blue-500/25',
     DMA: 'bg-violet-500/15 text-violet-300 border-violet-500/25',
     P3: 'bg-teal-500/15 text-teal-300 border-teal-500/25',
-    'อื่นๆ': 'bg-white/8 text-white/40 border-white/15',
+    'อื่นๆ': 'bg-black/8 text-black/40 border-black/15',
   }
   const statusStyle: Record<string, string> = {
     'รายงานใหม่':  'bg-blue-500/15 text-blue-300 border-blue-500/25',
@@ -440,9 +440,9 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
     : null
 
   return (
-    <div style={{ border: '1px solid rgba(251,191,36,.2)', background: 'linear-gradient(135deg,rgba(251,191,36,.06),rgba(251,191,36,.02))', borderRadius: '14px', overflow: 'hidden' }}>
+    <div style={{ border: '1px solid rgba(168,114,26,.2)', background: 'linear-gradient(135deg,rgba(168,114,26,.06),rgba(168,114,26,.02))', borderRadius: '14px', overflow: 'hidden' }}>
       {/* Head */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(251,191,36,.1)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 16px', borderBottom: '1px solid rgba(168,114,26,.1)' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="text-[11px] font-bold text-amber-400/70 font-mono tracking-wider mb-1">{obs.code}</div>
           <div className="text-[14px] font-bold text-yellow-50 leading-snug">{obs.obstacle_type}</div>
@@ -457,19 +457,19 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
         {obs.area && (
           <div>
             <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">พื้นที่ / โซน</div>
-            <div className="text-[13px] text-white/85">📍 {obs.area}</div>
+            <div className="text-[13px] text-black/85">📍 {obs.area}</div>
           </div>
         )}
         {obs.data_quality_impact && (
           <div>
             <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">ผลกระทบต่อข้อมูล / NRW</div>
-            <div className="text-[13px] text-white/85 leading-relaxed">{obs.data_quality_impact}</div>
+            <div className="text-[13px] text-black/85 leading-relaxed">{obs.data_quality_impact}</div>
           </div>
         )}
         {obs.resolution_plan && (
           <div style={{ gridColumn: '1/-1' }}>
             <div className="text-[10px] font-bold text-amber-500/60 uppercase tracking-wider mb-1">แผนแก้ไข / Resolution Plan</div>
-            <div className="text-[13px] text-white/85 leading-relaxed">{obs.resolution_plan}</div>
+            <div className="text-[13px] text-black/85 leading-relaxed">{obs.resolution_plan}</div>
           </div>
         )}
         {obs.region_support_needed && (
@@ -480,10 +480,10 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
         )}
       </div>
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderTop: '1px solid rgba(251,191,36,.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderTop: '1px solid rgba(168,114,26,.08)' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span className="text-[11px] text-amber-400/65 whitespace-nowrap font-medium">ความคืบหน้า {pct}%</span>
-          <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,.07)', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ flex: 1, height: '4px', background: 'rgba(0,0,0,.07)', borderRadius: '999px', overflow: 'hidden' }}>
             <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: `linear-gradient(to right,${progressColor}88,${progressColor})`, transition: 'width .5s ease' }} />
           </div>
         </div>
@@ -492,7 +492,7 @@ function ModalObstacleCard({ obs }: { obs: Obstacle }) {
             ? <span className="text-red-400 text-[10px] flex items-center gap-1"><AlertCircle size={10} />เกินกำหนด {Math.abs(daysLeft)} วัน</span>
             : daysLeft <= 7
             ? <span className="text-orange-400 text-[10px] flex items-center gap-1"><Clock size={10} />เหลือ {daysLeft} วัน</span>
-            : <span className="text-white/25 text-[10px]">ครบ {obs.due_date}</span>
+            : <span className="text-black/25 text-[10px]">ครบ {obs.due_date}</span>
         )}
       </div>
     </div>
@@ -592,7 +592,7 @@ function PdcaDetailModal({
     <div
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(2,8,20,.85)',
+        background: 'rgba(255,255,255,.85)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         zIndex: 50,
@@ -606,10 +606,10 @@ function PdcaDetailModal({
       <div
         style={{
           width: 'min(1060px, 96vw)', maxHeight: '90vh',
-          background: '#0b1b30',
-          border: '1px solid rgba(255,255,255,.09)',
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,0,0,.09)',
           borderRadius: '24px',
-          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)',
+          boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(0,0,0,.06)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           transform: open ? 'scale(1) translateY(0)' : 'scale(.9) translateY(22px)',
           opacity: open ? 1 : 0,
@@ -620,21 +620,21 @@ function PdcaDetailModal({
         {/* ── Header ── */}
         <div style={{
           padding: '24px 30px 20px',
-          borderBottom: '1px solid rgba(255,255,255,.06)',
+          borderBottom: '1px solid rgba(0,0,0,.06)',
           flexShrink: 0, position: 'relative', overflow: 'hidden',
-          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(139,92,246,.16) 0%, transparent 65%), radial-gradient(ellipse 50% 100% at 110% 0%, rgba(59,130,246,.1) 0%, transparent 55%)',
+          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(107,79,160,.16) 0%, transparent 65%), radial-gradient(ellipse 50% 100% at 110% 0%, rgba(11,110,118,.1) 0%, transparent 55%)',
         }}>
           <div className="flex justify-between items-start mb-3">
-            <h2 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-.4px', background: 'linear-gradient(135deg,#fff 40%,rgba(196,181,253,.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-.4px', background: 'linear-gradient(135deg,#fff 40%,rgba(107,79,160,.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               สาขา{branchName}
             </h2>
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={e => { e.stopPropagation(); onPrev() }} disabled={!hasPrev}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
               <button type="button" onClick={e => { e.stopPropagation(); onNext() }} disabled={!hasNext}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
               <button type="button" onClick={e => { e.stopPropagation(); onClose() }}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white transition-all">
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-black/12 hover:text-[#12181F] transition-all">
                 <X size={15} />
               </button>
             </div>
@@ -642,7 +642,7 @@ function PdcaDetailModal({
           <div className="flex items-center gap-2 flex-wrap">
             {hasPdca
               ? <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/25 font-semibold">✓ ส่ง PDCA แล้ว</span>
-              : <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-white/5 text-white/30 border-white/10 font-semibold">ยังไม่ส่ง</span>
+              : <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-black/5 text-black/30 border-black/10 font-semibold">ยังไม่ส่ง</span>
             }
             {refMonth && refYear && (
               <span className="text-[11px] px-2.5 py-1 rounded-lg border bg-violet-500/12 text-violet-300 border-violet-500/25 font-semibold">
@@ -658,8 +658,8 @@ function PdcaDetailModal({
 
           {/* Area selector — only when multiple areas */}
           {hasMultipleAreas && (
-            <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-white/6">
-              <span className="text-[10px] text-white/30 shrink-0">พื้นที่</span>
+            <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-black/6">
+              <span className="text-[10px] text-black/30 shrink-0">พื้นที่</span>
               <button
                 type="button"
                 onClick={e => { e.stopPropagation(); setSelectedArea(null) }}
@@ -667,7 +667,7 @@ function PdcaDetailModal({
                   'text-[11px] px-2.5 py-0.5 rounded-lg border transition-all',
                   activeArea === null
                     ? 'bg-violet-500/20 text-violet-300 border-violet-500/40'
-                    : 'text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                    : 'text-black/35 border-black/10 hover:border-black/25 hover:text-black/60'
                 )}
               >
                 ทุกพื้นที่
@@ -681,7 +681,7 @@ function PdcaDetailModal({
                     'text-[11px] px-2.5 py-0.5 rounded-lg border transition-all',
                     activeArea === name
                       ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                      : 'text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                      : 'text-black/35 border-black/10 hover:border-black/25 hover:text-black/60'
                   )}
                 >
                   {name}
@@ -692,12 +692,12 @@ function PdcaDetailModal({
         </div>
 
         {/* ── Body ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '22px 30px 24px', display: 'flex', flexDirection: 'column', gap: '20px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(139,92,246,.25) transparent' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '22px 30px 24px', display: 'flex', flexDirection: 'column', gap: '20px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(107,79,160,.25) transparent' }}>
           {!hasPdca && !hasData && branchObstacles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="text-5xl opacity-20 mb-4">📋</div>
-              <p className="text-white/30 font-bold text-lg mb-1">ยังไม่มีข้อมูลรายงาน</p>
-              <p className="text-white/15 text-sm">สาขา{branchName} ยังไม่ได้ส่งรายงานประจำเดือน</p>
+              <p className="text-black/30 font-bold text-lg mb-1">ยังไม่มีข้อมูลรายงาน</p>
+              <p className="text-black/15 text-sm">สาขา{branchName} ยังไม่ได้ส่งรายงานประจำเดือน</p>
             </div>
           ) : (
             <>
@@ -742,11 +742,11 @@ function PdcaDetailModal({
                 <div>
                   <ModalSectionLabel>ท่อรั่วและมาตรผิดปกติ</ModalSectionLabel>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px' }}>
-                    <ModalLeakCard label="จุดรั่วพบใหม่" val={detail!.leaks_found} color="#f87171" />
-                    <ModalLeakCard label="ซ่อมแล้ว" val={detail!.leaks_repaired} color="#34d399" />
-                    <ModalLeakCard label="รอดำเนินการ" val={detail!.leaks_pending} color="#fbbf24" />
-                    <ModalLeakCard label="รั่วซ้ำ" val={detail!.leaks_repeat} color="#fb923c" />
-                    <ModalLeakCard label="มาตรผิดปกติ" val={detail!.meters_abnormal} color="#a78bfa" />
+                    <ModalLeakCard label="จุดรั่วพบใหม่" val={detail!.leaks_found} color="#B3392C" />
+                    <ModalLeakCard label="ซ่อมแล้ว" val={detail!.leaks_repaired} color="#1E7A5A" />
+                    <ModalLeakCard label="รอดำเนินการ" val={detail!.leaks_pending} color="#A8721A" />
+                    <ModalLeakCard label="รั่วซ้ำ" val={detail!.leaks_repeat} color="#B5651D" />
+                    <ModalLeakCard label="มาตรผิดปกติ" val={detail!.meters_abnormal} color="#6B4FA0" />
                   </div>
                 </div>
               )}
@@ -762,8 +762,8 @@ function PdcaDetailModal({
                       afterStr={afterNrw != null ? afterNrw.toFixed(1) + '%' : null}
                       delta={beforeNrw != null && afterNrw != null ? afterNrw - beforeNrw : null}
                       lowerBetter
-                      borderColor="rgba(251,191,36,.2)"
-                      accentColor={afterNrw != null && afterNrw < 20 ? '#6ee7b7' : '#fca5a5'}
+                      borderColor="rgba(168,114,26,.2)"
+                      accentColor={afterNrw != null && afterNrw < 20 ? '#1E7A5A' : '#B3392C'}
                     />
                     <TrendCard
                       label="MNF" unit="ลบ.ม./ชม."
@@ -771,8 +771,8 @@ function PdcaDetailModal({
                       afterStr={activeAreaRow.mnf_after != null ? activeAreaRow.mnf_after.toFixed(1) : null}
                       delta={activeAreaRow.mnf_before != null && activeAreaRow.mnf_after != null ? activeAreaRow.mnf_after - activeAreaRow.mnf_before : null}
                       lowerBetter
-                      borderColor="rgba(139,92,246,.2)"
-                      accentColor="#c4b5fd"
+                      borderColor="rgba(107,79,160,.2)"
+                      accentColor="#6B4FA0"
                     />
                     <TrendCard
                       label="น้ำจ่าย / วัน" unit="ลบ.ม."
@@ -780,8 +780,8 @@ function PdcaDetailModal({
                       afterStr={activeAreaRow.water_dist_after != null && areaDaysInMonth ? Math.round(activeAreaRow.water_dist_after / areaDaysInMonth).toLocaleString('en-US') : null}
                       delta={activeAreaRow.water_dist_before != null && activeAreaRow.water_dist_after != null && areaDaysInMonth ? (activeAreaRow.water_dist_after - activeAreaRow.water_dist_before) / areaDaysInMonth : null}
                       lowerBetter
-                      borderColor="rgba(59,130,246,.2)"
-                      accentColor="#7dd3fc"
+                      borderColor="rgba(11,110,118,.2)"
+                      accentColor="#0B6E76"
                     />
                     <TrendCard
                       label="น้ำจำหน่าย / วัน" unit="ลบ.ม."
@@ -789,7 +789,7 @@ function PdcaDetailModal({
                       afterStr={activeAreaRow.water_sold_after != null && areaDaysInMonth ? Math.round(activeAreaRow.water_sold_after / areaDaysInMonth).toLocaleString('en-US') : null}
                       delta={activeAreaRow.water_sold_before != null && activeAreaRow.water_sold_after != null && areaDaysInMonth ? (activeAreaRow.water_sold_after - activeAreaRow.water_sold_before) / areaDaysInMonth : null}
                       borderColor="rgba(16,185,129,.2)"
-                      accentColor="#6ee7b7"
+                      accentColor="#1E7A5A"
                     />
                   </div>
                 </div>
@@ -804,12 +804,12 @@ function PdcaDetailModal({
                 return (
                   <div>
                     <ModalSectionLabel>ผล Step Test{activeArea ? ` — ${activeArea}` : ''}</ModalSectionLabel>
-                    <div style={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,.08)', overflow: 'hidden', background: 'rgba(255,255,255,.015)' }}>
+                    <div style={{ borderRadius: '14px', border: '1px solid rgba(0,0,0,.08)', overflow: 'hidden', background: 'rgba(0,0,0,.015)' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                         <thead>
-                          <tr style={{ background: 'rgba(255,255,255,.04)' }}>
+                          <tr style={{ background: 'rgba(0,0,0,.04)' }}>
                             {['Step', 'Loss โดยประมาณ (ลบ.ม./ชม.)', 'จุดรั่วพบ', 'ซ่อมแล้ว', 'ค้างซ่อม'].map(h => (
-                              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: 'rgba(255,255,255,.50)', fontWeight: 700, fontSize: '11px', letterSpacing: '.04em', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,.08)' }}>{h}</th>
+                              <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: 'rgba(0,0,0,.50)', fontWeight: 700, fontSize: '11px', letterSpacing: '.04em', textTransform: 'uppercase', borderBottom: '1px solid rgba(0,0,0,.08)' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -819,27 +819,27 @@ function PdcaDetailModal({
                             const repaired = s.leaks_repaired ?? 0
                             const pending = Math.max(0, s.leaks_found - repaired)
                             return (
-                              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,.04)', background: hasLeak ? 'rgba(248,113,113,.04)' : i % 2 === 1 ? 'rgba(255,255,255,.012)' : 'transparent' }}>
+                              <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,.04)', background: hasLeak ? 'rgba(179,57,44,.04)' : i % 2 === 1 ? 'rgba(0,0,0,.012)' : 'transparent' }}>
                                 <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
-                                  <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,.55)', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', padding: '2px 8px' }}>S{s.step_no}</span>
+                                  <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(0,0,0,.55)', background: 'rgba(0,0,0,.07)', border: '1px solid rgba(0,0,0,.1)', borderRadius: '6px', padding: '2px 8px' }}>S{s.step_no}</span>
                                 </td>
-                                <td style={{ padding: '10px 14px', color: s.estimated_loss != null ? '#fde68a' : 'rgba(255,255,255,.18)', fontVariantNumeric: 'tabular-nums', fontWeight: s.estimated_loss != null ? 700 : 400 }}>
+                                <td style={{ padding: '10px 14px', color: s.estimated_loss != null ? '#A8721A' : 'rgba(0,0,0,.18)', fontVariantNumeric: 'tabular-nums', fontWeight: s.estimated_loss != null ? 700 : 400 }}>
                                   {s.estimated_loss != null ? s.estimated_loss.toFixed(2) : '—'}
                                 </td>
                                 <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
                                   {hasLeak
-                                    ? <span style={{ color: '#fca5a5', fontWeight: 800 }}>{s.leaks_found} จุด</span>
-                                    : <span style={{ color: 'rgba(255,255,255,.2)' }}>0 จุด</span>}
+                                    ? <span style={{ color: '#B3392C', fontWeight: 800 }}>{s.leaks_found} จุด</span>
+                                    : <span style={{ color: 'rgba(0,0,0,.2)' }}>0 จุด</span>}
                                 </td>
                                 <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
                                   {s.leaks_repaired != null
-                                    ? <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{s.leaks_repaired} จุด</span>
-                                    : <span style={{ color: 'rgba(255,255,255,.18)' }}>—</span>}
+                                    ? <span style={{ color: '#1E7A5A', fontWeight: 700 }}>{s.leaks_repaired} จุด</span>
+                                    : <span style={{ color: 'rgba(0,0,0,.18)' }}>—</span>}
                                 </td>
                                 <td style={{ padding: '10px 14px', fontVariantNumeric: 'tabular-nums' }}>
                                   {hasLeak
-                                    ? <span style={{ color: pending > 0 ? '#fbbf24' : 'rgba(255,255,255,.25)', fontWeight: pending > 0 ? 700 : 400 }}>{pending} จุด</span>
-                                    : <span style={{ color: 'rgba(255,255,255,.18)' }}>—</span>}
+                                    ? <span style={{ color: pending > 0 ? '#A8721A' : 'rgba(0,0,0,.25)', fontWeight: pending > 0 ? 700 : 400 }}>{pending} จุด</span>
+                                    : <span style={{ color: 'rgba(0,0,0,.18)' }}>—</span>}
                                 </td>
                               </tr>
                             )
@@ -847,21 +847,21 @@ function PdcaDetailModal({
                         </tbody>
                         {sorted.length > 1 && (
                           <tfoot>
-                            <tr style={{ background: 'rgba(255,255,255,.03)', borderTop: '1px solid rgba(255,255,255,.08)' }}>
-                              <td style={{ padding: '9px 14px', fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,.3)', letterSpacing: '.04em' }}>รวม</td>
-                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalLoss > 0 ? '#fde68a' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                            <tr style={{ background: 'rgba(0,0,0,.03)', borderTop: '1px solid rgba(0,0,0,.08)' }}>
+                              <td style={{ padding: '9px 14px', fontSize: '10px', fontWeight: 700, color: 'rgba(0,0,0,.3)', letterSpacing: '.04em' }}>รวม</td>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalLoss > 0 ? '#A8721A' : 'rgba(0,0,0,.2)', fontVariantNumeric: 'tabular-nums' }}>
                                 {totalLoss > 0 ? totalLoss.toFixed(2) : '—'}
                               </td>
-                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 800, color: totalFound > 0 ? '#fca5a5' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 800, color: totalFound > 0 ? '#B3392C' : 'rgba(0,0,0,.2)', fontVariantNumeric: 'tabular-nums' }}>
                                 {totalFound} จุด
                               </td>
-                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalRepaired > 0 ? '#6ee7b7' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                              <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: 700, color: totalRepaired > 0 ? '#1E7A5A' : 'rgba(0,0,0,.2)', fontVariantNumeric: 'tabular-nums' }}>
                                 {totalRepaired > 0 ? `${totalRepaired} จุด` : '—'}
                               </td>
                               {(() => {
                                 const totalPending = sorted.reduce((s, r) => s + Math.max(0, r.leaks_found - (r.leaks_repaired ?? 0)), 0)
                                 return (
-                                  <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: totalPending > 0 ? 800 : 400, color: totalPending > 0 ? '#fbbf24' : 'rgba(255,255,255,.2)', fontVariantNumeric: 'tabular-nums' }}>
+                                  <td style={{ padding: '9px 14px', fontSize: '11px', fontWeight: totalPending > 0 ? 800 : 400, color: totalPending > 0 ? '#A8721A' : 'rgba(0,0,0,.2)', fontVariantNumeric: 'tabular-nums' }}>
                                     {totalPending > 0 ? `${totalPending} จุด` : '—'}
                                   </td>
                                 )
@@ -915,19 +915,19 @@ function PdcaDetailModal({
         </div>
 
         {/* ── Footer ── */}
-        <div style={{ padding: '12px 30px', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'rgba(255,255,255,.015)' }}>
+        <div style={{ padding: '12px 30px', borderTop: '1px solid rgba(0,0,0,.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'rgba(0,0,0,.015)' }}>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-white/45 num font-medium">{counterIdx + 1} / {totalBranches} สาขา</span>
-            <div style={{ width: '100px', height: '3px', background: 'rgba(255,255,255,.1)', borderRadius: '999px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '999px', background: 'linear-gradient(to right,#7c3aed,#a78bfa)', width: `${progPct}%`, transition: 'width .3s ease' }} />
+            <span className="text-xs text-black/45 num font-medium">{counterIdx + 1} / {totalBranches} สาขา</span>
+            <div style={{ width: '100px', height: '3px', background: 'rgba(0,0,0,.1)', borderRadius: '999px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: '999px', background: 'linear-gradient(to right,#7c3aed,#6B4FA0)', width: `${progPct}%`, transition: 'width .3s ease' }} />
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-white/38">
-            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">←</kbd>
-            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">→</kbd>
+          <div className="flex items-center gap-2 text-[11px] text-black/38">
+            <kbd className="bg-black/8 border border-black/15 rounded px-1.5 py-0.5 text-black/50">←</kbd>
+            <kbd className="bg-black/8 border border-black/15 rounded px-1.5 py-0.5 text-black/50">→</kbd>
             <span>ข้ามสาขา</span>
             <span className="mx-1 opacity-40">|</span>
-            <kbd className="bg-white/8 border border-white/15 rounded px-1.5 py-0.5 text-white/50">Esc</kbd>
+            <kbd className="bg-black/8 border border-black/15 rounded px-1.5 py-0.5 text-black/50">Esc</kbd>
             <span>ปิด</span>
           </div>
         </div>
@@ -972,7 +972,7 @@ function ObstacleDetailModal({
     <div
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(2,8,20,.85)',
+        background: 'rgba(255,255,255,.85)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
         zIndex: 50,
@@ -986,10 +986,10 @@ function ObstacleDetailModal({
       <div
         style={{
           width: 'min(700px, 96vw)', maxHeight: '90vh',
-          background: '#0b1b30',
-          border: '1px solid rgba(255,255,255,.09)',
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,0,0,.09)',
           borderRadius: '24px',
-          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)',
+          boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 48px 120px rgba(0,0,0,.85), inset 0 1px 0 rgba(0,0,0,.06)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           transform: open ? 'scale(1) translateY(0)' : 'scale(.9) translateY(22px)',
           opacity: open ? 1 : 0,
@@ -1000,9 +1000,9 @@ function ObstacleDetailModal({
         {/* Header */}
         <div style={{
           padding: '24px 30px 20px',
-          borderBottom: '1px solid rgba(255,255,255,.06)',
+          borderBottom: '1px solid rgba(0,0,0,.06)',
           flexShrink: 0,
-          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(251,191,36,.12) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 80% 130% at -5% 60%, rgba(168,114,26,.12) 0%, transparent 65%)',
         }}>
           <div className="flex justify-between items-start">
             <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-.3px', background: 'linear-gradient(135deg,#fff 40%,rgba(253,224,71,.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -1010,11 +1010,11 @@ function ObstacleDetailModal({
             </h2>
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={e => { e.stopPropagation(); onPrev() }} disabled={!hasPrev}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">‹</button>
               <button type="button" onClick={e => { e.stopPropagation(); onNext() }} disabled={!hasNext}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-amber-500/15 hover:text-amber-300 hover:border-amber-500/35 disabled:opacity-20 disabled:cursor-default transition-all text-sm">›</button>
               <button type="button" onClick={e => { e.stopPropagation(); onClose() }}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white transition-all">
+                className="w-8 h-8 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-black/12 hover:text-[#12181F] transition-all">
                 <X size={15} />
               </button>
             </div>
@@ -1024,7 +1024,7 @@ function ObstacleDetailModal({
               'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
               obstacles.length > 0
                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                : 'bg-white/5 text-white/30 border-white/10'
+                : 'bg-black/5 text-black/30 border-black/10'
             )}>
               {obstacles.length > 0 ? `${obstacles.length} อุปสรรค` : 'ไม่มีอุปสรรค'}
             </span>
@@ -1034,7 +1034,7 @@ function ObstacleDetailModal({
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }} className="space-y-3">
           {obstacles.length === 0 ? (
-            <div className="text-center text-white/25 text-sm py-12">ไม่มีอุปสรรคที่เปิดอยู่</div>
+            <div className="text-center text-black/25 text-sm py-12">ไม่มีอุปสรรคที่เปิดอยู่</div>
           ) : (
             obstacles.map(obs => <ModalObstacleCard key={obs.id} obs={obs} />)
           )}
@@ -1117,7 +1117,7 @@ function ObstacleBranchPanel({
           'text-[10px] px-2 py-0.5 rounded-full border font-semibold',
           obstacles.length > 0
             ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-            : 'bg-white/5 text-white/30 border-white/10'
+            : 'bg-black/5 text-black/30 border-black/10'
         )}>
           {obstacles.length} รายการ · {branchesWithObs.length} สาขา
         </span>
@@ -1126,7 +1126,7 @@ function ObstacleBranchPanel({
       {/* Branch cards — only branches with obstacles */}
       <div className="px-4 pb-4 pt-3 flex flex-wrap gap-2">
         {branchesWithObs.length === 0 ? (
-          <p className="w-full text-center text-white/25 text-sm py-6">ไม่มีอุปสรรคที่เปิดอยู่</p>
+          <p className="w-full text-center text-black/25 text-sm py-6">ไม่มีอุปสรรคที่เปิดอยู่</p>
         ) : branchesWithObs.map(b => {
           const obsCount = obsByBranch.get(b.name_th)?.length ?? 0
           const delta = yoyMap.size > 0 ? (yoyMap.get(b.name_th) ?? null) : null
@@ -1145,12 +1145,12 @@ function ObstacleBranchPanel({
                   ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
                   : nrwGood
                     ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
-                    : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
+                    : 'bg-black/4 border-black/10 hover:bg-black/8 hover:border-black/20',
               )}
             >
               <span className={cn(
                 'text-[12px] font-bold leading-none',
-                nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/70',
+                nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-black/70',
               )}>
                 {b.name_th}
               </span>
@@ -1165,7 +1165,7 @@ function ObstacleBranchPanel({
 
       {/* Legend */}
       {branchesWithObs.length > 0 && (
-        <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-white/25 flex-wrap border-t border-white/5 pt-2.5">
+        <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-black/25 flex-wrap border-t border-black/5 pt-2.5">
           {yoyMap.size > 0 && (
             <>
               <span className="flex items-center gap-1.5">
@@ -1362,7 +1362,7 @@ function PdcaBranchPanel({
               ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
               : submittedCount > 0
                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                : 'bg-white/5 text-white/30 border-white/10'
+                : 'bg-black/5 text-black/30 border-black/10'
           )}>
             {submittedCount}/26 ส่งแล้ว
           </span>
@@ -1401,7 +1401,7 @@ function PdcaBranchPanel({
                 onChange={e => setEditMonth(Number(e.target.value))}
               >
                 {THAI_MONTHS_FULL.map((m, i) => (
-                  <option key={i + 1} value={i + 1} className="bg-[#0f1f35] text-white">{m}</option>
+                  <option key={i + 1} value={i + 1} className="bg-[#FFFFFF] text-[#12181F]">{m}</option>
                 ))}
               </select>
               <input
@@ -1424,7 +1424,7 @@ function PdcaBranchPanel({
               <button
                 type="button"
                 onClick={() => setEditingRef(false)}
-                className="text-white/30 hover:text-white/60 transition-colors"
+                className="text-black/30 hover:text-black/60 transition-colors"
                 title="ยกเลิก"
               >
                 <X size={12} />
@@ -1437,7 +1437,7 @@ function PdcaBranchPanel({
       {/* Month tabs — only when no ref specified */}
       {!refMonth && months.length > 0 && (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-violet-500/10 flex-wrap">
-          <span className="text-[10px] text-white/30 shrink-0">เดือน</span>
+          <span className="text-[10px] text-black/30 shrink-0">เดือน</span>
           {months.map(m => {
             const key = `${m.year}-${m.month}`
             return (
@@ -1449,7 +1449,7 @@ function PdcaBranchPanel({
                   'text-[10px] px-2 py-0.5 rounded-md border transition-all',
                   currentKey === key
                     ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
-                    : 'text-white/30 border-white/10 hover:border-violet-500/30 hover:text-violet-300'
+                    : 'text-black/30 border-black/10 hover:border-violet-500/30 hover:text-violet-300'
                 )}
               >
                 {THAI_MONTHS_SHORT[m.month - 1]} {m.year + 543}
@@ -1489,12 +1489,12 @@ function PdcaBranchPanel({
                     ? 'bg-red-500/18 border-red-500/45 hover:bg-red-500/26 hover:border-red-500/65'
                     : nrwGood
                       ? 'bg-emerald-500/14 border-emerald-500/38 hover:bg-emerald-500/22 hover:border-emerald-500/58'
-                      : 'bg-white/4 border-white/10 hover:bg-white/8 hover:border-white/20',
+                      : 'bg-black/4 border-black/10 hover:bg-black/8 hover:border-black/20',
                 )}
               >
                 <span className={cn(
                   'text-[11px] font-bold leading-none',
-                  nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-white/65',
+                  nrwBad ? 'text-red-200' : nrwGood ? 'text-emerald-100' : 'text-black/65',
                 )}>
                   {b.name_th}
                 </span>
@@ -1510,7 +1510,7 @@ function PdcaBranchPanel({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-white/25 flex-wrap border-t border-white/5 pt-2.5">
+      <div className="flex items-center gap-3 px-4 pb-3 text-[10px] text-black/25 flex-wrap border-t border-black/5 pt-2.5">
         {yoyMap.size > 0 && (
           <>
             <span className="flex items-center gap-1.5">
@@ -1524,7 +1524,7 @@ function PdcaBranchPanel({
           </>
         )}
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(251,191,36,.5)]" />
+          <span className="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_rgba(168,114,26,.5)]" />
           อุปสรรคใหม่เดือนนี้
         </span>
         <span className="ml-auto text-violet-400/35">กดสาขาเพื่อดูรายละเอียด</span>
@@ -1561,7 +1561,7 @@ function AgendaBadge({ no }: { no: number }) {
     'bg-violet-500/20 text-violet-300 border-violet-500/30',
     'bg-amber-500/20 text-amber-300 border-amber-500/30',
     'bg-green-500/20 text-green-300 border-green-500/30',
-    'bg-white/15 text-white/60 border-white/25',
+    'bg-black/15 text-black/60 border-black/25',
   ]
   return (
     <span className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm font-bold ${colors[no] ?? colors[6]}`}>
@@ -1595,13 +1595,13 @@ function SubItemCard({ item }: { item: MeetingAgendaSubItem }) {
   return (
     <div className="glass-card-sm p-4 space-y-2">
       <div className="flex items-start gap-2">
-        <span className="shrink-0 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white/50 font-bold mt-0.5">
+        <span className="shrink-0 w-5 h-5 rounded-full bg-black/10 flex items-center justify-center text-[10px] text-black/50 font-bold mt-0.5">
           {item.item_no}
         </span>
-        <p className="text-sm font-semibold text-white leading-snug">{item.title}</p>
+        <p className="text-sm font-semibold text-[#12181F] leading-snug">{item.title}</p>
       </div>
       {item.detail && (
-        <p className="text-xs text-white/55 leading-relaxed pl-7">{item.detail}</p>
+        <p className="text-xs text-black/55 leading-relaxed pl-7">{item.detail}</p>
       )}
       {item.detail_table && item.detail_table.rows.length > 0 && (
         <div className="pl-7 overflow-x-auto">
@@ -1619,9 +1619,9 @@ function SubItemCard({ item }: { item: MeetingAgendaSubItem }) {
               ))}
             </colgroup>
             <thead>
-              <tr className="bg-white/5">
+              <tr className="bg-black/5">
                 {item.detail_table.headers.map((h: string, i: number) => (
-                  <th key={i} className="text-left px-2 py-1.5 text-white/40 font-medium border border-white/8 leading-snug">
+                  <th key={i} className="text-left px-2 py-1.5 text-black/40 font-medium border border-black/8 leading-snug">
                     {h}
                   </th>
                 ))}
@@ -1629,9 +1629,9 @@ function SubItemCard({ item }: { item: MeetingAgendaSubItem }) {
             </thead>
             <tbody>
               {item.detail_table.rows.map((row: string[], ri: number) => (
-                <tr key={ri} className="hover:bg-white/3">
+                <tr key={ri} className="hover:bg-black/3">
                   {row.map((cell: string, ci: number) => (
-                    <td key={ci} className="px-2 py-1.5 text-white/70 border border-white/8 whitespace-pre-wrap break-words align-middle">{cell}</td>
+                    <td key={ci} className="px-2 py-1.5 text-black/70 border border-black/8 whitespace-pre-wrap break-words align-middle">{cell}</td>
                   ))}
                 </tr>
               ))}
@@ -1658,16 +1658,16 @@ function ModalSection({ no, title, children }: { no: number; title: string; chil
     3: { badge: 'bg-violet-500/20 text-violet-300 border-violet-500/30' },
     4: { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
     5: { badge: 'bg-green-500/20 text-green-300 border-green-500/30' },
-    6: { badge: 'bg-white/15 text-white/60 border-white/25' },
+    6: { badge: 'bg-black/15 text-black/60 border-black/25' },
   }
   const style = colorMap[no] ?? colorMap[6]
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className={cn('shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm font-bold', style.badge)}>{no}</span>
-        <div className="h-px flex-1 bg-white/6" />
+        <div className="h-px flex-1 bg-black/6" />
       </div>
-      <p className="text-xs font-bold text-white/50 uppercase tracking-widest pl-11">{title}</p>
+      <p className="text-xs font-bold text-black/50 uppercase tracking-widest pl-11">{title}</p>
       <div className="pl-11 space-y-2">{children}</div>
     </div>
   )
@@ -1699,7 +1699,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
     <div
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(2,8,20,.88)',
+        background: 'rgba(255,255,255,.88)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         zIndex: 60,
@@ -1713,10 +1713,10 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
       <div
         style={{
           width: 'min(860px, 96vw)', maxHeight: '92vh',
-          background: 'linear-gradient(160deg,#0d1f38 0%,#091627 100%)',
-          border: '1px solid rgba(255,255,255,.1)',
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,0,0,.1)',
           borderRadius: '16px',
-          boxShadow: '0 0 0 1px rgba(255,255,255,.04), 0 60px 140px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.07)',
+          boxShadow: '0 0 0 1px rgba(0,0,0,.04), 0 60px 140px rgba(0,0,0,.9), inset 0 1px 0 rgba(0,0,0,.07)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           transform: open ? 'scale(1) translateY(0)' : 'scale(.95) translateY(16px)',
           opacity: open ? 1 : 0,
@@ -1727,8 +1727,8 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
         {/* ── Mac title bar ── */}
         <div style={{
           height: '44px',
-          background: 'rgba(255,255,255,.03)',
-          borderBottom: '1px solid rgba(255,255,255,.08)',
+          background: 'rgba(0,0,0,.03)',
+          borderBottom: '1px solid rgba(0,0,0,.08)',
           display: 'flex', alignItems: 'center',
           padding: '0 16px', gap: '8px', flexShrink: 0, userSelect: 'none',
         }}>
@@ -1742,7 +1742,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
           <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#febc2e', border: '1px solid rgba(0,0,0,.3)', flexShrink: 0 }} />
           <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#28c840', border: '1px solid rgba(0,0,0,.3)', flexShrink: 0 }} />
 
-          <div style={{ flex: 1, textAlign: 'center', fontSize: '12.5px', fontWeight: 600, color: 'rgba(255,255,255,.45)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', padding: '0 8px' }}>
+          <div style={{ flex: 1, textAlign: 'center', fontSize: '12.5px', fontWeight: 600, color: 'rgba(0,0,0,.45)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', padding: '0 8px' }}>
             {meeting?.code && <span style={{ fontFamily: 'monospace', marginRight: '8px', opacity: .55 }}>{meeting.code}</span>}
             {meeting?.title ?? ''}
           </div>
@@ -1750,7 +1750,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
           <button
             type="button"
             onClick={e => { e.stopPropagation(); onClose() }}
-            className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 text-white/35 flex items-center justify-center hover:bg-white/12 hover:text-white/70 transition-all shrink-0"
+            className="w-7 h-7 rounded-lg bg-black/5 border border-black/10 text-black/35 flex items-center justify-center hover:bg-black/12 hover:text-black/70 transition-all shrink-0"
           >
             <X size={13} />
           </button>
@@ -1758,45 +1758,45 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
 
         {/* ── Scrollable body ── */}
         <div
-          style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}
+          style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,.1) transparent' }}
           className="space-y-6"
         >
           {!meeting ? null : !hasReport || !agendaHeader ? (
-            <div className="rounded-xl border border-white/8 bg-white/3 p-12 text-center">
+            <div className="rounded-xl border border-black/8 bg-black/3 p-12 text-center">
               <FileText size={36} className="mx-auto mb-3 opacity-15" />
-              <p className="text-white/30 text-sm font-medium">ยังไม่มีรายงานการประชุมบันทึกไว้</p>
-              <p className="text-white/18 text-xs mt-1">กรอกรายงานในหน้า แก้ไขรายงาน</p>
+              <p className="text-black/30 text-sm font-medium">ยังไม่มีรายงานการประชุมบันทึกไว้</p>
+              <p className="text-black/18 text-xs mt-1">กรอกรายงานในหน้า แก้ไขรายงาน</p>
             </div>
           ) : (
             <>
               {/* Meeting info */}
               <div className="space-y-1.5">
-                <h2 className="text-xl font-bold text-white leading-tight">{meeting.title}</h2>
-                <div className="flex flex-wrap gap-4 text-xs text-white/40">
+                <h2 className="text-xl font-bold text-[#12181F] leading-tight">{meeting.title}</h2>
+                <div className="flex flex-wrap gap-4 text-xs text-black/40">
                   <span className="flex items-center gap-1.5">
-                    <Calendar size={11} className="text-white/22" />
+                    <Calendar size={11} className="text-black/22" />
                     {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time?.slice(0, 5)} น.
                   </span>
                   {meeting.location && (
                     <span className="flex items-center gap-1.5">
-                      <MapPin size={11} className="text-white/22" />
+                      <MapPin size={11} className="text-black/22" />
                       {meeting.location}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="h-px bg-white/8" />
+              <div className="h-px bg-black/8" />
 
               {/* วาระ 1 */}
               <ModalSection no={1} title="ประธานแจ้งที่ประชุมทราบ">
                 {agendaHeader.agenda1_detail ? (
                   <>
-                    <p className="text-sm text-white/72 leading-relaxed whitespace-pre-wrap">{agendaHeader.agenda1_detail}</p>
+                    <p className="text-sm text-black/72 leading-relaxed whitespace-pre-wrap">{agendaHeader.agenda1_detail}</p>
                     <ResolutionBadge type={agendaHeader.agenda1_resolution ?? 'รับทราบ'} detail={agendaHeader.agenda1_resolution_detail} />
                   </>
                 ) : (
-                  <p className="text-sm text-white/22 italic">ไม่ได้กรอกรายละเอียด</p>
+                  <p className="text-sm text-black/22 italic">ไม่ได้กรอกรายละเอียด</p>
                 )}
                 {subItems(1).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)}
               </ModalSection>
@@ -1805,7 +1805,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
               <ModalSection no={2} title={`รับรองรายงานการประชุม${agendaHeader.agenda2_meeting_no ? ` ครั้งที่ ${agendaHeader.agenda2_meeting_no}` : ''}`}>
                 {subItems(2).length > 0
                   ? subItems(2).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
-                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                  : <p className="text-sm text-black/22 italic">ไม่มีรายการ</p>
                 }
                 {agendaHeader.agenda2_resolution && (
                   <ResolutionBadge type={agendaHeader.agenda2_resolution} detail={agendaHeader.agenda2_resolution_detail} />
@@ -1816,7 +1816,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
               <ModalSection no={3} title="เรื่องเพื่อทราบ">
                 {subItems(3).length > 0
                   ? subItems(3).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
-                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                  : <p className="text-sm text-black/22 italic">ไม่มีรายการ</p>
                 }
               </ModalSection>
 
@@ -1824,7 +1824,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
               <ModalSection no={4} title={agenda4Label}>
                 {subItems(4).length > 0
                   ? subItems(4).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
-                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                  : <p className="text-sm text-black/22 italic">ไม่มีรายการ</p>
                 }
               </ModalSection>
 
@@ -1832,7 +1832,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
               <ModalSection no={5} title={hasAgenda6 ? 'ผลการดำเนินการ / PDCA' : 'เรื่องอื่นๆ'}>
                 {subItems(5).length > 0
                   ? subItems(5).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
-                  : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                  : <p className="text-sm text-black/22 italic">ไม่มีรายการ</p>
                 }
               </ModalSection>
 
@@ -1841,7 +1841,7 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
                 <ModalSection no={6} title="เรื่องอื่นๆ">
                   {subItems(6).length > 0
                     ? subItems(6).map(item => <SubItemCard key={item.id ?? item.item_no} item={item} />)
-                    : <p className="text-sm text-white/22 italic">ไม่มีรายการ</p>
+                    : <p className="text-sm text-black/22 italic">ไม่มีรายการ</p>
                   }
                 </ModalSection>
               )}
@@ -1863,14 +1863,14 @@ function PastMeetingReportModal({ entry, open, onClose }: PastMeetingReportModal
                             <div className="flex items-start gap-2 flex-1 min-w-0">
                               <span className="num text-xs font-bold text-cyan-400 shrink-0 mt-0.5">#{r.sequence_no}</span>
                               <div className="min-w-0 space-y-0.5">
-                                <p className="text-sm text-white font-medium leading-snug">{r.title}</p>
-                                {r.detail && <p className="text-xs text-white/45 leading-relaxed">{r.detail}</p>}
+                                <p className="text-sm text-[#12181F] font-medium leading-snug">{r.title}</p>
+                                {r.detail && <p className="text-xs text-black/45 leading-relaxed">{r.detail}</p>}
                               </div>
                             </div>
                             <StatusPill status={r.status} />
                           </div>
                           {(r.responsible_branch || r.due_date) && (
-                            <div className="flex items-center gap-3 text-[11px] text-white/30 pl-5">
+                            <div className="flex items-center gap-3 text-[11px] text-black/30 pl-5">
                               {r.responsible_branch && <span>สาขา: {r.responsible_branch}</span>}
                               {r.due_date && (
                                 <span className="flex items-center gap-1">
@@ -2005,13 +2005,13 @@ export function MeetingPreviewClient({
       <div className="flex items-center gap-3">
         <Link
           href={`/meeting`}
-          className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-sm text-black/50 hover:text-[#12181F] transition-colors"
         >
           <ChevronLeft size={16} />
           วาระ / มติ
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-sm text-white/60">ตรวจสอบวาระ</span>
+        <span className="text-black/20">/</span>
+        <span className="text-sm text-black/60">ตรวจสอบวาระ</span>
       </div>
 
       {/* Meeting Header */}
@@ -2021,16 +2021,16 @@ export function MeetingPreviewClient({
           <div className="flex-1 min-w-0 space-y-3">
             <div>
               <p className="page-kicker mb-1">ดูตัวอย่างวาระการประชุม</p>
-              <h1 className="text-lg sm:text-xl font-bold text-white leading-snug">{meeting.title}</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-[#12181F] leading-snug">{meeting.title}</h1>
             </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-white/50">
+            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-black/50">
               <div className="flex items-center gap-2">
-                <Calendar size={13} className="text-white/30" />
+                <Calendar size={13} className="text-black/30" />
                 {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time.slice(0, 5)} น.
               </div>
               {meeting.location && (
                 <div className="flex items-center gap-2">
-                  <MapPin size={13} className="text-white/30" />
+                  <MapPin size={13} className="text-black/30" />
                   {meeting.location}
                 </div>
               )}
@@ -2052,7 +2052,7 @@ export function MeetingPreviewClient({
             <StatusPill status={meeting.status} />
             <Link
               href={`/meeting/${meeting.id}/report`}
-              className="text-sm text-white/50 hover:text-white/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/25 transition-all"
+              className="text-sm text-black/50 hover:text-black/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 hover:border-black/25 transition-all"
             >
               <FileText size={13} />
               แก้ไขรายงาน
@@ -2065,15 +2065,15 @@ export function MeetingPreviewClient({
             )}
           </div>
         </div>
-        <div className="mt-4 pt-3 border-t border-white/8">
-          <p className="text-xs text-white/30">
+        <div className="mt-4 pt-3 border-t border-black/8">
+          <p className="text-xs text-black/30">
             {agendaHeader ? `${TABS.length} วาระ · กรอกข้อมูลแล้ว` : 'ยังไม่ได้กรอกวาระ'}
           </p>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1.5 border-b border-white/10 pb-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-1.5 border-b border-black/10 pb-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -2082,7 +2082,7 @@ export function MeetingPreviewClient({
               'shrink-0 px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap',
               activeTab === t.key
                 ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                : 'text-white/40 hover:text-white/70 border border-transparent'
+                : 'text-black/40 hover:text-black/70 border border-transparent'
             )}
           >
             {t.label}
@@ -2096,12 +2096,12 @@ export function MeetingPreviewClient({
           <div className="flex items-start gap-3">
             <AgendaBadge no={1} />
             <div>
-              <p className="font-bold text-white">ประธานแจ้งที่ประชุมทราบ</p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 1</p>
+              <p className="font-bold text-[#12181F]">ประธานแจ้งที่ประชุมทราบ</p>
+              <p className="text-xs text-black/40 mt-0.5">วาระที่ 1</p>
             </div>
           </div>
 
-          <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+          <div className="glass-card-sm p-6 sm:p-8 text-center text-black/25 text-sm">
             {agendaHeader?.agenda1_detail
               ? 'รายละเอียดวาระนี้บันทึกไว้ในรายงานการประชุมแล้ว'
               : 'ยังไม่ได้กรอกรายละเอียดวาระที่ 1'}
@@ -2117,13 +2117,13 @@ export function MeetingPreviewClient({
             <div className="flex items-start gap-3">
               <AgendaBadge no={2} />
               <div>
-                <p className="font-bold text-white">รับรองรายงานการประชุม</p>
-                <p className="text-xs text-white/40 mt-0.5">วาระที่ 2</p>
+                <p className="font-bold text-[#12181F]">รับรองรายงานการประชุม</p>
+                <p className="text-xs text-black/40 mt-0.5">วาระที่ 2</p>
               </div>
             </div>
 
             {pastMeetings.length === 0 ? (
-              <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+              <div className="glass-card-sm p-6 sm:p-8 text-center text-black/25 text-sm">
                 ไม่พบรายงานการประชุมครั้งก่อน
               </div>
             ) : (
@@ -2142,7 +2142,7 @@ export function MeetingPreviewClient({
                           'text-[11px] px-3 py-1 rounded-lg border transition-all flex items-center gap-1.5',
                           isSelected
                             ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                            : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                            : 'text-black/40 border-black/10 hover:border-black/25 hover:text-black/60'
                         )}
                       >
                           <span className="font-mono text-[10px] opacity-70">{e.meeting.code}</span>
@@ -2155,7 +2155,7 @@ export function MeetingPreviewClient({
                               'text-[9px] px-1 py-0.5 rounded border',
                               isSelected
                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                : 'bg-white/5 text-white/30 border-white/10'
+                                : 'bg-black/5 text-black/30 border-black/10'
                             )}>
                               มีรายงาน
                             </span>
@@ -2187,12 +2187,12 @@ export function MeetingPreviewClient({
           <div className="flex items-start gap-3">
             <AgendaBadge no={3} />
             <div>
-              <p className="font-bold text-white">เรื่องเพื่อทราบ</p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 3</p>
+              <p className="font-bold text-[#12181F]">เรื่องเพื่อทราบ</p>
+              <p className="text-xs text-black/40 mt-0.5">วาระที่ 3</p>
             </div>
           </div>
 
-          <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+          <div className="glass-card-sm p-6 sm:p-8 text-center text-black/25 text-sm">
             {items(3).length > 0
               ? 'รายการวาระนี้บันทึกไว้ในรายงานการประชุมแล้ว'
               : 'ยังไม่มีรายการเรื่องเพื่อทราบ'}
@@ -2220,24 +2220,24 @@ export function MeetingPreviewClient({
             const worsenedCount = nrwYoyRows.filter((r) => (r.rate_delta ?? 0) > 0.001).length
 
             return (
-              <div className="space-y-5 pt-3 border-t border-white/8">
+              <div className="space-y-5 pt-3 border-t border-black/8">
                 {/* Section header + filter */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-violet-400" style={{ boxShadow: '0 0 8px rgba(167,139,250,0.5)' }} />
-                      <p className="text-sm font-bold text-white">
+                      <span className="w-2 h-2 rounded-full bg-violet-400" style={{ boxShadow: '0 0 8px rgba(107,79,160,0.5)' }} />
+                      <p className="text-sm font-bold text-[#12181F]">
                         เปรียบเทียบน้ำสูญเสีย ปีงบ {prevYear} vs {nrwFiscalYear}
                       </p>
                     </div>
-                    <span className="text-[10px] text-white/40 px-2.5 py-1 rounded-full border border-white/12 bg-white/4 font-medium">
+                    <span className="text-[10px] text-black/40 px-2.5 py-1 rounded-full border border-black/12 bg-black/4 font-medium">
                       {startMonthLabel} – {endMonthLabel}
                     </span>
                   </div>
 
                   {/* Month count filter */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-white/30 shrink-0">สะสม</span>
+                    <span className="text-[10px] text-black/30 shrink-0">สะสม</span>
                     <div className="flex flex-wrap gap-1">
                       {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
                         <button
@@ -2246,15 +2246,15 @@ export function MeetingPreviewClient({
                           className={cn(
                             'num text-[11px] w-7 h-6 rounded-md border transition-all font-medium',
                             selectedMonths === n
-                              ? 'bg-violet-500/25 text-violet-300 border-violet-500/50 shadow-[0_0_6px_rgba(167,139,250,0.2)]'
-                              : 'text-white/30 border-white/10 hover:border-white/25 hover:text-white/60'
+                              ? 'bg-violet-500/25 text-violet-300 border-violet-500/50 shadow-[0_0_6px_rgba(107,79,160,0.2)]'
+                              : 'text-black/30 border-black/10 hover:border-black/25 hover:text-black/60'
                           )}
                         >
                           {n}
                         </button>
                       ))}
                     </div>
-                    <span className="text-[10px] text-white/30 shrink-0">เดือน</span>
+                    <span className="text-[10px] text-black/30 shrink-0">เดือน</span>
                   </div>
                 </div>
 
@@ -2283,20 +2283,20 @@ export function MeetingPreviewClient({
                       ? 'border border-emerald-500/20'
                       : distDelta !== null && distDelta > 0
                       ? 'border border-red-500/20'
-                      : 'border border-white/8'
+                      : 'border border-black/8'
                   )}>
-                    <p className="text-xs text-white/40 font-medium">เปลี่ยนแปลง NRW%</p>
+                    <p className="text-xs text-black/40 font-medium">เปลี่ยนแปลง NRW%</p>
                     {distDelta !== null ? (
                       <p className={cn(
                         'num text-3xl sm:text-4xl font-bold leading-none',
-                        distDelta < 0 ? 'text-emerald-400' : distDelta > 0 ? 'text-red-400' : 'text-white/50'
+                        distDelta < 0 ? 'text-emerald-400' : distDelta > 0 ? 'text-red-400' : 'text-black/50'
                       )}>
                         {distDelta < 0 ? '▼' : distDelta > 0 ? '▲' : ''}
                         {' '}{Math.abs(distDelta).toFixed(2)}
                         <span className="text-base font-normal ml-1 opacity-60">%</span>
                       </p>
                     ) : (
-                      <p className="num text-3xl sm:text-4xl font-bold text-white/20 leading-none">—</p>
+                      <p className="num text-3xl sm:text-4xl font-bold text-black/20 leading-none">—</p>
                     )}
                   </div>
                   {/* Branch counts */}
@@ -2305,7 +2305,7 @@ export function MeetingPreviewClient({
                     <div className="flex items-baseline gap-2">
                       <span className="num text-3xl sm:text-4xl font-bold text-emerald-400 leading-none">{improvedCount}</span>
                       <span className="text-xs text-emerald-400/60">ดีขึ้น</span>
-                      <span className="text-white/15 mx-1">/</span>
+                      <span className="text-black/15 mx-1">/</span>
                       <span className="num text-3xl sm:text-4xl font-bold text-red-400 leading-none">{worsenedCount}</span>
                       <span className="text-xs text-red-400/60">แย่ลง</span>
                     </div>
@@ -2329,8 +2329,8 @@ export function MeetingPreviewClient({
           <div className="flex items-start gap-3">
             <AgendaBadge no={4} />
             <div>
-              <p className="font-bold text-white">{agenda4Label}</p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 4 · อุปสรรคและการติดตาม</p>
+              <p className="font-bold text-[#12181F]">{agenda4Label}</p>
+              <p className="text-xs text-black/40 mt-0.5">วาระที่ 4 · อุปสรรคและการติดตาม</p>
             </div>
           </div>
 
@@ -2350,10 +2350,10 @@ export function MeetingPreviewClient({
           <div className="flex items-start gap-3">
             <AgendaBadge no={5} />
             <div>
-              <p className="font-bold text-white">
+              <p className="font-bold text-[#12181F]">
                 {hasAgenda6 ? 'ผลการดำเนินการ / PDCA' : 'เรื่องอื่นๆ'}
               </p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 5</p>
+              <p className="text-xs text-black/40 mt-0.5">วาระที่ 5</p>
             </div>
           </div>
 
@@ -2363,7 +2363,7 @@ export function MeetingPreviewClient({
           )}
 
           {items(5).length === 0 && (
-            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-black/25 text-sm">
               ยังไม่มีรายการในวาระที่ 5
             </div>
           )}
@@ -2376,13 +2376,13 @@ export function MeetingPreviewClient({
           <div className="flex items-start gap-3">
             <AgendaBadge no={6} />
             <div>
-              <p className="font-bold text-white">เรื่องอื่นๆ</p>
-              <p className="text-xs text-white/40 mt-0.5">วาระที่ 6</p>
+              <p className="font-bold text-[#12181F]">เรื่องอื่นๆ</p>
+              <p className="text-xs text-black/40 mt-0.5">วาระที่ 6</p>
             </div>
           </div>
 
           {items(6).length === 0 && (
-            <div className="glass-card-sm p-6 sm:p-8 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-6 sm:p-8 text-center text-black/25 text-sm">
               ยังไม่มีรายการในวาระที่ 6
             </div>
           )}

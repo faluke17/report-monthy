@@ -24,7 +24,7 @@ export function OverviewTab({ pdca, dmaStats, mnfNodes, budget_2569, lossTrend }
       {/* PDCA */}
       {pdca && (pdca.do_text || pdca.act_text) && (
         <Card>
-          <Sec label="PDCA — แผนดำเนินงาน" right={pdca.report_month ? <span style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>{THAI_MONTHS[pdca.report_month]} {pdca.report_year}</span> : undefined} />
+          <Sec label="PDCA — แผนดำเนินงาน" right={pdca.report_month ? <span style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>{THAI_MONTHS[pdca.report_month]} {pdca.report_year != null ? pdca.report_year + 543 : ''}</span> : undefined} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pdca.do_text && (
               <div>
@@ -47,7 +47,7 @@ export function OverviewTab({ pdca, dmaStats, mnfNodes, budget_2569, lossTrend }
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {dmaStats.length > 0 && (
             <Card style={{ padding: '12px 16px' }}>
-              <div style={{ fontSize: 9, color: C.warn, fontFamily: MONO, letterSpacing: 1.5, marginBottom: 8 }}>// DMA สูงสุด 3 อันดับแรก</div>
+              <div style={{ fontSize: 9, color: C.warn, fontFamily: MONO, letterSpacing: 1.5, marginBottom: 8 }}>{'// DMA สูงสุด 3 อันดับแรก'}</div>
               {dmaStats.slice(0, 3).map((d, i) => (
                 <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none' }}>
                   <span style={{ fontSize: 10, color: i === 0 ? C.crit : C.muted, fontFamily: MONO, width: 16, textAlign: 'center' }}>{i + 1}</span>
@@ -59,7 +59,7 @@ export function OverviewTab({ pdca, dmaStats, mnfNodes, budget_2569, lossTrend }
           )}
           {mnfNodes.filter(n => n.alert_status.startsWith('red')).length > 0 && (
             <Card style={{ padding: '12px 16px' }}>
-              <div style={{ fontSize: 9, color: C.crit, fontFamily: MONO, letterSpacing: 1.5, marginBottom: 8 }}>// MNF แจ้งเตือน</div>
+              <div style={{ fontSize: 9, color: C.crit, fontFamily: MONO, letterSpacing: 1.5, marginBottom: 8 }}>{'// MNF แจ้งเตือน'}</div>
               {mnfNodes.filter(n => n.alert_status.startsWith('red')).slice(0, 3).map((n, i) => {
                 const al = ALERT[n.alert_status] ?? { color: C.muted, label: n.alert_status }
                 return (

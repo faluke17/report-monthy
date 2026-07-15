@@ -96,7 +96,7 @@ export function PhaseTimeline({
       {/* ── Horizontal stepper ── */}
       <div className="relative">
         {/* Rail bg — spans from center of first to center of last node (node w=32px → offset 16px = 1rem = Tailwind-4) */}
-        <div className="absolute top-4 left-4 right-4 h-px bg-white/8" />
+        <div className="absolute top-4 left-4 right-4 h-px bg-black/8" />
 
         {/* Rail fill */}
         {fillPct > 0 && (
@@ -125,12 +125,12 @@ export function PhaseTimeline({
               ? 'bg-amber-500/15 border-amber-400/70 text-amber-400'
               : isActive
               ? 'bg-cyan-500/15 border-cyan-400 text-cyan-300'
-              : 'bg-white/4 border-white/10 text-white/18'
+              : 'bg-black/4 border-black/10 text-black/18'
 
-            const labelColor = isCompleted && !hasMissing ? 'text-white/45'
+            const labelColor = isCompleted && !hasMissing ? 'text-black/45'
               : isCompleted && hasMissing ? 'text-amber-400/80'
               : isActive ? 'text-cyan-400'
-              : 'text-white/18'
+              : 'text-black/18'
 
             return (
               <div key={phase.no} className="flex flex-col items-center gap-1.5 z-10">
@@ -147,7 +147,7 @@ export function PhaseTimeline({
                     'relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-200',
                     circleColor,
                     isSelected
-                      ? 'ring-2 ring-cyan-400/40 ring-offset-2 ring-offset-[#0d1b2a] scale-110 shadow-[0_0_14px_rgba(34,211,238,0.25)]'
+                      ? 'ring-2 ring-cyan-400/40 ring-offset-2 ring-offset-white scale-110 shadow-[0_0_14px_rgba(11,110,118,0.25)]'
                       : '',
                     isPending ? 'cursor-not-allowed' : isCheckbox || !isPending ? 'hover:scale-105 active:scale-95' : '',
                   ].join(' ')}
@@ -177,13 +177,13 @@ export function PhaseTimeline({
                     {phase.label}
                   </span>
                   {date && (
-                    <span className="text-white/35 leading-none text-[9px]">
+                    <span className="text-black/35 leading-none text-[9px]">
                       {formatDateShort(date)}
                     </span>
                   )}
                   {/* Dot under selected node */}
                   {isSelected && (
-                    <span className="w-1 h-1 rounded-full bg-cyan-400 mt-0.5 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+                    <span className="w-1 h-1 rounded-full bg-cyan-400 mt-0.5 shadow-[0_0_6px_rgba(11,110,118,0.8)]" />
                   )}
                 </div>
               </div>
@@ -194,12 +194,12 @@ export function PhaseTimeline({
 
       {/* ── Phase 5 pipe-length progress bar ── */}
       {progressPct !== null && projectType === 'pipe' && cp >= 5 && (
-        <div className="bg-white/3 rounded-lg px-3 py-2.5 border border-white/6">
+        <div className="bg-black/3 rounded-lg px-3 py-2.5 border border-black/6">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs text-white/50 font-semibold">ความคืบหน้าก่อสร้าง</span>
+            <span className="text-xs text-black/50 font-semibold">ความคืบหน้าก่อสร้าง</span>
             <span className="text-sm text-cyan-300 font-bold num">{progressPct}%</span>
           </div>
-          <div className="h-2 rounded-full bg-white/6 overflow-hidden">
+          <div className="h-2 rounded-full bg-black/6 overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
               style={{

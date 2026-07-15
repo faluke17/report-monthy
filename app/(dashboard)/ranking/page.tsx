@@ -24,8 +24,8 @@ export default async function RankingPage() {
   return (
     <div className="space-y-5 animate-fadein">
       <div>
-        <h1 className="text-xl font-bold text-white">จัดอันดับสาขา</h1>
-        <p className="text-sm text-white/40 mt-0.5">
+        <h1 className="text-xl font-bold text-[#12181F]">จัดอันดับสาขา</h1>
+        <p className="text-sm text-black/40 mt-0.5">
           ประจำเดือน {formatThaiMonthYear(year, month)} · เรียงตาม NRW สูงสุด
         </p>
       </div>

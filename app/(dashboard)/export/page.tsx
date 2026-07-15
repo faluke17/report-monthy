@@ -81,8 +81,8 @@ export default function ExportPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-xl font-bold text-white">ส่งออกรายงาน</h1>
-        <p className="text-sm text-white/50 mt-0.5">
+        <h1 className="text-xl font-bold text-[#12181F]">ส่งออกรายงาน</h1>
+        <p className="text-sm text-black/50 mt-0.5">
           ประจำเดือน {getThaiMonthName(selectedMonth)} {toThaiYear(selectedYear)}
         </p>
       </div>
@@ -102,13 +102,13 @@ export default function ExportPage() {
                 <Icon size={20} className={option.format === 'excel' ? 'text-green-400' : 'text-red-400'} />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-white">{option.label}</p>
-                <p className="text-xs text-white/40">{option.description}</p>
+                <p className="text-sm font-medium text-[#12181F]">{option.label}</p>
+                <p className="text-xs text-black/40">{option.description}</p>
               </div>
               <button
                 onClick={() => handleExport(option)}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg disabled:opacity-50 transition-colors shrink-0"
+                className="flex items-center gap-2 px-4 py-2 bg-black/10 hover:bg-black/15 text-[#12181F] text-sm rounded-lg disabled:opacity-50 transition-colors shrink-0"
               >
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                 {isLoading ? 'กำลังสร้าง...' : 'ดาวน์โหลด'}

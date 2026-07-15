@@ -63,7 +63,6 @@ export async function submitObstacle(formData: FormData): Promise<ActionResult> 
   }).eq('id', inserted.id)
 
   revalidatePath('/obstacle')
-  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -100,7 +99,6 @@ export async function updateObstacleProgress(
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/obstacle')
-  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -114,7 +112,6 @@ export async function deleteObstacle(id: string): Promise<ActionResult> {
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/obstacle')
-  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -177,6 +174,5 @@ export async function addProgressLog(
   await supabase.from('obstacles').update(patch).eq('id', obstacleId)
 
   revalidatePath('/obstacle')
-  revalidatePath('/dashboard')
   return { success: true }
 }

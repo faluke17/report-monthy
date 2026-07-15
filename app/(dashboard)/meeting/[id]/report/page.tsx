@@ -85,9 +85,9 @@ export default async function MeetingReportPage({
       {/* Meeting Info */}
       <div className="glass-card-sm p-4 flex items-center justify-between gap-4">
         <div className="min-w-0 space-y-0.5">
-          <p className="text-sm font-semibold text-white truncate">{meeting.title}</p>
-          <p className="text-xs text-white/40 flex items-center gap-1.5">
-            <Calendar size={11} className="text-white/30" />
+          <p className="text-sm font-semibold text-[#12181F] truncate">{meeting.title}</p>
+          <p className="text-xs text-black/40 flex items-center gap-1.5">
+            <Calendar size={11} className="text-black/30" />
             {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time.slice(0, 5)} น.
             {meeting.location && ` · ${meeting.location}`}
           </p>
@@ -95,13 +95,13 @@ export default async function MeetingReportPage({
         <div className="flex items-center gap-3 shrink-0">
           <Link
             href={`/meeting/${id}/agenda`}
-            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+            className="text-xs text-black/30 hover:text-black/60 transition-colors"
           >
             ← วาระ
           </Link>
           <Link
             href={`/meeting/${id}/preview`}
-            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+            className="text-xs text-black/30 hover:text-black/60 transition-colors"
           >
             Preview →
           </Link>

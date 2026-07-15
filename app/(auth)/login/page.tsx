@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { PWA_BRANCHES } from '@/lib/utils/pwa-branches'
 import { createClient } from '@/lib/supabase/client'
@@ -14,10 +14,6 @@ const HEAD = {
   login: { h: 'เข้าสู่ระบบ',        p: 'Authorized personnel only · ใช้บัญชีพนักงานเท่านั้น' },
   reg:   { h: 'ลงทะเบียนครั้งแรก', p: 'สร้างบัญชีพนักงานใหม่ · ต้องได้รับการอนุมัติจากผู้ดูแลระบบ' },
 }
-
-const LINK_PTS: [number, number][] = [
-  [-50,-90],[40,-110],[90,-45],[130,20],[20,100],[-60,55],[-110,0],[-80,-40],
-]
 
 export default function LoginPage() {
   const [tab, setTab]               = useState<Tab>('login')
@@ -45,78 +41,6 @@ export default function LoginPage() {
   const [fpConfirm, setFpConfirm]   = useState('')
   const [fpDone, setFpDone]         = useState(false)
 
-  const pageRef  = useRef<HTMLDivElement>(null)
-  const bearRef  = useRef<SVGGElement>(null)
-  const nodesRef = useRef<SVGGElement>(null)
-
-  useEffect(() => {
-    const el = pageRef.current
-    if (!el) return
-    const parts: HTMLDivElement[] = []
-    for (let i = 0; i < 22; i++) {
-      const p = document.createElement('div')
-      p.className = s.particle
-      p.style.left              = Math.random() * 100 + 'vw'
-      p.style.bottom            = -Math.random() * 30 + 'vh'
-      p.style.animationDelay    = -Math.random() * 22 + 's'
-      p.style.animationDuration = 14 + Math.random() * 14 + 's'
-      p.style.opacity           = String(0.25 + Math.random() * 0.45)
-      if (Math.random() < 0.3) { p.style.background = '#8b5cf6'; p.style.boxShadow = '0 0 6px #8b5cf6' }
-      el.appendChild(p)
-      parts.push(p)
-    }
-    return () => parts.forEach(p => p.remove())
-  }, [])
-
-  useEffect(() => {
-    const g = bearRef.current
-    if (!g) return
-    const ns = 'http://www.w3.org/2000/svg'
-    for (let a = 0; a < 360; a += 15) {
-      const r1 = 180, r2 = a % 45 === 0 ? 170 : 175
-      const rad = a * Math.PI / 180
-      const l = document.createElementNS(ns, 'line')
-      l.setAttribute('class', s.bearTick)
-      l.setAttribute('x1', String(Math.sin(rad) * r1))
-      l.setAttribute('y1', String(-Math.cos(rad) * r1))
-      l.setAttribute('x2', String(Math.sin(rad) * r2))
-      l.setAttribute('y2', String(-Math.cos(rad) * r2))
-      g.appendChild(l)
-      if (a % 90 === 0) {
-        const t = document.createElementNS(ns, 'text')
-        t.setAttribute('class', s.bearText)
-        t.setAttribute('x', String(Math.sin(rad) * 195))
-        t.setAttribute('y', String(-Math.cos(rad) * 195 + 3))
-        t.setAttribute('text-anchor', 'middle')
-        t.textContent = (['N', 'E', 'S', 'W'])[a / 90]
-        g.appendChild(t)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    const g = nodesRef.current
-    if (!g) return
-    const ns = 'http://www.w3.org/2000/svg'
-    const pts: [number, number][] = [
-      [-50,-95],[40,-110],[90,-45],[120,15],[20,100],[-60,55],[-105,-5],[-80,-40],
-      [55,-60],[10,-35],[-30,-65],[80,40],[-20,130],[55,130],[140,-30],[60,-130],
-      [-70,120],[110,-95],[-130,40],[100,90],[-20,20],[35,-20],[-95,80],[150,-60],
-      [-50,-150],[160,40],
-    ]
-    pts.forEach(([x, y], i) => {
-      const ring = document.createElementNS(ns, 'circle')
-      ring.setAttribute('class', s.nodeRing + (i % 2 ? ' ' + s.nodeRingAlt : ''))
-      ring.setAttribute('cx', String(x)); ring.setAttribute('cy', String(y)); ring.setAttribute('r', '2.5')
-      g.appendChild(ring)
-      const c = document.createElementNS(ns, 'circle')
-      c.setAttribute('class', s.nodeDot)
-      c.setAttribute('cx', String(x)); c.setAttribute('cy', String(y)); c.setAttribute('r', '1.8')
-      c.setAttribute('filter', 'drop-shadow(0 0 4px #00e5ff)')
-      g.appendChild(c)
-    })
-  }, [])
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -140,7 +64,7 @@ export default function LoginPage() {
           })
         }
         setSuccess(true)
-        setTimeout(() => { window.location.href = '/dashboard' }, 1400)
+        setTimeout(() => { window.location.href = '/executive-summary' }, 1400)
       }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
@@ -167,7 +91,7 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? 'ลงทะเบียนไม่สำเร็จ') }
-      else { toast.success(`ลงทะเบียนสำเร็จ — ยินดีต้อนรับ ${data.branch_name}`); window.location.href = '/dashboard' }
+      else { toast.success(`ลงทะเบียนสำเร็จ — ยินดีต้อนรับ ${data.branch_name}`); window.location.href = '/executive-summary' }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
   }
@@ -275,66 +199,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={s.page} ref={pageRef}>
+    <div className={s.page}>
 
       {/* Top chrome bar */}
       <div className={s.chrome}>
-        <span className={s.brand}>◢ WSC-R10</span>
+        <span className={s.brand}>WSC-R10</span>
         <span className={s.sep} />
-        <span>SECURE ACCESS · <b>REGION 10</b> · DISTRIBUTION SYSTEM DIVISION</span>
+        <span>การประปาส่วนภูมิภาค <b>เขต 10</b> · ฝ่ายระบบจำหน่ายน้ำ</span>
         <div className={s.chromeRight}>
-          <span className={s.secure}>● TLS 1.3 · AES-256-GCM</span>
+          <span className={s.secure}>● เชื่อมต่อปลอดภัย</span>
           <span className={s.sep} />
-          <span>NODE <b>BKK-EDGE-04</b></span>
-          <span className={s.sep} />
-          <span className={s.live}><span className={s.liveDot} />SYSTEM LIVE</span>
+          <span className={s.live}><span className={s.liveDot} />ระบบพร้อมใช้งาน</span>
         </div>
       </div>
 
       <div className={s.stage}>
 
-        {/* Left — tactical display */}
+        {/* Left — brand panel */}
         <section className={s.left}>
           <div className={s.leftHead}>
-            <div className={s.kicker}>{'// Distribution System Division'}</div>
-            <h1 className={s.title}>เขต 10<small>ZONE_10 · OPERATIONS COMMAND</small></h1>
+            <div className={s.kicker}>ฝ่ายระบบจำหน่ายน้ำ</div>
+            <h1 className={s.title}>NRW Tracker<small>ระบบติดตามน้ำสูญเสีย · เขต 10</small></h1>
             <p className={s.sub}>
-              ระบบบริหารจัดการและติดตามเครือข่ายระบบประปา การประปาส่วนภูมิภาค
-              สาขาในความรับผิดชอบ เขต 10 ครอบคลุม 26 สาขา ใน 10 จังหวัด
-              พื้นที่ภาคเหนือตอนล่างและภาคกลางตอนบน — กรุณากรอกข้อมูลผู้ใช้งาน
-              และพื้นที่ที่ท่านรับผิดชอบ เพื่อเข้าสู่ ศูนย์ปฏิบัติการระบบประปา กปภ. เขต 10
+              ระบบบริหารจัดการและติดตามน้ำสูญเสีย (NRW) ของการประปาส่วนภูมิภาค
+              เขต 10 ครอบคลุม 26 สาขา ใน 10 จังหวัด พื้นที่ภาคเหนือตอนล่างและภาคกลางตอนบน
+              — กรอกรหัสพนักงานและรหัสผ่านเพื่อเข้าสู่ระบบ
             </p>
           </div>
 
-          <div className={s.radar}>
-            <svg viewBox="-200 -200 400 400">
-              <circle className={s.ring} cx="0" cy="0" r="180" />
-              <circle className={`${s.ring} ${s.dash}`} cx="0" cy="0" r="140" />
-              <circle className={s.ring} cx="0" cy="0" r="100" />
-              <circle className={`${s.ring} ${s.dash}`} cx="0" cy="0" r="60" />
-              <circle className={s.ring} cx="0" cy="0" r="20" />
-              <line className={s.cross} x1="-190" y1="0" x2="190" y2="0" />
-              <line className={s.cross} x1="0" y1="-190" x2="0" y2="190" />
-              <g ref={bearRef} />
-              <polygon className={s.zone} points="-80,-130 -10,-150 60,-130 80,-50 50,30 -30,40 -90,-30" />
-              <polygon className={`${s.zone} ${s.zoneV}`} points="-50,40 30,40 70,90 50,140 -20,150 -70,100" />
-              <polygon className={s.zone} points="80,-130 150,-90 160,0 110,40 70,-30" />
-              <g>
-                {LINK_PTS.map(([x, y], i) => (
-                  <line key={i} className={s.link} x1="0" y1="0" x2={x} y2={y} />
-                ))}
-              </g>
-              <g ref={nodesRef} />
-              <g>
-                <circle className={s.hubRing} cx="0" cy="0" r="3" />
-                <circle className={`${s.hubRing} ${s.hubRingAlt}`} cx="0" cy="0" r="3" />
-                <circle cx="0" cy="0" r="6" fill="none" stroke="#00e5ff" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 10px #00e5ff)' }} />
-                <circle cx="0" cy="0" r="3" fill="white" />
-                <text x="10" y="-8" fontFamily="var(--font-mono)" fontSize={9} fill="#00e5ff" letterSpacing={1.4}>HUB · CC 1032</text>
-                <text x="10" y="6"  fontFamily="var(--font-sans)" fontSize={10} fill="#cfe6ff">นครสวรรค์</text>
-              </g>
+          <div className={s.mark}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0B6E76" strokeWidth="1.5">
+              <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
+              <path d="M9 12l2 2 4-4" strokeOpacity="0.75" />
             </svg>
-            <div className={s.sweep} />
           </div>
 
           <div className={s.stats}>
@@ -352,16 +249,13 @@ export default function LoginPage() {
         {/* Right — auth panel */}
         <section className={s.right}>
           <div className={s.auth}>
-            <i className={`${s.corner} ${s.cTL}`} /><i className={`${s.corner} ${s.cTR}`} />
-            <i className={`${s.corner} ${s.cBL}`} /><i className={`${s.corner} ${s.cBR}`} />
-
             {mode === 'fp' ? (
               /* ── Forgot Password Panel ── */
               <div>
                 <div className={s.authHead}>
                   <div className={s.authMark}><span>?</span></div>
                   <div className={s.ht}>
-                    <div className={s.authK}>{'// Recover Access'}</div>
+                    <div className={s.authK}>กู้คืนการเข้าถึง</div>
                     <h2>ลืมรหัสผ่าน</h2>
                     <p>ค้นหารหัสผ่านด้วยรหัสพนักงาน</p>
                   </div>
@@ -397,7 +291,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className={s.fpPwBox}>
-                      <div className={s.fpPwLabel}>{'// รหัสผ่านที่บันทึกไว้'}</div>
+                      <div className={s.fpPwLabel}>รหัสผ่านที่บันทึกไว้</div>
                       <div className={s.fpPwRow}>
                         <span className={s.fpPwText}>
                           {fpShowPw ? fpPassword : '•'.repeat(fpPassword.length)}
@@ -436,7 +330,7 @@ export default function LoginPage() {
                           <div className={s.fpBadgeName}>{fpName || fpEmpId}</div>
                           <div className={s.fpBadgeBranch}>{fpBranch}</div>
                         </div>
-                        <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,181,71,.07)', border: '1px solid rgba(255,181,71,.25)', fontSize: 12.5, color: '#f0e0c0', lineHeight: 1.5 }}>
+                        <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: '#FBF1E1', border: '1px solid #A8721A40', fontSize: 12.5, color: '#6B5010', lineHeight: 1.5 }}>
                           ไม่พบรหัสผ่านที่บันทึกไว้ — กรุณาตั้งรหัสผ่านใหม่
                         </div>
                         <div className={s.field}>
@@ -511,7 +405,7 @@ export default function LoginPage() {
                 <div className={s.authHead}>
                   <div className={s.authMark}><span>◢</span></div>
                   <div className={s.ht}>
-                    <div className={s.authK}>{'// Secure Sign-in'}</div>
+                    <div className={s.authK}>เข้าสู่ระบบอย่างปลอดภัย</div>
                     <h2>{HEAD[tab].h}</h2>
                     <p>{HEAD[tab].p}</p>
                   </div>
@@ -617,15 +511,8 @@ export default function LoginPage() {
 
             <div className={s.foot}>
               <span>WSC-R10 · <b>v1.0</b></span>
-              <span className={s.footSec}>SESSION ENCRYPTED</span>
+              <span className={s.footSec}>เชื่อมต่อปลอดภัย</span>
             </div>
-          </div>
-
-          <div className={s.chips}>
-            <div className={s.chipRow}><span>UPLINK <b>STABLE</b></span></div>
-            <div className={s.chipRow}><span>SCADA <b className={s.ok}>SYNC</b></span></div>
-            <div className={s.chipRow}><span>26/26 NODES</span></div>
-            <div className={s.chipRow}><span>LAT <b>15.7°N</b> · LNG <b>100.1°E</b></span></div>
           </div>
         </section>
       </div>

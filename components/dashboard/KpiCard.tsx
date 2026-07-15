@@ -12,69 +12,16 @@ interface KpiCardProps {
   invertDelta?: boolean
 }
 
-const ACCENT: Record<AccentColor, {
-  val:      string
-  glow:     string
-  gradient: string
-  border:   string
-  blob:     string
-}> = {
-  sky:    {
-    val:      '#38BDF8',
-    glow:     'rgba(56,189,248,.45)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(7,89,133,.22) 100%)',
-    border:   'rgba(56,189,248,.22)',
-    blob:     'rgba(56,189,248,.10)',
-  },
-  cyan:   {
-    val:      '#22D3EE',
-    glow:     'rgba(34,211,238,.42)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(6,100,120,.22) 100%)',
-    border:   'rgba(34,211,238,.20)',
-    blob:     'rgba(34,211,238,.09)',
-  },
-  teal:   {
-    val:      '#2DD4BF',
-    glow:     'rgba(45,212,191,.40)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(17,94,89,.22) 100%)',
-    border:   'rgba(45,212,191,.20)',
-    blob:     'rgba(45,212,191,.09)',
-  },
-  green:  {
-    val:      '#4ADE80',
-    glow:     'rgba(74,222,128,.40)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(20,83,45,.22) 100%)',
-    border:   'rgba(74,222,128,.20)',
-    blob:     'rgba(74,222,128,.09)',
-  },
-  amber:  {
-    val:      '#FCD34D',
-    glow:     'rgba(252,211,77,.50)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(120,76,0,.24) 100%)',
-    border:   'rgba(252,211,77,.22)',
-    blob:     'rgba(252,211,77,.10)',
-  },
-  red:    {
-    val:      '#F87171',
-    glow:     'rgba(248,113,113,.45)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(100,15,15,.28) 100%)',
-    border:   'rgba(248,113,113,.22)',
-    blob:     'rgba(248,113,113,.10)',
-  },
-  purple: {
-    val:      '#C084FC',
-    glow:     'rgba(192,132,252,.42)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(76,29,149,.24) 100%)',
-    border:   'rgba(192,132,252,.20)',
-    blob:     'rgba(192,132,252,.09)',
-  },
-  blue:   {
-    val:      '#93C5FD',
-    glow:     'rgba(147,197,253,.38)',
-    gradient: 'linear-gradient(135deg, rgba(8,18,44,.96) 55%, rgba(30,64,175,.22) 100%)',
-    border:   'rgba(147,197,253,.20)',
-    blob:     'rgba(147,197,253,.08)',
-  },
+// สีตัวเลข + คลาส accent-bar (globals.css) — ธีมสว่าง การ์ดพื้นขาวมี glass-card ให้อยู่แล้ว
+const ACCENT: Record<AccentColor, { val: string; barClass: string }> = {
+  sky:    { val: '#0B6E76', barClass: 'accent-bar-sky' },
+  cyan:   { val: '#0B6E76', barClass: 'accent-bar-cyan' },
+  teal:   { val: '#0B6E76', barClass: 'accent-bar-teal' },
+  green:  { val: '#1E7A5A', barClass: 'accent-bar-green' },
+  amber:  { val: '#A8721A', barClass: 'accent-bar-amber' },
+  red:    { val: '#B3392C', barClass: 'accent-bar-red' },
+  purple: { val: '#6B4FA0', barClass: 'accent-bar-purple' },
+  blue:   { val: '#2B5C86', barClass: 'accent-bar-blue' },
 }
 
 export function KpiCard({
@@ -87,35 +34,21 @@ export function KpiCard({
     : null
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl p-5"
-      style={{
-        background: a.gradient,
-        border: `1px solid ${a.border}`,
-        boxShadow: `0 0 0 1px rgba(255,255,255,.03) inset, 0 4px 6px rgba(0,0,0,.40), 0 16px 48px rgba(0,0,0,.50)`,
-      }}
-    >
-      {/* Decorative blob — top-right corner */}
-      <div
-        aria-hidden
-        className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${a.blob} 0%, transparent 70%)` }}
-      />
-
+    <div className={`glass-card ${a.barClass} p-5`}>
       {/* Label */}
       <p
-        className="relative text-[10px] font-bold tracking-[.14em] uppercase mb-3"
-        style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}
+        className="text-[10px] font-bold tracking-[.14em] uppercase mb-3"
+        style={{ color: '#6B7686', fontFamily: 'var(--font-mono)' }}
       >
         {label}
       </p>
 
       {/* Value */}
-      <div className="relative flex items-baseline gap-2 mb-1">
+      <div className="flex items-baseline gap-2 mb-1">
         {loading ? (
           <div
             className="h-10 w-32 rounded-xl animate-pulse"
-            style={{ background: 'rgba(71,130,255,.10)' }}
+            style={{ background: '#EFF2F5' }}
           />
         ) : (
           <>
@@ -126,7 +59,6 @@ export function KpiCard({
                 fontSize: '40px',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '-.02em',
-                textShadow: `0 0 28px ${a.glow}, 0 0 56px ${a.glow}60`,
               }}
             >
               {value}
@@ -134,7 +66,7 @@ export function KpiCard({
             {unit && (
               <span
                 className="text-[14px] font-semibold"
-                style={{ color: a.val, opacity: .60 }}
+                style={{ color: a.val, opacity: .65 }}
               >
                 {unit}
               </span>
@@ -144,9 +76,9 @@ export function KpiCard({
       </div>
 
       {/* Sub / Delta */}
-      <div className="relative flex items-center justify-between mt-2.5 gap-2">
+      <div className="flex items-center justify-between mt-2.5 gap-2">
         {sub && (
-          <p className="text-[11px] leading-tight" style={{ color: '#7B9CCC' }}>
+          <p className="text-[11px] leading-tight" style={{ color: '#6B7686' }}>
             {sub}
           </p>
         )}
@@ -154,7 +86,7 @@ export function KpiCard({
           <span
             className="text-[11px] font-bold shrink-0"
             style={{
-              color: deltaGood ? '#4ADE80' : '#F87171',
+              color: deltaGood ? '#1E7A5A' : '#B3392C',
               fontFamily: 'var(--font-mono)',
             }}
           >
@@ -167,13 +99,6 @@ export function KpiCard({
           </span>
         )}
       </div>
-
-      {/* Subtle bottom glow line */}
-      <div
-        aria-hidden
-        className="absolute bottom-0 left-6 right-6 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${a.val}30, transparent)` }}
-      />
     </div>
   )
 }

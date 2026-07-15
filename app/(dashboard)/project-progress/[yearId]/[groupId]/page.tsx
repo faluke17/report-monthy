@@ -71,21 +71,21 @@ export default async function GroupProjectsPage({
     <div className="space-y-5 animate-fadein">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm flex-wrap">
-        <Link href="/project-progress" className="text-white/40 hover:text-white/70 transition-colors">
+        <Link href="/project-progress" className="text-black/40 hover:text-black/70 transition-colors">
           ความก้าวหน้าโครงการ
         </Link>
-        <span className="text-white/20">/</span>
-        <Link href={`/project-progress/${yearId}`} className="text-white/40 hover:text-white/70 transition-colors">
+        <span className="text-black/20">/</span>
+        <Link href={`/project-progress/${yearId}`} className="text-black/40 hover:text-black/70 transition-colors">
           {year.name}
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-white/60">{group.name}</span>
+        <span className="text-black/20">/</span>
+        <span className="text-black/60">{group.name}</span>
       </div>
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-white">{group.name}</h1>
-        <p className="text-sm text-white/40 mt-0.5">{year.name}</p>
+        <h1 className="text-xl font-bold text-[#12181F]">{group.name}</h1>
+        <p className="text-sm text-black/40 mt-0.5">{year.name}</p>
       </div>
 
       <ProjectProgressTable

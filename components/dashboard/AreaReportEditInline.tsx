@@ -37,8 +37,8 @@ interface ObstacleRow {
   priority: 1 | 2
 }
 
-const INPUT = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
-const LABEL = 'block text-[10px] font-semibold text-white/40 uppercase tracking-wide mb-1.5'
+const INPUT = 'w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
+const LABEL = 'block text-[10px] font-semibold text-black/40 uppercase tracking-wide mb-1.5'
 
 interface Props {
   report: AreaReport
@@ -172,7 +172,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-white">{report.area_name}</p>
+          <p className="text-sm font-bold text-[#12181F]">{report.area_name}</p>
           <p className="text-[10px] text-cyan-400/60 mt-0.5">โหมดแก้ไข</p>
         </div>
         <div className="flex gap-2">
@@ -180,7 +180,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/50 hover:text-white border border-white/15 rounded-lg transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black/50 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors disabled:opacity-40"
           >
             <X size={12} />
             ยกเลิก
@@ -189,7 +189,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold rounded-lg disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-bold rounded-lg disabled:opacity-40 transition-colors"
           >
             <Check size={12} />
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -197,7 +197,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
         </div>
       </div>
 
-      <div className="h-px bg-white/10" />
+      <div className="h-px bg-black/10" />
 
       {/* ก่อนดำเนินการ */}
       <section>
@@ -226,7 +226,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
             <Plus size={11} /> เพิ่มสเต็ป
           </button>
         </div>
-        <div className="grid grid-cols-[24px_1fr_56px_56px_80px_20px] gap-1.5 text-[9px] text-white/25 px-0.5 mb-1">
+        <div className="grid grid-cols-[24px_1fr_56px_56px_80px_20px] gap-1.5 text-[9px] text-black/25 px-0.5 mb-1">
           <span />
           <span>สูญเสีย (m³/hr)</span>
           <span className="text-center">จุดรั่ว</span>
@@ -237,7 +237,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
         <div className="space-y-1.5">
           {steps.map((s, i) => (
             <div key={i} className="grid grid-cols-[24px_1fr_56px_56px_80px_20px] gap-1.5 items-center">
-              <span className="text-xs text-white/40 font-mono text-center">{s.step_no}</span>
+              <span className="text-xs text-black/40 font-mono text-center">{s.step_no}</span>
               <input
                 type="number"
                 value={s.estimated_loss}
@@ -262,7 +262,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
               <select
                 value={s.repair_status}
                 onChange={(e) => patchStep(i, { repair_status: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+                className="w-full bg-black/5 border border-black/10 rounded-lg px-2 py-2 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50 cursor-pointer"
               >
                 {REPAIR_STATUSES.map((r) => (
                   <option key={r} value={r}>{r}</option>
@@ -302,7 +302,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
 
       {/* จุดรั่วรวม */}
       <section>
-        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">จุดรั่วรวม</p>
+        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest mb-2">จุดรั่วรวม</p>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className={LABEL}>ซ่อมแล้ว (จุด)</label>
@@ -326,7 +326,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
           onChange={(e) => setPdcaDo(e.target.value)}
           rows={4}
           placeholder="บันทึกสิ่งที่ดำเนินการไปแล้ว..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 resize-none transition-colors"
+          className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 resize-none transition-colors"
         />
       </section>
 
@@ -341,7 +341,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
           onChange={(e) => setPdcaAct(e.target.value)}
           rows={4}
           placeholder="บันทึกแผนงานเดือนถัดไป..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 resize-none transition-colors"
+          className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-emerald-500/50 resize-none transition-colors"
         />
       </section>
 
@@ -355,10 +355,10 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
             className={`ml-auto flex items-center gap-2 px-3 py-1 rounded-full text-xs border transition-colors ${
               hasObstacle
                 ? 'bg-orange-500/20 border-orange-500/40 text-orange-300'
-                : 'bg-white/5 border-white/15 text-white/40'
+                : 'bg-black/5 border-black/15 text-black/40'
             }`}
           >
-            <span className={`w-3 h-3 rounded-full border-2 transition-colors ${hasObstacle ? 'bg-orange-400 border-orange-400' : 'border-white/30'}`} />
+            <span className={`w-3 h-3 rounded-full border-2 transition-colors ${hasObstacle ? 'bg-orange-400 border-orange-400' : 'border-black/30'}`} />
             {hasObstacle ? 'มีอุปสรรค' : 'ไม่มีอุปสรรค'}
           </button>
         </div>
@@ -378,7 +378,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                   <select
                     value={obs.obstacle_type}
                     onChange={(e) => patchObstacle(oi, { obstacle_type: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 cursor-pointer"
+                    className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50 cursor-pointer"
                   >
                     <option value="">— เลือก —</option>
                     {OBSTACLE_TYPES.map((t) => (
@@ -403,7 +403,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                           ? lvl === 1
                             ? 'bg-red-500/20 border-red-500/60 text-red-300'
                             : 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                          : 'bg-white/5 border-white/15 text-white/40'
+                          : 'bg-black/5 border-black/15 text-black/40'
                       }`}
                     >
                       {lvl === 1 ? '🔴 สูง' : '🟡 กลาง'}
@@ -412,15 +412,15 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                 </div>
                 <div>
                   <label className={LABEL}>รายละเอียด</label>
-                  <textarea value={obs.obstacle_detail} onChange={(e) => patchObstacle(oi, { obstacle_detail: e.target.value })} rows={2} placeholder="อธิบายสภาพปัญหา..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
+                  <textarea value={obs.obstacle_detail} onChange={(e) => patchObstacle(oi, { obstacle_detail: e.target.value })} rows={2} placeholder="อธิบายสภาพปัญหา..." className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
                 </div>
                 <div>
                   <label className={LABEL}>แนวทางแก้ไข</label>
-                  <textarea value={obs.resolution_plan} onChange={(e) => patchObstacle(oi, { resolution_plan: e.target.value })} rows={2} placeholder="แนวทางที่จะดำเนินการ..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
+                  <textarea value={obs.resolution_plan} onChange={(e) => patchObstacle(oi, { resolution_plan: e.target.value })} rows={2} placeholder="แนวทางที่จะดำเนินการ..." className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
                 </div>
                 <div>
                   <label className={LABEL}>สิ่งที่ต้องการจากเขต</label>
-                  <textarea value={obs.region_support_needed} onChange={(e) => patchObstacle(oi, { region_support_needed: e.target.value })} rows={2} placeholder="(ถ้ามี)" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
+                  <textarea value={obs.region_support_needed} onChange={(e) => patchObstacle(oi, { region_support_needed: e.target.value })} rows={2} placeholder="(ถ้ามี)" className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 resize-none" />
                 </div>
               </div>
             ))}
@@ -432,12 +432,12 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       </section>
 
       {/* Bottom save button (repeat for long forms) */}
-      <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+      <div className="flex justify-end gap-2 pt-2 border-t border-black/10">
         <button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs text-white/50 hover:text-white border border-white/15 rounded-lg transition-colors disabled:opacity-40"
+          className="flex items-center gap-1.5 px-4 py-2 text-xs text-black/50 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors disabled:opacity-40"
         >
           ยกเลิก
         </button>
@@ -445,7 +445,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold rounded-lg disabled:opacity-40 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 text-xs bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-bold rounded-lg disabled:opacity-40 transition-colors"
         >
           <Check size={12} />
           {saving ? 'กำลังบันทึก...' : 'บันทึก'}

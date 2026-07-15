@@ -13,7 +13,7 @@ interface Props {
 }
 
 const PHASE_COLORS = [
-  'bg-white/15', 'bg-violet-500', 'bg-blue-500',
+  'bg-black/15', 'bg-violet-500', 'bg-blue-500',
   'bg-indigo-400', 'bg-amber-400', 'bg-cyan-400', 'bg-emerald-400',
 ]
 
@@ -89,8 +89,8 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">ความก้าวหน้าโครงการ</h1>
-          <p className="text-sm text-white/40 mt-1">ติดตามโครงการก่อสร้าง / วางท่อ แยกตามปีงบประมาณ</p>
+          <h1 className="text-2xl font-bold text-[#12181F] tracking-tight">ความก้าวหน้าโครงการ</h1>
+          <p className="text-sm text-black/40 mt-1">ติดตามโครงการก่อสร้าง / วางท่อ แยกตามปีงบประมาณ</p>
         </div>
         {canCreate && (
           <button
@@ -104,10 +104,10 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
 
       {/* Year list */}
       {budgetYears.length === 0 ? (
-        <div className="glass-card p-16 text-center text-white/30">
+        <div className="glass-card p-16 text-center text-black/30">
           <Building2 size={40} className="mx-auto mb-3 opacity-30" />
           <p>ยังไม่มีปีงบประมาณ</p>
-          {canCreate && <p className="text-sm mt-1 text-white/20">กด &ldquo;เพิ่มปีงบประมาณ&rdquo; เพื่อเริ่มต้น</p>}
+          {canCreate && <p className="text-sm mt-1 text-black/20">กด &ldquo;เพิ่มปีงบประมาณ&rdquo; เพื่อเริ่มต้น</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -132,7 +132,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
             }
 
             return (
-              <div key={year.id} className="glass-card overflow-hidden hover:border-white/15 transition-all group/card">
+              <div key={year.id} className="glass-card overflow-hidden hover:border-black/15 transition-all group/card">
                 <div className="flex items-stretch">
                   {/* Left accent */}
                   <div className="w-1.5 shrink-0 bg-gradient-to-b from-cyan-400/70 via-cyan-500/30 to-transparent" />
@@ -146,12 +146,12 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                       {/* Left: year info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-3 mb-2">
-                          <span className="text-3xl font-black text-white/90 num tracking-tight">
+                          <span className="text-3xl font-black text-black/90 num tracking-tight">
                             {year.fiscal_year}
                           </span>
-                          <span className="text-sm text-white/40 font-medium">{year.name}</span>
+                          <span className="text-sm text-black/40 font-medium">{year.name}</span>
                           {hasBothTypes && (
-                            <span className="text-[11px] text-white/30">
+                            <span className="text-[11px] text-black/30">
                               {isExpanded ? 'เลือกประเภท' : 'คลิกเพื่อดู'}
                             </span>
                           )}
@@ -173,7 +173,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
 
                         {/* Stats inline */}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                          <span className="text-xs text-white/40 num">
+                          <span className="text-xs text-black/40 num">
                             {s.groupCount} กลุ่มงบ · {s.total} โครงการ
                           </span>
                           {s.completed > 0 && (
@@ -198,8 +198,8 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                       <div className="shrink-0 flex flex-col items-center gap-1">
                         <ProgressRing pct={s.donePct} size={52} />
                         {hasBothTypes
-                          ? <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-cyan-400' : 'text-white/20'}`} />
-                          : <ChevronRight size={14} className="text-white/20 group-hover/card:text-cyan-400 transition-colors" />
+                          ? <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-cyan-400' : 'text-black/20'}`} />
+                          : <ChevronRight size={14} className="text-black/20 group-hover/card:text-cyan-400 transition-colors" />
                         }
                       </div>
                     </div>
@@ -207,18 +207,18 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
 
                   {/* Actions zone */}
                   {canCreate && (
-                    <div className="shrink-0 flex flex-col justify-center gap-1 px-3 border-l border-white/5">
+                    <div className="shrink-0 flex flex-col justify-center gap-1 px-3 border-l border-black/5">
                       {!isConfirmDelete ? (
                         <>
                           <button
                             onClick={() => { setEditingYear({ id: year.id, name: year.name }); setEditName(year.name) }}
-                            className="p-1.5 text-white/15 hover:text-cyan-400 transition-colors rounded-lg hover:bg-cyan-500/10"
+                            className="p-1.5 text-black/15 hover:text-cyan-400 transition-colors rounded-lg hover:bg-cyan-500/10"
                           >
                             <Pencil size={12} />
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(year.id)}
-                            className="p-1.5 text-white/15 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                            className="p-1.5 text-black/15 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -230,7 +230,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                             ลบ
                           </button>
                           <button onClick={() => setConfirmDeleteId(null)}
-                            className="text-[10px] text-white/30 px-2 py-0.5 rounded border border-white/10">
+                            className="text-[10px] text-black/30 px-2 py-0.5 rounded border border-black/10">
                             ยกเลิก
                           </button>
                         </div>
@@ -241,8 +241,8 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
 
                 {/* ── Type selector panel (expands inline) ─────────────────── */}
                 {hasBothTypes && isExpanded && (
-                  <div className="border-t border-white/8 px-5 py-4 bg-white/2 animate-fadein">
-                    <p className="text-[10px] text-white/30 uppercase tracking-widest mb-3">เลือกประเภทโครงการ</p>
+                  <div className="border-t border-black/8 px-5 py-4 bg-black/2 animate-fadein">
+                    <p className="text-[10px] text-black/30 uppercase tracking-widest mb-3">เลือกประเภทโครงการ</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                       {/* Pipe */}
@@ -259,8 +259,8 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                           </div>
                           <ChevronRight size={14} className="text-cyan-400/40 group-hover/btn:text-cyan-400 transition-colors" />
                         </div>
-                        <p className="text-2xl font-black text-white num">{s.pipeCount}</p>
-                        <p className="text-[11px] text-white/40 mt-0.5">โครงการ</p>
+                        <p className="text-2xl font-black text-[#12181F] num">{s.pipeCount}</p>
+                        <p className="text-[11px] text-black/40 mt-0.5">โครงการ</p>
                         {pipeStats.total > 0 && (
                           <div className="mt-2.5 space-y-1">
                             <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
@@ -294,8 +294,8 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
                           </div>
                           <ChevronRight size={14} className="text-violet-400/40 group-hover/btn:text-violet-400 transition-colors" />
                         </div>
-                        <p className="text-2xl font-black text-white num">{s.dmaCount}</p>
-                        <p className="text-[11px] text-white/40 mt-0.5">โครงการ</p>
+                        <p className="text-2xl font-black text-[#12181F] num">{s.dmaCount}</p>
+                        <p className="text-[11px] text-black/40 mt-0.5">โครงการ</p>
                         {dmaStats.total > 0 && (
                           <div className="mt-2.5 space-y-1">
                             <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
@@ -329,18 +329,18 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative z-10 w-full max-w-sm glass-card rounded-2xl overflow-hidden animate-fadein shadow-2xl">
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/8 bg-white/3">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-black/8 bg-black/3">
               <button onClick={() => setShowForm(false)} className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-              <p className="flex-1 text-center text-sm font-semibold text-white/70">เพิ่มปีงบประมาณ</p>
+              <p className="flex-1 text-center text-sm font-semibold text-black/70">เพิ่มปีงบประมาณ</p>
               <div className="w-3" />
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs text-white/50 mb-1.5">ปี พ.ศ. <span className="text-white/25">(2560–2599)</span></label>
+                <label className="block text-xs text-black/50 mb-1.5">ปี พ.ศ. <span className="text-black/25">(2560–2599)</span></label>
                 <input
                   type="number" value={fiscalYear} onChange={e => setFiscalYear(e.target.value)}
                   placeholder="เช่น 2569" min={2560} max={2599}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50"
+                  className="w-full bg-black/5 border border-black/15 rounded-xl px-4 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50"
                   autoFocus
                 />
                 {fiscalYear && parseInt(fiscalYear) >= 2560 && parseInt(fiscalYear) <= 2599 && (
@@ -349,7 +349,7 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => { setShowForm(false); setFiscalYear('') }}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white/80 border border-white/10 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl text-sm text-black/50 hover:text-black/80 border border-black/10 transition-colors">
                   ยกเลิก
                 </button>
                 <button type="submit" disabled={isPending || !fiscalYear || parseInt(fiscalYear) < 2560 || parseInt(fiscalYear) > 2599}
@@ -367,20 +367,20 @@ export function BudgetYearList({ budgetYears, canCreate }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingYear(null)} />
           <div className="relative z-10 w-full max-w-sm glass-card rounded-2xl overflow-hidden animate-fadein shadow-2xl">
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/8 bg-white/3">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-black/8 bg-black/3">
               <button onClick={() => setEditingYear(null)} className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-              <p className="flex-1 text-center text-sm font-semibold text-white/70">แก้ไขชื่อปีงบประมาณ</p>
+              <p className="flex-1 text-center text-sm font-semibold text-black/70">แก้ไขชื่อปีงบประมาณ</p>
               <div className="w-3" />
             </div>
             <div className="p-5 space-y-4">
               <input
                 type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-black/5 border border-black/15 rounded-xl px-4 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button onClick={() => setEditingYear(null)}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white/80 border border-white/10 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl text-sm text-black/50 hover:text-black/80 border border-black/10 transition-colors">
                   ยกเลิก
                 </button>
                 <button onClick={handleEditSave} disabled={isPending || !editName.trim()}
@@ -406,16 +406,16 @@ function ProgressRing({ pct, size }: { pct: number; size: number }) {
   return (
     <svg width={size} height={size} className="-rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r}
-        fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={5} />
+        fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={5} />
       <circle cx={size / 2} cy={size / 2} r={r}
-        fill="none" stroke={pct === 100 ? '#34d399' : '#22d3ee'}
+        fill="none" stroke={pct === 100 ? '#1E7A5A' : '#0B6E76'}
         strokeWidth={5} strokeLinecap="round"
         strokeDasharray={`${dash} ${circ}`}
         style={{ transition: 'stroke-dasharray 0.5s ease' }}
       />
       <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central"
         className="rotate-90" style={{ transform: `rotate(90deg) translate(0, 0)`, transformOrigin: `${size/2}px ${size/2}px` }}
-        fill={pct === 100 ? '#34d399' : '#22d3ee'} fontSize={10} fontWeight={700}>
+        fill={pct === 100 ? '#1E7A5A' : '#0B6E76'} fontSize={10} fontWeight={700}>
         {pct}%
       </text>
     </svg>

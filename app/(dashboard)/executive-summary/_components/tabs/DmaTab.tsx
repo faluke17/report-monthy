@@ -7,7 +7,7 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
 
   if (!nodeDmaStats.length) return (
     <Card style={{ textAlign: 'center', padding: 50 }}>
-      <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>// ยังไม่มีข้อมูลน้ำจ่ายรายโซนสำหรับสาขานี้</div>
+      <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{'// ยังไม่มีข้อมูลน้ำจ่ายรายโซนสำหรับสาขานี้'}</div>
     </Card>
   )
 
@@ -32,7 +32,7 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
       />
 
       {/* Summary row */}
-      <div style={{ display: 'flex', gap: isMobile ? 12 : 20, flexWrap: 'wrap', rowGap: 10, marginBottom: 14, padding: '10px 14px', background: 'rgba(34,211,238,0.04)', border: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', columnGap: isMobile ? 12 : 20, flexWrap: 'wrap', rowGap: 10, marginBottom: 14, padding: '10px 14px', background: 'rgba(11,110,118,0.05)', border: `1px solid ${C.border}` }}>
         <div>
           <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>รวมน้ำสูญเสีย</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: C.crit, fontFamily: MONO }}>{fmt(total)} <span style={{ fontSize: 10, color: C.dim }}>m³</span></div>
@@ -55,7 +55,7 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
       <div style={{ overflowX: isMobile ? 'auto' : 'visible' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: isMobile ? 620 : undefined }}>
         {/* Header */}
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 8, padding: '6px 10px', background: 'rgba(34,211,238,0.07)', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 8, padding: '6px 10px', background: 'rgba(11,110,118,0.08)', borderBottom: `1px solid ${C.border}` }}>
           {['#', 'ประเภท', 'ชื่อ Node', 'น้ำจ่าย', 'จำหน่าย', 'สูญเสีย (m³)', 'NRW%'].map(h => (
             <div key={h} style={{ fontSize: 9, color: C.accent, fontFamily: MONO, fontWeight: 700, letterSpacing: 1 }}>{h}</div>
           ))}
@@ -73,8 +73,8 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
                 gridTemplateColumns: gridCols,
                 gap: 8,
                 padding: '9px 10px',
-                background: top3 ? 'rgba(239,68,68,0.07)' : C.row,
-                border: `1px solid ${top3 ? 'rgba(239,68,68,0.25)' : C.border}`,
+                background: top3 ? 'rgba(179,57,44,0.07)' : C.row,
+                border: `1px solid ${top3 ? 'rgba(179,57,44,0.25)' : C.border}`,
               }}
             >
               {/* อันดับ */}
@@ -88,7 +88,7 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
 
               {/* ชื่อ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                <span style={{ fontSize: 13, color: top3 ? '#F1948A' : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 13, color: top3 ? '#B85A50' : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {d.node_name || d.node_code}
                 </span>
                 {d.has_device_fail && (

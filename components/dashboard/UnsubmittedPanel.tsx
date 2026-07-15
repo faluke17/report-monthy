@@ -34,18 +34,18 @@ export function UnsubmittedPanel({
   const isUrgent  = days !== null && days <= 7 && days >= 0
   const isOverdue = days !== null && days < 0
 
-  const accent    = allDone ? '#4ADE80' : isOverdue ? '#F87171' : isUrgent ? '#FCD34D' : '#38BDF8'
+  const accent    = allDone ? '#1E7A5A' : isOverdue ? '#B3392C' : isUrgent ? '#A8721A' : '#0B6E76'
   const bgTint    = allDone
-    ? 'rgba(74,222,128,.10)'
+    ? 'rgba(30,122,90,.10)'
     : isOverdue
-    ? 'rgba(248,113,113,.12)'
-    : 'rgba(56,189,248,.09)'
+    ? 'rgba(179,57,44,.12)'
+    : 'rgba(11,110,118,.09)'
 
   return (
     <div
       className="relative overflow-hidden rounded-2xl p-5"
       style={{
-        background: `linear-gradient(135deg, rgba(8,18,44,.96) 55%, ${bgTint} 100%)`,
+        background: `linear-gradient(135deg, rgba(0,0,0,.96) 55%, ${bgTint} 100%)`,
         border: `1px solid ${accent}28`,
         boxShadow: `inset 4px 0 0 ${accent}, 0 4px 6px rgba(0,0,0,.40), 0 16px 48px rgba(0,0,0,.50)`,
       }}
@@ -58,17 +58,17 @@ export function UnsubmittedPanel({
       />
 
       {/* Label */}
-      <p className="text-[10px] font-bold tracking-[.14em] uppercase mb-1 relative" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>
+      <p className="text-[10px] font-bold tracking-[.14em] uppercase mb-1 relative" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>
         {requirementTitle ?? 'สถานะการส่งรายงาน'}
       </p>
 
       {/* Period + due date */}
       <div className="flex items-center gap-2 mb-4 flex-wrap relative">
-        <span className="inline-flex text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: 'rgba(71,130,255,.14)', color: '#93C5FD', border: '1px solid rgba(71,130,255,.22)' }}>
+        <span className="inline-flex text-[11px] px-2 py-0.5 rounded font-medium" style={{ background: 'rgba(11,110,118,.14)', color: '#0B6E76', border: '1px solid rgba(11,110,118,.22)' }}>
           {formatThaiMonthYearShort(reportYear, reportMonth)}
         </span>
         {dueDateLabel && (
-          <span className="text-[11px]" style={{ color: isOverdue ? '#F87171' : isUrgent ? '#FCD34D' : '#7B9CCC' }}>
+          <span className="text-[11px]" style={{ color: isOverdue ? '#B3392C' : isUrgent ? '#A8721A' : '#4B5563' }}>
             กำหนดส่ง {dueDateLabel}
             {days !== null && !allDone && (
               <span className="ml-1 font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
@@ -100,15 +100,15 @@ export function UnsubmittedPanel({
 
       {/* Progress bar */}
       <div className="relative mb-3">
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.10)' }}>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(11,110,118,.10)' }}>
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{ width: `${pct}%`, background: accent, boxShadow: `0 0 10px ${accent}66` }}
           />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span className="text-[10px]" style={{ color: '#5B7AAF', fontFamily: 'var(--font-mono)' }}>{pct}%</span>
-          <span className="text-[10px]" style={{ color: allDone ? '#4ADE80' : '#FCD34D' }}>
+          <span className="text-[10px]" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>{pct}%</span>
+          <span className="text-[10px]" style={{ color: allDone ? '#1E7A5A' : '#A8721A' }}>
             {allDone ? '✓ ครบทุกสาขา' : `ค้าง ${pending} สาขา`}
           </span>
         </div>
@@ -121,7 +121,7 @@ export function UnsubmittedPanel({
             <span
               key={b.id}
               className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
-              style={{ background: 'rgba(252,211,77,.08)', border: '1px solid rgba(252,211,77,.20)', color: '#FCD34D' }}
+              style={{ background: 'rgba(168,114,26,.08)', border: '1px solid rgba(168,114,26,.20)', color: '#A8721A' }}
             >
               {b.name_th}
             </span>

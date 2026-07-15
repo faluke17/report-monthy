@@ -14,9 +14,9 @@ export const dynamic = 'force-dynamic'
 function NoteBlock({ text }: { text: string | null | undefined }) {
   if (!text) return null
   return (
-    <div className="flex gap-2 items-start bg-white/3 rounded-xl p-3 mt-1">
-      <span className="text-[10px] text-white/30 shrink-0 mt-0.5 font-bold tracking-wide uppercase">หมายเหตุ</span>
-      <p className="text-xs text-white/55 leading-relaxed">{text}</p>
+    <div className="flex gap-2 items-start bg-black/3 rounded-xl p-3 mt-1">
+      <span className="text-[10px] text-black/30 shrink-0 mt-0.5 font-bold tracking-wide uppercase">หมายเหตุ</span>
+      <p className="text-xs text-black/55 leading-relaxed">{text}</p>
     </div>
   )
 }
@@ -27,13 +27,13 @@ function MetricBlock({
   label: string; value: number | null | undefined; unit?: string; color: string
 }) {
   return (
-    <div className="bg-white/3 rounded-xl p-3">
-      <p className="text-[10px] text-white/40 mb-1.5">{label}</p>
+    <div className="bg-black/3 rounded-xl p-3">
+      <p className="text-[10px] text-black/40 mb-1.5">{label}</p>
       <div className="flex items-baseline gap-1">
         <span className={`num text-2xl font-bold ${color}`}>
           {value != null ? value.toLocaleString() : '—'}
         </span>
-        {unit && <span className="text-xs text-white/30">{unit}</span>}
+        {unit && <span className="text-xs text-black/30">{unit}</span>}
       </div>
     </div>
   )
@@ -42,8 +42,8 @@ function MetricBlock({
 function EmptyTopic() {
   return (
     <div className="flex flex-col items-center gap-2 py-6 text-center opacity-40">
-      <Circle size={24} className="text-white/30" />
-      <p className="text-sm text-white/40">ไม่มีข้อมูล</p>
+      <Circle size={24} className="text-black/30" />
+      <p className="text-sm text-black/40">ไม่มีข้อมูล</p>
     </div>
   )
 }
@@ -69,15 +69,15 @@ function TopicCard({
             {no}
           </span>
           <div>
-            <p className="font-semibold text-white text-sm leading-snug">{title}</p>
-            <p className="text-xs text-white/40 mt-0.5">{subtitle}</p>
+            <p className="font-semibold text-[#12181F] text-sm leading-snug">{title}</p>
+            <p className="text-xs text-black/40 mt-0.5">{subtitle}</p>
           </div>
         </div>
         {filled
           ? <CheckCircle2 size={18} className="text-green-400 shrink-0 mt-0.5" />
-          : <Circle size={18} className="text-white/20 shrink-0 mt-0.5" />}
+          : <Circle size={18} className="text-black/20 shrink-0 mt-0.5" />}
       </div>
-      <div className="border-t border-white/8" />
+      <div className="border-t border-black/8" />
       {children}
     </div>
   )
@@ -163,13 +163,13 @@ export default async function FiveTopicsDetailPage({
       <div className="flex items-center gap-3">
         <Link
           href="/five-topics"
-          className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-sm text-black/50 hover:text-[#12181F] transition-colors"
         >
           <ChevronLeft size={16} />
           รายงาน 5 หัวข้อ
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-sm text-white">{r.branches?.name_th}</span>
+        <span className="text-black/20">/</span>
+        <span className="text-sm text-[#12181F]">{r.branches?.name_th}</span>
       </div>
 
       {/* Hero Header */}
@@ -177,11 +177,11 @@ export default async function FiveTopicsDetailPage({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="page-kicker mb-1">รายงาน 5 หัวข้อ NRW</p>
-            <h1 className="text-xl font-bold text-white">{r.branches?.name_th}</h1>
-            <p className="text-sm text-white/40 mt-0.5">
+            <h1 className="text-xl font-bold text-[#12181F]">{r.branches?.name_th}</h1>
+            <p className="text-sm text-black/40 mt-0.5">
               {getThaiMonthName(r.report_month)} {toThaiYear(r.report_year)}
               {r.branches?.code && (
-                <span className="ml-2 text-white/25">{r.branches.code}</span>
+                <span className="ml-2 text-black/25">{r.branches.code}</span>
               )}
             </p>
           </div>
@@ -217,7 +217,7 @@ export default async function FiveTopicsDetailPage({
         </div>
 
         {r.submitted_at && (
-          <p className="text-[11px] text-white/30">
+          <p className="text-[11px] text-black/30">
             บันทึกโดย {r.created_by ?? '—'} · {formatThaiDate(r.submitted_at)}
           </p>
         )}
@@ -233,15 +233,15 @@ export default async function FiveTopicsDetailPage({
             <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold ${badgeColors[c.no]}`}>
               {c.no}
             </span>
-            <span className="text-[9px] text-white/40 leading-tight">{c.label}</span>
+            <span className="text-[9px] text-black/40 leading-tight">{c.label}</span>
             {c.filled
               ? <CheckCircle2 size={14} className="text-green-400" />
-              : <Circle size={14} className="text-white/20" />}
-            <span className={`num text-sm font-bold ${c.filled ? c.color : 'text-white/25'}`}>
+              : <Circle size={14} className="text-black/20" />}
+            <span className={`num text-sm font-bold ${c.filled ? c.color : 'text-black/25'}`}>
               {c.value != null ? c.value.toLocaleString() : '—'}
             </span>
             {c.value != null && (
-              <span className="text-[9px] text-white/30">{c.unit}</span>
+              <span className="text-[9px] text-black/30">{c.unit}</span>
             )}
           </div>
         ))}
@@ -261,7 +261,7 @@ export default async function FiveTopicsDetailPage({
               <span className="num text-4xl font-bold text-cyan-300">
                 {r.t1_dma_count?.toLocaleString() ?? '—'}
               </span>
-              <span className="text-white/40 text-sm">DMA</span>
+              <span className="text-black/40 text-sm">DMA</span>
             </div>
 
             {r.t1_areas && r.t1_areas.length > 0 && (
@@ -270,8 +270,8 @@ export default async function FiveTopicsDetailPage({
                 <div className="space-y-1.5">
                   {r.t1_areas.map((a, i) => (
                     <div key={i} className="glass-card-sm flex justify-between items-center px-3 py-2">
-                      <span className="text-sm text-white/80">{a.area_name || '—'}</span>
-                      <span className="num text-xs text-white/40">
+                      <span className="text-sm text-black/80">{a.area_name || '—'}</span>
+                      <span className="num text-xs text-black/40">
                         {a.conducted_date ? formatThaiDate(a.conducted_date) : '—'}
                       </span>
                     </div>
@@ -282,8 +282,8 @@ export default async function FiveTopicsDetailPage({
 
             {(!r.t1_areas || r.t1_areas.length === 0) && r.t1_conducted_date && (
               <div className="flex justify-between text-sm py-1.5">
-                <span className="text-white/50">วันที่ดำเนินการ</span>
-                <span className="text-white/70">{formatThaiDate(r.t1_conducted_date)}</span>
+                <span className="text-black/50">วันที่ดำเนินการ</span>
+                <span className="text-black/70">{formatThaiDate(r.t1_conducted_date)}</span>
               </div>
             )}
 
@@ -310,8 +310,8 @@ export default async function FiveTopicsDetailPage({
             {repairRatio != null && (
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
-                  <span className="text-white/40">อัตราซ่อมสำเร็จ</span>
-                  <span className="num text-white/70 font-semibold">{repairRatio}%</span>
+                  <span className="text-black/40">อัตราซ่อมสำเร็จ</span>
+                  <span className="num text-black/70 font-semibold">{repairRatio}%</span>
                 </div>
                 <div className="prog-bg">
                   <div
@@ -322,17 +322,17 @@ export default async function FiveTopicsDetailPage({
               </div>
             )}
 
-            <div className="space-y-1 divide-y divide-white/5">
+            <div className="space-y-1 divide-y divide-black/5">
               {r.t2_frequency != null && (
                 <div className="flex justify-between text-sm py-1.5">
-                  <span className="text-white/50">จำนวนครั้ง/เดือน</span>
-                  <span className="num text-white/80">{r.t2_frequency} ครั้ง</span>
+                  <span className="text-black/50">จำนวนครั้ง/เดือน</span>
+                  <span className="num text-black/80">{r.t2_frequency} ครั้ง</span>
                 </div>
               )}
               {r.t2_water_loss_m3h != null && (
                 <div className="flex justify-between text-sm py-1.5">
-                  <span className="text-white/50">ปริมาณน้ำสูญเสีย</span>
-                  <span className="num text-white/80">{r.t2_water_loss_m3h?.toLocaleString()} ลบ.ม./ชม.</span>
+                  <span className="text-black/50">ปริมาณน้ำสูญเสีย</span>
+                  <span className="num text-black/80">{r.t2_water_loss_m3h?.toLocaleString()} ลบ.ม./ชม.</span>
                 </div>
               )}
             </div>
@@ -357,9 +357,9 @@ export default async function FiveTopicsDetailPage({
               <MetricBlock label="PRV" value={r.t3_prv_pm_count} unit="แห่ง" color="text-violet-300" />
               <MetricBlock label="P3" value={r.t3_p3_pm_count} unit="แห่ง" color="text-violet-300" />
             </div>
-            <div className="flex justify-between text-sm py-1.5 border-t border-white/8 pt-3">
-              <span className="text-white/50">รวมทั้งหมด</span>
-              <span className="num text-white font-bold">{t3Total} แห่ง</span>
+            <div className="flex justify-between text-sm py-1.5 border-t border-black/8 pt-3">
+              <span className="text-black/50">รวมทั้งหมด</span>
+              <span className="num text-[#12181F] font-bold">{t3Total} แห่ง</span>
             </div>
             <NoteBlock text={r.t3_notes} />
           </div>
@@ -399,8 +399,8 @@ export default async function FiveTopicsDetailPage({
               <span className="num text-5xl font-bold text-green-300">
                 {r.t5_meters_replaced?.toLocaleString()}
               </span>
-              <span className="text-white/40 text-sm">เครื่อง</span>
-              <p className="text-[11px] text-white/25 mt-1">มาตรวัดน้ำชำรุดที่เปลี่ยนแทนแล้ว (MM-01)</p>
+              <span className="text-black/40 text-sm">เครื่อง</span>
+              <p className="text-[11px] text-black/25 mt-1">มาตรวัดน้ำชำรุดที่เปลี่ยนแทนแล้ว (MM-01)</p>
             </div>
             <NoteBlock text={r.t5_notes} />
           </div>

@@ -23,8 +23,8 @@ export default async function NewObstaclePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-white">รายงานอุปสรรค</h1>
-        <p className="text-sm text-white/40 mt-0.5">แจ้งปัญหาที่ส่งผลต่อคุณภาพข้อมูล NRW</p>
+        <h1 className="text-xl font-bold text-[#12181F]">รายงานอุปสรรค</h1>
+        <p className="text-sm text-black/40 mt-0.5">แจ้งปัญหาที่ส่งผลต่อคุณภาพข้อมูล NRW</p>
       </div>
       <ObstacleForm
         branches={branches}

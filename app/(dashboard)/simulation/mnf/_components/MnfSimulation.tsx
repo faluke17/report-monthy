@@ -156,9 +156,9 @@ const STATUS_ORDER: Record<AlertStatus, number> = {
 }
 
 function barFill(status: AlertStatus): string {
-  if (status === 'red_spike' || status === 'red_accumulated') return '#f87171'
-  if (status === 'yellow') return '#fbbf24'
-  return '#22d3ee'
+  if (status === 'red_spike' || status === 'red_accumulated') return '#B3392C'
+  if (status === 'yellow') return '#A8721A'
+  return '#0B6E76'
 }
 
 // ── Custom chart tooltip ───────────────────────────────────────────────────────
@@ -174,10 +174,10 @@ function ChartTooltip({ active, payload, label }: TooltipProps) {
     ? ((mnf - ema) / ema * 100).toFixed(1) : null
   const diffNum = diff != null ? parseFloat(diff) : 0
   return (
-    <div className="bg-[#0f1623] border border-white/15 rounded-lg px-3 py-2 text-xs shadow-xl">
-      <p className="text-white/40 mb-1.5 font-medium">{label}</p>
+    <div className="bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-xs shadow-xl">
+      <p className="text-black/40 mb-1.5 font-medium">{label}</p>
       <p className="text-cyan-300 font-bold">MNF: {mnf?.toFixed(2)} m³/hr</p>
-      <p className="text-white/50">EMA-14: {ema?.toFixed(2)} m³/hr</p>
+      <p className="text-black/50">EMA-14: {ema?.toFixed(2)} m³/hr</p>
       {diff != null && (
         <p className={`font-bold mt-0.5 ${diffNum >= 200 ? 'text-red-400' : diffNum >= 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
           Diff: {diffNum > 0 ? '+' : ''}{diff}%
@@ -207,17 +207,17 @@ function BranchCard({ branch, selected, onClick }: {
           :         'bg-cyan-500/15 border-cyan-500 ring-2 ring-cyan-500/30'
           : isRed ? 'bg-red-500/10 border-red-500/40 hover:bg-red-500/15'
           : isYel ? 'bg-amber-500/8 border-amber-500/30 hover:bg-amber-500/12'
-          :         'bg-white/3 border-white/8 hover:bg-white/6'
+          :         'bg-black/3 border-black/8 hover:bg-black/6'
       }`}
     >
       {isRed && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />}
-      <p className={`text-xs font-semibold truncate mb-1.5 ${isRed ? 'text-red-300' : isYel ? 'text-amber-300' : 'text-white/70'}`}>
+      <p className={`text-xs font-semibold truncate mb-1.5 ${isRed ? 'text-red-300' : isYel ? 'text-amber-300' : 'text-black/70'}`}>
         {branch.name}
       </p>
       <div className="flex items-center gap-1.5">
         {c.red > 0    && <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-1.5 py-0.5 rounded num">🔴 {c.red}</span>}
         {c.yellow > 0 && <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded num">🟡 {c.yellow}</span>}
-        {c.green > 0  && <span className="text-[10px] text-white/30 num">{c.green} node</span>}
+        {c.green > 0  && <span className="text-[10px] text-black/30 num">{c.green} node</span>}
       </div>
     </button>
   )
@@ -231,21 +231,21 @@ function NodeChart({ node, seed }: { node: MockNode; seed: number }) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
         <XAxis
           dataKey="date"
-          tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9 }}
+          tick={{ fill: 'rgba(0,0,0,0.25)', fontSize: 9 }}
           tickLine={false}
           axisLine={false}
           interval={4}
         />
         <YAxis
-          tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9 }}
+          tick={{ fill: 'rgba(0,0,0,0.25)', fontSize: 9 }}
           tickLine={false}
           axisLine={false}
           width={36}
         />
-        <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+        <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
         <Bar dataKey="mnf" name="mnf" maxBarSize={14} radius={[2, 2, 0, 0]}>
           {data.map((pt, i) => (
             <Cell key={i} fill={barFill(pt.status)} fillOpacity={pt.status === 'green' ? 0.55 : 0.85} />
@@ -255,7 +255,7 @@ function NodeChart({ node, seed }: { node: MockNode; seed: number }) {
           type="monotone"
           dataKey="ema"
           name="ema"
-          stroke="#34d399"
+          stroke="#1E7A5A"
           strokeWidth={1.5}
           dot={false}
           strokeDasharray="5 3"
@@ -273,7 +273,7 @@ function NodeTable({ branch, highlightLabel }: { branch: MockBranch; highlightLa
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-white/25 border-b border-white/6">
+          <tr className="text-black/25 border-b border-black/6">
             <th className="text-left px-4 py-2.5 font-medium">Node</th>
             <th className="text-right px-4 py-2.5 font-medium">MNF (m³/hr)</th>
             <th className="text-right px-4 py-2.5 font-medium">EMA-14</th>
@@ -290,20 +290,20 @@ function NodeTable({ branch, highlightLabel }: { branch: MockBranch; highlightLa
             return (
               <tr
                 key={n.node_label}
-                className={`border-b border-white/5 transition-colors ${
-                  isHL ? 'bg-white/6' : isRed ? 'bg-red-500/5 hover:bg-red-500/8' : 'hover:bg-white/4'
+                className={`border-b border-black/5 transition-colors ${
+                  isHL ? 'bg-black/6' : isRed ? 'bg-red-500/5 hover:bg-red-500/8' : 'hover:bg-black/4'
                 }`}
               >
-                <td className={`px-4 py-2.5 font-medium ${isHL ? 'text-white' : 'text-white/60'}`}>
+                <td className={`px-4 py-2.5 font-medium ${isHL ? 'text-[#12181F]' : 'text-black/60'}`}>
                   {n.node_label}
-                  {isHL && <span className="ml-1.5 text-[9px] text-white/30 font-normal">(กำลังดูกราฟ)</span>}
+                  {isHL && <span className="ml-1.5 text-[9px] text-black/30 font-normal">(กำลังดูกราฟ)</span>}
                 </td>
-                <td className="px-4 py-2.5 text-right text-white/70 num">{n.mnf_flow.toFixed(2)}</td>
-                <td className="px-4 py-2.5 text-right text-white/40 num">{n.ema_value.toFixed(2)}</td>
-                <td className={`px-4 py-2.5 text-right font-bold num ${isRed ? 'text-red-400' : isYel ? 'text-amber-400' : 'text-white/35'}`}>
+                <td className="px-4 py-2.5 text-right text-black/70 num">{n.mnf_flow.toFixed(2)}</td>
+                <td className="px-4 py-2.5 text-right text-black/40 num">{n.ema_value.toFixed(2)}</td>
+                <td className={`px-4 py-2.5 text-right font-bold num ${isRed ? 'text-red-400' : isYel ? 'text-amber-400' : 'text-black/35'}`}>
                   +{n.diff_percent.toFixed(1)}%
                 </td>
-                <td className="px-4 py-2.5 text-right text-white/40 num">
+                <td className="px-4 py-2.5 text-right text-black/40 num">
                   {n.consecutive_count > 0 ? `${n.consecutive_count} วัน` : '—'}
                 </td>
                 <td className="px-4 py-2.5">
@@ -338,22 +338,22 @@ function BranchDetail({ branch, onClose }: { branch: MockBranch; onClose: () => 
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-black/8">
         <div>
-          <p className="text-sm font-bold text-white">สาขา{branch.name}</p>
-          <p className="text-[11px] text-white/35 mt-0.5">{branch.nodes.length} nodes · คำนวณล่าสุด 21 พ.ค. 69</p>
+          <p className="text-sm font-bold text-[#12181F]">สาขา{branch.name}</p>
+          <p className="text-[11px] text-black/35 mt-0.5">{branch.nodes.length} nodes · คำนวณล่าสุด 21 พ.ค. 69</p>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/6 transition-colors">
+        <button onClick={onClose} className="p-1.5 rounded-lg text-black/30 hover:text-black/60 hover:bg-black/6 transition-colors">
           <X size={14} />
         </button>
       </div>
 
       {/* Chart section */}
-      <div className="p-4 border-b border-white/8">
+      <div className="p-4 border-b border-black/8">
         {/* Node selector tabs */}
         <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-          <TrendingUp size={11} className="text-white/25 shrink-0" />
-          <span className="text-[10px] text-white/25 mr-1">เลือก node:</span>
+          <TrendingUp size={11} className="text-black/25 shrink-0" />
+          <span className="text-[10px] text-black/25 mr-1">เลือก node:</span>
           {branch.nodes.map(n => {
             const nRed = n.alert_status === 'red_spike' || n.alert_status === 'red_accumulated'
             const nYel = n.alert_status === 'yellow'
@@ -367,7 +367,7 @@ function BranchDetail({ branch, onClose }: { branch: MockBranch; onClose: () => 
                     ? nRed ? 'bg-red-500/20 border-red-500/50 text-red-300'
                     : nYel ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
                     :        'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
-                    : 'bg-white/5 border-white/8 text-white/40 hover:bg-white/8 hover:text-white/60'
+                    : 'bg-black/5 border-black/8 text-black/40 hover:bg-black/8 hover:text-black/60'
                 }`}
               >
                 {n.node_label}
@@ -384,20 +384,20 @@ function BranchDetail({ branch, onClose }: { branch: MockBranch; onClose: () => 
         {/* Chart header */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs font-semibold text-white/70">{node.node_label}</p>
+            <p className="text-xs font-semibold text-black/70">{node.node_label}</p>
             <p className={`text-[11px] mt-0.5 ${isRed ? 'text-red-400' : isYel ? 'text-amber-400' : 'text-emerald-400'}`}>
               {STATUS_LABEL[node.alert_status]}
               {node.consecutive_count > 0 && ` · ต่อเนื่อง ${node.consecutive_count} วัน`}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-white/30">
+          <div className="flex items-center gap-3 text-[10px] text-black/30">
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-2.5 rounded-sm inline-block bg-cyan-400/60" />
               MNF flow
             </span>
             <span className="flex items-center gap-1.5">
               <svg width="16" height="8" viewBox="0 0 16 8">
-                <line x1="0" y1="4" x2="16" y2="4" stroke="#34d399" strokeWidth="1.5" strokeDasharray="4 2" />
+                <line x1="0" y1="4" x2="16" y2="4" stroke="#1E7A5A" strokeWidth="1.5" strokeDasharray="4 2" />
               </svg>
               EMA-14
             </span>
@@ -408,31 +408,31 @@ function BranchDetail({ branch, onClose }: { branch: MockBranch; onClose: () => 
         <NodeChart node={node} seed={branch.id * 97 + node.node_label.length * 13} />
 
         {/* Diff summary below chart */}
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/6 text-xs">
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-black/6 text-xs">
           <div>
-            <p className="text-white/30">MNF วันล่าสุด</p>
-            <p className="font-bold text-white num">{node.mnf_flow.toFixed(2)} m³/hr</p>
+            <p className="text-black/30">MNF วันล่าสุด</p>
+            <p className="font-bold text-[#12181F] num">{node.mnf_flow.toFixed(2)} m³/hr</p>
           </div>
           <div>
-            <p className="text-white/30">EMA-14</p>
-            <p className="font-bold text-white/60 num">{node.ema_value.toFixed(2)} m³/hr</p>
+            <p className="text-black/30">EMA-14</p>
+            <p className="font-bold text-black/60 num">{node.ema_value.toFixed(2)} m³/hr</p>
           </div>
           <div>
-            <p className="text-white/30">เบี่ยงเบน</p>
+            <p className="text-black/30">เบี่ยงเบน</p>
             <p className={`font-bold num ${isRed ? 'text-red-400' : isYel ? 'text-amber-400' : 'text-emerald-400'}`}>
               +{node.diff_percent.toFixed(1)}%
             </p>
           </div>
           <div className="ml-auto">
-            <p className="text-white/30">เกณฑ์แจ้งเตือน</p>
-            <p className="text-white/40 num text-[11px]">≥50% = เหลือง / ≥200% = แดง</p>
+            <p className="text-black/30">เกณฑ์แจ้งเตือน</p>
+            <p className="text-black/40 num text-[11px]">≥50% = เหลือง / ≥200% = แดง</p>
           </div>
         </div>
       </div>
 
       {/* Node table */}
       <div>
-        <p className="px-4 pt-3 pb-1 text-[10px] text-white/25 font-bold uppercase tracking-widest">ทุก node ในสาขานี้</p>
+        <p className="px-4 pt-3 pb-1 text-[10px] text-black/25 font-bold uppercase tracking-widest">ทุก node ในสาขานี้</p>
         <NodeTable branch={branch} highlightLabel={activeLabel} />
       </div>
     </div>
@@ -468,7 +468,7 @@ export function MnfSimulation() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-red-400/70">ต้องดำเนินการ</p>
           </div>
           <p className="text-3xl font-bold text-red-400 num leading-none">{redBranches.length}</p>
-          <p className="text-xs text-white/35 mt-1">สาขา มี node Alert</p>
+          <p className="text-xs text-black/35 mt-1">สาขา มี node Alert</p>
         </div>
         <div className="glass-card p-4 border-l-4 border-amber-500">
           <div className="flex items-center gap-2 mb-1">
@@ -476,7 +476,7 @@ export function MnfSimulation() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70">เฝ้าระวัง</p>
           </div>
           <p className="text-3xl font-bold text-amber-400 num leading-none">{yelBranches.length}</p>
-          <p className="text-xs text-white/35 mt-1">สาขา MNF สูงกว่า EMA</p>
+          <p className="text-xs text-black/35 mt-1">สาขา MNF สูงกว่า EMA</p>
         </div>
         <div className="glass-card p-4 border-l-4 border-emerald-500">
           <div className="flex items-center gap-2 mb-1">
@@ -484,15 +484,15 @@ export function MnfSimulation() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/70">ปกติ</p>
           </div>
           <p className="text-3xl font-bold text-emerald-400 num leading-none">{okBranches.length}</p>
-          <p className="text-xs text-white/35 mt-1">สาขา ทุก node ปกติ</p>
+          <p className="text-xs text-black/35 mt-1">สาขา ทุก node ปกติ</p>
         </div>
       </div>
 
       {/* ── Branch grid ── */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold text-white/40 uppercase tracking-widest">26 สาขา · {totalNodes} nodes</p>
-          <p className="text-[11px] text-white/25">คลิกสาขาเพื่อดูกราฟ + รายละเอียด</p>
+          <p className="text-xs font-bold text-black/40 uppercase tracking-widest">26 สาขา · {totalNodes} nodes</p>
+          <p className="text-[11px] text-black/25">คลิกสาขาเพื่อดูกราฟ + รายละเอียด</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
           {sorted.map(b => (
@@ -515,7 +515,7 @@ export function MnfSimulation() {
         />
       )}
 
-      <p className="text-[11px] text-white/20 text-center">* ข้อมูลจำลอง ไม่ใช่ข้อมูลจริง</p>
+      <p className="text-[11px] text-black/20 text-center">* ข้อมูลจำลอง ไม่ใช่ข้อมูลจริง</p>
     </div>
   )
 }

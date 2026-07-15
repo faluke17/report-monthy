@@ -6,7 +6,7 @@ import { LayoutDashboard, BarChart3, ClipboardList, Calendar, Target } from 'luc
 import { cn } from '@/lib/utils'
 
 const MOBILE_NAV = [
-  { href: '/dashboard', label: 'ภาพรวม',  icon: LayoutDashboard },
+  { href: '/executive-summary', label: 'ภาพรวม',  icon: LayoutDashboard },
   ...(process.env.NODE_ENV !== 'production' ? [{ href: '/ranking', label: 'อันดับ', icon: BarChart3 }] : []),
   { href: '/pdca',      label: 'PDCA',      icon: ClipboardList },
   { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
@@ -20,11 +20,11 @@ export function MobileNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 md:hidden z-50"
       style={{
-        background: 'rgba(5,9,26,.98)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderTop: '1px solid rgba(71,130,255,.16)',
-        boxShadow: '0 -4px 24px rgba(0,0,0,.50)',
+        background: 'rgba(255,255,255,.96)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderTop: '1px solid #E3E7EC',
+        boxShadow: '0 -2px 12px rgba(18,24,31,.06)',
       }}
     >
       <div className="flex">
@@ -38,15 +38,15 @@ export function MobileNav() {
               className={cn(
                 'relative flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium transition-all'
               )}
-              style={{ color: isActive ? '#93C5FD' : '#3D5380' }}
+              style={{ color: isActive ? '#0B6E76' : '#8896A3' }}
             >
               {isActive && (
                 <span
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-b-full"
-                  style={{ background: '#4782FF', boxShadow: '0 0 8px rgba(71,130,255,.70)' }}
+                  style={{ background: '#0B6E76' }}
                 />
               )}
-              <Icon size={20} style={{ color: isActive ? '#4782FF' : 'currentColor' }} />
+              <Icon size={20} style={{ color: isActive ? '#0B6E76' : 'currentColor' }} />
               <span>{item.label}</span>
             </Link>
           )

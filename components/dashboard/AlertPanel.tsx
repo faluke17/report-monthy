@@ -40,14 +40,14 @@ export async function AlertPanel() {
 
   return (
     <div className="glass-card p-5 space-y-5">
-      <h3 className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>การแจ้งเตือน</h3>
+      <h3 className="text-[13px] font-semibold" style={{ color: '#12181F' }}>การแจ้งเตือน</h3>
 
       {/* Overdue actions */}
       {overdueActions.length > 0 && (
         <section>
           <div className="flex items-center gap-1.5 mb-2.5">
-            <Clock size={12} style={{ color: '#F87171' }} />
-            <span className="text-[11px] font-semibold" style={{ color: '#F87171' }}>
+            <Clock size={12} style={{ color: '#B3392C' }} />
+            <span className="text-[11px] font-semibold" style={{ color: '#B3392C' }}>
               Action เกินกำหนด ({overdueActions.length})
             </span>
           </div>
@@ -57,14 +57,14 @@ export async function AlertPanel() {
                 key={a.id}
                 className="flex items-start gap-2.5 px-3 py-2 rounded-xl"
                 style={{
-                  background: 'rgba(248,113,113,.06)',
-                  border: '1px solid rgba(248,113,113,.18)',
-                  borderLeft: '3px solid #F87171',
+                  background: 'rgba(179,57,44,.06)',
+                  border: '1px solid rgba(179,57,44,.18)',
+                  borderLeft: '3px solid #B3392C',
                 }}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium truncate" style={{ color: '#E4ECFF' }}>{a.title}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#F87171' }}>
+                  <p className="text-[12px] font-medium truncate" style={{ color: '#12181F' }}>{a.title}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#B3392C' }}>
                     {(a as any).branches?.name_th} · {a.due_date}
                   </p>
                 </div>
@@ -74,7 +74,7 @@ export async function AlertPanel() {
           <Link
             href="/action"
             className="inline-flex items-center gap-1 mt-2 text-[11px] transition-colors"
-            style={{ color: '#F87171' }}
+            style={{ color: '#B3392C' }}
           >
             ดูทั้งหมด <ArrowRight size={10} />
           </Link>
@@ -85,8 +85,8 @@ export async function AlertPanel() {
       {obstacles.length > 0 && (
         <section>
           <div className="flex items-center gap-1.5 mb-2.5">
-            <AlertTriangle size={12} style={{ color: '#FCD34D' }} />
-            <span className="text-[11px] font-semibold" style={{ color: '#FCD34D' }}>
+            <AlertTriangle size={12} style={{ color: '#A8721A' }} />
+            <span className="text-[11px] font-semibold" style={{ color: '#A8721A' }}>
               อุปสรรคที่ต้องติดตาม ({obstacles.length})
             </span>
           </div>
@@ -96,14 +96,14 @@ export async function AlertPanel() {
                 key={o.id}
                 className="flex items-start gap-2.5 px-3 py-2 rounded-xl"
                 style={{
-                  background: 'rgba(252,211,77,.06)',
-                  border: '1px solid rgba(252,211,77,.16)',
-                  borderLeft: '3px solid #FCD34D',
+                  background: 'rgba(168,114,26,.06)',
+                  border: '1px solid rgba(168,114,26,.16)',
+                  borderLeft: '3px solid #A8721A',
                 }}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium truncate" style={{ color: '#E4ECFF' }}>{o.obstacle_type}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#FCD34D' }}>
+                  <p className="text-[12px] font-medium truncate" style={{ color: '#12181F' }}>{o.obstacle_type}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#A8721A' }}>
                     {(o as any).branches?.name_th} · {o.status}
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export async function AlertPanel() {
           <Link
             href="/obstacle"
             className="inline-flex items-center gap-1 mt-2 text-[11px] transition-colors"
-            style={{ color: '#FCD34D' }}
+            style={{ color: '#A8721A' }}
           >
             ดูทั้งหมด <ArrowRight size={10} />
           </Link>
@@ -124,8 +124,8 @@ export async function AlertPanel() {
       {mnfRedNodes.length > 0 && (
         <section>
           <div className="flex items-center gap-1.5 mb-2.5">
-            <Droplets size={12} style={{ color: '#FB7185' }} />
-            <span className="text-[11px] font-semibold" style={{ color: '#FB7185' }}>
+            <Droplets size={12} style={{ color: '#B3392C' }} />
+            <span className="text-[11px] font-semibold" style={{ color: '#B3392C' }}>
               MNF Alert ({mnfRedNodes.length} node)
             </span>
           </div>
@@ -139,16 +139,16 @@ export async function AlertPanel() {
                   key={`${n.dmama_branch_id}-${n.logger_id}`}
                   className="flex items-start gap-2.5 px-3 py-2 rounded-xl"
                   style={{
-                    background: 'rgba(251,113,133,.06)',
-                    border: '1px solid rgba(251,113,133,.16)',
-                    borderLeft: `3px solid ${isSpike ? '#F87171' : '#FB7185'}`,
+                    background: 'rgba(179,57,44,.06)',
+                    border: '1px solid rgba(179,57,44,.16)',
+                    borderLeft: `3px solid ${isSpike ? '#B3392C' : '#B3392C'}`,
                   }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium truncate" style={{ color: '#E4ECFF' }}>
+                    <p className="text-[12px] font-medium truncate" style={{ color: '#12181F' }}>
                       {branchName} · {n.node_label}
                     </p>
-                    <p className="text-[10px] mt-0.5" style={{ color: '#FB7185' }}>
+                    <p className="text-[10px] mt-0.5" style={{ color: '#B3392C' }}>
                       {isSpike ? 'ฉุกเฉิน' : 'สะสม'}
                       {' · '}Diff {diffSign}{Number(n.diff_percent).toFixed(1)}%
                     </p>
@@ -160,7 +160,7 @@ export async function AlertPanel() {
           <Link
             href="/mnf-monitor"
             className="inline-flex items-center gap-1 mt-2 text-[11px] transition-colors"
-            style={{ color: '#FB7185' }}
+            style={{ color: '#B3392C' }}
           >
             ดูรายละเอียด <ArrowRight size={10} />
           </Link>
@@ -172,11 +172,11 @@ export async function AlertPanel() {
         <div className="flex flex-col items-center gap-3 py-6">
           <div
             className="w-11 h-11 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(52,211,153,.10)', border: '1px solid rgba(52,211,153,.20)' }}
+            style={{ background: 'rgba(30,122,90,.10)', border: '1px solid rgba(30,122,90,.20)' }}
           >
-            <CheckCircle size={20} style={{ color: '#34D399' }} />
+            <CheckCircle size={20} style={{ color: '#1E7A5A' }} />
           </div>
-          <p className="text-[12px] text-center" style={{ color: '#7B9CCC' }}>ไม่มีการแจ้งเตือน</p>
+          <p className="text-[12px] text-center" style={{ color: '#4B5563' }}>ไม่มีการแจ้งเตือน</p>
         </div>
       )}
     </div>

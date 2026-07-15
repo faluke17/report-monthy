@@ -124,13 +124,13 @@ function SlidingMeetingBanner() {
           <div className="flex-1 min-w-0 space-y-1.5">
             {/* Type + countdown */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[11px] px-2 py-0.5 rounded-full border ${TYPE_COLOR[m.type] ?? 'text-white/50 bg-white/10 border-white/15'}`}>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full border ${TYPE_COLOR[m.type] ?? 'text-black/50 bg-black/10 border-black/15'}`}>
                 {m.type}
               </span>
               <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
                 m.daysLeft <= 7
                   ? 'text-amber-400 bg-amber-500/15 border-amber-500/30'
-                  : 'text-white/40 bg-white/5 border-white/10'
+                  : 'text-black/40 bg-black/5 border-black/10'
               }`}>
                 {m.daysLeft <= 0 ? 'วันนี้' : `อีก ${m.daysLeft} วัน`}
               </span>
@@ -142,9 +142,9 @@ function SlidingMeetingBanner() {
             </div>
 
             {/* Title + date */}
-            <p className="font-semibold text-sm text-white">{m.title}</p>
-            <p className="text-xs text-white/45 flex items-center gap-1.5">
-              <Calendar size={11} className="text-white/30" />
+            <p className="font-semibold text-sm text-[#12181F]">{m.title}</p>
+            <p className="text-xs text-black/45 flex items-center gap-1.5">
+              <Calendar size={11} className="text-black/30" />
               {m.date} · 09:00 น. · ห้องประชุมเขต 10
             </p>
 
@@ -152,14 +152,14 @@ function SlidingMeetingBanner() {
             {mainReq && (
               <div className="flex items-center gap-2 pt-0.5">
                 {REQ_ICON[mainReq.type]}
-                <span className="text-[11px] text-white/50 flex-1 truncate">{mainReq.title}</span>
+                <span className="text-[11px] text-black/50 flex-1 truncate">{mainReq.title}</span>
                 <span className={`text-[11px] font-bold ${
                   mainReq.submitted === mainReq.total ? 'text-green-400' :
                   mainReq.submitted / mainReq.total >= 0.5 ? 'text-amber-400' : 'text-red-400'
                 }`}>
                   {mainReq.submitted}/{mainReq.total}
                 </span>
-                <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-16 h-1.5 bg-black/10 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       mainReq.submitted / mainReq.total >= 0.7 ? 'bg-green-400' :
@@ -177,13 +177,13 @@ function SlidingMeetingBanner() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => go(-1)}
-                className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-black/10 text-black/30 hover:text-[#12181F] transition-colors"
               >
                 <ChevronLeft size={14} />
               </button>
               <button
                 onClick={() => go(1)}
-                className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-black/10 text-black/30 hover:text-[#12181F] transition-colors"
               >
                 <ChevronRight size={14} />
               </button>
@@ -195,7 +195,7 @@ function SlidingMeetingBanner() {
                   key={i}
                   onClick={() => { setPaused(true); setActive(i); setTimeout(() => setPaused(false), 8000) }}
                   className={`rounded-full transition-all duration-300 ${
-                    i === active ? 'w-4 h-1.5 bg-cyan-400' : 'w-1.5 h-1.5 bg-white/20'
+                    i === active ? 'w-4 h-1.5 bg-cyan-400' : 'w-1.5 h-1.5 bg-black/20'
                   }`}
                 />
               ))}
@@ -206,7 +206,7 @@ function SlidingMeetingBanner() {
 
       {/* Progress bar (auto-advance timer) */}
       {!paused && (
-        <div className="h-0.5 bg-white/5">
+        <div className="h-0.5 bg-black/5">
           <div
             key={active}
             className="h-full bg-cyan-500/50"
@@ -237,7 +237,7 @@ function TicketProgressPanel() {
 
   return (
     <div className="glass-card p-4 pt-5 relative overflow-hidden accent-bar-amber space-y-3">
-      <p className="text-[10px] font-bold tracking-[.07em] uppercase text-white/40">
+      <p className="text-[10px] font-bold tracking-[.07em] uppercase text-black/40">
         สถานะ Ticket
       </p>
 
@@ -245,8 +245,8 @@ function TicketProgressPanel() {
       <div className="flex items-start gap-2">
         <FileText size={13} className="text-cyan-400 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-white leading-snug">{req.title}</p>
-          <p className="text-[11px] text-white/35 mt-0.5 flex items-center gap-1">
+          <p className="text-sm font-semibold text-[#12181F] leading-snug">{req.title}</p>
+          <p className="text-[11px] text-black/35 mt-0.5 flex items-center gap-1">
             <Clock size={10} /> กำหนดส่ง {MOCK_MEETINGS[0].requirements[0].dueDate}
           </p>
         </div>
@@ -254,15 +254,15 @@ function TicketProgressPanel() {
 
       {/* Count */}
       <div className="flex items-baseline gap-2">
-        <span className="num text-3xl font-bold leading-none text-[#f6c453]">
+        <span className="num text-3xl font-bold leading-none text-[#A8721A]">
           {total - submitted}
         </span>
-        <span className="text-sm text-white/40">/ {total} สาขา ยังไม่ส่ง</span>
+        <span className="text-sm text-black/40">/ {total} สาขา ยังไม่ส่ง</span>
       </div>
 
       {/* Progress bar */}
       <div>
-        <div className="h-2 bg-white/8 rounded-full overflow-hidden">
+        <div className="h-2 bg-black/8 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
               pct >= 70 ? 'bg-green-400' : pct >= 40 ? 'bg-amber-400' : 'bg-red-400'
@@ -270,16 +270,16 @@ function TicketProgressPanel() {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="text-[11px] text-white/35 mt-1">ส่งแล้ว {pct}% ({submitted}/{total} สาขา)</p>
+        <p className="text-[11px] text-black/35 mt-1">ส่งแล้ว {pct}% ({submitted}/{total} สาขา)</p>
       </div>
 
       {/* Branch chips */}
       <div className="flex flex-wrap gap-1">
         {unsubmitted.slice(0, MAX_SHOW).map((b) => (
-          <span key={b} className="text-[11px] px-2 py-0.5 rounded bg-white/8 text-white/60">{b}</span>
+          <span key={b} className="text-[11px] px-2 py-0.5 rounded bg-black/8 text-black/60">{b}</span>
         ))}
         {unsubmitted.length > MAX_SHOW && (
-          <span className="text-[11px] px-2 py-0.5 text-[#f6c453] font-bold">
+          <span className="text-[11px] px-2 py-0.5 text-[#A8721A] font-bold">
             +{unsubmitted.length - MAX_SHOW} สาขา
           </span>
         )}
@@ -316,18 +316,18 @@ function BranchTicketView() {
               อีก {meeting.daysLeft} วัน
             </span>
           </div>
-          <p className="font-bold text-sm text-white">{meeting.title}</p>
-          <p className="text-xs text-white/45 mt-0.5 flex items-center gap-1.5">
-            <Calendar size={11} className="text-white/30" />
+          <p className="font-bold text-sm text-[#12181F]">{meeting.title}</p>
+          <p className="text-xs text-black/45 mt-0.5 flex items-center gap-1.5">
+            <Calendar size={11} className="text-black/30" />
             {meeting.date} · 09:00 น.
           </p>
         </div>
-        <Bell size={16} className="text-white/25 shrink-0 mt-1" />
+        <Bell size={16} className="text-black/25 shrink-0 mt-1" />
       </div>
 
       {/* Tickets */}
-      <div className="border-t border-white/8 pt-3 space-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">
+      <div className="border-t border-black/8 pt-3 space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-black/30 mb-2">
           รายการที่ต้องส่ง
         </p>
         {meeting.requirements.map((req) => {
@@ -338,7 +338,7 @@ function BranchTicketView() {
               className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                 done
                   ? 'bg-green-500/8 border-green-500/20'
-                  : 'bg-white/3 border-white/10'
+                  : 'bg-black/3 border-black/10'
               }`}
             >
               <div className="shrink-0">
@@ -349,10 +349,10 @@ function BranchTicketView() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium leading-snug ${done ? 'text-white/50 line-through' : 'text-white'}`}>
+                <p className={`text-sm font-medium leading-snug ${done ? 'text-black/50 line-through' : 'text-[#12181F]'}`}>
                   {req.title}
                 </p>
-                <p className="text-[11px] text-white/30 flex items-center gap-1 mt-0.5">
+                <p className="text-[11px] text-black/30 flex items-center gap-1 mt-0.5">
                   <Clock size={10} /> กำหนดส่ง {req.dueDate}
                 </p>
               </div>
@@ -374,7 +374,7 @@ function BranchTicketView() {
         })}
       </div>
 
-      <p className="text-[11px] text-white/25 text-center">
+      <p className="text-[11px] text-black/25 text-center">
         (จำลอง — ปุ่ม &quot;ส่งรายงาน&quot; จะลิงก์ไปฟอร์มที่ pre-fill ปี/เดือนให้อัตโนมัติ)
       </p>
     </div>
@@ -389,11 +389,11 @@ function AllRequirementsGrid() {
       {MOCK_MEETINGS.filter((m) => m.requirements.length > 0).map((m) => (
         <div key={m.id} className="glass-card p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] px-2 py-0.5 rounded-full border ${TYPE_COLOR[m.type] ?? 'text-white/40 bg-white/8 border-white/10'}`}>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full border ${TYPE_COLOR[m.type] ?? 'text-black/40 bg-black/8 border-black/10'}`}>
               {m.type}
             </span>
-            <span className="text-xs text-white/60 font-medium">{m.title}</span>
-            <span className="text-[11px] text-white/30 ml-auto">{m.date}</span>
+            <span className="text-xs text-black/60 font-medium">{m.title}</span>
+            <span className="text-[11px] text-black/30 ml-auto">{m.date}</span>
           </div>
           <div className="space-y-2">
             {m.requirements.map((req) => {
@@ -401,14 +401,14 @@ function AllRequirementsGrid() {
               return (
                 <div key={req.id} className="flex items-center gap-3">
                   {REQ_ICON[req.type]}
-                  <span className="text-[12px] text-white/70 flex-1 truncate">{req.title}</span>
+                  <span className="text-[12px] text-black/70 flex-1 truncate">{req.title}</span>
                   <span className={`text-[11px] font-bold w-10 text-right ${
                     req.submitted === req.total ? 'text-green-400' :
                     pct >= 50 ? 'text-amber-400' : 'text-red-400'
                   }`}>
                     {req.submitted}/{req.total}
                   </span>
-                  <div className="w-20 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                  <div className="w-20 h-1.5 bg-black/8 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
                         req.submitted === req.total ? 'bg-green-400' :
@@ -417,7 +417,7 @@ function AllRequirementsGrid() {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-white/30 w-8 text-right">{pct}%</span>
+                  <span className="text-[10px] text-black/30 w-8 text-right">{pct}%</span>
                 </div>
               )
             })}
@@ -436,15 +436,15 @@ export function SimulationClient() {
   return (
     <div className="space-y-6">
       {/* Toggle */}
-      <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit">
+      <div className="flex gap-2 p-1 bg-black/5 rounded-xl w-fit">
         {(['dashboard', 'branch'] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               view === v
-                ? 'bg-cyan-500 text-[#061327]'
-                : 'text-white/50 hover:text-white'
+                ? 'bg-cyan-500 text-[#FFFFFF]'
+                : 'text-black/50 hover:text-[#12181F]'
             }`}
           >
             {v === 'dashboard' ? '🖥 มุมเขต (Dashboard)' : '📱 มุมสาขา (/notify)'}
@@ -454,10 +454,10 @@ export function SimulationClient() {
 
       {view === 'dashboard' ? (
         <div className="space-y-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest font-bold">Meeting Banner — sliding อัตโนมัติ ทุก 4 วินาที</p>
+          <p className="text-xs text-black/30 uppercase tracking-widest font-bold">Meeting Banner — sliding อัตโนมัติ ทุก 4 วินาที</p>
           <SlidingMeetingBanner />
 
-          <p className="text-xs text-white/30 uppercase tracking-widest font-bold mt-6">ภาพรวมเขต — นับจาก Ticket</p>
+          <p className="text-xs text-black/30 uppercase tracking-widest font-bold mt-6">ภาพรวมเขต — นับจาก Ticket</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TicketProgressPanel />
             <AllRequirementsGrid />
@@ -465,8 +465,8 @@ export function SimulationClient() {
         </div>
       ) : (
         <div className="space-y-4 max-w-lg">
-          <p className="text-xs text-white/30 uppercase tracking-widest font-bold">มุมสาขา — เห็น Ticket พร้อมปุ่มส่งรายงาน</p>
-          <p className="text-[11px] text-white/30">ลองกดปุ่ม &quot;ส่งรายงาน&quot; เพื่อดู state เปลี่ยน</p>
+          <p className="text-xs text-black/30 uppercase tracking-widest font-bold">มุมสาขา — เห็น Ticket พร้อมปุ่มส่งรายงาน</p>
+          <p className="text-[11px] text-black/30">ลองกดปุ่ม &quot;ส่งรายงาน&quot; เพื่อดู state เปลี่ยน</p>
           <BranchTicketView />
         </div>
       )}

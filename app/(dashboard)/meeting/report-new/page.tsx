@@ -9,8 +9,8 @@ export default async function MeetingReportNewPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-white">สร้างรายงานการประชุม</h1>
-        <p className="text-sm text-white/40 mt-0.5">ระบุข้อมูลการประชุม แล้วกรอกรายงานแต่ละวาระได้เลย</p>
+        <h1 className="text-xl font-bold text-[#12181F]">สร้างรายงานการประชุม</h1>
+        <p className="text-sm text-black/40 mt-0.5">ระบุข้อมูลการประชุม แล้วกรอกรายงานแต่ละวาระได้เลย</p>
       </div>
       <ReportNewForm />
     </div>

@@ -19,12 +19,12 @@ export default async function PlansPage() {
     <div className="space-y-5 animate-fadein">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">แผนลดน้ำสูญเสีย</h1>
-          <p className="text-sm text-white/40 mt-0.5">จัดการแผน NRW ของแต่ละสาขา</p>
+          <h1 className="text-xl font-bold text-[#12181F]">แผนลดน้ำสูญเสีย</h1>
+          <p className="text-sm text-black/40 mt-0.5">จัดการแผน NRW ของแต่ละสาขา</p>
         </div>
         <Link
           href="/plans/new"
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
         >
           <Plus size={15} />
           สร้างแผนใหม่

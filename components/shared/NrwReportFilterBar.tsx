@@ -30,7 +30,7 @@ export function NrwReportFilterBar({ activeFiscalYear, activeMonth }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      <span className="text-xs text-white/40 font-medium">ปีงบ</span>
+      <span className="text-xs text-black/40 font-medium">ปีงบ</span>
       {fiscalYears.map((y) => (
         <button
           key={y}
@@ -38,20 +38,20 @@ export function NrwReportFilterBar({ activeFiscalYear, activeMonth }: Props) {
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             activeFiscalYear === y
               ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-              : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10'
+              : 'bg-black/5 text-black/50 border border-black/10 hover:bg-black/10'
           }`}
         >
           {y}
         </button>
       ))}
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-black/10 mx-1" />
 
-      <span className="text-xs text-white/40 font-medium">เดือน</span>
+      <span className="text-xs text-black/40 font-medium">เดือน</span>
       <select
         value={activeMonth}
         onChange={(e) => nav({ month: e.target.value })}
-        className="bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/60"
+        className="bg-black/5 border border-black/15 rounded-lg px-3 py-1.5 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/60"
       >
         {FISCAL_MONTHS.map((m) => (
           <option key={m} value={m}>{getThaiMonthName(m, true)}</option>

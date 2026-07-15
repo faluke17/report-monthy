@@ -16,7 +16,7 @@ export function DirectiveProgressTimeline({ logs }: Props) {
 
   if (logs.length === 0) {
     return (
-      <p className="text-xs text-white/25 text-center py-3">ยังไม่มีการอัพเดตความก้าวหน้า</p>
+      <p className="text-xs text-black/25 text-center py-3">ยังไม่มีการอัพเดตความก้าวหน้า</p>
     )
   }
 
@@ -32,16 +32,16 @@ export function DirectiveProgressTimeline({ logs }: Props) {
               <div className={`w-2 h-2 rounded-full ${
                 log.progress_pct === 100 ? 'bg-emerald-400' :
                 log.progress_pct >= 50  ? 'bg-cyan-400' :
-                                          'bg-white/30'
+                                          'bg-black/30'
               }`} />
               {i < visible.length - 1 && (
-                <div className="w-px flex-1 min-h-[16px] bg-white/10 mt-1" />
+                <div className="w-px flex-1 min-h-[16px] bg-black/10 mt-1" />
               )}
             </div>
 
             <div className="flex-1 min-w-0 pb-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/8 text-white/70 border border-white/10">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/8 text-black/70 border border-black/10">
                   {log.branch_name}
                 </span>
                 <span className={`num text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -50,7 +50,7 @@ export function DirectiveProgressTimeline({ logs }: Props) {
                 }`}>
                   {log.progress_pct}%
                 </span>
-                <span className="text-[10px] text-white/25">
+                <span className="text-[10px] text-black/25">
                   {formatThaiDate(log.created_at, true)} · {log.updated_by}
                 </span>
               </div>
@@ -59,7 +59,7 @@ export function DirectiveProgressTimeline({ logs }: Props) {
                   onClick={() => setExpandedNote(noteExpanded ? null : log.id)}
                   className="text-left mt-0.5 w-full"
                 >
-                  <p className={`text-xs text-white/50 leading-snug ${noteExpanded ? '' : 'line-clamp-2'}`}>
+                  <p className={`text-xs text-black/50 leading-snug ${noteExpanded ? '' : 'line-clamp-2'}`}>
                     {log.note}
                   </p>
                   {log.note.length > 80 && (
@@ -77,7 +77,7 @@ export function DirectiveProgressTimeline({ logs }: Props) {
       {logs.length > INITIAL_SHOW && (
         <button
           onClick={() => setShowAll(v => !v)}
-          className="w-full text-center text-[11px] text-white/30 hover:text-cyan-400 transition-colors pt-1 border-t border-white/8"
+          className="w-full text-center text-[11px] text-black/30 hover:text-cyan-400 transition-colors pt-1 border-t border-black/8"
         >
           {showAll ? 'แสดงน้อยลง' : `ดูทั้งหมด ${logs.length} รายการ`}
         </button>

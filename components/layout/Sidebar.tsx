@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, ClipboardList, Target, AlertTriangle,
+  BarChart3, ClipboardList, Target, AlertTriangle,
   Calendar, BookOpen, Download, ChevronLeft, ChevronRight,
   Droplets, ListChecks, FileText, Crosshair, Activity, Building2, Presentation, GitBranch, Network,
 } from 'lucide-react'
@@ -27,7 +27,6 @@ const NAV_GROUPS = [
   {
     label: 'ภาพรวม',
     items: [
-      { href: '/dashboard',           label: 'Dashboard เขต',       icon: LayoutDashboard },
       { href: '/executive-summary',   label: 'บทสรุปผู้บริหาร',     icon: Presentation },
       { href: '/mnf-monitor',         label: 'MNF Monitor',          icon: Activity },
       { href: '/report-nrw',          label: 'Report NRW',           icon: Droplets },
@@ -42,7 +41,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
       ...(process.env.NODE_ENV !== 'production' ? [{ href: '/action',  label: 'Action Tracker',  icon: Crosshair }] : []),
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary', label: 'Executive Summary', icon: FileText, badge: 'new' as const }] : []),
+      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary', label: 'Exec. Summary', icon: FileText, badge: 'new' as const }] : []),
     ],
   },
   {
@@ -74,7 +73,7 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
   const overdueActions = stats?.overdueActions ?? 0
   const mnfRedCount    = stats?.mnfRedCount    ?? 0
   const pct        = total > 0 ? Math.round((submitted / total) * 100) : 0
-  const arcColor   = pct === 100 ? '#4ADE80' : pct >= 60 ? '#38BDF8' : pct >= 30 ? '#FCD34D' : '#F87171'
+  const arcColor   = pct === 100 ? '#1E7A5A' : pct >= 60 ? '#2B5C86' : pct >= 30 ? '#A8721A' : '#B3392C'
   const r          = 20
   const circ       = 2 * Math.PI * r
   const dash       = (pct / 100) * circ
@@ -86,45 +85,35 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
         sidebarCollapsed ? 'w-16' : 'w-[220px]'
       )}
       style={{
-        background: 'linear-gradient(180deg, #05091E 0%, #040812 100%)',
-        borderRight: '1px solid rgba(71,130,255,.15)',
-        boxShadow: '4px 0 40px rgba(0,0,0,.50)',
+        background: '#FFFFFF',
+        borderRight: '1px solid #E3E7EC',
       }}
     >
       {/* ── Brand ── */}
       <div
         className="relative px-4 pt-5 pb-4 shrink-0 overflow-hidden"
         style={{
-          borderBottom: '1px solid rgba(71,130,255,.10)',
-          background: 'linear-gradient(135deg, rgba(59,130,246,.10) 0%, transparent 60%)',
+          borderBottom: '1px solid #E3E7EC',
+          background: 'linear-gradient(135deg, #EAF1F0 0%, transparent 60%)',
         }}
       >
-        {/* bg glow blob */}
-        <div
-          aria-hidden
-          className="absolute -top-6 -left-6 w-24 h-24 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%)' }}
-        />
-
         <div className="relative flex items-center gap-3 mb-3">
           <div
             className="w-9 h-9 flex items-center justify-center shrink-0 rounded-xl text-[11px] font-bold"
             style={{
-              background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(56,189,248,.18))',
-              border: '1px solid rgba(59,130,246,.45)',
-              color: '#93C5FD',
+              background: '#0B6E76',
+              color: '#FFFFFF',
               fontFamily: 'var(--font-mono)',
-              boxShadow: '0 0 16px rgba(59,130,246,.30), inset 0 1px 0 rgba(255,255,255,.10)',
             }}
           >
             NW
           </div>
           {!sidebarCollapsed && (
             <div>
-              <p className="text-[13px] font-bold leading-tight tracking-wide" style={{ color: '#E4ECFF' }}>
+              <p className="text-[13px] font-bold leading-tight tracking-wide" style={{ color: '#12181F' }}>
                 WSC-R10
               </p>
-              <p className="text-[9px] tracking-[.18em] uppercase mt-px" style={{ color: '#6B8DB8', fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[9px] tracking-[.18em] uppercase mt-px" style={{ color: '#6B7686', fontFamily: 'var(--font-mono)' }}>
                 NRW Tracker
               </p>
             </div>
@@ -141,25 +130,23 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
         <div
           className="mx-3 my-3 rounded-xl shrink-0 overflow-hidden"
           style={{
-            background: 'rgba(8,14,36,.90)',
-            border: '1px solid rgba(71,130,255,.14)',
+            background: '#FFFFFF',
+            border: '1px solid #E3E7EC',
+            boxShadow: '0 1px 2px rgba(18,24,31,.04)',
           }}
         >
           {/* Arc + text */}
           <div className="flex items-center gap-3 px-3 pt-3 pb-2">
             <div className="relative shrink-0">
               <svg width="50" height="50" className="-rotate-90">
-                <circle cx="25" cy="25" r={r} fill="none" stroke="rgba(71,130,255,.08)" strokeWidth="3.5" />
+                <circle cx="25" cy="25" r={r} fill="none" stroke="#EFF2F5" strokeWidth="3.5" />
                 <circle
                   cx="25" cy="25" r={r} fill="none"
                   stroke={arcColor}
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   strokeDasharray={`${dash} ${circ}`}
-                  style={{
-                    transition: 'stroke-dasharray .7s ease',
-                    filter: `drop-shadow(0 0 4px ${arcColor}88)`,
-                  }}
+                  style={{ transition: 'stroke-dasharray .7s ease' }}
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
@@ -169,59 +156,55 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
               </div>
             </div>
             <div>
-              <p className="text-[9px] mb-0.5 uppercase tracking-[.12em]" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)' }}>
+              <p className="text-[9px] mb-0.5 uppercase tracking-[.12em]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)' }}>
                 ส่งรายงาน
               </p>
-              <p style={{ color: '#E4ECFF', fontSize: '15px', fontFamily: 'var(--font-mono)', fontWeight: 700, lineHeight: 1 }}>
+              <p style={{ color: '#12181F', fontSize: '15px', fontFamily: 'var(--font-mono)', fontWeight: 700, lineHeight: 1 }}>
                 {submitted}
-                <span style={{ color: '#6B8DB8', fontSize: '11px', fontWeight: 400 }}> / {total}</span>
+                <span style={{ color: '#8896A3', fontSize: '11px', fontWeight: 400 }}> / {total}</span>
               </p>
             </div>
           </div>
 
           {/* Progress bar */}
           <div className="px-3 pb-2.5">
-            <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.08)' }}>
+            <div className="h-[3px] rounded-full overflow-hidden" style={{ background: '#EFF2F5' }}>
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${pct}%`,
-                  background: arcColor,
-                  boxShadow: `0 0 6px ${arcColor}`,
-                }}
+                style={{ width: `${pct}%`, background: arcColor }}
               />
             </div>
           </div>
 
-          <div className="h-px mx-3" style={{ background: 'rgba(71,130,255,.08)' }} />
+          <div className="h-px mx-3" style={{ background: '#E3E7EC' }} />
 
           {/* Stats row 1 */}
           <div className="px-3 pt-2.5 pb-2 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
-              <p style={{ color: pending > 0 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
+              <p style={{ color: pending > 0 ? '#B3392C' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {pending}
               </p>
             </div>
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
-              <p style={{ color: obstacles > 0 ? '#FCD34D' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
+              <p style={{ color: obstacles > 0 ? '#A8721A' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {obstacles}
               </p>
             </div>
           </div>
-          <div className="h-px mx-3" style={{ background: 'rgba(71,130,255,.06)' }} />
+          <div className="h-px mx-3" style={{ background: '#E3E7EC' }} />
           {/* Stats row 2 */}
           <div className="px-3 pt-2 pb-2.5 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>Action🔴</p>
-              <p style={{ color: overdueActions > 0 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>Action ค้าง</p>
+              <p style={{ color: overdueActions > 0 ? '#B3392C' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {overdueActions}
               </p>
             </div>
             <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#4A6490', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>MNF🔴</p>
-              <p style={{ color: mnfRedCount > 0 ? '#FB923C' : '#34D399', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
+              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>MNF แดง</p>
+              <p style={{ color: mnfRedCount > 0 ? '#B5651D' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
                 {mnfRedCount}
               </p>
             </div>
@@ -237,11 +220,11 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
               <div className="flex items-center gap-2 px-4 mb-1 pt-1">
                 <span
                   className="text-[9px] font-bold tracking-[.18em] uppercase shrink-0"
-                  style={{ color: '#4A6490', fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)' }}
                 >
                   {group.label}
                 </span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(71,130,255,.08)' }} />
+                <div className="flex-1 h-px" style={{ background: '#E3E7EC' }} />
               </div>
             )}
 
@@ -258,33 +241,33 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
                   title={sidebarCollapsed ? item.label : undefined}
                   className="group relative flex items-center gap-2.5 mx-2 mb-px py-[7px] px-3 rounded-xl text-[13px] font-medium transition-all duration-150"
                   style={isActive ? {
-                    background: 'linear-gradient(90deg, rgba(59,130,246,.18), rgba(59,130,246,.08))',
-                    border: '1px solid rgba(59,130,246,.28)',
-                    color: '#93C5FD',
-                    boxShadow: 'inset 3px 0 0 #3B82F6, 0 0 20px rgba(59,130,246,.08)',
+                    background: '#EAF1F0',
+                    border: '1px solid #0B6E7640',
+                    color: '#0B6E76',
+                    boxShadow: 'inset 3px 0 0 #0B6E76',
                   } : {
                     border: '1px solid transparent',
-                    color: '#6B8DB8',
+                    color: '#4B5563',
                   }}
                   onMouseEnter={e => {
                     if (!isActive) {
                       const el = e.currentTarget as HTMLElement
-                      el.style.background = 'rgba(71,130,255,.07)'
-                      el.style.color = '#8DB4D8'
+                      el.style.background = '#F5F6F8'
+                      el.style.color = '#12181F'
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isActive) {
                       const el = e.currentTarget as HTMLElement
                       el.style.background = ''
-                      el.style.color = '#6B8DB8'
+                      el.style.color = '#4B5563'
                     }
                   }}
                 >
                   <Icon
                     size={15}
                     className="shrink-0 transition-colors"
-                    style={{ color: isActive ? '#60A5FA' : 'currentColor' }}
+                    style={{ color: isActive ? '#0B6E76' : 'currentColor' }}
                   />
                   {!sidebarCollapsed && (
                     <span className="truncate flex-1">{item.label}</span>
@@ -296,7 +279,7 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
                   {sidebarCollapsed && isActive && (
                     <span
                       className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
-                      style={{ background: '#60A5FA', boxShadow: '0 0 6px #60A5FA' }}
+                      style={{ background: '#0B6E76' }}
                     />
                   )}
                 </Link>
@@ -311,9 +294,9 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
         onClick={toggleSidebar}
         title={sidebarCollapsed ? 'ขยาย' : 'ย่อ'}
         className="flex items-center justify-center h-10 shrink-0 transition-all"
-        style={{ borderTop: '1px solid rgba(71,130,255,.09)', color: '#4A6490' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#4782FF' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#4A6490' }}
+        style={{ borderTop: '1px solid #E3E7EC', color: '#98A2AF' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#0B6E76' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#98A2AF' }}
       >
         {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>

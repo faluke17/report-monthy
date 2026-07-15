@@ -35,7 +35,7 @@ export function BranchFilterBar({ branches, activeBranchId, activeYear, activeMo
         <select
           value={activeBranchId}
           onChange={(e) => nav({ branch_id: e.target.value })}
-          className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+          className="bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
         >
           <option value="">— ทุกสาขา —</option>
           {branches.map((b) => (
@@ -46,7 +46,7 @@ export function BranchFilterBar({ branches, activeBranchId, activeYear, activeMo
       <select
         value={activeMonth}
         onChange={(e) => nav({ month: e.target.value })}
-        className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+        className="bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
       >
         {months.map((m) => (
           <option key={m} value={m}>{getThaiMonthName(m)}</option>
@@ -55,7 +55,7 @@ export function BranchFilterBar({ branches, activeBranchId, activeYear, activeMo
       <select
         value={activeYear}
         onChange={(e) => nav({ year: e.target.value })}
-        className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+        className="bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
       >
         {years.map((y) => (
           <option key={y} value={y}>{toThaiYear(y)}</option>

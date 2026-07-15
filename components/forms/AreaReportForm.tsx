@@ -127,10 +127,10 @@ function fmt(n: number | null, dec = 2) {
 }
 
 
-const INPUT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
-const SELECT = 'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer'
-const LABEL = 'block text-xs font-semibold text-white/40 uppercase tracking-wide mb-2'
-const CALC_BOX = 'w-full bg-white/3 border border-dashed border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white/50 min-h-[46px] flex items-center'
+const INPUT = 'w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm text-[#12181F] font-mono placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 transition-colors'
+const SELECT = 'w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer'
+const LABEL = 'block text-xs font-semibold text-black/40 uppercase tracking-wide mb-2'
+const CALC_BOX = 'w-full bg-black/3 border border-dashed border-black/10 rounded-xl px-4 py-3 text-sm font-mono text-black/50 min-h-[46px] flex items-center'
 
 type MnfLookup = { report_year: number; report_month: number; avg_mnf: number }
 
@@ -519,9 +519,9 @@ export function AreaReportForm({
               <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center shrink-0">
                 {areaIdx + 1}
               </div>
-              <span className="flex-1 text-sm font-semibold text-white truncate">
+              <span className="flex-1 text-sm font-semibold text-[#12181F] truncate">
                 {area.area_name || (
-                  <span className="text-white/30 font-normal">พื้นที่ที่ {areaIdx + 1}</span>
+                  <span className="text-black/30 font-normal">พื้นที่ที่ {areaIdx + 1}</span>
                 )}
               </span>
               {areas.length > 1 && (
@@ -536,14 +536,14 @@ export function AreaReportForm({
                 </button>
               )}
               {area.expanded ? (
-                <ChevronUp size={15} className="text-white/30 shrink-0" />
+                <ChevronUp size={15} className="text-black/30 shrink-0" />
               ) : (
-                <ChevronDown size={15} className="text-white/30 shrink-0" />
+                <ChevronDown size={15} className="text-black/30 shrink-0" />
               )}
             </div>
 
             {area.expanded && (
-              <div className="border-t border-white/10 px-5 pb-6 space-y-6">
+              <div className="border-t border-black/10 px-5 pb-6 space-y-6">
 
                 {/* Part 1 ─ พื้นที่ */}
                 <section className="pt-5">
@@ -582,10 +582,10 @@ export function AreaReportForm({
                         <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                           area.manual_input
                             ? 'bg-amber-500 border-amber-500'
-                            : 'bg-transparent border-white/25 group-hover:border-white/50'
+                            : 'bg-transparent border-black/25 group-hover:border-black/50'
                         }`}>
                           {area.manual_input && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                            <svg className="w-2.5 h-2.5 text-[#12181F]" fill="none" viewBox="0 0 10 10">
                               <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           )}
@@ -597,7 +597,7 @@ export function AreaReportForm({
                           onChange={(e) => toggleManualInput(area.key, e.target.checked)}
                         />
                         <span className={`text-[10px] font-medium transition-colors ${
-                          area.manual_input ? 'text-amber-400' : 'text-white/30 group-hover:text-white/50'
+                          area.manual_input ? 'text-amber-400' : 'text-black/30 group-hover:text-black/50'
                         }`}>
                           กรอกเอง
                         </span>
@@ -645,7 +645,7 @@ export function AreaReportForm({
                       <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
                       <div className={CALC_BOX}>
                         {before ? (
-                          <span className="text-white/80 num">{fmt(before.loss, 2)}</span>
+                          <span className="text-black/80 num">{fmt(before.loss, 2)}</span>
                         ) : (
                           <span>—</span>
                         )}
@@ -681,7 +681,7 @@ export function AreaReportForm({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-[36px_1fr_72px_72px_72px_28px] gap-2 text-[10px] text-white/35 px-1 mb-1">
+                  <div className="grid grid-cols-[36px_1fr_72px_72px_72px_28px] gap-2 text-[10px] text-black/35 px-1 mb-1">
                     <span className="text-center">สเต็ป</span>
                     <span>สูญเสียคาดการณ์ (m³/hr)</span>
                     <span>จุดรั่ว</span>
@@ -700,7 +700,7 @@ export function AreaReportForm({
                           key={si}
                           className="grid grid-cols-[36px_1fr_72px_72px_72px_28px] gap-2 items-center"
                         >
-                          <div className="text-xs text-white/40 font-mono text-center">{step.step_no}</div>
+                          <div className="text-xs text-black/40 font-mono text-center">{step.step_no}</div>
                           <input
                             type="number"
                             value={step.estimated_loss}
@@ -723,7 +723,7 @@ export function AreaReportForm({
                             className={INPUT}
                           />
                           <div className={CALC_BOX}>
-                            <span className={`num text-xs ${pending > 0 ? 'text-amber-400' : 'text-white/40'}`}>
+                            <span className={`num text-xs ${pending > 0 ? 'text-amber-400' : 'text-black/40'}`}>
                               {found > 0 || repaired > 0 ? pending : '—'}
                             </span>
                           </div>
@@ -758,10 +758,10 @@ export function AreaReportForm({
                         <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                           area.manual_input_after
                             ? 'bg-amber-500 border-amber-500'
-                            : 'bg-transparent border-white/25 group-hover:border-white/50'
+                            : 'bg-transparent border-black/25 group-hover:border-black/50'
                         }`}>
                           {area.manual_input_after && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                            <svg className="w-2.5 h-2.5 text-[#12181F]" fill="none" viewBox="0 0 10 10">
                               <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           )}
@@ -773,7 +773,7 @@ export function AreaReportForm({
                           onChange={(e) => toggleManualInputAfter(area.key, e.target.checked)}
                         />
                         <span className={`text-[10px] font-medium transition-colors ${
-                          area.manual_input_after ? 'text-amber-400' : 'text-white/30 group-hover:text-white/50'
+                          area.manual_input_after ? 'text-amber-400' : 'text-black/30 group-hover:text-black/50'
                         }`}>
                           กรอกเอง
                         </span>
@@ -821,7 +821,7 @@ export function AreaReportForm({
                       <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
                       <div className={CALC_BOX}>
                         {after ? (
-                          <span className="text-white/80 num">{fmt(after.loss, 2)}</span>
+                          <span className="text-black/80 num">{fmt(after.loss, 2)}</span>
                         ) : (
                           <span>—</span>
                         )}
@@ -872,7 +872,7 @@ export function AreaReportForm({
                       </button>
                     </div>
                     {/* Items */}
-                    <div className="divide-y divide-white/5">
+                    <div className="divide-y divide-black/5">
                       {area.pdca_do_items.map((item, idx) => (
                         <div key={idx} className="px-4 py-3 space-y-2 group">
                           <div className="flex items-center gap-3">
@@ -884,13 +884,13 @@ export function AreaReportForm({
                               value={item.title}
                               onChange={(e) => patchPdcaItem(area.key, 'pdca_do_items', idx, { title: e.target.value })}
                               placeholder="ชื่อหัวข้อ / กิจกรรม..."
-                              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-sm font-medium text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 focus:bg-white/8 transition-all"
+                              className="flex-1 bg-black/5 border border-black/15 rounded-lg px-3 py-1.5 text-sm font-medium text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 focus:bg-black/8 transition-all"
                             />
                             {area.pdca_do_items.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removePdcaItem(area.key, 'pdca_do_items', idx)}
-                                className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all shrink-0"
+                                className="opacity-0 group-hover:opacity-100 text-black/20 hover:text-red-400 transition-all shrink-0"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -901,7 +901,7 @@ export function AreaReportForm({
                             onChange={(e) => patchPdcaItem(area.key, 'pdca_do_items', idx, { detail: e.target.value })}
                             rows={2}
                             placeholder="รายละเอียด..."
-                            className="w-full bg-white/3 border border-white/8 rounded-lg px-3 py-2 text-sm text-white/65 placeholder:text-white/18 focus:outline-none focus:border-cyan-500/35 focus:bg-white/5 resize-none transition-all ml-8"
+                            className="w-full bg-black/3 border border-black/8 rounded-lg px-3 py-2 text-sm text-black/65 placeholder:text-black/18 focus:outline-none focus:border-cyan-500/35 focus:bg-black/5 resize-none transition-all ml-8"
                           />
                         </div>
                       ))}
@@ -927,7 +927,7 @@ export function AreaReportForm({
                       </button>
                     </div>
                     {/* Items */}
-                    <div className="divide-y divide-white/5">
+                    <div className="divide-y divide-black/5">
                       {area.pdca_act_items.map((item, idx) => (
                         <div key={idx} className="px-4 py-3 space-y-2 group">
                           <div className="flex items-center gap-3">
@@ -939,13 +939,13 @@ export function AreaReportForm({
                               value={item.title}
                               onChange={(e) => patchPdcaItem(area.key, 'pdca_act_items', idx, { title: e.target.value })}
                               placeholder="ชื่อหัวข้อ / แผนงาน..."
-                              className="flex-1 bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-sm font-medium text-white placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 focus:bg-white/8 transition-all"
+                              className="flex-1 bg-black/5 border border-black/15 rounded-lg px-3 py-1.5 text-sm font-medium text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-emerald-500/50 focus:bg-black/8 transition-all"
                             />
                             {area.pdca_act_items.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removePdcaItem(area.key, 'pdca_act_items', idx)}
-                                className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all shrink-0"
+                                className="opacity-0 group-hover:opacity-100 text-black/20 hover:text-red-400 transition-all shrink-0"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -956,7 +956,7 @@ export function AreaReportForm({
                             onChange={(e) => patchPdcaItem(area.key, 'pdca_act_items', idx, { detail: e.target.value })}
                             rows={2}
                             placeholder="รายละเอียด..."
-                            className="w-full bg-white/3 border border-white/8 rounded-lg px-3 py-2 text-sm text-white/65 placeholder:text-white/18 focus:outline-none focus:border-emerald-500/35 focus:bg-white/5 resize-none transition-all ml-8"
+                            className="w-full bg-black/3 border border-black/8 rounded-lg px-3 py-2 text-sm text-black/65 placeholder:text-black/18 focus:outline-none focus:border-emerald-500/35 focus:bg-black/5 resize-none transition-all ml-8"
                           />
                         </div>
                       ))}
@@ -975,12 +975,12 @@ export function AreaReportForm({
                       className={`ml-auto flex items-center gap-2 px-3 py-1 rounded-full text-xs border transition-colors ${
                         area.has_obstacle
                           ? 'bg-orange-500/20 border-orange-500/40 text-orange-300'
-                          : 'bg-white/5 border-white/15 text-white/40'
+                          : 'bg-black/5 border-black/15 text-black/40'
                       }`}
                     >
                       <span
                         className={`w-3.5 h-3.5 rounded-full border-2 transition-colors ${
-                          area.has_obstacle ? 'bg-orange-400 border-orange-400' : 'border-white/30'
+                          area.has_obstacle ? 'bg-orange-400 border-orange-400' : 'border-black/30'
                         }`}
                       />
                       {area.has_obstacle ? 'มีอุปสรรค' : 'ไม่มีอุปสรรค'}
@@ -1030,7 +1030,7 @@ export function AreaReportForm({
                                       ? lvl === 'สูง'
                                         ? 'bg-red-500/20 border-red-500/60 text-red-300'
                                         : 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                                      : 'bg-white/5 border-white/15 text-white/40'
+                                      : 'bg-black/5 border-black/15 text-black/40'
                                   }`}
                                 >
                                   {lvl === 'สูง' ? '🔴' : '🟡'} {lvl}
@@ -1059,7 +1059,7 @@ export function AreaReportForm({
                               onChange={(e) => patchObstacle(area.key, oi, { obstacle_detail: e.target.value })}
                               rows={2}
                               placeholder="อธิบายสภาพปัญหาที่พบ..."
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
                             />
                           </div>
 
@@ -1070,7 +1070,7 @@ export function AreaReportForm({
                               onChange={(e) => patchObstacle(area.key, oi, { resolution_plan: e.target.value })}
                               rows={2}
                               placeholder="ระบุแนวทางที่จะดำเนินการแก้ไข..."
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
                             />
                           </div>
 
@@ -1081,7 +1081,7 @@ export function AreaReportForm({
                               onChange={(e) => patchObstacle(area.key, oi, { impact: e.target.value })}
                               rows={2}
                               placeholder="ผลกระทบต่อการให้บริการหรือข้อมูล NRW..."
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
                             />
                           </div>
 
@@ -1092,7 +1092,7 @@ export function AreaReportForm({
                               onChange={(e) => patchObstacle(area.key, oi, { region_support_needed: e.target.value })}
                               rows={2}
                               placeholder="ระบุสิ่งที่ต้องการให้เขตช่วยเหลือ (หากมี)..."
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
                             />
                           </div>
                         </div>
@@ -1117,7 +1117,7 @@ export function AreaReportForm({
       {/* Add area */}
       <button
         onClick={() => setAreas((prev) => [...prev, newArea(prev.length)])}
-        className="w-full py-3 border border-dashed border-white/20 rounded-xl text-sm text-white/40 hover:text-white hover:border-white/40 transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 border border-dashed border-black/20 rounded-xl text-sm text-black/40 hover:text-[#12181F] hover:border-black/40 transition-colors flex items-center justify-center gap-2"
       >
         <Plus size={14} />
         เพิ่มพื้นที่
@@ -1127,14 +1127,14 @@ export function AreaReportForm({
       <div className="flex gap-3 justify-end pt-1">
         <button
           onClick={() => router.back()}
-          className="px-4 py-2.5 text-sm text-white/60 hover:text-white border border-white/15 rounded-lg transition-colors"
+          className="px-4 py-2.5 text-sm text-black/60 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors"
         >
           ยกเลิก
         </button>
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="px-6 py-2.5 text-sm bg-green-500 hover:bg-green-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
+          className="px-6 py-2.5 text-sm bg-green-500 hover:bg-green-400 text-[#FFFFFF] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
           {submitting ? 'กำลังบันทึก...' : `บันทึก ${areas.length} พื้นที่`}
         </button>

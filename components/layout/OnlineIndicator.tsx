@@ -25,29 +25,29 @@ function UserRow({ user, tick }: { user: PresenceUser; tick: number }) {
   const label = isRegion ? 'ส่วนเขต' : `สาขา${user.branch_name}`
 
   return (
-    <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg" style={{ background: 'rgba(71,130,255,.04)' }}>
+    <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg" style={{ background: '#F5F6F8' }}>
       <div
         className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
         style={{
-          background: isRegion ? 'rgba(52,211,153,.15)' : 'rgba(71,130,255,.15)',
-          color: isRegion ? '#34D399' : '#93C5FD',
-          border: `1px solid ${isRegion ? 'rgba(52,211,153,.25)' : 'rgba(71,130,255,.25)'}`,
+          background: isRegion ? '#E7F3EE' : '#EAF1F0',
+          color: isRegion ? '#1E7A5A' : '#0B6E76',
+          border: `1px solid ${isRegion ? '#1E7A5A40' : '#0B6E7640'}`,
         }}
       >
         {initials || 'U'}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-medium leading-tight truncate" style={{ color: '#E4ECFF' }}>
+        <p className="text-[12px] font-medium leading-tight truncate" style={{ color: '#12181F' }}>
           {user.name} {user.surname}
         </p>
-        <p className="text-[10px] leading-tight mt-0.5" style={{ color: '#3D5380' }}>
+        <p className="text-[10px] leading-tight mt-0.5" style={{ color: '#8896A3' }}>
           {label}
         </p>
       </div>
 
       {/* tick ใช้เพื่อ force re-render ให้ timeAgo อัปเดต */}
-      <span key={tick} className="text-[10px] shrink-0" style={{ color: '#3D5380' }}>
+      <span key={tick} className="text-[10px] shrink-0" style={{ color: '#8896A3' }}>
         {timeAgo(user.joined_at)}
       </span>
     </div>
@@ -73,8 +73,8 @@ export function OnlineIndicator({ username, name, surname, branch_name }: Online
           style={{ border: '1px solid transparent' }}
           onMouseEnter={e => {
             const el = e.currentTarget as HTMLElement
-            el.style.background = 'rgba(52,211,153,.08)'
-            el.style.borderColor = 'rgba(52,211,153,.20)'
+            el.style.background = '#E7F3EE'
+            el.style.borderColor = '#1E7A5A30'
           }}
           onMouseLeave={e => {
             const el = e.currentTarget as HTMLElement
@@ -85,15 +85,15 @@ export function OnlineIndicator({ username, name, surname, branch_name }: Online
           <span className="relative flex h-2 w-2">
             <span
               className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
-              style={{ background: '#34D399' }}
+              style={{ background: '#1E7A5A' }}
             />
             <span
               className="relative inline-flex rounded-full h-2 w-2"
-              style={{ background: '#34D399' }}
+              style={{ background: '#1E7A5A' }}
             />
           </span>
-          <Users size={13} style={{ color: '#34D399' }} />
-          <span className="text-[12px] font-semibold tabular-nums" style={{ color: '#34D399' }}>
+          <Users size={13} style={{ color: '#1E7A5A' }} />
+          <span className="text-[12px] font-semibold tabular-nums" style={{ color: '#1E7A5A' }}>
             {count}
           </span>
         </button>
@@ -104,28 +104,28 @@ export function OnlineIndicator({ username, name, surname, branch_name }: Online
         sideOffset={8}
         className="w-[260px] p-0 overflow-hidden"
         style={{
-          background: '#080F25',
-          border: '1px solid rgba(71,130,255,.20)',
-          boxShadow: '0 16px 48px rgba(0,0,0,.70), 0 0 0 1px rgba(71,130,255,.06) inset',
+          background: '#FFFFFF',
+          border: '1px solid #E3E7EC',
+          boxShadow: '0 8px 28px rgba(18,24,31,.10)',
           borderRadius: '12px',
         }}
       >
         <div
           className="flex items-center justify-between px-3 py-2.5"
-          style={{ borderBottom: '1px solid rgba(71,130,255,.10)' }}
+          style={{ borderBottom: '1px solid #E3E7EC' }}
         >
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: '#34D399' }} />
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#34D399' }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: '#1E7A5A' }} />
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#1E7A5A' }} />
             </span>
-            <span className="text-[11px] font-semibold" style={{ color: '#34D399' }}>
+            <span className="text-[11px] font-semibold" style={{ color: '#1E7A5A' }}>
               ออนไลน์อยู่
             </span>
           </div>
           <span
             className="text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded"
-            style={{ background: 'rgba(52,211,153,.12)', color: '#34D399' }}
+            style={{ background: '#E7F3EE', color: '#1E7A5A' }}
           >
             {count} คน
           </span>
@@ -133,7 +133,7 @@ export function OnlineIndicator({ username, name, surname, branch_name }: Online
 
         <div className="p-2 flex flex-col gap-1 max-h-[280px] overflow-y-auto">
           {count === 0 ? (
-            <p className="text-center text-[12px] py-4" style={{ color: '#3D5380' }}>
+            <p className="text-center text-[12px] py-4" style={{ color: '#8896A3' }}>
               ไม่มีผู้ใช้ออนไลน์
             </p>
           ) : (

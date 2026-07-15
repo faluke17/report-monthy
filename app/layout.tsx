@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th" className={`${notoSansThai.variable} ${spaceMono.variable} h-full`}>
-      <body className="min-h-full bg-[#05091A] text-[#E4ECFF] antialiased">
+      <body className="min-h-full bg-[#F5F6F8] text-[#12181F] antialiased">
         {children}
         <Toaster richColors position="top-right" />
       </body>

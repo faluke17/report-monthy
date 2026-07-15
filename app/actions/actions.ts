@@ -49,6 +49,5 @@ export async function updateActionStatus(id: string, status: string): Promise<Ac
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/action')
-  revalidatePath('/dashboard')
   return { success: true }
 }

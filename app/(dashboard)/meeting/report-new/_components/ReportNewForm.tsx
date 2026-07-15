@@ -46,7 +46,7 @@ export function ReportNewForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="glass-card p-6 space-y-4">
         <div>
-          <label className="block text-sm text-white/60 mb-1.5">
+          <label className="block text-sm text-black/60 mb-1.5">
             หัวข้อการประชุม <span className="text-red-400">*</span>
           </label>
           <input
@@ -55,20 +55,20 @@ export function ReportNewForm() {
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="เช่น ประชุมติดตาม NRW เขต 10 ครั้งที่ 7/2569"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">
+            <label className="block text-sm text-black/60 mb-1.5">
               ประเภทการประชุม <span className="text-red-400">*</span>
             </label>
             <select
               required
               value={form.meeting_type}
               onChange={(e) => set('meeting_type', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             >
               <option value="">— เลือก —</option>
               {MEETING_TYPES.map((t) => (
@@ -77,7 +77,7 @@ export function ReportNewForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">
+            <label className="block text-sm text-black/60 mb-1.5">
               วันที่ประชุม <span className="text-red-400">*</span>
             </label>
             <input
@@ -85,22 +85,22 @@ export function ReportNewForm() {
               required
               value={form.scheduled_date}
               onChange={(e) => set('scheduled_date', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">เวลา</label>
+            <label className="block text-sm text-black/60 mb-1.5">เวลา</label>
             <input
               type="time"
               value={form.scheduled_time}
               onChange={(e) => set('scheduled_time', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             />
           </div>
         </div>
 
         <div>
-          <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-black/60 mb-1.5">
             <MapPin size={13} /> สถานที่ / ห้องประชุม
           </label>
           <input
@@ -108,7 +108,7 @@ export function ReportNewForm() {
             value={form.location}
             onChange={(e) => set('location', e.target.value)}
             placeholder="เช่น ห้องประชุม 1 ชั้น 3"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
           />
         </div>
       </div>
@@ -117,14 +117,14 @@ export function ReportNewForm() {
         <button
           type="button"
           onClick={() => router.push('/meeting')}
-          className="px-4 py-2.5 text-sm text-white/60 hover:text-white border border-white/15 rounded-lg transition-colors"
+          className="px-4 py-2.5 text-sm text-black/60 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="flex items-center gap-2 px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
+          className="flex items-center gap-2 px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
           <Calendar size={14} />
           {submitting ? 'กำลังสร้าง...' : 'ถัดไป — กรอกวาระ 1-6'}

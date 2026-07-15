@@ -1,46 +1,44 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Branch } from '@/lib/types'
-import type { BranchNrwSnap } from '../page'
+import type { BranchNrwSnap, RegionNrwSnap } from '../page'
 import type { BranchExecutiveSummary } from '@/app/actions/executive-summary'
 import { getExecutiveBranchSummary } from '@/app/actions/executive-summary'
 import { BranchSummaryPanel } from './BranchSummaryPanel'
+import { useRealtimeBranchReadStats } from '@/hooks/useRealtimeData'
+import { getBranchByCostcenter } from '@/lib/utils/pwa-branches'
 import { useBreakpoint } from './tabs/shared'
 
-const SCAN_MS = 1400
+const MONTH_SHORT = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
-const PROVINCE_GROUPS = [
-  { province: 'นครสวรรค์', codes: ['NKS','TTK','LYW','PYK'] },
-  { province: 'ชัยนาท',    codes: ['CNT'] },
-  { province: 'อุทัยธานี', codes: ['UTN'] },
-  { province: 'กำแพงเพชร', codes: ['KPP','KNU'] },
-  { province: 'ตาก',       codes: ['TAK','MSO'] },
-  { province: 'สุโขทัย',   codes: ['SKT','TSL','SRR','SWK','SSN'] },
-  { province: 'อุตรดิตถ์',  codes: ['UTT'] },
-  { province: 'พิษณุโลก',  codes: ['PKM','NKT'] },
-  { province: 'พิจิตร',    codes: ['PCT','BML','TPH'] },
-  { province: 'เพชรบูรณ์', codes: ['PBC','LOM','CHN','NNP','VCB'] },
+const SANS = 'var(--font-sans)'
+const MONO = 'var(--font-mono), var(--font-sans)'
+const INK   = '#12181F'
+const INK2  = '#4B5563'
+const INK3  = '#8896A3'
+const LINE  = '#E3E7EC'
+const BG    = '#F5F6F8'
+const SURF  = '#FFFFFF'
+
+// กลุ่มสถานะสาขา — จัดกลุ่มตายตัวตามที่เขตกำหนด (ไม่ได้คำนวณจาก threshold)
+type GroupKey = 'track' | 'crit' | 'watch' | 'general'
+type SevFilter = 'all' | GroupKey
+
+const STATUS_GROUPS: { key: GroupKey; label: string; color: string; soft: string; codes: string[] }[] = [
+  { key: 'track',   label: 'ติดตาม',    color: '#2B5C86', soft: '#EAF1F8', codes: ['PKM', 'KPP', 'MSO', 'SKT', 'PCT'] },
+  { key: 'crit',    label: 'วิกฤต',     color: '#B3392C', soft: '#FBEAE8', codes: ['PBC', 'LOM', 'PYK', 'TAK', 'TPH', 'CNT'] },
+  { key: 'watch',   label: 'เฝ้าระวัง', color: '#A8721A', soft: '#FBF1E1', codes: ['BML', 'UTN', 'KNU', 'NKT', 'UTT', 'SWK', 'NKS', 'SSN', 'VCB'] },
+  { key: 'general', label: 'ทั่วไป',    color: '#1E7A5A', soft: '#E7F3EE', codes: ['LYW', 'TTK', 'CHN', 'SRR', 'NNP', 'TSL'] },
 ]
 
-type Sev = 'ok' | 'warn' | 'crit' | 'grey'
-type SevFilter = 'all' | 'crit' | 'warn'
+const GROUP_ORDER: GroupKey[] = STATUS_GROUPS.map((g) => g.key)
+const GROUP_COLOR: Record<GroupKey, string> = Object.fromEntries(STATUS_GROUPS.map((g) => [g.key, g.color])) as Record<GroupKey, string>
+const GROUP_BY_CODE: Record<string, GroupKey> = {}
+for (const g of STATUS_GROUPS) for (const c of g.codes) GROUP_BY_CODE[c] = g.key
 
-const BRANCH_ORDER = ['NKS','TTK','LYW','PYK','CNT','UTN','KPP','KNU','TAK','MSO','SKT','TSL','SRR','SWK','SSN','UTT','PKM','NKT','PCT','BML','TPH','PBC','LOM','CHN','NNP','VCB']
-
-function sevFromNrw(pct: number | null, status: string | null): Sev {
-  if (!status || status === 'draft') return 'grey'
-  if (pct === null) return 'grey'
-  if (pct <= 20) return 'ok'
-  if (pct <= 25) return 'warn'
-  return 'crit'
-}
-
-const SEV_COLOR: Record<Sev, string> = {
-  ok:   '#10D9B0',
-  warn: '#F59E0B',
-  crit: '#EF4444',
-  grey: '#475569',
+function groupOf(code: string): GroupKey {
+  return GROUP_BY_CODE[code] ?? 'general'
 }
 
 function useClock() {
@@ -56,226 +54,247 @@ function thaiDateTime(d: Date) {
   const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
   return {
     date: `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear() + 543}`,
-    time: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`,
+    time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
   }
 }
 
-function Corners({ color = 'rgba(34,211,238,0.55)', size = 12 }: { color?: string; size?: number }) {
-  const s: React.CSSProperties = { position: 'absolute', width: size, height: size, borderColor: color }
+function trendInfo(delta: number | null): { label: string; color: string } {
+  if (delta == null) return { label: 'ไม่มีข้อมูลเทียบ', color: INK3 }
+  if (delta > 0.05) return { label: `▲ แย่ลง ${delta.toFixed(1)} จุด`, color: '#B3392C' }
+  if (delta < -0.05) return { label: `▼ ดีขึ้น ${Math.abs(delta).toFixed(1)} จุด`, color: '#1E7A5A' }
+  return { label: '▬ คงที่', color: INK3 }
+}
+
+// ย่อตัวเลขปริมาณน้ำให้พอดี sidebar แคบๆ (200px)
+function fmtLossCompact(v: number | null): string {
+  if (v == null) return '—'
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)} ล้าน m³`
+  if (v >= 1_000) return `${Math.round(v / 1000).toLocaleString('th-TH')}k m³`
+  return `${Math.round(v).toLocaleString('th-TH')} m³`
+}
+
+// ── มาตรวัดเชิงเส้น — ใช้กับแถวสาขาทุกจุดที่โชว์ %NRW เทียบเป้า 20% ──
+function Gauge({ pct, color, height = 8 }: { pct: number | null; color: string; height?: number }) {
+  const domain = 40 // สเกลอ้างอิง 0–40% → เป้าหมาย 20% อยู่กึ่งกลางแท่งพอดี
+  const width = pct == null ? 0 : Math.max(2, Math.min(100, (pct / domain) * 100))
   return (
-    <>
-      <span style={{ ...s, top: -1, left: -1,  borderTop: '1px solid', borderLeft: '1px solid' }} />
-      <span style={{ ...s, top: -1, right: -1, borderTop: '1px solid', borderRight: '1px solid' }} />
-      <span style={{ ...s, bottom: -1, left: -1, borderBottom: '1px solid', borderLeft: '1px solid' }} />
-      <span style={{ ...s, bottom: -1, right: -1, borderBottom: '1px solid', borderRight: '1px solid' }} />
-    </>
+    <div style={{ position: 'relative', height, borderRadius: 99, background: '#EBEEF1', overflow: 'hidden', flex: 1, minWidth: 40 }}>
+      <div aria-hidden style={{ position: 'absolute', left: '50%', top: -1, bottom: -1, width: 1, background: '#C7CFD7' }} />
+      <div style={{ height: '100%', width: `${width}%`, borderRadius: 99, background: color, transition: 'width .5s ease' }} />
+    </div>
   )
 }
 
-// ── Branch dock card ──────────────────────────────────────────────
-function BranchDockCard({
-  branch, snap, isDragging, isLoaded, onDragStart, onDragEnd, onClick,
-}: {
+// ── สัญลักษณ์หลักของหน้านี้ — มาตรวัดครึ่งวงกลม (เหมือนหน้าปัดมิเตอร์น้ำ) แสดง NRW% สะสมทั้งเขต ──
+// เป้าหมาย 20% อยู่ตำแหน่ง 12 นาฬิกาพอดี (สเกล 0–40%) ให้เทียบง่ายด้วยตา
+// ขนาดคุมด้วย container ที่ห่อ (width:100% + aspect-ratio) ไม่ตรึงพิกเซล เพราะใช้ทั้งใน sidebar แคบและ hero มือถือกว้าง
+function HeroDial({ pct }: { pct: number | null }) {
+  const W = 220, H = 122, CX = 110, CY = 102, R = 82, SW = 18
+  const domain = 40
+  const circumference = 2 * Math.PI * R
+  const halfCirc = circumference / 2
+  const value = pct == null ? 0 : Math.max(0, Math.min(domain, pct))
+  const valueLen = halfCirc * (value / domain)
+  const color = pct == null ? '#C7CFD7' : pct <= 20 ? '#1E7A5A' : pct <= 25 ? '#A8721A' : '#B3392C'
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', width: '100%', height: 'auto' }} aria-hidden>
+      <circle
+        cx={CX} cy={CY} r={R} fill="none" stroke="#EBEEF1" strokeWidth={SW}
+        strokeDasharray={`${halfCirc} ${circumference}`} strokeLinecap="round"
+        transform={`rotate(180 ${CX} ${CY})`}
+      />
+      {pct != null && (
+        <circle
+          cx={CX} cy={CY} r={R} fill="none" stroke={color} strokeWidth={SW}
+          strokeDasharray={`${valueLen} ${circumference}`} strokeLinecap="round"
+          transform={`rotate(180 ${CX} ${CY})`}
+          style={{ transition: 'stroke-dasharray .7s ease' }}
+        />
+      )}
+      {/* ขีดเป้าหมาย 20% — ตำแหน่ง apex กึ่งกลางสเกล */}
+      <line x1={CX} y1={CY - R - SW / 2 - 3} x2={CX} y2={CY - R + SW / 2 + 3} stroke="#B9C2CB" strokeWidth={2} />
+    </svg>
+  )
+}
+
+function BranchRow({ branch, snap, compact, onClick }: {
   branch: Branch
   snap: BranchNrwSnap | undefined
-  isDragging: boolean
-  isLoaded: boolean
-  onDragStart: (id: string) => void
-  onDragEnd: () => void
+  compact: boolean
   onClick: () => void
 }) {
-  const sev = sevFromNrw(snap?.nrw_pct ?? null, snap?.report_status ?? null)
-  const c = SEV_COLOR[sev]
+  const color = GROUP_COLOR[groupOf(branch.code)]
+  const { label: trendLabel, color: trendColor } = trendInfo(snap?.cum_trend_delta ?? null)
+  const pctLabel = snap?.cum_pct != null ? snap.cum_pct.toFixed(1) + '%' : '—'
 
-  return (
-    <div
-      draggable
-      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('branch-id', branch.id); onDragStart(branch.id) }}
-      onDragEnd={onDragEnd}
-      onClick={onClick}
-      className={`exec-dock-card${isLoaded ? ' is-loaded' : ''}`}
-      style={{
-        position: 'relative',
-        padding: '7px 10px 7px 12px',
-        background: isLoaded ? 'rgba(34,211,238,0.08)' : 'rgba(8,14,26,0.4)',
-        border: `1px solid ${isLoaded ? 'rgba(34,211,238,0.5)' : 'rgba(34,211,238,0.1)'}`,
-        borderLeft: `2px solid ${isLoaded ? c : `${c}55`}`,
-        marginBottom: 3,
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr auto',
-        alignItems: 'center',
-        gap: 8,
-        opacity: isDragging ? 0.3 : 1,
-        transform: isDragging ? 'scale(0.97)' : undefined,
-      }}
-    >
-      <span
-        className={sev === 'crit' || sev === 'warn' ? 'anim-blink-crit' : ''}
-        style={{ width: 6, height: 6, borderRadius: '50%', background: c, display: 'inline-block', boxShadow: `0 0 5px ${c}`, flexShrink: 0 }}
-      />
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 8, color: isLoaded ? 'rgba(34,211,238,0.6)' : '#475569', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>{branch.code}</div>
-        <div style={{ fontSize: 12, color: '#CBD5E1', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {branch.name_th}
-        </div>
-      </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 12, fontFamily: 'IBM Plex Mono, monospace', fontWeight: 700, color: c }}>
-          {snap?.nrw_pct != null ? snap.nrw_pct.toFixed(1) + '%' : '—'}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Hero Stage (full-screen empty state) ─────────────────────────
-function HeroStage({ critCount, warnCount, okCount, totalCount, compact, isTouch }: {
-  critCount: number; warnCount: number; okCount: number; totalCount: number; compact: boolean; isTouch: boolean
-}) {
-  const greyCount = totalCount - critCount - warnCount - okCount
-  const radarSize = compact ? 130 : 220
-  const ratio = radarSize / 220
-
-  return (
-    <div style={{
-      position: 'absolute', inset: 0,
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: compact ? '16px 14px' : '32px 48px',
-      overflow: 'hidden auto',
-    }}>
-      {/* BG radial glow — centered */}
-      <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,211,238,0.045) 0%, transparent 65%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.035) 0%, transparent 65%)', pointerEvents: 'none' }} />
-
-      {/* ── Radar ── */}
-      <div className="anim-float" style={{ position: 'relative', width: radarSize, height: radarSize, marginBottom: compact ? 20 : 36, flexShrink: 0 }}>
-        {/* Outermost dashed ring */}
-        <div className="anim-radar-slow" style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px dashed rgba(34,211,238,0.14)' }} />
-        {/* Outer ring */}
-        <div style={{ position: 'absolute', inset: Math.round(16 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.22)', boxShadow: '0 0 18px rgba(34,211,238,0.06)' }} />
-        {/* Mid ring */}
-        <div style={{ position: 'absolute', inset: Math.round(38 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.32)', boxShadow: '0 0 12px rgba(34,211,238,0.1)' }} />
-        {/* Inner filled */}
-        <div style={{ position: 'absolute', inset: Math.round(64 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.5)', background: 'radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%)' }} />
-        {/* Sweep — rotating */}
-        <div className="anim-radar" style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', animationDuration: '3.5s' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'conic-gradient(from 270deg, transparent 0deg, rgba(34,211,238,0.0) 0deg, rgba(34,211,238,0.24) 55deg, rgba(34,211,238,0.0) 85deg)' }} />
-        </div>
-        {/* Crosshairs */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', width: '60%', height: 1, background: 'rgba(34,211,238,0.1)' }} />
-          <div style={{ position: 'absolute', width: 1, height: '60%', background: 'rgba(34,211,238,0.1)' }} />
-        </div>
-        {/* Center core */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22D3EE', boxShadow: '0 0 20px #22D3EE, 0 0 6px #22D3EE, 0 0 40px rgba(34,211,238,0.3)' }} />
-        </div>
-        {/* Ping rings */}
-        <div className="anim-radar-ping"   style={{ position: 'absolute', inset: -Math.round(14 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.38)' }} />
-        <div className="anim-radar-ping-2" style={{ position: 'absolute', inset: -Math.round(14 * ratio), borderRadius: '50%', border: '1px solid rgba(34,211,238,0.18)' }} />
-        {/* Blips on radar */}
-        {([
-          { top: '20%', left: '64%', c: '#EF4444', delay: 0 },
-          { top: '58%', left: '22%', c: '#F59E0B', delay: 0.5 },
-          { top: '35%', left: '52%', c: '#10D9B0', delay: 0.9 },
-          { top: '70%', left: '60%', c: '#10D9B0', delay: 1.4 },
-          { top: '30%', left: '30%', c: '#EF4444', delay: 0.7 },
-        ] as { top: string; left: string; c: string; delay: number }[]).map((b, i) => (
-          <div key={i} className="anim-blink-crit" style={{ position: 'absolute', top: b.top, left: b.left, width: 5, height: 5, borderRadius: '50%', background: b.c, boxShadow: `0 0 8px ${b.c}`, animationDelay: `${b.delay}s` }} />
-        ))}
-        {/* Range labels */}
-        {!compact && [
-          { text: '5', r: 64 }, { text: '10', r: 38 }, { text: '15', r: 16 },
-        ].map(({ text, r }) => (
-          <div key={text} style={{ position: 'absolute', top: `calc(50% - ${r}px - 7px)`, left: '52%', fontSize: 7, color: 'rgba(34,211,238,0.2)', fontFamily: 'IBM Plex Mono, monospace' }}>{text}</div>
-        ))}
-      </div>
-
-      {/* ── Main text ── */}
-      <div style={{ textAlign: 'center', marginBottom: compact ? 22 : 48 }}>
-        {!compact && (
-          <div style={{ fontSize: 10, color: 'rgba(34,211,238,0.38)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 3, marginBottom: 12 }}>
-            // BRANCH ACQUISITION SYSTEM · READY
-          </div>
-        )}
-        <div style={{ fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1.0, marginBottom: compact ? 10 : 14 }}>
-          {!compact && (
-            <div style={{ fontSize: 42, fontWeight: 800, color: '#CBD5E1', letterSpacing: 1.5, textShadow: '0 0 40px rgba(34,211,238,0.1)' }}>
-              Let&apos;s drag ur
-            </div>
-          )}
-          <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: compact ? 30 : 52, fontWeight: 800, color: '#22D3EE', letterSpacing: 2, textShadow: '0 0 32px rgba(34,211,238,0.65), 0 0 80px rgba(34,211,238,0.2)' }}>
-              Branch
-            </span>
-            <span className="anim-blink-crit" style={{ fontSize: compact ? 26 : 42, color: 'rgba(34,211,238,0.65)', fontWeight: 200, lineHeight: 1 }}>_</span>
-          </div>
-        </div>
-        <div style={{ fontSize: compact ? 9 : 10, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.8, padding: compact ? '0 8px' : 0 }}>
-          {isTouch ? 'แตะสาขาในแผงด้านซ้ายเพื่อเลือก' : '← DRAG FROM REGISTRY  ·  OR CLICK BRANCH IN LEFT PANEL'}
-        </div>
-      </div>
-
-      {/* ── Stat cards ── */}
-      <div style={{
-        display: compact ? 'grid' : 'flex',
-        gridTemplateColumns: compact ? 'repeat(2, 1fr)' : undefined,
-        gap: compact ? 10 : 14, width: '100%', maxWidth: 680,
+  if (compact) {
+    return (
+      <button onClick={onClick} className="exec-row" style={{
+        width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderBottom: `1px solid ${LINE}`,
+        padding: '10px 12px', fontFamily: SANS,
       }}>
-        {([
-          { key: 'CRIT',   val: critCount,  sub: '> 25% NRW',  c: '#EF4444', bg: 'rgba(239,68,68,0.07)',  bd: 'rgba(239,68,68,0.25)',  top: 'rgba(239,68,68,0.6)' },
-          { key: 'WARN',   val: warnCount,  sub: '≤ 25% NRW',  c: '#F59E0B', bg: 'rgba(245,158,11,0.06)', bd: 'rgba(245,158,11,0.22)', top: 'rgba(245,158,11,0.5)' },
-          { key: 'PASS',   val: okCount,    sub: '≤ 20% NRW',  c: '#10D9B0', bg: 'rgba(16,217,176,0.06)', bd: 'rgba(16,217,176,0.2)',  top: 'rgba(16,217,176,0.45)' },
-          { key: 'N/A',    val: greyCount,  sub: 'ไม่มีข้อมูล', c: '#475569', bg: 'rgba(71,85,105,0.06)', bd: 'rgba(71,85,105,0.2)',   top: 'rgba(71,85,105,0.35)' },
-        ] as { key: string; val: number; sub: string; c: string; bg: string; bd: string; top: string }[]).map(({ key, val, sub, c, bg, bd, top }) => (
-          <div key={key} style={{
-            flex: compact ? undefined : 1, position: 'relative', padding: compact ? '12px 10px 10px' : '20px 16px 18px',
-            background: bg, border: `1px solid ${bd}`,
-            borderTop: `2px solid ${top}`,
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            overflow: 'hidden',
-          }}>
-            {/* Card bg glow */}
-            <div style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)', width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${c}18 0%, transparent 70%)`, pointerEvents: 'none' }} />
-            <Corners color={`${c}55`} size={7} />
-            {/* Label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: compact ? 6 : 12 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: c, boxShadow: `0 0 6px ${c}`, display: 'inline-block' }} />
-              <span style={{ fontSize: 9, color: c, fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2, fontWeight: 700 }}>{key}</span>
-            </div>
-            {/* Big number */}
-            <div style={{ fontSize: compact ? 32 : 64, fontWeight: 900, color: c, fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1, textShadow: `0 0 24px ${c}55`, marginBottom: compact ? 4 : 8 }}>
-              {val}
-            </div>
-            {/* Sub label */}
-            <div style={{ fontSize: 10, color: '#334155', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1, textAlign: 'center' }}>{sub}</div>
-            <div style={{ fontSize: 9, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace', marginTop: 3 }}>สาขา</div>
-          </div>
-        ))}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+            <span style={{ fontSize: 9, color: INK3, fontFamily: MONO, flexShrink: 0 }}>{branch.code}</span>
+            <span style={{ fontSize: 13, color: INK, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{branch.name_th}</span>
+          </span>
+          <span style={{ fontSize: 13, fontFamily: MONO, fontWeight: 700, color, flexShrink: 0 }}>{pctLabel}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Gauge pct={snap?.cum_pct ?? null} color={color} height={6} />
+          <span style={{ fontSize: 10, color: trendColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{trendLabel}</span>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <button onClick={onClick} className="exec-row" style={{
+      width: '100%', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(120px,1.4fr) 70px 140px', alignItems: 'center', gap: 14,
+      padding: '11px 16px', background: 'transparent', border: 'none', borderBottom: `1px solid ${LINE}`,
+      textAlign: 'left', fontFamily: SANS,
+    }}>
+      <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
+        <span style={{ fontSize: 10, color: INK3, fontFamily: MONO, flexShrink: 0 }}>{branch.code}</span>
+        <span style={{ fontSize: 13.5, color: INK, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{branch.name_th}</span>
+      </span>
+      <Gauge pct={snap?.cum_pct ?? null} color={color} />
+      <span style={{ fontSize: 13.5, fontFamily: MONO, fontWeight: 700, color, textAlign: 'right' }}>{pctLabel}</span>
+      <span style={{ fontSize: 11.5, color: trendColor, textAlign: 'right' }}>{trendLabel}</span>
+    </button>
+  )
+}
+
+// ── ปุ่มกรองแบบ pill รวมกลุ่ม — แทนที่การ์ดใหญ่เดิม ให้เป็น toolbar เดียวกับช่องค้นหา ──
+function SevPill({ active, label, count, color, onClick }: {
+  active: boolean; label: string; count: number; color: string; onClick: () => void
+}) {
+  return (
+    <button onClick={onClick} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px 6px 11px', borderRadius: 99,
+      background: active ? color : SURF, border: `1px solid ${active ? color : LINE}`,
+      cursor: 'pointer', fontFamily: SANS, transition: 'background .15s, border-color .15s', flexShrink: 0,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: 99, background: active ? '#FFFFFF' : color, flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontWeight: 600, color: active ? '#FFFFFF' : INK2, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, fontFamily: MONO, color: active ? 'rgba(255,255,255,0.85)' : INK3 }}>{count}</span>
+    </button>
+  )
+}
+
+// ── stat chip แบบ label บน/ตัวเลข mono ใหญ่ล่าง — รูปแบบเดียวกับแถบสรุปใน CumulativeLossChart ──
+function StatChip({ label, value, unit, color, sub }: {
+  label: string; value: string; unit?: string; color: string; sub?: string
+}) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 5 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+        <span style={{ fontSize: 21, fontWeight: 800, color, fontFamily: MONO, lineHeight: 1 }}>{value}</span>
+        {unit && <span style={{ fontSize: 11, color: INK3, fontFamily: MONO }}>{unit}</span>}
       </div>
+      {sub && <div style={{ fontSize: 10.5, color: INK3, marginTop: 3 }}>{sub}</div>}
     </div>
   )
 }
 
-// ── Cyber scan overlay ────────────────────────────────────────────
-function CyberScan({ branch }: { branch: Branch }) {
+// ── แถวตัวกรองแนวตั้ง — ใช้ใน sidebar ซ้ายบนจอกว้าง ──
+function VFilterRow({ active, label, count, color, onClick }: {
+  active: boolean; label: string; count: number; color: string; onClick: () => void
+}) {
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="anim-scan" style={{
-        position: 'absolute', left: 0, right: 0, height: 90,
-        background: 'linear-gradient(180deg, transparent 0%, rgba(34,211,238,0.03) 35%, rgba(34,211,238,0.38) 50%, rgba(34,211,238,0.03) 65%, transparent 100%)',
-        boxShadow: '0 0 28px rgba(34,211,238,0.35)',
-      }} />
-      <div style={{ position: 'relative', width: 220, height: 110 }}>
-        <Corners color="rgba(34,211,238,0.45)" size={18} />
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <div className="anim-blink-crit" style={{ fontSize: 9, color: 'rgba(34,211,238,0.55)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 3 }}>ACQUIRING TARGET</div>
-          <div style={{ fontSize: 26, color: '#E2E8F0', letterSpacing: 3, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', textShadow: '0 0 18px rgba(34,211,238,0.35)' }}>{branch.code}</div>
-          <div style={{ fontSize: 13, color: 'rgba(34,211,238,0.5)', letterSpacing: 1 }}>สาขา{branch.name_th}</div>
-          <div className="anim-blink-crit" style={{ marginTop: 4, fontSize: 8, color: '#334155', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2, animationDelay: '0.4s' }}>กำลังดึงข้อมูล...</div>
-        </div>
+    <button onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+      padding: '8px 10px', borderRadius: 7, width: '100%', textAlign: 'left',
+      background: active ? SURF : 'transparent', boxShadow: active ? '0 1px 2px rgba(18,24,31,0.06)' : 'none',
+      border: 'none', cursor: 'pointer', fontFamily: SANS,
+    }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 99, background: color, flexShrink: 0 }} />
+        <span style={{ fontSize: 12, fontWeight: 600, color: INK2 }}>{label}</span>
+      </span>
+      <span style={{ fontSize: 11, fontFamily: MONO, color: INK3 }}>{count}</span>
+    </button>
+  )
+}
+
+// ── แถวสรุปเร็ว label/value บรรทัดเดียว — ใช้ใน sidebar การ์ด "สรุปเร็ว" ──
+function QuickRow({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, padding: '5px 0' }}>
+      <span style={{ fontSize: 11, color: INK2 }}>{label}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, fontFamily: MONO, color }}>{value}</span>
+    </div>
+  )
+}
+
+const RATS_RANK_COLOR = ['#A8721A', '#8896A3', '#B5651D']
+
+// ── RATS2 rail widget — ย่อจาก RatsReadingPanel เต็มรูปแบบให้เป็นคอลัมน์เดียว
+// พอดีกับความกว้าง rail (RatsReadingPanel เต็มมี md:grid-cols-2 ภายใน ซึ่งอิงความกว้างจอ ไม่ใช่ความกว้าง container
+// เอามาใส่ rail แคบๆ ตรงๆ จะบีบจนอ่านยาก เลยทำเวอร์ชันคอลัมน์เดียวแยกต่างหาก) ──
+function RatsRailSummary({ yearBe, month }: { yearBe: number; month: number }) {
+  const { data: stats, loading, syncing } = useRealtimeBranchReadStats(yearBe, month)
+  const label = `${MONTH_SHORT[month]} ${yearBe}`
+  const total = stats.length
+  const started = stats.filter((s) => s.read_count > 0)
+  const pct = total > 0 ? Math.round((started.length / total) * 100) : 0
+  const top3 = [...stats].sort((a, b) => b.read_count - a.read_count).slice(0, 3)
+  const maxRead = top3[0]?.read_count ?? 1
+
+  return (
+    <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: '16px', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
+        <div style={{ fontSize: 12.5, color: INK, fontWeight: 700 }}>การจดมาตร RATS2</div>
+        <div style={{ fontSize: 10.5, color: INK3 }}>{label}</div>
       </div>
+
+      {loading && total === 0 ? (
+        <div className="animate-pulse" style={{ height: 96, background: BG, borderRadius: 8 }} />
+      ) : total === 0 ? (
+        <div style={{ fontSize: 12, color: INK3 }}>ยังไม่มีข้อมูลจาก RATS สำหรับเดือนนี้</div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 26, fontWeight: 800, color: '#6B4FA0', fontFamily: MONO, lineHeight: 1 }}>{pct}%</span>
+            <span style={{ fontSize: 11, color: INK3 }}>
+              {started.length}/{total} สาขาเริ่มจดมาตรแล้ว{syncing ? ' · กำลังอัปเดต' : ''}
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 99, background: '#EBEEF1', overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: 'linear-gradient(90deg, #6B4FA0, #4A5FA5)', transition: 'width .6s ease' }} />
+          </div>
+
+          <div style={{ fontSize: 10, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 9 }}>TOP 3 บันทึกมากที่สุด</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            {top3.map((s, i) => {
+              const barPct = maxRead > 0 ? (s.read_count / maxRead) * 100 : 0
+              return (
+                <div key={s.ba} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                    background: 'rgba(107,79,160,.10)', color: RATS_RANK_COLOR[i] ?? '#6B4FA0',
+                    fontSize: 10, fontWeight: 700, fontFamily: MONO,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, marginBottom: 3 }}>
+                      <span style={{ fontSize: 11, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {getBranchByCostcenter(String(s.ba))?.name_th ?? `BA ${s.ba}`}
+                      </span>
+                      <span style={{ fontSize: 11, color: INK2, fontFamily: MONO, fontWeight: 700, flexShrink: 0 }}>{s.read_count.toLocaleString()}</span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 99, background: '#EBEEF1', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${barPct}%`, borderRadius: 99, background: '#6B4FA0' }} />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -284,334 +303,348 @@ function CyberScan({ branch }: { branch: Branch }) {
 interface Props {
   branches: Branch[]
   snapMap: Record<string, BranchNrwSnap>
+  regionSnap: RegionNrwSnap
 }
 
-export function ExecutiveSummaryClient({ branches, snapMap }: Props) {
+export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props) {
   const now = useClock()
   const { date, time } = thaiDateTime(now)
-  const { isMobile, isTouch } = useBreakpoint()
+  const { isMobile, w } = useBreakpoint()
+  // จอ >=768 มี Sidebar หลักของแอปกิน 220px เสมอ (components/layout/Sidebar.tsx) — ต้องหักออกก่อนคำนวณว่าพอวาง
+  // sidebar 208px + rail 300px ของหน้านี้เองมั้ย ไม่งั้น iPad แนวนอน (1024px) จะได้ผลลัพธ์ที่ยังบีบคอลัมน์กลางจนพัง
+  // ต้องการอย่างน้อย ~1280px raw viewport ถึงจะเหลือพอสำหรับคอลัมน์กลาง (คำนวณ: 220 sidebar + 80 padding + 556 fixed (208+300+48) + 372 ขั้นต่ำคอลัมน์กลาง ≈ 1228)
+  const showSidebarLayout = w >= 1280
+  const gap = isMobile ? 20 : 28
 
-  const [draggingId, setDraggingId]     = useState<string | null>(null)
-  const [isOver, setIsOver]             = useState(false)
-  const [scanning, setScanning]         = useState<Branch | null>(null)
-  const [loadedBranch, setLoadedBranch] = useState<Branch | null>(null)
-  const [summaryData, setSummaryData]   = useState<BranchExecutiveSummary | null>(null)
-  const [search, setSearch]             = useState('')
-  const [animKey, setAnimKey]           = useState(0)
-  const [sevFilter, setSevFilter]       = useState<SevFilter>('all')
-  const dropRef = useRef<HTMLDivElement>(null)
+  const [pendingBranch, setPendingBranch] = useState<Branch | null>(null)
+  const [loadedBranch, setLoadedBranch]   = useState<Branch | null>(null)
+  const [summaryData, setSummaryData]     = useState<BranchExecutiveSummary | null>(null)
+  const [search, setSearch]               = useState('')
+  const [animKey, setAnimKey]             = useState(0)
+  const [sevFilter, setSevFilter]         = useState<SevFilter>('all')
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setLoadedBranch(null); setSummaryData(null); setScanning(null) }
+      if (e.key === 'Escape') { setLoadedBranch(null); setSummaryData(null) }
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [])
 
   const loadBranch = useCallback(async (branch: Branch) => {
-    if (scanning) return
-    setScanning(branch)
+    setPendingBranch(branch)
     setSummaryData(null)
     setLoadedBranch(null)
-    const [result] = await Promise.all([
-      getExecutiveBranchSummary(branch.id),
-      new Promise<void>((r) => setTimeout(r, SCAN_MS)),
-    ])
-    setScanning(null)
-    setLoadedBranch(branch)
-    if (result.data) { setSummaryData(result.data); setAnimKey((k) => k + 1) }
-  }, [scanning])
+    const result = await getExecutiveBranchSummary(branch.id)
+    setPendingBranch(null)
+    if (result.data) {
+      setLoadedBranch(branch)
+      setSummaryData(result.data)
+      setAnimKey((k) => k + 1)
+    }
+  }, [])
 
-  const critCount = branches.filter((b) => sevFromNrw(snapMap[b.id]?.nrw_pct ?? null, snapMap[b.id]?.report_status ?? null) === 'crit').length
-  const warnCount = branches.filter((b) => sevFromNrw(snapMap[b.id]?.nrw_pct ?? null, snapMap[b.id]?.report_status ?? null) === 'warn').length
-  const okCount   = branches.filter((b) => sevFromNrw(snapMap[b.id]?.nrw_pct ?? null, snapMap[b.id]?.report_status ?? null) === 'ok').length
+  const trackCount   = branches.filter((b) => groupOf(b.code) === 'track').length
+  const critCount    = branches.filter((b) => groupOf(b.code) === 'crit').length
+  const watchCount   = branches.filter((b) => groupOf(b.code) === 'watch').length
+  const generalCount = branches.filter((b) => groupOf(b.code) === 'general').length
 
+  // สาขาที่แนวโน้มแย่ลงชัดเจน (%สะสมเพิ่มขึ้น) — ไล่จากแย่ลงมากสุด ใช้โชว์เป็น "ต้องจับตา"
+  const worsening = branches
+    .filter((b) => (snapMap[b.id]?.cum_trend_delta ?? 0) > 0.05)
+    .sort((a, b) => (snapMap[b.id]?.cum_trend_delta ?? 0) - (snapMap[a.id]?.cum_trend_delta ?? 0))
+  const topConcerns = worsening.slice(0, 5)
+
+  // เรียง: กลุ่ม (ติดตาม→วิกฤต→เฝ้าระวัง→ทั่วไป) แล้วภายในกลุ่มเรียงแนวโน้มแย่ลงก่อน
   const filteredBranches = branches
     .filter((b) => {
       const q = search.trim().toLowerCase()
       if (q && !b.name_th.toLowerCase().includes(q) && !b.code.toLowerCase().includes(q)) return false
-      if (sevFilter !== 'all') {
-        return sevFromNrw(snapMap[b.id]?.nrw_pct ?? null, snapMap[b.id]?.report_status ?? null) === sevFilter
-      }
+      if (sevFilter !== 'all' && groupOf(b.code) !== sevFilter) return false
       return true
     })
     .sort((a, b) => {
-      if (!search.trim() && sevFilter === 'all') {
-        const order = { crit: 0, warn: 1, ok: 2, grey: 3 }
-        const sa = sevFromNrw(snapMap[a.id]?.nrw_pct ?? null, snapMap[a.id]?.report_status ?? null)
-        const sb = sevFromNrw(snapMap[b.id]?.nrw_pct ?? null, snapMap[b.id]?.report_status ?? null)
-        if (order[sa] !== order[sb]) return order[sa] - order[sb]
-      }
-      const ai = BRANCH_ORDER.indexOf(a.code), bi = BRANCH_ORDER.indexOf(b.code)
-      if (ai === -1 && bi === -1) return a.name_th.localeCompare(b.name_th, 'th')
-      if (ai === -1) return 1; if (bi === -1) return -1
-      return ai - bi
+      const ga = GROUP_ORDER.indexOf(groupOf(a.code)), gb = GROUP_ORDER.indexOf(groupOf(b.code))
+      if (ga !== gb) return ga - gb
+      const da = snapMap[a.id]?.cum_trend_delta ?? null
+      const db = snapMap[b.id]?.cum_trend_delta ?? null
+      if (da == null && db == null) return a.name_th.localeCompare(b.name_th, 'th')
+      if (da == null) return 1
+      if (db == null) return -1
+      return db - da
     })
 
-  return (
-    <div style={{
-      height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
-      background: [
-        'radial-gradient(ellipse at 20% 0%, rgba(34,211,238,0.055) 0%, transparent 45%)',
-        'radial-gradient(ellipse at 90% 95%, rgba(59,130,246,0.04) 0%, transparent 50%)',
-        'linear-gradient(180deg, #050913 0%, #04070F 100%)',
-      ].join(', '),
-    }}>
-      {/* BG grid */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: 'linear-gradient(rgba(34,211,238,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.06) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-        maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 90%)',
-      }} />
-      {/* CRT scan lines */}
-      <div className="anim-flicker" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4,
-        background: 'repeating-linear-gradient(180deg, rgba(34,211,238,0.016) 0px, rgba(34,211,238,0.016) 1px, transparent 1px, transparent 3px)',
-        mixBlendMode: 'screen', opacity: 0.35,
-      }} />
+  const byGroup = new Map<GroupKey, Branch[]>()
+  for (const b of filteredBranches) {
+    const g = groupOf(b.code)
+    if (!byGroup.has(g)) byGroup.set(g, [])
+    byGroup.get(g)!.push(b)
+  }
+  const showGrouped = !search.trim() && sevFilter === 'all'
 
+  const periodLabel = regionSnap.latest_month != null
+    ? `ข้อมูลเดือน ${MONTH_SHORT[regionSnap.latest_month]} · รายงานแล้ว ${regionSnap.branches_reporting}/${regionSnap.branches_total} สาขา`
+    : 'ยังไม่มีข้อมูลเดือนนี้'
+  const { label: cumTrendLabel, color: cumTrendColor } = trendInfo(regionSnap.cum_trend_delta)
+  const { label: latestTrendLabel } = trendInfo(regionSnap.latest_month_delta)
+  const latestColor = regionSnap.latest_month_pct == null ? INK3 : regionSnap.latest_month_pct <= 20 ? '#1E7A5A' : regionSnap.latest_month_pct <= 25 ? '#A8721A' : '#B3392C'
+  const targetColor = regionSnap.branches_reporting > 0 && regionSnap.branches_on_target === regionSnap.branches_reporting ? '#1E7A5A' : '#0B6E76'
+
+  // ── ส่วนที่ใช้ซ้ำได้ทั้งเลย์เอาต์มือถือ (สแต็กเดียว) และเดสก์ท็อป (3 คอลัมน์) ──
+  const listSection = (
+    <div>
+      <div style={{ fontSize: 12.5, color: INK2, fontWeight: 700, marginBottom: 8 }}>
+        รายชื่อสาขาทั้งหมด <span style={{ color: INK3, fontWeight: 500 }}>({filteredBranches.length})</span>
+      </div>
+      <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+        {!isMobile && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(120px,1.4fr) 70px 140px', gap: 14, padding: '9px 16px', background: '#FAFBFC', borderBottom: `1px solid ${LINE}` }}>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>สาขา</span>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>ระดับ NRW% (เป้า 20%)</span>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>สะสม</span>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>แนวโน้ม</span>
+          </div>
+        )}
+
+        {!filteredBranches.length && (
+          <div style={{ textAlign: 'center', color: INK3, fontSize: 12, padding: '28px 0' }}>ไม่พบสาขาที่ค้นหา</div>
+        )}
+
+        {showGrouped
+          ? STATUS_GROUPS.map(({ key, label, color }) => {
+              const group = byGroup.get(key) ?? []
+              if (!group.length) return null
+              return (
+                <div key={key}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: '#FAFBFC', borderBottom: `1px solid ${LINE}` }}>
+                    <span style={{ width: 6, height: 6, borderRadius: 99, background: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color, fontWeight: 700 }}>{label}</span>
+                    <span style={{ fontSize: 10.5, color: INK3 }}>({group.length})</span>
+                  </div>
+                  {group.map((b) => (
+                    <BranchRow key={b.id} branch={b} snap={snapMap[b.id]} compact={isMobile} onClick={() => loadBranch(b)} />
+                  ))}
+                </div>
+              )
+            })
+          : filteredBranches.map((b) => (
+              <BranchRow key={b.id} branch={b} snap={snapMap[b.id]} compact={isMobile} onClick={() => loadBranch(b)} />
+            ))
+        }
+      </div>
+    </div>
+  )
+
+  const watchSection = (
+    <div>
+      <div style={{ fontSize: 12.5, color: INK2, fontWeight: 700, marginBottom: 8 }}>
+        ต้องจับตาเป็นพิเศษ{topConcerns.length > 0 ? ` (${worsening.length})` : ''}
+      </div>
+      {topConcerns.length === 0 ? (
+        <div style={{ padding: '12px 16px', borderRadius: 10, background: '#E7F3EE', border: '1px solid #CDE5DA', fontSize: 12.5, color: '#1E7A5A' }}>
+          ✓ ไม่มีสาขาที่แนวโน้มแย่ลงจากเดือนก่อน
+        </div>
+      ) : (
+        <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+          {topConcerns.map((b) => (
+            <BranchRow key={b.id} branch={b} snap={snapMap[b.id]} compact onClick={() => loadBranch(b)} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  const ratsSection = <RatsRailSummary yearBe={now.getFullYear() + 543} month={now.getMonth() + 1} />
+
+  const severityFilters = [
+    { key: 'all' as SevFilter,     label: 'ทั้งหมด',   count: branches.length, color: INK2 },
+    { key: 'track' as SevFilter,   label: 'ติดตาม',    count: trackCount,   color: GROUP_COLOR.track },
+    { key: 'crit' as SevFilter,    label: 'วิกฤต',     count: critCount,    color: GROUP_COLOR.crit },
+    { key: 'watch' as SevFilter,   label: 'เฝ้าระวัง', count: watchCount,   color: GROUP_COLOR.watch },
+    { key: 'general' as SevFilter, label: 'ทั่วไป',    count: generalCount, color: GROUP_COLOR.general },
+  ]
+
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', background: BG, fontFamily: SANS }}>
       {/* ── Header ── */}
       <header style={{
-        height: isMobile ? 46 : 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: isMobile ? '0 10px' : '0 20px', flexShrink: 0,
-        borderBottom: '1px solid rgba(34,211,238,0.15)',
-        background: 'linear-gradient(180deg, rgba(8,12,24,0.93), rgba(6,10,20,0.78))',
-        backdropFilter: 'blur(10px)',
-        position: 'relative', zIndex: 20,
+        position: 'sticky', top: 0, zIndex: 20,
+        height: isMobile ? 52 : 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: isMobile ? '0 14px' : '0 28px',
+        background: 'rgba(245,246,248,0.92)', backdropFilter: 'blur(8px)',
+        borderBottom: `1px solid ${LINE}`,
       }}>
-        {/* Logo + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, minWidth: 0 }}>
-          <div style={{ position: 'relative', width: isMobile ? 30 : 38, height: isMobile ? 30 : 38, flexShrink: 0, border: '1px solid rgba(34,211,238,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(34,211,238,0.05)',
-            boxShadow: '0 0 14px rgba(34,211,238,0.45), inset 0 0 12px rgba(34,211,238,0.12)',
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+          <div style={{
+            width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, borderRadius: 8, flexShrink: 0,
+            background: '#0B6E76', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <svg width={isMobile ? 15 : 19} height={isMobile ? 15 : 19} viewBox="0 0 24 24" fill="none" stroke="rgba(34,211,238,0.9)" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.75))' }}>
+            <svg width={isMobile ? 15 : 17} height={isMobile ? 15 : 17} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.6">
               <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
-              <path d="M9 12l2 2 4-4" strokeOpacity="0.7" />
+              <path d="M9 12l2 2 4-4" strokeOpacity="0.85" />
             </svg>
-            <Corners size={8} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <span style={{ fontSize: isMobile ? 14 : 17, color: '#E2E8F0', fontWeight: 600, letterSpacing: 0.3 }}>ระบบ MATE</span>
-              {!isMobile && <span style={{ fontSize: 9, color: 'rgba(34,211,238,0.5)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.6 }}>· DIALOG MODE · v3.2</span>}
-            </div>
-            {!isMobile && (
-              <div style={{ fontSize: 10, color: '#64748B', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                หน้าต่างสรุปสาขา — การประปาส่วนภูมิภาค เขต ๑๐
-              </div>
-            )}
+            <div style={{ fontSize: isMobile ? 14.5 : 16.5, color: INK, fontWeight: 700, letterSpacing: 0.1, lineHeight: 1.2 }}>บทสรุปผู้บริหาร</div>
+            {!isMobile && <div style={{ fontSize: 11, color: INK3, marginTop: 1 }}>การประปาส่วนภูมิภาค เขต 10 · 26 สาขา</div>}
           </div>
         </div>
-
-        {/* Status + clock */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="anim-blink-crit" style={{ width: 7, height: 7, borderRadius: '50%', background: '#10D9B0', boxShadow: '0 0 8px #10D9B0', display: 'inline-block' }} />
-            {!isMobile && <span style={{ fontSize: 9, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1 }}>SYS · ONLINE</span>}
-          </div>
-          {!isMobile && <div style={{ width: 1, height: 26, background: 'rgba(34,211,238,0.2)' }} />}
-          <div style={{ textAlign: 'right' }}>
-            {!isMobile && <div suppressHydrationWarning style={{ fontSize: 9, color: '#64748B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 0.8 }}>{date}</div>}
-            <div suppressHydrationWarning style={{ fontSize: isMobile ? 12 : 15, color: 'rgba(34,211,238,0.9)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.5, textShadow: '0 0 8px rgba(34,211,238,0.55)' }}>{time}</div>
-          </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          {!isMobile && <div suppressHydrationWarning style={{ fontSize: 11, color: INK3 }}>{date}</div>}
+          <div suppressHydrationWarning style={{ fontSize: isMobile ? 12 : 13, color: INK2, fontFamily: MONO, fontWeight: 600 }}>{time} น.</div>
         </div>
       </header>
 
       {/* ── Body ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', position: 'relative', minHeight: 0, zIndex: 10 }}>
+      <main style={{ maxWidth: 1320, margin: '0 auto', padding: isMobile ? '18px 14px 40px' : '32px 40px 56px' }}>
 
-        {/* ── Branch Dock ── */}
-        <aside className="exec-panel" style={{
-          width: isMobile ? '100%' : 264,
-          maxHeight: isMobile ? '38vh' : undefined,
-          flexShrink: 0,
-          borderRight: isMobile ? 'none' : '1px solid rgba(34,211,238,0.15)',
-          borderBottom: isMobile ? '1px solid rgba(34,211,238,0.15)' : 'none',
-          borderTop: 'none', borderLeft: 'none',
-          borderRadius: 0,
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid rgba(34,211,238,0.1)', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 8, color: 'rgba(34,211,238,0.45)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.8 }}>// BRANCH REGISTRY</span>
-              <span style={{ fontSize: 8, color: '#334155', fontFamily: 'IBM Plex Mono, monospace' }}>{filteredBranches.length}/{branches.length}</span>
+        {!showSidebarLayout ? (
+          <>
+            {/* มือถือ + แท็บเล็ตทุกแนว (รวม iPad แนวนอน 1024–1180px) — รวมหน้าปัด + หัวข้อ + ตัวเลขรองไว้การ์ดเดียว
+                sidebar แนวตั้ง 208px + rail 300px ของเดสก์ท็อปจะบีบคอลัมน์กลางจนพัง ถ้าจอไม่กว้างพอ (ดูค่า showSidebarLayout) */}
+            <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '20px 18px', marginBottom: gap, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ position: 'relative', width: 200 }}>
+                  <HeroDial pct={regionSnap.cum_pct} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
+                    <span style={{ fontSize: 34, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
+                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}
+                      <span style={{ fontSize: 14, color: INK3, marginLeft: 2 }}>%</span>
+                    </span>
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: INK2, fontWeight: 600 }}>NRW% สะสมปีงบ ({regionSnap.cum_months} ด.)</div>
+                <div style={{ fontSize: 11, color: cumTrendColor, marginTop: 2 }}>{cumTrendLabel}</div>
+              </div>
+
+              <h1 style={{ fontSize: 19, fontWeight: 700, color: critCount > 0 ? '#B3392C' : INK, margin: '18px 0 0', lineHeight: 1.35, textAlign: 'center' }}>
+                {critCount} สาขาต้องเร่งแก้ไข · {worsening.length} สาขามีแนวโน้มแย่ลง
+              </h1>
+              <p style={{ fontSize: 12, color: INK3, marginTop: 6, textAlign: 'center' }}>{periodLabel}</p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px 28px', marginTop: 16, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
+                <StatChip label="NRW% เดือนล่าสุด" value={regionSnap.latest_month_pct != null ? regionSnap.latest_month_pct.toFixed(1) : '—'} unit="%" color={latestColor} sub={latestTrendLabel} />
+                <StatChip label="น้ำสูญเสียสะสม" value={regionSnap.cum_loss_total != null ? Math.round(regionSnap.cum_loss_total).toLocaleString('th-TH') : '—'} unit="m³" color="#B3392C" />
+                <StatChip label="สาขาผ่านเป้า ≤20%" value={`${regionSnap.branches_on_target}`} unit={`/ ${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
+              </div>
             </div>
 
-            {/* Severity filter */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, marginBottom: 8 }}>
-              {([
-                { key: 'all'  as SevFilter, label: 'ทั้งหมด', count: branches.length, c: 'rgba(34,211,238,0.85)' },
-                { key: 'crit' as SevFilter, label: 'วิกฤต',   count: critCount,       c: '#EF4444' },
-                { key: 'warn' as SevFilter, label: 'เฝ้าดู',  count: warnCount,       c: '#F59E0B' },
-              ] as { key: SevFilter; label: string; count: number; c: string }[]).map(({ key, label, count, c }) => {
-                const active = sevFilter === key
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setSevFilter(key)}
-                    className="mode-btn"
-                    style={{
-                      padding: '5px 4px', fontSize: 9,
-                      background: active ? `${c}18` : 'rgba(8,14,26,0.5)',
-                      border: `1px solid ${active ? c : 'rgba(34,211,238,0.12)'}`,
-                      color: active ? c : '#475569',
-                      cursor: 'pointer', fontFamily: 'IBM Plex Mono, monospace',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                    }}
-                  >
-                    <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{count}</span>
-                    <span style={{ fontSize: 8 }}>{label}</span>
-                  </button>
-                )
-              })}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: gap - 8 }}>
+              {severityFilters.map(({ key, label, count, color }) => (
+                <SevPill key={key} active={sevFilter === key} onClick={() => setSevFilter(sevFilter === key ? 'all' : key)} label={label} count={count} color={color} />
+              ))}
             </div>
 
-            {/* Search */}
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', marginBottom: gap - 8 }}>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาสาขา / รหัส..."
-                style={{ width: '100%', padding: '5px 8px 5px 25px', fontSize: 11, background: 'rgba(4,7,14,0.7)', border: '1px solid rgba(34,211,238,0.18)', color: '#CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                style={{
+                  width: '100%', padding: '8px 12px 8px 30px', fontSize: 12.5, borderRadius: 8,
+                  background: SURF, border: `1px solid ${LINE}`, color: INK, outline: 'none', boxSizing: 'border-box',
+                  fontFamily: SANS,
+                }}
               />
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(34,211,238,0.4)" strokeWidth="2" style={{ position: 'absolute', left: 7, top: 8 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={INK3} strokeWidth="2" style={{ position: 'absolute', left: 10, top: 10.5 }}>
                 <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
               </svg>
             </div>
-          </div>
 
-          {/* Branch list */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
-            {(() => {
-              const useFlat = !!(search.trim() || sevFilter !== 'all')
-              if (useFlat) {
-                if (!filteredBranches.length) return (
-                  <div style={{ textAlign: 'center', color: '#334155', fontSize: 10, padding: '24px 0', fontFamily: 'IBM Plex Mono, monospace' }}>// ไม่พบสาขา</div>
-                )
-                return filteredBranches.map((b) => (
-                  <BranchDockCard key={b.id} branch={b} snap={snapMap[b.id]} isDragging={draggingId === b.id} isLoaded={loadedBranch?.id === b.id} onDragStart={setDraggingId} onDragEnd={() => setDraggingId(null)} onClick={() => loadBranch(b)} />
-                ))
-              }
-              const byCode = Object.fromEntries(filteredBranches.map(b => [b.code, b]))
-              return PROVINCE_GROUPS.map(({ province, codes }) => {
-                const group = codes.map(c => byCode[c]).filter(Boolean)
-                if (!group.length) return null
-                return (
-                  <div key={province} style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(34,211,238,0.08)' }} />
-                      <span style={{ fontSize: 8, color: 'rgba(34,211,238,0.3)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.6, flexShrink: 0 }}>{province}</span>
-                    </div>
-                    {group.map((b) => (
-                      <BranchDockCard key={b.id} branch={b} snap={snapMap[b.id]} isDragging={draggingId === b.id} isLoaded={loadedBranch?.id === b.id} onDragStart={setDraggingId} onDragEnd={() => setDraggingId(null)} onClick={() => loadBranch(b)} />
-                    ))}
+            <div style={{ marginBottom: gap }}>{watchSection}</div>
+            <div style={{ marginBottom: gap }}>{listSection}</div>
+            <div style={{ marginBottom: gap }}>{ratsSection}</div>
+          </>
+        ) : (
+          /* เดสก์ท็อป — โครง 3 คอลัมน์: sidebar (มาตรวัดย่อ+ตัวกรอง+สรุปเร็ว) | รายชื่อสาขา | rail (จับตา+RATS2) */
+          <div style={{ display: 'grid', gridTemplateColumns: '208px 1fr 300px', gap: 24, alignItems: 'start', marginBottom: gap }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 76 }}>
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: '16px 14px', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+                <div style={{ position: 'relative' }}>
+                  <HeroDial pct={regionSnap.cum_pct} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
+                    <span style={{ fontSize: 24, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
+                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}
+                      <span style={{ fontSize: 11, color: INK3, marginLeft: 1 }}>%</span>
+                    </span>
                   </div>
-                )
-              })
-            })()}
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(34,211,238,0.08)', padding: '5px 12px', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>{isTouch ? 'TAP TO SELECT' : 'DRAG · CLICK TO SELECT'}</span>
-            <span style={{ fontSize: 8, color: '#10D9B0', fontFamily: 'IBM Plex Mono, monospace' }}>● LIVE</span>
-          </div>
-        </aside>
-
-        {/* ── Main Stage ── */}
-        <main style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? '6px 8px' : '8px 12px 8px 10px', minWidth: 0 }}>
-          {/* Drop zone */}
-          <div
-            ref={dropRef}
-            onDragOver={(e) => { e.preventDefault(); setIsOver(true) }}
-            onDragEnter={(e) => { e.preventDefault(); setIsOver(true) }}
-            onDragLeave={(e) => { if (!dropRef.current?.contains(e.relatedTarget as Node)) setIsOver(false) }}
-            onDrop={(e) => {
-              e.preventDefault()
-              const id = e.dataTransfer.getData('branch-id') || draggingId
-              setIsOver(false); setDraggingId(null)
-              if (!id) return
-              const branch = branches.find((b) => b.id === id)
-              if (branch) loadBranch(branch)
-            }}
-            style={{
-              flex: 1, position: 'relative',
-              border: `1px solid ${isOver ? 'rgba(34,211,238,0.65)' : draggingId ? 'rgba(34,211,238,0.35)' : 'rgba(34,211,238,0.13)'}`,
-              background: isOver ? 'rgba(34,211,238,0.02)' : 'rgba(4,7,14,0.6)',
-              boxShadow: isOver ? 'inset 0 0 80px rgba(34,211,238,0.08), 0 0 24px rgba(34,211,238,0.12)' : draggingId ? 'inset 0 0 40px rgba(34,211,238,0.04)' : 'none',
-              transition: 'border-color .2s, box-shadow .25s, background .2s',
-              overflow: 'hidden',
-            }}
-          >
-            <Corners />
-            {/* Micro-grid background */}
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
-              backgroundImage: 'linear-gradient(rgba(34,211,238,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.025) 1px, transparent 1px)',
-              backgroundSize: '28px 28px',
-            }} />
-
-            <HeroStage critCount={critCount} warnCount={warnCount} okCount={okCount} totalCount={branches.length} compact={isMobile} isTouch={isTouch} />
-
-            {/* Drag-inbound banner */}
-            {draggingId && !isOver && (
-              <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none' }}>
-                <div className="anim-blink-crit" style={{ padding: '5px 20px', border: '1px solid rgba(245,158,11,0.5)', background: 'rgba(245,158,11,0.06)', fontSize: 9, color: '#F59E0B', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2 }}>
-                  ◆ DROP HERE TO LOAD BRANCH ◆
                 </div>
+                <div style={{ fontSize: 10.5, color: INK2, fontWeight: 600, textAlign: 'center', marginTop: 2 }}>NRW% สะสม {regionSnap.cum_months} ด.</div>
+                <div style={{ fontSize: 10.5, color: cumTrendColor, textAlign: 'center' }}>{cumTrendLabel}</div>
               </div>
-            )}
 
-            {/* Drop overlay */}
-            {isOver && (
-              <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(34,211,238,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', inset: 8 }}><Corners color="rgba(34,211,238,0.65)" size={20} /></div>
-                <div style={{ textAlign: 'center' }}>
-                  <div className="anim-blink-crit" style={{ fontSize: 11, color: 'rgba(34,211,238,0.9)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 2.5, textShadow: '0 0 12px rgba(34,211,238,0.8)', marginBottom: 6 }}>
-                    ▾ RELEASE TO ACQUIRE ▾
-                  </div>
-                  <div style={{ fontSize: 9, color: 'rgba(34,211,238,0.35)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.5 }}>TARGET LOCKED</div>
-                </div>
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 10, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+                {severityFilters.map(({ key, label, count, color }) => (
+                  <VFilterRow key={key} active={sevFilter === key} onClick={() => setSevFilter(sevFilter === key ? 'all' : key)} label={label} count={count} color={color} />
+                ))}
               </div>
-            )}
-          </div>
 
-          {/* Telemetry bar */}
-          <div style={{ marginTop: 6, padding: isMobile ? '5px 10px' : '5px 14px', border: '1px solid rgba(34,211,238,0.12)', background: 'rgba(8,12,24,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, flexWrap: 'wrap', rowGap: 4 }}>
-            <div style={{ display: 'flex', gap: isMobile ? 10 : 18, flexWrap: 'wrap', rowGap: 4 }}>
-              {[
-                { l: 'MODE',    v: 'DIALOG',             c: 'rgba(34,211,238,0.7)' },
-                { l: 'CRIT',   v: `${critCount}`,        c: critCount > 0 ? '#EF4444' : '#1E293B' },
-                { l: 'WARN',   v: `${warnCount}`,        c: warnCount > 0 ? '#F59E0B' : '#1E293B' },
-                { l: 'PASS',   v: `${okCount}`,          c: '#10D9B0' },
-                { l: 'SYNC',   v: '● LIVE',              c: '#10D9B0' },
-              ].map(({ l, v, c }) => (
-                <span key={l} style={{ fontSize: 8, color: '#334155', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: 1.1 }}>
-                  {l} <span style={{ color: c, fontWeight: 700 }}>{v}</span>
-                </span>
-              ))}
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 14, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
+                <div style={{ fontSize: 9.5, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>สรุปเร็ว</div>
+                <QuickRow label="NRW เดือนนี้" value={regionSnap.latest_month_pct != null ? `${regionSnap.latest_month_pct.toFixed(1)}%` : '—'} color={latestColor} />
+                <QuickRow label="น้ำสูญเสียสะสม" value={fmtLossCompact(regionSnap.cum_loss_total)} color="#B3392C" />
+                <QuickRow label="ผ่านเป้า ≤20%" value={`${regionSnap.branches_on_target}/${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
+              </div>
             </div>
-            {!isMobile && <span style={{ fontSize: 8, color: '#1E293B', fontFamily: 'IBM Plex Mono, monospace' }}>MATE © ๒๕๖๙ · กปภ.เขต ๑๐</span>}
-          </div>
-        </main>
-      </div>
 
-      {/* ── Fullscreen Panel (scan → detail) ── */}
-      {(scanning || (loadedBranch && summaryData)) && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 300, overflow: 'hidden',
-          background: scanning ? [
-            'radial-gradient(ellipse at 20% 0%, rgba(34,211,238,0.04) 0%, transparent 40%)',
-            'linear-gradient(180deg, #050913 0%, #04070F 100%)',
-          ].join(', ') : 'transparent',
-        }}>
-          {scanning && <CyberScan branch={scanning} />}
-          {!scanning && summaryData && (
-            <BranchSummaryPanel
-              data={summaryData}
-              animKey={animKey}
-              onBack={() => { setLoadedBranch(null); setSummaryData(null) }}
-            />
-          )}
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: critCount > 0 ? '#B3392C' : INK, margin: 0, lineHeight: 1.35 }}>
+                {critCount} สาขาต้องเร่งแก้ไข · {worsening.length} สาขามีแนวโน้มแย่ลง
+              </h1>
+              <p style={{ fontSize: 12, color: INK3, marginTop: 6 }}>{periodLabel}</p>
+
+              <div style={{ position: 'relative', width: '100%', margin: '18px 0 14px' }}>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ค้นหาสาขา / รหัส..."
+                  style={{
+                    width: '100%', padding: '8px 12px 8px 30px', fontSize: 12.5, borderRadius: 8,
+                    background: SURF, border: `1px solid ${LINE}`, color: INK, outline: 'none', boxSizing: 'border-box',
+                    fontFamily: SANS,
+                  }}
+                />
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={INK3} strokeWidth="2" style={{ position: 'absolute', left: 10, top: 10.5 }}>
+                  <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+                </svg>
+              </div>
+
+              {listSection}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {watchSection}
+              {ratsSection}
+            </div>
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', fontSize: 10.5, color: INK3, marginTop: 22 }}>
+          NRW Tracker · ข้อมูล ณ {date} {time} น.
+        </div>
+      </main>
+
+      {/* ── Loading overlay ── */}
+      {pendingBranch && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(245,246,248,0.9)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <svg className="animate-spin" width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}>
+              <circle cx="12" cy="12" r="10" stroke="#E3E7EC" strokeWidth="3" />
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="#0B6E76" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <div style={{ fontSize: 13, color: INK2 }}>กำลังโหลดข้อมูลสาขา{pendingBranch.name_th}...</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Detail panel ── */}
+      {loadedBranch && summaryData && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, overflow: 'hidden' }}>
+          <BranchSummaryPanel
+            data={summaryData}
+            animKey={animKey}
+            onBack={() => { setLoadedBranch(null); setSummaryData(null) }}
+          />
         </div>
       )}
     </div>

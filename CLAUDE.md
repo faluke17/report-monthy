@@ -31,7 +31,7 @@
 | # | เป้าหมาย |
 |---|---------|
 | 1 | สาขากรอกรายงานประจำเดือน (NRW%, MNF Factor, ข้อมูลท่อรั่ว) |
-| 2 | ส่วนกลาง (เขต) มองเห็นสถานะ 26 สาขาผ่าน Dashboard |
+| 2 | ส่วนกลาง (เขต) มองเห็นสถานะ 26 สาขาผ่านหน้าบทสรุปผู้บริหาร (Executive Summary) |
 | 3 | ติดตาม Action Items, อุปสรรค, แผนการลด NRW |
 | 4 | จัดการประชุม — วาระ, มติ, การรับทราบ |
 | 5 | แจ้งเตือน MNF ผิดปกติ ผ่าน EMA Algorithm อัตโนมัติ |
@@ -79,8 +79,8 @@ report-monthy/
 │   │   └── login/               # หน้า login
 │   ├── (dashboard)/             # กลุ่ม route ต้อง login — มี Sidebar/Topbar
 │   │   ├── layout.tsx           # layout หลัก: auth check + sidebar stats
-│   │   ├── page.tsx             # redirect ไป /dashboard
-│   │   ├── dashboard/           # หน้าสรุป KPI และ traffic light
+│   │   ├── page.tsx             # redirect ไป /executive-summary
+│   │   ├── executive-summary/   # บทสรุปผู้บริหาร — หน้าแรกหลัง login, รวมทุกสาขา + RATS2 + รายละเอียดรายสาขา
 │   │   ├── monthly/             # รายงานประจำเดือน (กรอก/ดู)
 │   │   ├── plans/               # แผนลด NRW
 │   │   ├── obstacle/            # อุปสรรค

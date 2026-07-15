@@ -32,7 +32,7 @@ export function ObstacleFilterBar({ branches, activeBranchId, activeCategory, sh
         <select
           value={activeBranchId}
           onChange={(e) => nav({ branch_id: e.target.value })}
-          className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+          className="bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
         >
           <option value="">— ทุกสาขา —</option>
           {branches.map((b) => (
@@ -44,7 +44,7 @@ export function ObstacleFilterBar({ branches, activeBranchId, activeCategory, sh
       <select
         value={activeCategory}
         onChange={(e) => nav({ category: e.target.value })}
-        className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+        className="bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
       >
         <option value="">— ทุกหมวด —</option>
         {CATEGORIES.map((c) => (
@@ -57,7 +57,7 @@ export function ObstacleFilterBar({ branches, activeBranchId, activeCategory, sh
         className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
           showClosed
             ? 'bg-green-500/15 border-green-500/30 text-green-300'
-            : 'bg-white/5 border-white/15 text-white/50 hover:border-white/30'
+            : 'bg-black/5 border-black/15 text-black/50 hover:border-black/30'
         }`}
       >
         {showClosed ? '✓ ' : ''}รวมปิดแล้ว

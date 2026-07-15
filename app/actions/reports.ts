@@ -70,7 +70,6 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/dashboard')
   revalidatePath('/')
   revalidatePath('/ranking')
   revalidatePath('/pdca')
@@ -151,7 +150,6 @@ export async function updateAreaReport(id: string, data: UpdateAreaReportInput):
 
   revalidatePath('/pdca')
   revalidatePath('/obstacle')
-  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -165,6 +163,5 @@ export async function deleteAreaReport(id: string): Promise<ActionResult> {
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/')
-  revalidatePath('/dashboard')
   return { success: true }
 }

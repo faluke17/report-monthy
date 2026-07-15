@@ -32,12 +32,12 @@ const TOPICS = [
 ]
 
 const INPUT_CLASS =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] font-mono placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60'
 const SELECT_CLASS =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60'
 const TEXTAREA_CLASS =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none'
-const LABEL_CLASS = 'block text-sm text-white/60 mb-1.5'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none'
+const LABEL_CLASS = 'block text-sm text-black/60 mb-1.5'
 
 interface T1AreaRow {
   area_name: string
@@ -118,7 +118,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Branch / Month / Year selector */}
       <div className="glass-card p-5 space-y-4">
-        <h2 className="font-semibold text-white">เลือกสาขา &amp; เดือน</h2>
+        <h2 className="font-semibold text-[#12181F]">เลือกสาขา &amp; เดือน</h2>
 
         {!isBranch && (
           <div>
@@ -169,7 +169,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
       {/* ข้อ 1: Step Test — dropdown พื้นที่ + วันที่ + ปุ่ม + */}
       <TopicCard no={1} color={TOPIC_COLORS[0]}>
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_148px_28px] gap-2 text-[11px] text-white/40 px-0.5 mb-0.5">
+          <div className="grid grid-cols-[1fr_148px_28px] gap-2 text-[11px] text-black/40 px-0.5 mb-0.5">
             <span>พื้นที่ดำเนินการ</span>
             <span>วันที่ดำเนินการ</span>
             <span />
@@ -335,7 +335,7 @@ export function FiveTopicsForm({ branches, profile, nodesByBranch }: Props) {
         <button
           type="submit"
           disabled={submitting || !form.branch_id}
-          className="px-8 py-2.5 text-sm bg-green-500 hover:bg-green-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
+          className="px-8 py-2.5 text-sm bg-green-500 hover:bg-green-400 text-[#FFFFFF] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
           {submitting ? 'กำลังบันทึก...' : 'ยืนยันและส่งรายงาน'}
         </button>
@@ -362,8 +362,8 @@ function TopicCard({
           {no}
         </span>
         <div>
-          <p className="font-semibold text-white text-sm leading-snug">{topic.title}</p>
-          <p className="text-xs text-white/40 mt-0.5">{topic.subtitle}</p>
+          <p className="font-semibold text-[#12181F] text-sm leading-snug">{topic.title}</p>
+          <p className="text-xs text-black/40 mt-0.5">{topic.subtitle}</p>
         </div>
       </div>
       {children}

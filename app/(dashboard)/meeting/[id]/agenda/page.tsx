@@ -111,33 +111,33 @@ export default async function MeetingAgendaPage({
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <CheckCircle2 size={16} className="text-emerald-400" />
-          <span className="text-sm text-white/50">รายละเอียดการประชุม</span>
+          <span className="text-sm text-black/50">รายละเอียดการประชุม</span>
         </div>
-        <div className="h-px w-8 bg-white/20" />
+        <div className="h-px w-8 bg-black/20" />
         <div className="flex items-center gap-2">
           <Circle size={16} className="text-cyan-400 fill-cyan-500/20" />
-          <span className="text-sm text-white font-semibold">วาระการประชุม</span>
+          <span className="text-sm text-[#12181F] font-semibold">วาระการประชุม</span>
         </div>
-        <div className="h-px w-8 bg-white/20" />
+        <div className="h-px w-8 bg-black/20" />
         <div className="flex items-center gap-2">
-          <Circle size={16} className="text-white/20" />
-          <span className="text-sm text-white/35">รายงานการประชุม</span>
+          <Circle size={16} className="text-black/20" />
+          <span className="text-sm text-black/35">รายงานการประชุม</span>
         </div>
       </div>
 
       {/* Meeting Info */}
       <div className="glass-card-sm p-4 flex items-center justify-between gap-4">
         <div className="min-w-0 space-y-0.5">
-          <p className="text-sm font-semibold text-white truncate">{meeting.title}</p>
-          <p className="text-xs text-white/40 flex items-center gap-1.5">
-            <Calendar size={11} className="text-white/30" />
+          <p className="text-sm font-semibold text-[#12181F] truncate">{meeting.title}</p>
+          <p className="text-xs text-black/40 flex items-center gap-1.5">
+            <Calendar size={11} className="text-black/30" />
             {formatThaiDate(meeting.scheduled_date)} · {meeting.scheduled_time.slice(0, 5)} น.
             {meeting.location && ` · ${meeting.location}`}
           </p>
         </div>
         <Link
           href={`/meeting/${id}/report`}
-          className="shrink-0 text-xs text-white/30 hover:text-white/60 transition-colors"
+          className="shrink-0 text-xs text-black/30 hover:text-black/60 transition-colors"
         >
           ข้ามไปรายงาน →
         </Link>

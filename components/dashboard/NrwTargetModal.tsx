@@ -6,7 +6,7 @@ import { X, Save, Target } from 'lucide-react'
 import { bulkUpsertNrwBranchTargets } from '@/app/actions/nrw-report'
 import { BRANCH_ORDER } from './NrwReportTable'
 
-const INPUT = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50 text-right font-mono'
+const INPUT = 'w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder-white/20 focus:outline-none focus:border-cyan-500/50 text-right font-mono'
 
 interface Props {
   fiscalYear: number
@@ -51,23 +51,23 @@ export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarg
     <>
       <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-[#061a38] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl animate-fadein">
+        <div className="bg-[#FFFFFF] border border-black/10 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl animate-fadein">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
             <div>
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[#12181F] flex items-center gap-2">
                 <Target size={16} className="text-cyan-400" />
                 ตั้งเป้าหมายปีงบ {fiscalYear}
               </h3>
-              <p className="text-xs text-white/40 mt-0.5">กรอกครั้งเดียวใช้ทั้งปี — สามารถใส่เป้าหมายเดียวกันทุกสาขาได้</p>
+              <p className="text-xs text-black/40 mt-0.5">กรอกครั้งเดียวใช้ทั้งปี — สามารถใส่เป้าหมายเดียวกันทุกสาขาได้</p>
             </div>
-            <button onClick={onClose} className="text-white/40 hover:text-white">
+            <button onClick={onClose} className="text-black/40 hover:text-[#12181F]">
               <X size={18} />
             </button>
           </div>
 
           {/* District target */}
-          <div className="px-5 py-3 border-b border-white/10 flex items-center gap-3 bg-cyan-500/5">
+          <div className="px-5 py-3 border-b border-black/10 flex items-center gap-3 bg-cyan-500/5">
             <span className="text-xs text-cyan-300/70 shrink-0 font-medium">เป้าหมายเขต:</span>
             <input
               type="number"
@@ -77,25 +77,25 @@ export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarg
               placeholder="—"
               value={districtValue}
               onChange={(e) => setDistrictValue(e.target.value)}
-              className="w-28 bg-white/5 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/60 font-mono text-right"
+              className="w-28 bg-black/5 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-xs text-[#12181F] placeholder-white/20 focus:outline-none focus:border-cyan-500/60 font-mono text-right"
             />
-            <span className="text-xs text-white/30">%</span>
-            <span className="text-xs text-white/25 ml-auto">ใช้ทั้งปีงบ {fiscalYear}</span>
+            <span className="text-xs text-black/30">%</span>
+            <span className="text-xs text-black/25 ml-auto">ใช้ทั้งปีงบ {fiscalYear}</span>
           </div>
 
           {/* Quick fill */}
-          <div className="px-5 py-3 border-b border-white/10 flex items-center gap-3">
-            <span className="text-xs text-white/40 shrink-0">กรอกเป้าเดียวกันทุกสาขา:</span>
+          <div className="px-5 py-3 border-b border-black/10 flex items-center gap-3">
+            <span className="text-xs text-black/40 shrink-0">กรอกเป้าเดียวกันทุกสาขา:</span>
             <input
               type="number"
               step="0.01"
               min="0"
               max="100"
               placeholder="เช่น 25.00"
-              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50 font-mono"
+              className="flex-1 bg-black/5 border border-black/10 rounded-lg px-3 py-1.5 text-xs text-[#12181F] placeholder-white/20 focus:outline-none focus:border-cyan-500/50 font-mono"
               onChange={(e) => { if (e.target.value) setAll(e.target.value) }}
             />
-            <span className="text-xs text-white/30">%</span>
+            <span className="text-xs text-black/30">%</span>
           </div>
 
           {/* Branch list */}
@@ -103,8 +103,8 @@ export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarg
             <div className="space-y-1.5">
               {BRANCH_ORDER.map((branch, idx) => (
                 <div key={branch} className="flex items-center gap-3">
-                  <span className="text-xs text-white/30 font-mono w-5 shrink-0">{idx + 1}</span>
-                  <span className="text-xs text-white flex-1">{branch}</span>
+                  <span className="text-xs text-black/30 font-mono w-5 shrink-0">{idx + 1}</span>
+                  <span className="text-xs text-[#12181F] flex-1">{branch}</span>
                   <div className="flex items-center gap-1.5 w-28">
                     <input
                       type="number"
@@ -116,7 +116,7 @@ export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarg
                       onChange={(e) => setValues((v) => ({ ...v, [branch]: e.target.value }))}
                       className={INPUT}
                     />
-                    <span className="text-xs text-white/30">%</span>
+                    <span className="text-xs text-black/30">%</span>
                   </div>
                 </div>
               ))}
@@ -124,9 +124,9 @@ export function NrwTargetModal({ fiscalYear, initialTargets, initialDistrictTarg
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-white/10 flex gap-2">
+          <div className="px-5 py-4 border-t border-black/10 flex gap-2">
             <button onClick={onClose} disabled={pending}
-              className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 disabled:opacity-50">
+              className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-black/5 text-black/60 border border-black/10 hover:bg-black/10 disabled:opacity-50">
               ยกเลิก
             </button>
             <button onClick={handleSave} disabled={pending}

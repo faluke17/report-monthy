@@ -57,13 +57,13 @@ export function DataTable<T>({
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/10">
+          <tr className="border-b border-black/10">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-4 py-3 text-left text-xs text-white/50 font-medium uppercase tracking-wider',
-                  col.sortable && 'cursor-pointer hover:text-white/80 select-none',
+                  'px-4 py-3 text-left text-xs text-black/50 font-medium uppercase tracking-wider',
+                  col.sortable && 'cursor-pointer hover:text-black/80 select-none',
                   col.className
                 )}
                 onClick={col.sortable ? () => handleSort(col.key) : undefined}
@@ -91,7 +91,7 @@ export function DataTable<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="text-center py-12 text-white/40"
+                className="text-center py-12 text-black/40"
               >
                 {emptyMessage}
               </td>
@@ -101,8 +101,8 @@ export function DataTable<T>({
               <tr
                 key={i}
                 className={cn(
-                  'border-b border-white/5 transition-colors',
-                  onRowClick && 'cursor-pointer hover:bg-white/5'
+                  'border-b border-black/5 transition-colors',
+                  onRowClick && 'cursor-pointer hover:bg-black/5'
                 )}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
               >

@@ -46,8 +46,8 @@ function LegendPill({ color, label, branches }: {
         <div
           className={`absolute top-full mt-2 right-0 z-30 rounded-xl border p-3 shadow-2xl min-w-[220px] ${
             isGreen
-              ? 'bg-[#04150f]/97 border-emerald-500/25'
-              : 'bg-[#150408]/97 border-red-500/25'
+              ? 'bg-[#FFFFFF]/97 border-emerald-500/25'
+              : 'bg-[#FFFFFF]/97 border-red-500/25'
           }`}
           style={{ backdropFilter: 'blur(16px)' }}
         >
@@ -60,7 +60,7 @@ function LegendPill({ color, label, branches }: {
                 <span className={`shrink-0 text-[10px] font-mono ${isGreen ? 'text-emerald-400/40' : 'text-red-400/40'}`}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="text-xs text-white/75 truncate">{name}</span>
+                <span className="text-xs text-black/75 truncate">{name}</span>
               </div>
             ))}
           </div>
@@ -105,7 +105,7 @@ function CustomLabel({ x, y, width, height, value }: any) {
         y={by + bh / 2}
         textAnchor={isNeg ? 'end' : 'start'}
         dominantBaseline="middle"
-        fill="rgba(255,255,255,0.92)"
+        fill="rgba(0,0,0,0.92)"
         fontSize={10}
         fontWeight={700}
         fontFamily="'JetBrains Mono', 'Fira Code', monospace"
@@ -122,18 +122,18 @@ function CustomTooltip({ active, payload, label }: any) {
   const isImproved = v < 0
   return (
     <div style={{
-      background: 'rgba(8,20,45,0.97)',
-      border: `1px solid ${isImproved ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}`,
+      background: 'rgba(255,255,255,0.97)',
+      border: `1px solid ${isImproved ? 'rgba(30,122,90,0.3)' : 'rgba(179,57,44,0.3)'}`,
       borderRadius: 10,
       padding: '10px 14px',
       backdropFilter: 'blur(12px)',
-      boxShadow: `0 4px 24px ${isImproved ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'}`,
+      boxShadow: `0 4px 24px ${isImproved ? 'rgba(30,122,90,0.1)' : 'rgba(179,57,44,0.1)'}`,
     }}>
-      <p style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600, fontSize: 12, marginBottom: 6 }}>{label}</p>
-      <p style={{ color: isImproved ? '#34d399' : '#f87171', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>
+      <p style={{ color: 'rgba(0,0,0,0.8)', fontWeight: 600, fontSize: 12, marginBottom: 6 }}>{label}</p>
+      <p style={{ color: isImproved ? '#1E7A5A' : '#B3392C', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>
         {v > 0 ? '▲ +' : '▼ '}{Math.abs(v).toFixed(2)}% NRW
       </p>
-      <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 4 }}>
+      <p style={{ color: 'rgba(0,0,0,0.35)', fontSize: 10, marginTop: 4 }}>
         {isImproved ? 'ลดลงจากปีก่อน (ดีขึ้น)' : 'เพิ่มขึ้นจากปีก่อน (แย่ลง)'}
       </p>
     </div>
@@ -162,16 +162,16 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-white/6">
+      <div className="px-5 pt-5 pb-4 border-b border-black/6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-400" style={{ boxShadow: '0 0 6px rgba(167,139,250,0.6)' }} />
-              <h3 className="text-sm font-bold text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400" style={{ boxShadow: '0 0 6px rgba(107,79,160,0.6)' }} />
+              <h3 className="text-sm font-bold text-[#12181F]">
                 การเปลี่ยนแปลง NRW% รายสาขา
               </h3>
             </div>
-            <p className="text-xs text-white/35 ml-3.5">
+            <p className="text-xs text-black/35 ml-3.5">
               ปีงบ {prevYear} → {fiscalYear} · เรียงจากดีขึ้นมากที่สุด
             </p>
           </div>
@@ -182,9 +182,9 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
           </div>
           {noData.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[10px] text-white/30 self-center">ไม่มีข้อมูลเปรียบเทียบ:</span>
+              <span className="text-[10px] text-black/30 self-center">ไม่มีข้อมูลเปรียบเทียบ:</span>
               {noData.map((d) => (
-                <span key={d.name} className="text-[10px] text-white/25 bg-white/4 border border-white/8 px-2 py-0.5 rounded-full">
+                <span key={d.name} className="text-[10px] text-black/25 bg-black/4 border border-black/8 px-2 py-0.5 rounded-full">
                   {d.name}
                 </span>
               ))}
@@ -205,14 +205,14 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
           >
             <CartesianGrid
               strokeDasharray="1 6"
-              stroke="rgba(255,255,255,0.04)"
+              stroke="rgba(0,0,0,0.04)"
               horizontal={false}
             />
             <XAxis
               type="number"
               domain={domain}
-              tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9 }}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+              tick={{ fill: 'rgba(0,0,0,0.25)', fontSize: 9 }}
+              axisLine={{ stroke: 'rgba(0,0,0,0.08)' }}
               tickLine={false}
               tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}%`}
               tickCount={7}
@@ -221,14 +221,14 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
               type="category"
               dataKey="name"
               width={96}
-              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
+              tick={{ fill: 'rgba(0,0,0,0.5)', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip fiscalYear={fiscalYear} />} cursor={{ fill: 'rgba(255,255,255,0.025)' }} />
+            <Tooltip content={<CustomTooltip fiscalYear={fiscalYear} />} cursor={{ fill: 'rgba(0,0,0,0.025)' }} />
             <ReferenceLine
               x={0}
-              stroke="rgba(255,255,255,0.2)"
+              stroke="rgba(0,0,0,0.2)"
               strokeWidth={1}
               strokeDasharray="0"
             />
@@ -242,7 +242,7 @@ export function NrwYoyChart({ rows, fiscalYear }: Props) {
                 return (
                   <Cell
                     key={`cell-${i}`}
-                    fill={entry.delta < -0.001 ? '#34d399' : entry.delta > 0.001 ? '#f87171' : '#6b7280'}
+                    fill={entry.delta < -0.001 ? '#1E7A5A' : entry.delta > 0.001 ? '#B3392C' : '#6b7280'}
                     fillOpacity={opacity}
                   />
                 )

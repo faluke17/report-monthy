@@ -30,8 +30,8 @@ export default async function ActionPage() {
   return (
     <div className="space-y-5 animate-fadein">
       <div>
-        <h1 className="text-xl font-bold text-white">Action Tracker</h1>
-        <p className="text-sm text-white/40 mt-0.5">ติดตามมติสั่งการและความก้าวหน้าต่อสาขา</p>
+        <h1 className="text-xl font-bold text-[#12181F]">Action Tracker</h1>
+        <p className="text-sm text-black/40 mt-0.5">ติดตามมติสั่งการและความก้าวหน้าต่อสาขา</p>
       </div>
       <DirectiveCommandCenter
         initialSummaries={summaries}

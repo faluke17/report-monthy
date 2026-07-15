@@ -43,7 +43,7 @@ const CANVAS_W = 1010
 const CANVAS_H = 668
 
 const COLORS: Record<string, string> = {
-  sky: '#38bdf8', cyan: '#22d3ee', violet: '#a78bfa', fuchsia: '#e879f9',
+  sky: '#0B6E76', cyan: '#0B6E76', violet: '#6B4FA0', fuchsia: '#6B4FA0',
 }
 
 const CONNS: { from: string; fs: Side; to: string; ts: Side; col: string; dashed?: boolean; label?: string }[] = [
@@ -96,7 +96,7 @@ const TYPE_LABEL: Record<NodeType, string> = {
 }
 const STATUS_DOT: Record<Status, string> = {
   ok: 'bg-emerald-400', warn: 'bg-amber-400', error: 'bg-red-400',
-  info: 'bg-sky-400', unknown: 'bg-white/25',
+  info: 'bg-sky-400', unknown: 'bg-black/25',
 }
 
 interface NodeInfo {
@@ -234,9 +234,9 @@ function NodeCard({ node, info }: { node: NodePos; info: NodeInfo }) {
         <div className="flex items-start gap-2 mb-1.5">
           <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 shadow-sm ${STATUS_DOT[info.status]}`} />
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold text-white/90 leading-tight truncate">{info.title}</div>
+            <div className="text-[11px] font-semibold text-black/90 leading-tight truncate">{info.title}</div>
             {info.subtitle && (
-              <div className="text-[10px] text-white/40 mt-0.5 leading-tight">{info.subtitle}</div>
+              <div className="text-[10px] text-black/40 mt-0.5 leading-tight">{info.subtitle}</div>
             )}
           </div>
           <span className={`text-[8px] font-bold px-1 py-0.5 rounded flex-shrink-0 ${TYPE_BADGE[node.type]}`}>
@@ -246,7 +246,7 @@ function NodeCard({ node, info }: { node: NodePos; info: NodeInfo }) {
         {/* Stats lines */}
         <div className="space-y-0.5 pl-4">
           {info.lines.map((line, i) => (
-            <div key={i} className="text-[10px] text-white/55 font-mono leading-snug">{line}</div>
+            <div key={i} className="text-[10px] text-black/55 font-mono leading-snug">{line}</div>
           ))}
           {info.warn && (
             <div className="text-[10px] text-amber-400/80 mt-0.5">⚠ {info.warn}</div>
@@ -270,7 +270,7 @@ export function PipelineGraph(props: PipelineGraphProps) {
         ].map(col => (
           <div
             key={col.label}
-            className="absolute text-[10px] font-bold uppercase tracking-widest text-white/25 text-center"
+            className="absolute text-[10px] font-bold uppercase tracking-widest text-black/25 text-center"
             style={{ left: col.x, width: col.w }}
           >
             {col.label}
@@ -336,16 +336,16 @@ export function PipelineGraph(props: PipelineGraphProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] text-white/40 pt-1 border-t border-white/8">
+      <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] text-black/40 pt-1 border-t border-black/8">
         <div className="flex items-center gap-1.5">
-          <span className="text-white/50 font-semibold">สถานะ:</span>
+          <span className="text-black/50 font-semibold">สถานะ:</span>
         </div>
         {[
           { color: 'bg-emerald-400', label: 'OK' },
           { color: 'bg-amber-400',   label: 'บางส่วน' },
           { color: 'bg-red-400',     label: 'ผิดปกติ' },
           { color: 'bg-sky-400',     label: 'External' },
-          { color: 'bg-white/25',    label: 'ไม่ทราบ' },
+          { color: 'bg-black/25',    label: 'ไม่ทราบ' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${color}`} />
@@ -353,14 +353,14 @@ export function PipelineGraph(props: PipelineGraphProps) {
           </div>
         ))}
         <div className="ml-4 flex items-center gap-1.5">
-          <span className="text-white/50 font-semibold">เส้น:</span>
+          <span className="text-black/50 font-semibold">เส้น:</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#22d3ee" strokeWidth="1.5" /></svg>
+          <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#0B6E76" strokeWidth="1.5" /></svg>
           <span>primary</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
+          <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#6B4FA0" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
           <span>secondary / dependency</span>
         </div>
       </div>

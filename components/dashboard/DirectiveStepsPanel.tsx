@@ -42,7 +42,7 @@ export function DirectiveStepsPanel({ steps, resolutionId, isAdmin }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">ขั้นตอนการดำเนินการ</span>
+        <span className="text-[10px] font-bold text-black/30 uppercase tracking-wider">ขั้นตอนการดำเนินการ</span>
         {isAdmin && (
           <button
             onClick={() => setShowAddForm(v => !v)}
@@ -55,7 +55,7 @@ export function DirectiveStepsPanel({ steps, resolutionId, isAdmin }: Props) {
       </div>
 
       {steps.length === 0 ? (
-        <p className="text-xs text-white/25 text-center py-2">ยังไม่มีขั้นตอน</p>
+        <p className="text-xs text-black/25 text-center py-2">ยังไม่มีขั้นตอน</p>
       ) : (
         <div className="space-y-1.5">
           {steps.map(step => (
@@ -67,22 +67,22 @@ export function DirectiveStepsPanel({ steps, resolutionId, isAdmin }: Props) {
                 'w-full flex items-start gap-2.5 p-2.5 rounded-lg border text-left transition-all',
                 step.is_complete
                   ? 'bg-emerald-500/8 border-emerald-500/20 opacity-70'
-                  : 'bg-white/3 border-white/8 hover:bg-white/6 hover:border-white/15'
+                  : 'bg-black/3 border-black/8 hover:bg-black/6 hover:border-black/15'
               )}
             >
               <div className="mt-0.5 shrink-0">
                 {step.is_complete ? (
                   <Check size={13} className="text-emerald-400" />
                 ) : (
-                  <Circle size={13} className="text-white/25" />
+                  <Circle size={13} className="text-black/25" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className={cn(
                   'text-xs leading-snug',
-                  step.is_complete ? 'line-through text-white/35' : 'text-white/70'
+                  step.is_complete ? 'line-through text-black/35' : 'text-black/70'
                 )}>
-                  <span className="num text-white/30 mr-1">{step.step_no}.</span>
+                  <span className="num text-black/30 mr-1">{step.step_no}.</span>
                   {step.title}
                 </p>
                 {step.completed_at && step.completed_by && (
@@ -104,7 +104,7 @@ export function DirectiveStepsPanel({ steps, resolutionId, isAdmin }: Props) {
             onChange={e => setNewTitle(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
             placeholder="ชื่อขั้นตอน..."
-            className="flex-1 bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40"
+            className="flex-1 bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-1.5 text-xs text-[#12181F] placeholder:text-black/20 focus:outline-none focus:border-cyan-500/40"
           />
           <button
             onClick={handleAdd}

@@ -36,24 +36,24 @@ const columns: ColumnDef<PlanRow>[] = [
     header: 'สาขา',
     render: (r) => (
       <div>
-        <p className="font-bold text-white text-sm">{r.branches?.name_th}</p>
-        <p className="text-[10px] text-white/35">{r.plan_type}</p>
+        <p className="font-bold text-[#12181F] text-sm">{r.branches?.name_th}</p>
+        <p className="text-[10px] text-black/35">{r.plan_type}</p>
       </div>
     ),
   },
   {
     key: 'approach_group',
     header: 'แนวทาง',
-    render: (r) => <span className="text-sm text-white/70">{r.approach_group}</span>,
+    render: (r) => <span className="text-sm text-black/70">{r.approach_group}</span>,
   },
   {
     key: 'target_nrw',
     header: 'เป้า NRW',
     render: (r) => (
       <div className="text-sm">
-        <span className="num font-bold text-white">{r.target_nrw ?? '—'}%</span>
+        <span className="num font-bold text-[#12181F]">{r.target_nrw ?? '—'}%</span>
         {r.baseline_nrw && (
-          <span className="text-white/35 text-[11px] ml-1">base: {r.baseline_nrw}%</span>
+          <span className="text-black/35 text-[11px] ml-1">base: {r.baseline_nrw}%</span>
         )}
       </div>
     ),
@@ -70,7 +70,7 @@ const columns: ColumnDef<PlanRow>[] = [
       <span className={`pill rounded-full px-2.5 py-0.5 text-[10px] font-bold ${PRIORITY_PILL[r.priority] ?? 'pill-gray'}`}>
         {r.priority}
       </span>
-    ) : <span className="text-white/25">—</span>,
+    ) : <span className="text-black/25">—</span>,
   },
   {
     key: 'status',
@@ -80,7 +80,7 @@ const columns: ColumnDef<PlanRow>[] = [
         <span className={`pill rounded-full px-2.5 py-0.5 text-[10px] font-bold ${STATUS_PILL[r.status] ?? 'pill-gray'}`}>
           {r.status}
         </span>
-        <ChevronRight size={12} className="text-white/20" />
+        <ChevronRight size={12} className="text-black/20" />
       </div>
     ),
   },
@@ -89,8 +89,8 @@ const columns: ColumnDef<PlanRow>[] = [
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-widest text-white/30">{label}</span>
-      <span className="text-sm text-white/80">{value ?? <span className="text-white/25">—</span>}</span>
+      <span className="text-[10px] uppercase tracking-widest text-black/30">{label}</span>
+      <span className="text-sm text-black/80">{value ?? <span className="text-black/25">—</span>}</span>
     </div>
   )
 }
@@ -150,13 +150,13 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
         side="right"
         className="w-full sm:max-w-[520px] overflow-y-auto p-0"
         style={{
-          background: 'linear-gradient(180deg,#060e1f 0%,#030810 100%)',
-          borderLeft: '1px solid rgba(0,229,255,.15)',
+          background: '#FFFFFF',
+          borderLeft: '1px solid rgba(11,110,118,.15)',
         }}
       >
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-white/8 sticky top-0 z-10"
-          style={{ background: 'rgba(6,14,31,0.97)', backdropFilter: 'blur(12px)' }}>
+        <div className="px-6 pt-6 pb-4 border-b border-black/8 sticky top-0 z-10"
+          style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)' }}>
           <SheetTitle className="sr-only">รายละเอียดแผน</SheetTitle>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -166,10 +166,10 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
                   {plan.status}
                 </span>
               </div>
-              <p className="text-white font-bold text-base leading-tight truncate">{plan.branches?.name_th}</p>
-              <p className="text-white/40 text-xs mt-0.5">{plan.plan_type} · {plan.approach_group}</p>
+              <p className="text-[#12181F] font-bold text-base leading-tight truncate">{plan.branches?.name_th}</p>
+              <p className="text-black/40 text-xs mt-0.5">{plan.plan_type} · {plan.approach_group}</p>
             </div>
-            <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors mt-0.5 shrink-0">
+            <button onClick={onClose} className="text-black/30 hover:text-black/70 transition-colors mt-0.5 shrink-0">
               <X size={18} />
             </button>
           </div>
@@ -178,20 +178,20 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
         <div className="px-6 py-5 space-y-6">
           {/* Key metrics */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/8 p-3"
-              style={{ background: 'rgba(0,229,255,.04)' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">NRW เป้าหมาย</p>
-              <p className="num text-xl font-bold text-[#00e5ff]">{plan.target_nrw ?? '—'}%</p>
+            <div className="rounded-xl border border-black/8 p-3"
+              style={{ background: 'rgba(11,110,118,.04)' }}>
+              <p className="text-[10px] uppercase tracking-widest text-black/30 mb-1">NRW เป้าหมาย</p>
+              <p className="num text-xl font-bold text-[#0B6E76]">{plan.target_nrw ?? '—'}%</p>
               {plan.baseline_nrw != null && (
-                <p className="text-[11px] text-white/30 mt-0.5">Baseline: {plan.baseline_nrw}%</p>
+                <p className="text-[11px] text-black/30 mt-0.5">Baseline: {plan.baseline_nrw}%</p>
               )}
             </div>
-            <div className="rounded-xl border border-white/8 p-3"
-              style={{ background: 'rgba(139,92,246,.04)' }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">MNF เป้าหมาย</p>
+            <div className="rounded-xl border border-black/8 p-3"
+              style={{ background: 'rgba(107,79,160,.04)' }}>
+              <p className="text-[10px] uppercase tracking-widest text-black/30 mb-1">MNF เป้าหมาย</p>
               <p className="num text-xl font-bold text-purple-300">{plan.target_mnf ?? '—'}</p>
               {plan.baseline_mnf != null && (
-                <p className="text-[11px] text-white/30 mt-0.5">Baseline: {plan.baseline_mnf}</p>
+                <p className="text-[11px] text-black/30 mt-0.5">Baseline: {plan.baseline_mnf}</p>
               )}
             </div>
           </div>
@@ -199,8 +199,8 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
           {/* Progress */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-widest text-white/30">ความคืบหน้า</span>
-              <span className="num text-sm font-bold text-white/80">{localProgress}%</span>
+              <span className="text-xs uppercase tracking-widest text-black/30">ความคืบหน้า</span>
+              <span className="num text-sm font-bold text-black/80">{localProgress}%</span>
             </div>
             <input
               type="range" min={0} max={100} step={5}
@@ -208,7 +208,7 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
               onChange={(e) => setLocalProgress(Number(e.target.value))}
               className="w-full accent-cyan-400"
             />
-            <div className="flex justify-between text-[10px] text-white/20 mt-0.5">
+            <div className="flex justify-between text-[10px] text-black/20 mt-0.5">
               <span>0%</span><span>50%</span><span>100%</span>
             </div>
             {localProgress !== plan.progress_pct && (
@@ -217,9 +217,9 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
                 disabled={isPending}
                 className="mt-2 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors"
                 style={{
-                  background: 'rgba(0,229,255,.12)',
-                  border: '1px solid rgba(0,229,255,.3)',
-                  color: '#00e5ff',
+                  background: 'rgba(11,110,118,.12)',
+                  border: '1px solid rgba(11,110,118,.3)',
+                  color: '#0B6E76',
                 }}
               >
                 {isPending ? 'กำลังบันทึก…' : 'บันทึกความคืบหน้า'}
@@ -252,9 +252,9 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
           {/* Action plan */}
           {plan.action_plan && (
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">แผนดำเนินการ</p>
-              <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap rounded-xl border border-white/8 p-3"
-                style={{ background: 'rgba(255,255,255,.02)' }}>
+              <p className="text-[10px] uppercase tracking-widest text-black/30 mb-2">แผนดำเนินการ</p>
+              <p className="text-sm text-black/70 leading-relaxed whitespace-pre-wrap rounded-xl border border-black/8 p-3"
+                style={{ background: 'rgba(0,0,0,.02)' }}>
                 {plan.action_plan}
               </p>
             </div>
@@ -263,9 +263,9 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
           {/* Resources */}
           {plan.resources && (
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">ทรัพยากร</p>
-              <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap rounded-xl border border-white/8 p-3"
-                style={{ background: 'rgba(255,255,255,.02)' }}>
+              <p className="text-[10px] uppercase tracking-widest text-black/30 mb-2">ทรัพยากร</p>
+              <p className="text-sm text-black/70 leading-relaxed whitespace-pre-wrap rounded-xl border border-black/8 p-3"
+                style={{ background: 'rgba(0,0,0,.02)' }}>
                 {plan.resources}
               </p>
             </div>
@@ -273,14 +273,14 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
 
           {/* Status actions */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/30 mb-3">อัพเดตสถานะ</p>
+            <p className="text-[10px] uppercase tracking-widest text-black/30 mb-3">อัพเดตสถานะ</p>
             <div className="grid grid-cols-2 gap-2">
               {plan.status === 'รออนุมัติ' && (
                 <button
                   onClick={handleAcknowledge}
                   disabled={isPending}
                   className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-colors col-span-2"
-                  style={{ background: 'rgba(34,211,238,.12)', border: '1px solid rgba(34,211,238,.3)', color: '#22d3ee' }}
+                  style={{ background: 'rgba(11,110,118,.12)', border: '1px solid rgba(11,110,118,.3)', color: '#0B6E76' }}
                 >
                   <PlayCircle size={14} />รับทราบ / เริ่มดำเนินการ
                 </button>
@@ -290,7 +290,7 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
                   onClick={() => handleStatus('สำเร็จ')}
                   disabled={isPending}
                   className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(74,222,128,.12)', border: '1px solid rgba(74,222,128,.3)', color: '#4ade80' }}
+                  style={{ background: 'rgba(30,122,90,.12)', border: '1px solid rgba(30,122,90,.3)', color: '#1E7A5A' }}
                 >
                   <CheckCircle2 size={14} />สำเร็จ
                 </button>
@@ -300,7 +300,7 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
                   onClick={() => handleStatus('ล่าช้า')}
                   disabled={isPending}
                   className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(251,113,133,.12)', border: '1px solid rgba(251,113,133,.3)', color: '#fb7185' }}
+                  style={{ background: 'rgba(179,57,44,.12)', border: '1px solid rgba(179,57,44,.3)', color: '#B3392C' }}
                 >
                   <Clock3 size={14} />ล่าช้า
                 </button>
@@ -310,7 +310,7 @@ function PlanDetailSheet({ plan, onClose }: PlanDetailSheetProps) {
                   onClick={() => handleStatus('ยกเลิก')}
                   disabled={isPending}
                   className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(148,163,184,.08)', border: '1px solid rgba(148,163,184,.2)', color: '#94a3b8' }}
+                  style={{ background: 'rgba(107,118,134,.08)', border: '1px solid rgba(107,118,134,.2)', color: '#6B7686' }}
                 >
                   <Ban size={14} />ยกเลิก
                 </button>

@@ -102,8 +102,8 @@ export default async function PipelinePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-white">Pipeline Monitor</h1>
-        <p className="text-sm text-white/40 mt-0.5">
+        <h1 className="text-xl font-bold text-[#12181F]">Pipeline Monitor</h1>
+        <p className="text-sm text-black/40 mt-0.5">
           แสดง data flow ของระบบ — DMAMA API → Sync → Database → UI
         </p>
       </div>

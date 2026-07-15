@@ -32,18 +32,18 @@ export function MeetingAckSummary({ acks, allBranches }: MeetingAckSummaryProps)
         onClick={() => setOpen((p) => !p)}
         className="flex items-center gap-2 text-xs hover:opacity-80 transition-opacity w-full"
       >
-        <CheckCircle2 size={12} className={pct === 100 ? 'text-emerald-400' : 'text-white/40'} />
-        <span className={pct === 100 ? 'text-emerald-400' : 'text-white/60'}>
+        <CheckCircle2 size={12} className={pct === 100 ? 'text-emerald-400' : 'text-black/40'} />
+        <span className={pct === 100 ? 'text-emerald-400' : 'text-black/60'}>
           {ackedCount}/{total} สาขารับทราบ
         </span>
-        <span className="text-white/25 text-[10px]">({pct}%)</span>
-        <span className="ml-auto text-white/30">
+        <span className="text-black/25 text-[10px]">({pct}%)</span>
+        <span className="ml-auto text-black/30">
           {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
         </span>
       </button>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-black/10 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${barColor}`}
           style={{ width: `${pct}%` }}
@@ -52,7 +52,7 @@ export function MeetingAckSummary({ acks, allBranches }: MeetingAckSummaryProps)
 
       {/* Expandable detail */}
       {open && (
-        <div className="mt-2 bg-white/5 border border-white/10 rounded-xl p-3 space-y-3">
+        <div className="mt-2 bg-black/5 border border-black/10 rounded-xl p-3 space-y-3">
 
           {/* Acknowledged */}
           {ackedCount > 0 && (
@@ -69,7 +69,7 @@ export function MeetingAckSummary({ acks, allBranches }: MeetingAckSummaryProps)
                         <CheckCircle2 size={10} />
                         {a.branch_name}
                       </span>
-                      <span className="text-white/30 shrink-0">
+                      <span className="text-black/30 shrink-0">
                         {new Date(a.acknowledged_at).toLocaleDateString('th-TH', {
                           day: 'numeric', month: 'short',
                         })}
@@ -83,12 +83,12 @@ export function MeetingAckSummary({ acks, allBranches }: MeetingAckSummaryProps)
           {/* Pending */}
           {pending.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">
                 ยังไม่รับทราบ ({pending.length})
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                 {pending.map((b) => (
-                  <div key={b} className="flex items-center gap-1 text-[11px] text-white/35">
+                  <div key={b} className="flex items-center gap-1 text-[11px] text-black/35">
                     <Circle size={10} />
                     {b}
                   </div>

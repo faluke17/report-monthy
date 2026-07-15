@@ -70,7 +70,7 @@ export default async function MeetingSchedulePage() {
 
   function MeetingCard({ m, showAck }: { m: Meeting; showAck: boolean }) {
     const days = daysUntil(m.scheduled_date)
-    const typeClass = TYPE_COLOR[m.meeting_type] ?? 'bg-white/10 text-white/50 border-white/15'
+    const typeClass = TYPE_COLOR[m.meeting_type] ?? 'bg-black/10 text-black/50 border-black/15'
     const isAcked = ackedSet.has(m.id)
     const myAck = myAcks.find((a) => a.meeting_id === m.id)
     const acks = acksByMeeting[m.id] ?? []
@@ -95,17 +95,17 @@ export default async function MeetingSchedulePage() {
             </div>
 
             {/* Title */}
-            <p className="font-bold text-white text-sm leading-snug">{m.title}</p>
+            <p className="font-bold text-[#12181F] text-sm leading-snug">{m.title}</p>
 
             {/* Date / Location */}
             <div className="space-y-0.5">
-              <p className="text-xs text-white/50 flex items-center gap-1.5">
-                <Calendar size={11} className="text-white/30" />
+              <p className="text-xs text-black/50 flex items-center gap-1.5">
+                <Calendar size={11} className="text-black/30" />
                 {formatThaiDate(m.scheduled_date)} · {m.scheduled_time.slice(0, 5)} น.
               </p>
               {m.location && (
-                <p className="text-xs text-white/45 flex items-center gap-1.5">
-                  <MapPin size={11} className="text-white/30" />
+                <p className="text-xs text-black/45 flex items-center gap-1.5">
+                  <MapPin size={11} className="text-black/30" />
                   {m.location}
                 </p>
               )}
@@ -124,11 +124,11 @@ export default async function MeetingSchedulePage() {
 
             {/* Audience + Prep */}
             {(m.target_audience || m.prep_required) && (
-              <div className="border-t border-white/8 pt-2 space-y-1">
+              <div className="border-t border-black/8 pt-2 space-y-1">
                 {m.target_audience && (
-                  <p className="text-xs text-white/40 flex items-center gap-1.5">
-                    <Users size={11} className="text-white/25" />
-                    กลุ่มเป้าหมาย: <span className="text-white/60">{m.target_audience}</span>
+                  <p className="text-xs text-black/40 flex items-center gap-1.5">
+                    <Users size={11} className="text-black/25" />
+                    กลุ่มเป้าหมาย: <span className="text-black/60">{m.target_audience}</span>
                   </p>
                 )}
                 {m.prep_required && (
@@ -138,7 +138,7 @@ export default async function MeetingSchedulePage() {
                   </p>
                 )}
                 {m.notification_message && (
-                  <p className="text-xs text-white/40">{m.notification_message}</p>
+                  <p className="text-xs text-black/40">{m.notification_message}</p>
                 )}
               </div>
             )}
@@ -194,13 +194,13 @@ export default async function MeetingSchedulePage() {
     <div className="space-y-6 max-w-2xl animate-fadein">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">กำหนดการประชุม</h1>
-          <p className="text-sm text-white/40 mt-0.5">ตารางและการแจ้งเตือนการประชุม WSC-R</p>
+          <h1 className="text-xl font-bold text-[#12181F]">กำหนดการประชุม</h1>
+          <p className="text-sm text-black/40 mt-0.5">ตารางและการแจ้งเตือนการประชุม WSC-R</p>
         </div>
         {isAdmin && (
           <Link
             href="/meeting/setup"
-            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
+            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
           >
             <Plus size={15} />
             สร้างการประชุม
@@ -210,9 +210,9 @@ export default async function MeetingSchedulePage() {
 
       {/* Upcoming */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">การประชุมที่กำหนดไว้</h2>
+        <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">การประชุมที่กำหนดไว้</h2>
         {upcomingRows.length === 0 ? (
-          <div className="glass-card-sm p-8 text-center text-white/30 text-sm">
+          <div className="glass-card-sm p-8 text-center text-black/30 text-sm">
             ยังไม่มีการประชุมที่กำหนดไว้
             {isAdmin && (
               <div className="mt-3">
@@ -233,7 +233,7 @@ export default async function MeetingSchedulePage() {
       {/* Past */}
       {pastRows.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ประชุมล่าสุด</h2>
+          <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">ประชุมล่าสุด</h2>
           {pastRows.map((m) => <MeetingCard key={m.id} m={m} showAck={false} />)}
         </div>
       )}

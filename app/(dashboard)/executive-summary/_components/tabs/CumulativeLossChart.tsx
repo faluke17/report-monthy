@@ -6,6 +6,13 @@ import { C, MONO, fmt, Card, Sec } from './shared'
 
 const MONTH_LABELS = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.']
 
+// ย่อตัวเลขแกน Y ให้สั้นพออยู่ในความกว้างจำกัด (ค่าน้ำสูญเสียมักมีหลักแสน-ล้าน)
+function fmtAxis(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${Math.round(n / 1000)}k`
+  return `${Math.round(n)}`
+}
+
 function LegendDot({ color, label, dashed }: { color: string; label: string | number; dashed?: boolean }) {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color, fontFamily: MONO }}>
@@ -26,7 +33,7 @@ function ChartTooltip({ active, payload, label, fiscalYearCurr, fiscalYearPrev }
   const curr = payload.find((p) => p.dataKey === 'curr')
   const prev = payload.find((p) => p.dataKey === 'prev')
   return (
-    <div style={{ background: '#070C18', border: `1px solid ${C.border}`, padding: '8px 10px', fontFamily: MONO }}>
+    <div style={{ background: C.panel, border: `1px solid ${C.border}`, padding: '8px 10px', fontFamily: MONO, boxShadow: '0 4px 14px rgba(18,24,31,.08)' }}>
       <div style={{ fontSize: 10, color: C.muted, marginBottom: 6 }}>{label}</div>
       {curr && (
         <div style={{ fontSize: 11, color: C.good, marginBottom: 2 }}>
@@ -53,7 +60,7 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
   if (allVals.length === 0) {
     return (
       <Card style={{ textAlign: 'center', padding: 50 }}>
-        <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>// ยังไม่มีข้อมูลเพียงพอสำหรับคำนวณน้ำสูญเสียสะสม</div>
+        <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{'// ยังไม่มีข้อมูลเพียงพอสำหรับคำนวณน้ำสูญเสียสะสม'}</div>
       </Card>
     )
   }
@@ -92,7 +99,7 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
               <stop offset="100%" stopColor={C.good} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="rgba(34,211,238,0.08)" vertical={false} />
+          <CartesianGrid stroke="rgba(11,110,118,0.10)" vertical={false} />
           <XAxis
             dataKey="month"
             tick={{ fill: C.dim, fontSize: 9, fontFamily: MONO }}
@@ -103,12 +110,12 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
             tick={{ fill: C.dim, fontSize: 9, fontFamily: MONO }}
             axisLine={false}
             tickLine={false}
-            width={44}
-            tickFormatter={(v) => fmt(Math.round(v))}
+            width={40}
+            tickFormatter={fmtAxis}
             domain={[0, (max: number) => Math.ceil(max * 1.15)]}
           />
           <Tooltip
-            cursor={{ stroke: 'rgba(34,211,238,0.25)', strokeWidth: 1 }}
+            cursor={{ stroke: 'rgba(11,110,118,0.25)', strokeWidth: 1 }}
             content={<ChartTooltip fiscalYearCurr={fiscalYearCurr} fiscalYearPrev={fiscalYearPrev} />}
           />
           <Line

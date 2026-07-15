@@ -124,24 +124,24 @@ export function DirectiveCommandCenter({
             {activeMeeting.meeting_type && (
               <span className={cn(
                 'text-[10px] px-2 py-0.5 rounded-full border',
-                MEETING_TYPE_COLOR[activeMeeting.meeting_type] ?? 'bg-white/10 text-white/50 border-white/15'
+                MEETING_TYPE_COLOR[activeMeeting.meeting_type] ?? 'bg-black/10 text-black/50 border-black/15'
               )}>
                 {activeMeeting.meeting_type}
               </span>
             )}
-            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/40 border-white/12">
+            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-black/5 text-black/40 border-black/12">
               {activeMeeting.status}
             </span>
           </div>
-          <p className="font-semibold text-white text-sm leading-snug">{activeMeeting.title}</p>
-          <div className="flex items-center gap-4 text-xs text-white/40">
+          <p className="font-semibold text-[#12181F] text-sm leading-snug">{activeMeeting.title}</p>
+          <div className="flex items-center gap-4 text-xs text-black/40">
             <span className="flex items-center gap-1.5">
-              <Calendar size={10} className="text-white/25" />
+              <Calendar size={10} className="text-black/25" />
               {formatThaiDate(activeMeeting.scheduled_date)} · {activeMeeting.scheduled_time.slice(0, 5)} น.
             </span>
             {activeMeeting.location && (
               <span className="flex items-center gap-1.5">
-                <MapPin size={10} className="text-white/25" />
+                <MapPin size={10} className="text-black/25" />
                 {activeMeeting.location}
               </span>
             )}
@@ -154,10 +154,10 @@ export function DirectiveCommandCenter({
         <div className="flex items-center justify-between gap-3 bg-cyan-500/5 border border-cyan-500/20 rounded-xl px-4 py-2.5">
           <div className="flex items-center gap-2">
             <ListFilter size={13} className="text-cyan-400 shrink-0" />
-            <span className="text-xs text-white/60">
+            <span className="text-xs text-black/60">
               {showOnlyMine
                 ? <>แสดงเฉพาะงานของ <span className="text-cyan-400 font-medium">{branchName}</span> ({myCount} รายการ)</>
-                : <span className="text-white/40">แสดงมติทั้งหมด</span>
+                : <span className="text-black/40">แสดงมติทั้งหมด</span>
               }
             </span>
           </div>
@@ -183,7 +183,7 @@ export function DirectiveCommandCenter({
           <select
             value={filterMeeting}
             onChange={e => setFilterMeeting(e.target.value)}
-            className="bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white/70 focus:outline-none focus:border-cyan-500/40"
+            className="bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-1.5 text-xs text-black/70 focus:outline-none focus:border-cyan-500/40"
           >
             <option value="all">ทุกการประชุม</option>
             {meetings.map(m => (
@@ -205,7 +205,7 @@ export function DirectiveCommandCenter({
                     : f.key === 'แล้วเสร็จ'
                     ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                     : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
-                  : 'text-white/35 border-transparent hover:text-white/60 hover:border-white/15'
+                  : 'text-black/35 border-transparent hover:text-black/60 hover:border-black/15'
               )}
             >
               {f.label}
@@ -225,8 +225,8 @@ export function DirectiveCommandCenter({
                     ? 'bg-red-500/15 text-red-400 border-red-500/25'
                     : p === 'กลาง'
                     ? 'bg-amber-500/15 text-amber-400 border-amber-500/25'
-                    : 'bg-white/10 text-white/60 border-white/20'
-                  : 'text-white/30 border-transparent hover:text-white/50 hover:border-white/15'
+                    : 'bg-black/10 text-black/60 border-black/20'
+                  : 'text-black/30 border-transparent hover:text-black/50 hover:border-black/15'
               )}
             >
               {p === 'all' ? 'ทุกระดับ' : p}
@@ -235,31 +235,31 @@ export function DirectiveCommandCenter({
         </div>
 
         <div className="relative ml-auto">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30" />
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black/30" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหามติ..."
-            className="pl-8 pr-3 py-1.5 bg-[#0c1a30] border border-white/12 rounded-lg text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/40 w-44"
+            className="pl-8 pr-3 py-1.5 bg-[#FFFFFF] border border-black/12 rounded-lg text-xs text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/40 w-44"
           />
         </div>
       </div>
 
       {/* Result count */}
       {(filterStatus !== 'all' || filterPriority !== 'all' || search || filterMeeting !== 'all') && (
-        <p className="text-xs text-white/30">
-          แสดง <span className="num text-white/50">{filtered.length}</span> จาก{' '}
-          <span className="num text-white/50">{initialSummaries.length}</span> รายการ
+        <p className="text-xs text-black/30">
+          แสดง <span className="num text-black/50">{filtered.length}</span> จาก{' '}
+          <span className="num text-black/50">{initialSummaries.length}</span> รายการ
         </p>
       )}
 
       {/* Cards */}
       {filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <p className="text-white/30 text-sm">ไม่พบมติสั่งการที่ตรงกับเงื่อนไข</p>
+          <p className="text-black/30 text-sm">ไม่พบมติสั่งการที่ตรงกับเงื่อนไข</p>
           {!isAdmin && showOnlyMine && myCount === 0 && (
-            <p className="text-xs text-white/20 mt-1">ยังไม่มีมติที่ถูกมอบหมายให้สาขาของคุณ</p>
+            <p className="text-xs text-black/20 mt-1">ยังไม่มีมติที่ถูกมอบหมายให้สาขาของคุณ</p>
           )}
         </div>
       ) : (

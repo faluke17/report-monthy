@@ -88,8 +88,8 @@ export default async function SummaryPage({
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Executive Summary</h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <h1 className="text-xl font-bold text-[#12181F]">Executive Summary</h1>
+          <p className="text-sm text-black/40 mt-0.5">
             รายงานสรุปสำหรับผู้บริหาร — ประชุม WSC-R {monthLabel} · กปภ. เขต 10
           </p>
         </div>
@@ -110,16 +110,16 @@ export default async function SummaryPage({
       />
 
       {isEmpty && (
-        <div className="glass-card p-12 text-center text-white/30 text-sm">
+        <div className="glass-card p-12 text-center text-black/30 text-sm">
           ยังไม่มีข้อมูลสำหรับเดือนนี้ — เริ่มกรอกผลรายเดือนและบันทึกอุปสรรคเพื่อดูสรุป
         </div>
       )}
 
       {/* สถานการณ์ */}
       <ExecSection title="สถานการณ์" color="cyan">
-        <p className="text-sm text-white/60 leading-relaxed">
+        <p className="text-sm text-black/60 leading-relaxed">
           เขต 10 มีค่าเฉลี่ย NRW {monthLabel} อยู่ที่{' '}
-          <b className="text-white">
+          <b className="text-[#12181F]">
             {avgNrw !== null ? avgNrw.toFixed(1) + '%' : '(ยังไม่มีข้อมูล)'}
           </b>
           {reportsWithNrw.length > 0 && ` จาก ${reports.length} สาขาที่ส่งข้อมูล`}
@@ -130,7 +130,7 @@ export default async function SummaryPage({
           )}
           {totalLeaksPending > 0 && (
             <>
-              {' '}มีจุดรั่วค้างซ่อม <b className="text-white">{totalLeaksPending} จุด</b>
+              {' '}มีจุดรั่วค้างซ่อม <b className="text-[#12181F]">{totalLeaksPending} จุด</b>
             </>
           )}
         </p>
@@ -141,13 +141,13 @@ export default async function SummaryPage({
         <ExecSection title="ประเด็นสำคัญ" color="amber">
           <ol className="space-y-2">
             {obstacles.slice(0, 3).map((obs, i) => (
-              <li key={obs.id} className="text-sm text-white/60 leading-relaxed">
+              <li key={obs.id} className="text-sm text-black/60 leading-relaxed">
                 <b>{i + 1}.</b>{' '}
-                <b className="text-white">
+                <b className="text-[#12181F]">
                   {obs.branches?.name_th} — {obs.obstacle_type}
                 </b>
                 {obs.data_quality_impact && (
-                  <span className="text-white/50"> — {obs.data_quality_impact}</span>
+                  <span className="text-black/50"> — {obs.data_quality_impact}</span>
                 )}
               </li>
             ))}
@@ -160,13 +160,13 @@ export default async function SummaryPage({
         <ExecSection title="ผลกระทบ / Action เกินกำหนด" color="red">
           <ul className="space-y-2">
             {overdueActions.slice(0, 4).map(action => (
-              <li key={action.id} className="text-sm text-white/60 flex items-start gap-2">
+              <li key={action.id} className="text-sm text-black/60 flex items-start gap-2">
                 <span className="num text-red-400 text-xs font-mono shrink-0 mt-0.5">
                   {action.code}
                 </span>
                 <span>
                   {action.branches?.name_th && (
-                    <b className="text-white/80">{action.branches.name_th} — </b>
+                    <b className="text-black/80">{action.branches.name_th} — </b>
                   )}
                   {action.title}
                   {action.due_date && (
@@ -184,8 +184,8 @@ export default async function SummaryPage({
       {/* KM */}
       {confirmedKm ? (
         <ExecSection title="KM / ผลดีที่ควรขยาย" color="green">
-          <p className="text-sm text-white/60 leading-relaxed">
-            <b className="text-white">{confirmedKm.branches?.name_th}</b>
+          <p className="text-sm text-black/60 leading-relaxed">
+            <b className="text-[#12181F]">{confirmedKm.branches?.name_th}</b>
             {' — '}
             {confirmedKm.title}
             {confirmedKm.nrw_before !== null && confirmedKm.nrw_after !== null && (
@@ -199,13 +199,13 @@ export default async function SummaryPage({
             {confirmedKm.water_saved_daily !== null && confirmedKm.water_saved_daily !== undefined && (
               <>
                 {' '}ประหยัดน้ำ{' '}
-                <b className="text-white">{confirmedKm.water_saved_daily.toLocaleString()} ลบ.ม./วัน</b>
+                <b className="text-[#12181F]">{confirmedKm.water_saved_daily.toLocaleString()} ลบ.ม./วัน</b>
               </>
             )}
             {confirmedKm.applicable_branches && confirmedKm.applicable_branches.length > 0 && (
               <>
                 {' '}— เขตควรขยายผลไปสาขา{' '}
-                <b className="text-white">{confirmedKm.applicable_branches.join(' · ')}</b>
+                <b className="text-[#12181F]">{confirmedKm.applicable_branches.join(' · ')}</b>
               </>
             )}
           </p>
@@ -214,11 +214,11 @@ export default async function SummaryPage({
         <ExecSection title="KM / กรณีศึกษาที่กำลังติดตาม" color="green">
           <ul className="space-y-1.5">
             {kmCases.map(km => (
-              <li key={km.id} className="text-sm text-white/60 flex items-center gap-2">
+              <li key={km.id} className="text-sm text-black/60 flex items-center gap-2">
                 <TrendingDown size={13} className="text-green-400 shrink-0" />
-                <b className="text-white/80">{km.branches?.name_th}</b>
+                <b className="text-black/80">{km.branches?.name_th}</b>
                 {' — '}{km.title}
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/8 text-white/40 border border-white/10 shrink-0">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/8 text-black/40 border border-black/10 shrink-0">
                   {km.verification_status}
                 </span>
               </li>
@@ -232,9 +232,9 @@ export default async function SummaryPage({
         <ExecSection title="สิ่งที่ผู้จัดการควรมอบหมายเร่งรัด" color="cyan">
           <ol className="space-y-1.5">
             {overdueActions.slice(0, 5).map((action, i) => (
-              <li key={action.id} className="text-sm text-white/60">
-                <b className="text-white/80">{i + 1}. {action.title}</b>
-                {action.owner && <span className="text-white/40"> — {action.owner}</span>}
+              <li key={action.id} className="text-sm text-black/60">
+                <b className="text-black/80">{i + 1}. {action.title}</b>
+                {action.owner && <span className="text-black/40"> — {action.owner}</span>}
                 {action.due_date && (
                   <span className="text-red-400/70">
                     {' '}· ครบ {formatThaiDate(action.due_date, true)}
@@ -252,7 +252,7 @@ export default async function SummaryPage({
           <div className="space-y-1.5">
             {reportsWithNrw.slice(0, 3).map(r => (
               <div key={r.branch_id} className="flex items-center gap-3">
-                <b className="text-white/80 text-sm">{r.branches?.name_th}</b>
+                <b className="text-black/80 text-sm">{r.branches?.name_th}</b>
                 <span className="num text-red-400 text-xs font-bold">{r.nrw_pct?.toFixed(1)}%</span>
                 {r.leaks_pending > 0 && (
                   <span className="text-xs text-amber-400/80">ค้างซ่อม {r.leaks_pending} จุด</span>

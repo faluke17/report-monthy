@@ -42,7 +42,7 @@ export function MnfMonitorTable({ rows }: Props) {
 
   if (sorted.length === 0) {
     return (
-      <div className="glass-card p-8 text-center text-white/30 text-sm">
+      <div className="glass-card p-8 text-center text-black/30 text-sm">
         ยังไม่มีข้อมูล EMA — กรุณารัน mnf-sync ก่อน
       </div>
     )
@@ -52,7 +52,7 @@ export function MnfMonitorTable({ rows }: Props) {
     <div className="glass-card overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-white/40 border-b border-white/10">
+          <tr className="text-black/40 border-b border-black/10">
             <th className="text-left px-4 py-3 font-medium">สาขา</th>
             <th className="text-left px-4 py-3 font-medium">Node</th>
             <th className="text-left px-4 py-3 font-medium">วันที่ล่าสุด</th>
@@ -70,19 +70,19 @@ export function MnfMonitorTable({ rows }: Props) {
             return (
               <tr
                 key={`${row.dmama_branch_id}-${row.logger_id}`}
-                className={`border-b border-white/5 hover:bg-white/5 ${isRed ? 'bg-red-500/5' : ''}`}
+                className={`border-b border-black/5 hover:bg-black/5 ${isRed ? 'bg-red-500/5' : ''}`}
               >
-                <td className="px-4 py-2.5 text-white font-medium">{row.branch_name_th ?? String(row.dmama_branch_id)}</td>
-                <td className="px-4 py-2.5 text-white/70">{row.node_label}</td>
-                <td className="px-4 py-2.5 text-white/50">{row.record_date}</td>
-                <td className="px-4 py-2.5 text-right text-white/70">
+                <td className="px-4 py-2.5 text-[#12181F] font-medium">{row.branch_name_th ?? String(row.dmama_branch_id)}</td>
+                <td className="px-4 py-2.5 text-black/70">{row.node_label}</td>
+                <td className="px-4 py-2.5 text-black/50">{row.record_date}</td>
+                <td className="px-4 py-2.5 text-right text-black/70">
                   {row.mnf_flow != null ? row.mnf_flow.toFixed(2) : '—'}
                 </td>
-                <td className="px-4 py-2.5 text-right text-white/50">{row.ema_value.toFixed(2)}</td>
-                <td className={`px-4 py-2.5 text-right font-medium ${isRed ? 'text-red-400' : row.alert_status === 'yellow' ? 'text-amber-400' : 'text-white/50'}`}>
+                <td className="px-4 py-2.5 text-right text-black/50">{row.ema_value.toFixed(2)}</td>
+                <td className={`px-4 py-2.5 text-right font-medium ${isRed ? 'text-red-400' : row.alert_status === 'yellow' ? 'text-amber-400' : 'text-black/50'}`}>
                   {diffSign}{row.diff_percent.toFixed(1)}%
                 </td>
-                <td className="px-4 py-2.5 text-right text-white/50">
+                <td className="px-4 py-2.5 text-right text-black/50">
                   {row.consecutive_count > 0 ? `${row.consecutive_count} วัน` : '—'}
                 </td>
                 <td className="px-4 py-2.5">

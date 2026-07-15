@@ -45,7 +45,7 @@ const VARIANT_STYLES: Record<Variant, string> = {
   bad:    'bg-red-500/15 text-red-400 border border-red-500/30',
   info:   'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
   purple: 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
-  gray:   'bg-white/10 text-white/60 border border-white/20',
+  gray:   'bg-black/10 text-black/60 border border-black/20',
 }
 
 interface StatusPillProps {

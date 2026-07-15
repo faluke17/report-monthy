@@ -11,10 +11,10 @@ interface BranchTableProps {
 }
 
 function getNrwColor(nrw: number | null) {
-  if (nrw === null) return { text: '#3D5380',  bar: '',          label: '—' }
-  if (nrw <= 20)   return { text: '#34D399',   bar: 'prog-good', label: 'ลดได้' }
-  if (nrw <= 23)   return { text: '#FCD34D',   bar: 'prog-warn', label: 'ใกล้เป้า' }
-  return           { text: '#F87171',   bar: 'prog-bad',  label: 'ไม่ลด' }
+  if (nrw === null) return { text: '#8896A3',  bar: '',          label: '—' }
+  if (nrw <= 20)   return { text: '#1E7A5A',   bar: 'prog-good', label: 'ลดได้' }
+  if (nrw <= 23)   return { text: '#A8721A',   bar: 'prog-warn', label: 'ใกล้เป้า' }
+  return           { text: '#B3392C',   bar: 'prog-bad',  label: 'ไม่ลด' }
 }
 
 const PILL: Record<string, string> = {
@@ -34,13 +34,13 @@ export function BranchTable({ branches }: BranchTableProps) {
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3.5"
-        style={{ borderBottom: '1px solid rgba(71,130,255,.12)' }}
+        style={{ borderBottom: '1px solid rgba(11,110,118,.12)' }}
       >
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full" style={{ background: '#2DD4BF', boxShadow: '0 0 6px rgba(45,212,191,.50)' }} />
-          <h3 className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>สถานะรายสาขา</h3>
+          <span className="w-2 h-2 rounded-full" style={{ background: '#0B6E76', boxShadow: '0 0 6px rgba(11,110,118,.50)' }} />
+          <h3 className="text-[13px] font-semibold" style={{ color: '#12181F' }}>สถานะรายสาขา</h3>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px]" style={{ color: '#34D399' }}>
+        <div className="flex items-center gap-1.5 text-[11px]" style={{ color: '#1E7A5A' }}>
           <Wifi size={11} />
           <span>Realtime</span>
         </div>
@@ -50,7 +50,7 @@ export function BranchTable({ branches }: BranchTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr style={{ borderBottom: '1px solid rgba(71,130,255,.10)' }}>
+            <tr style={{ borderBottom: '1px solid rgba(11,110,118,.10)' }}>
               {[
                 { label: 'สาขา',           w: '' },
                 { label: 'NRW (%)',        w: 'w-40' },
@@ -61,7 +61,7 @@ export function BranchTable({ branches }: BranchTableProps) {
                 <th
                   key={h.label}
                   className={`px-4 py-2.5 text-left text-[10px] font-bold tracking-wider uppercase ${h.w}`}
-                  style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#8896A3', fontFamily: 'var(--font-mono)' }}
                 >
                   {h.label}
                 </th>
@@ -71,10 +71,10 @@ export function BranchTable({ branches }: BranchTableProps) {
           <tbody>
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(71,130,255,.06)' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(11,110,118,.06)' }}>
                     {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 rounded animate-pulse" style={{ background: 'rgba(71,130,255,.08)' }} />
+                        <div className="h-4 rounded animate-pulse" style={{ background: 'rgba(11,110,118,.08)' }} />
                       </td>
                     ))}
                   </tr>
@@ -88,15 +88,15 @@ export function BranchTable({ branches }: BranchTableProps) {
                     <tr
                       key={branch.id}
                       className="cursor-pointer transition-colors"
-                      style={{ borderBottom: '1px solid rgba(71,130,255,.06)' }}
+                      style={{ borderBottom: '1px solid rgba(11,110,118,.06)' }}
                       onClick={() => router.push(`/pdca?branch=${branch.id}`)}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(71,130,255,.04)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(11,110,118,.04)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
                     >
                       {/* Branch name */}
                       <td className="px-4 py-3">
-                        <div className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>{branch.name_th}</div>
-                        <div className="text-[10px] mt-0.5" style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}>{branch.code}</div>
+                        <div className="text-[13px] font-semibold" style={{ color: '#12181F' }}>{branch.name_th}</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: '#8896A3', fontFamily: 'var(--font-mono)' }}>{branch.code}</div>
                       </td>
 
                       {/* NRW with progress bar */}
@@ -111,7 +111,7 @@ export function BranchTable({ branches }: BranchTableProps) {
                             </div>
                           </div>
                         ) : (
-                          <span style={{ color: '#3D5380' }}>—</span>
+                          <span style={{ color: '#8896A3' }}>—</span>
                         )}
                       </td>
 
@@ -121,25 +121,25 @@ export function BranchTable({ branches }: BranchTableProps) {
                           <span
                             className="text-[13px] font-semibold"
                             style={{
-                              color: report.mnf_factor > 0.5 ? '#F87171' : '#CBD5E1',
+                              color: report.mnf_factor > 0.5 ? '#B3392C' : '#12181F',
                               fontFamily: 'var(--font-mono)',
                             }}
                           >
                             {report.mnf_factor.toFixed(3)}
                           </span>
                         ) : (
-                          <span style={{ color: '#3D5380' }}>—</span>
+                          <span style={{ color: '#8896A3' }}>—</span>
                         )}
                       </td>
 
                       {/* Leaks found / repaired */}
                       <td className="px-4 py-3">
                         {report ? (
-                          <span className="text-[13px]" style={{ color: '#CBD5E1', fontFamily: 'var(--font-mono)' }}>
+                          <span className="text-[13px]" style={{ color: '#12181F', fontFamily: 'var(--font-mono)' }}>
                             {report.leaks_found ?? 0} / {report.leaks_repaired ?? 0}
                           </span>
                         ) : (
-                          <span style={{ color: '#3D5380' }}>—</span>
+                          <span style={{ color: '#8896A3' }}>—</span>
                         )}
                       </td>
 

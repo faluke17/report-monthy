@@ -80,13 +80,13 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
 
   return (
     <div className={cn(
-      'rounded-xl border border-white/10 border-l-4 overflow-hidden transition-opacity',
+      'rounded-xl border border-black/10 border-l-4 overflow-hidden transition-opacity',
       borderColor,
       done ? 'opacity-65' : ''
     )}>
 
       {/* ── Compact header (always visible) ── */}
-      <div className="px-5 pt-4 pb-3 bg-white/2">
+      <div className="px-5 pt-4 pb-3 bg-black/2">
         <div className="flex items-start gap-3">
           <span className="num text-xs font-bold text-cyan-400 w-7 shrink-0 text-right pt-0.5">
             #{r.sequence_no}
@@ -106,32 +106,32 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
                 </span>
               )}
               {r.source && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/40 border-white/12">
+                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-black/5 text-black/40 border-black/12">
                   {r.source}
                 </span>
               )}
             </div>
 
             {/* Title */}
-            <p className="text-sm font-semibold text-white leading-snug">{r.title}</p>
+            <p className="text-sm font-semibold text-[#12181F] leading-snug">{r.title}</p>
 
             {/* Meta */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
               {branchLabel && (
-                <span className="text-white/55 font-medium">{branchLabel}</span>
+                <span className="text-black/55 font-medium">{branchLabel}</span>
               )}
-              {branchLabel && r.responsible_dept && <span className="text-white/20">·</span>}
+              {branchLabel && r.responsible_dept && <span className="text-black/20">·</span>}
               {r.responsible_dept && (
-                <span className="px-2 py-0.5 rounded bg-white/6 border border-white/10 text-white/45">
+                <span className="px-2 py-0.5 rounded bg-black/6 border border-black/10 text-black/45">
                   {r.responsible_dept}
                 </span>
               )}
               {r.due_date && (
                 <>
-                  <span className="text-white/20">·</span>
+                  <span className="text-black/20">·</span>
                   <span className={cn(
                     'flex items-center gap-1',
-                    overdue ? 'text-red-400' : days !== null && days <= 7 ? 'text-amber-400' : 'text-white/40'
+                    overdue ? 'text-red-400' : days !== null && days <= 7 ? 'text-amber-400' : 'text-black/40'
                   )}>
                     <Clock size={10} />
                     ครบ {formatThaiDate(r.due_date, true)}
@@ -154,7 +154,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
             <StatusPill status={r.status} />
             <button
               onClick={() => setExpanded(v => !v)}
-              className="flex items-center gap-1 text-[10px] text-white/30 hover:text-cyan-400 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-black/30 hover:text-cyan-400 transition-colors"
             >
               {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               <span>{expanded ? 'ซ่อน' : 'รายละเอียด'}</span>
@@ -165,7 +165,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
         {/* Mini progress bar */}
         <div className="ml-10 mt-2.5">
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+            <div className="flex-1 h-1 rounded-full bg-black/8 overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-500',
@@ -176,29 +176,29 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
             </div>
             <span className={cn(
               'num text-[10px] font-bold w-8 text-right',
-              done ? 'text-emerald-400' : 'text-white/40'
+              done ? 'text-emerald-400' : 'text-black/40'
             )}>
               {r.progress_pct}%
             </span>
           </div>
           {r.progress_note && !expanded && (
-            <p className="text-[10px] text-white/25 mt-0.5 truncate">{r.progress_note}</p>
+            <p className="text-[10px] text-black/25 mt-0.5 truncate">{r.progress_note}</p>
           )}
         </div>
       </div>
 
       {/* ── Expanded detail panel ── */}
       {expanded && (
-        <div className="border-t border-white/8 bg-white/1 px-5 py-4 space-y-4">
+        <div className="border-t border-black/8 bg-black/1 px-5 py-4 space-y-4">
 
           {/* Detail */}
           {r.detail && (
             <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
                 <FileText size={10} />
                 รายละเอียด / สิ่งที่ต้องทำ
               </div>
-              <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line pl-4">{r.detail}</p>
+              <p className="text-sm text-black/70 leading-relaxed whitespace-pre-line pl-4">{r.detail}</p>
             </div>
           )}
 
@@ -207,29 +207,29 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {r.admin_notes && (
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
                     <MessageSquare size={10} />
                     หมายเหตุผู้บริหาร
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed pl-4">{r.admin_notes}</p>
+                  <p className="text-xs text-black/60 leading-relaxed pl-4">{r.admin_notes}</p>
                 </div>
               )}
               {r.tracking_notes && (
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
                     <TrendingUp size={10} />
                     การติดตาม
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed pl-4">{r.tracking_notes}</p>
+                  <p className="text-xs text-black/60 leading-relaxed pl-4">{r.tracking_notes}</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Full progress section */}
-          <div className="space-y-2 pt-1 border-t border-white/8">
+          <div className="space-y-2 pt-1 border-t border-black/8">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-black/30 uppercase tracking-wider flex items-center gap-1.5">
                 <TrendingUp size={10} />
                 ความก้าวหน้า — {r.progress_pct}%
               </span>
@@ -244,7 +244,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
               )}
             </div>
 
-            <div className="h-2 rounded-full bg-white/8 overflow-hidden">
+            <div className="h-2 rounded-full bg-black/8 overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-500',
@@ -255,10 +255,10 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
             </div>
 
             {r.progress_note && (
-              <p className="text-xs text-white/40 leading-relaxed">
+              <p className="text-xs text-black/40 leading-relaxed">
                 {r.progress_note}
                 {r.progress_updated_at && (
-                  <span className="text-white/20 ml-1.5">
+                  <span className="text-black/20 ml-1.5">
                     · {new Date(r.progress_updated_at).toLocaleDateString('th-TH', {
                       day: 'numeric', month: 'short',
                     })}
@@ -270,7 +270,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
 
             {/* Progress update form */}
             {showUpdate && (
-              <div className="mt-2 space-y-3 pt-3 border-t border-white/8">
+              <div className="mt-2 space-y-3 pt-3 border-t border-black/8">
                 <div className="flex gap-1.5">
                   {PROGRESS_STEPS.map(step => (
                     <button
@@ -282,7 +282,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
                           ? step === 100
                             ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
                             : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                          : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                          : 'bg-black/5 text-black/35 border-black/10 hover:border-black/25 hover:text-black/60'
                       )}
                     >
                       {step}%
@@ -295,7 +295,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
                   value={note}
                   onChange={e => setNote(e.target.value)}
                   placeholder="รายละเอียดความก้าวหน้า..."
-                  className="w-full bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40 resize-none"
+                  className="w-full bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-xs text-[#12181F] placeholder:text-black/20 focus:outline-none focus:border-cyan-500/40 resize-none"
                 />
 
                 <div className="flex items-center justify-between gap-2">
@@ -317,7 +317,7 @@ export function ResolutionCard({ r, isAdmin, branchName }: Props) {
                     className={cn(
                       'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                       isPending
-                        ? 'bg-white/8 text-white/25 cursor-not-allowed'
+                        ? 'bg-black/8 text-black/25 cursor-not-allowed'
                         : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
                     )}
                   >

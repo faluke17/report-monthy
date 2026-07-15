@@ -108,8 +108,8 @@ export default async function MnfMonitorPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">MNF Monitor</h1>
-          <p className="text-sm text-white/50 mt-1">
+          <h1 className="text-xl font-bold text-[#12181F]">MNF Monitor</h1>
+          <p className="text-sm text-black/50 mt-1">
             {isRegion
               ? `เฝ้าระวัง Minimum Night Flow ทั้งเขต · ${rows.length} nodes จาก ${groups.length} สาขา`
               : `เฝ้าระวัง MNF สาขา${myBranch?.name_th ?? ''} · ${rows.length} nodes`
@@ -118,8 +118,8 @@ export default async function MnfMonitorPage() {
         </div>
         <div className="shrink-0 text-right space-y-1.5">
           {daysBehind === null ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 text-white/30 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-black/10 bg-black/5 text-black/30 text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-black/20" />
               ไม่มีข้อมูล
             </span>
           ) : daysBehind === 0 ? (
@@ -139,13 +139,13 @@ export default async function MnfMonitorPage() {
             </span>
           )}
           {lastComputed && (
-            <p className="text-[10px] text-white/25">คำนวณ EMA: {lastComputed}</p>
+            <p className="text-[10px] text-black/25">คำนวณ EMA: {lastComputed}</p>
           )}
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <div className="glass-card p-8 text-center text-white/30 text-sm">
+        <div className="glass-card p-8 text-center text-black/30 text-sm">
           ยังไม่มีข้อมูล EMA — กรุณารัน mnf-sync ก่อน
         </div>
       ) : (

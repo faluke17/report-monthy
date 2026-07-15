@@ -28,6 +28,7 @@ export function useOnlinePresence(me: UseOnlinePresenceOptions) {
   const retryRef    = useRef(0)
   const timerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
   const unmountRef  = useRef(false)
+  const connectRef  = useRef<() => void>(() => {})
 
   const connect = useCallback(() => {
     if (unmountRef.current) return
@@ -87,12 +88,14 @@ export function useOnlinePresence(me: UseOnlinePresenceOptions) {
           if (process.env.NODE_ENV === 'development') {
             console.warn(`[OnlinePresence] ${status} — retry ${attempt + 1}/${MAX_RETRIES} in ${delay}ms`)
           }
-          timerRef.current = setTimeout(connect, delay)
+          timerRef.current = setTimeout(() => connectRef.current(), delay)
         }
       })
 
     channelRef.current = channel
   }, [me.username, me.name, me.surname, me.branch_name])
+
+  connectRef.current = connect
 
   useEffect(() => {
     unmountRef.current = false

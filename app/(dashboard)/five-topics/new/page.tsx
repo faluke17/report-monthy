@@ -45,18 +45,18 @@ export default async function NewFiveTopicsPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/five-topics"
-          className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-sm text-black/50 hover:text-[#12181F] transition-colors"
         >
           <ChevronLeft size={16} />
           รายงาน 5 หัวข้อ
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-sm text-white">เพิ่มรายงานใหม่</span>
+        <span className="text-black/20">/</span>
+        <span className="text-sm text-[#12181F]">เพิ่มรายงานใหม่</span>
       </div>
 
       <div>
-        <h1 className="text-xl font-bold text-white">บันทึกรายงาน 5 หัวข้อ</h1>
-        <p className="text-sm text-white/40 mt-0.5">
+        <h1 className="text-xl font-bold text-[#12181F]">บันทึกรายงาน 5 หัวข้อ</h1>
+        <p className="text-sm text-black/40 mt-0.5">
           ติดตามกิจกรรมลดน้ำสูญเสีย 5 หัวข้อมาตรฐาน กปภ. เขต 10
         </p>
       </div>

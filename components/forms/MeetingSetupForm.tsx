@@ -220,7 +220,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
           <button
             type="button"
             onClick={clearDraft}
-            className="flex items-center gap-1 text-[11px] text-white/30 hover:text-red-400 transition-colors"
+            className="flex items-center gap-1 text-[11px] text-black/30 hover:text-red-400 transition-colors"
           >
             <Trash2 size={10} /> ล้าง
           </button>
@@ -231,11 +231,11 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
       <div className="glass-card p-6 space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <Calendar size={15} className="text-cyan-400" />
-          <span className="text-xs font-bold text-white/50 uppercase tracking-widest">ส่วนที่ 1 — รายละเอียดการประชุม</span>
+          <span className="text-xs font-bold text-black/50 uppercase tracking-widest">ส่วนที่ 1 — รายละเอียดการประชุม</span>
         </div>
 
         <div>
-          <label className="block text-sm text-white/60 mb-1.5">
+          <label className="block text-sm text-black/60 mb-1.5">
             หัวข้อการประชุม <span className="text-red-400">*</span>
           </label>
           <input
@@ -244,20 +244,20 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="เช่น ประชุมติดตาม NRW เขต 10 ครั้งที่ 7/2569"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">
+            <label className="block text-sm text-black/60 mb-1.5">
               ประเภทการประชุม <span className="text-red-400">*</span>
             </label>
             <select
               required
               value={form.meeting_type}
               onChange={(e) => set('meeting_type', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             >
               <option value="">— เลือก —</option>
               {MEETING_TYPES.map((t) => (
@@ -266,7 +266,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">
+            <label className="block text-sm text-black/60 mb-1.5">
               วันที่ประชุม <span className="text-red-400">*</span>
             </label>
             <input
@@ -274,22 +274,22 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
               required
               value={form.scheduled_date}
               onChange={(e) => set('scheduled_date', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1.5">เวลา</label>
+            <label className="block text-sm text-black/60 mb-1.5">เวลา</label>
             <input
               type="time"
               value={form.scheduled_time}
               onChange={(e) => set('scheduled_time', e.target.value)}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
             />
           </div>
         </div>
 
         <div>
-          <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-black/60 mb-1.5">
             <MapPin size={13} /> ช่องทางประชุม
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -298,16 +298,16 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
               value={form.location}
               onChange={(e) => set('location', e.target.value)}
               placeholder="สถานที่ / ห้องประชุม"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
             <div className="relative">
-              <Link2 size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+              <Link2 size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" />
               <input
                 type="url"
                 value={form.meeting_link}
                 onChange={(e) => set('meeting_link', e.target.value)}
                 placeholder="ลิงก์ประชุมออนไลน์ (Teams/Zoom)"
-                className="w-full bg-white/5 border border-white/15 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                className="w-full bg-black/5 border border-black/15 rounded-lg pl-8 pr-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
               />
             </div>
           </div>
@@ -319,7 +319,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
         <div className="glass-card p-6 space-y-4 border border-cyan-500/20">
           <div className="flex items-center gap-2 mb-1">
             <FileText size={15} className="text-cyan-400" />
-            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">รายงานที่ประชุมพิจารณา</span>
+            <span className="text-xs font-bold text-black/50 uppercase tracking-widest">รายงานที่ประชุมพิจารณา</span>
             {reportMonth !== '' && reportYearBe !== '' && (
               <span className="ml-auto text-[11px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
                 {getThaiMonthName(Number(reportMonth))} {reportYearBe}
@@ -327,20 +327,20 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             )}
           </div>
 
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-black/40">
             dashboard จะนับสาขาที่ส่ง/ยังไม่ส่งรายงานตามเดือนนี้ — ระบบแนะนำเดือนก่อนวันประชุม
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/60 mb-1.5">เดือนรายงาน</label>
+              <label className="block text-sm text-black/60 mb-1.5">เดือนรายงาน</label>
               <select
                 value={reportMonth}
                 onChange={(e) => {
                   setReportMonth(e.target.value === '' ? '' : Number(e.target.value))
                   periodAutoSetRef.current = true
                 }}
-                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
               >
                 <option value="">— เลือกเดือน —</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -349,7 +349,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
               </select>
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1.5">ปี (พ.ศ.)</label>
+              <label className="block text-sm text-black/60 mb-1.5">ปี (พ.ศ.)</label>
               <input
                 type="number"
                 value={reportYearBe}
@@ -358,7 +358,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                   periodAutoSetRef.current = true
                 }}
                 placeholder="เช่น 2569"
-                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
               />
             </div>
           </div>
@@ -369,17 +369,17 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
       <div className="glass-card p-6 space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <Bell size={15} className="text-cyan-400" />
-          <span className="text-xs font-bold text-white/50 uppercase tracking-widest">ส่วนที่ 2 — กลุ่มเป้าหมายและข้อความแจ้งเตือน</span>
+          <span className="text-xs font-bold text-black/50 uppercase tracking-widest">ส่วนที่ 2 — กลุ่มเป้าหมายและข้อความแจ้งเตือน</span>
         </div>
 
         <div>
-          <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-black/60 mb-1.5">
             <Users size={13} /> กลุ่มเป้าหมาย
           </label>
           <select
             value={form.target_audience}
             onChange={(e) => set('target_audience', e.target.value)}
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
           >
             {TARGET_AUDIENCES.map((a) => (
               <option key={a} value={a}>{a}</option>
@@ -388,7 +388,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
         </div>
 
         <div>
-          <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-black/60 mb-1.5">
             <FileText size={13} /> กำหนดให้สาขาเตรียมรายงาน
           </label>
           <textarea
@@ -396,12 +396,12 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             onChange={(e) => set('prep_required', e.target.value)}
             rows={2}
             placeholder="เช่น รายงาน NRW เดือนล่าสุด, สถานะ Action Items, KM Case..."
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
         </div>
 
         <div>
-          <label className="flex items-center gap-1.5 text-sm text-white/60 mb-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-black/60 mb-1.5">
             <Bell size={13} /> ข้อความแจ้งเตือน
           </label>
           <textarea
@@ -409,7 +409,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
             onChange={(e) => set('notification_message', e.target.value)}
             rows={2}
             placeholder="ข้อความที่สาขาจะเห็นในหน้า Notification..."
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
         </div>
       </div>
@@ -419,7 +419,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <ClipboardList size={15} className="text-cyan-400" />
-            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">ส่วนที่ 3 — สิ่งที่ต้องการจากสาขา</span>
+            <span className="text-xs font-bold text-black/50 uppercase tracking-widest">ส่วนที่ 3 — สิ่งที่ต้องการจากสาขา</span>
           </div>
           <button
             type="button"
@@ -431,7 +431,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
         </div>
 
         {requirements.length === 0 ? (
-          <p className="text-sm text-white/25 text-center py-3">
+          <p className="text-sm text-black/25 text-center py-3">
             ยังไม่มีรายการ — กด &quot;เพิ่มรายการ&quot; เพื่อกำหนดสิ่งที่สาขาต้องส่ง
           </p>
         ) : (
@@ -440,50 +440,50 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
               const typeInfo = REQ_TYPES.find((t) => t.value === req.requirement_type)
               const needsPeriod = req.requirement_type === 'monthly_report' || req.requirement_type === 'five_topics'
               return (
-                <div key={req.id} className="border border-white/10 rounded-xl p-4 space-y-3 bg-white/2">
+                <div key={req.id} className="border border-black/10 rounded-xl p-4 space-y-3 bg-black/2">
                   <div className="flex items-start gap-2">
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Type */}
                       <div>
-                        <label className="block text-[11px] text-white/40 mb-1">ประเภท</label>
+                        <label className="block text-[11px] text-black/40 mb-1">ประเภท</label>
                         <select
                           value={req.requirement_type}
                           onChange={(e) => setReq(req.id, 'requirement_type', e.target.value as MeetingRequirementType)}
-                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+                          className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
                         >
                           {REQ_TYPES.map((t) => (
                             <option key={t.value} value={t.value}>{t.label}</option>
                           ))}
                         </select>
                         {typeInfo && (
-                          <p className="text-[10px] text-white/30 mt-0.5">{typeInfo.hint}</p>
+                          <p className="text-[10px] text-black/30 mt-0.5">{typeInfo.hint}</p>
                         )}
                       </div>
                       {/* Title */}
                       <div>
-                        <label className="block text-[11px] text-white/40 mb-1">ชื่อรายการ</label>
+                        <label className="block text-[11px] text-black/40 mb-1">ชื่อรายการ</label>
                         <input
                           type="text"
                           value={req.title}
                           onChange={(e) => setReq(req.id, 'title', e.target.value)}
-                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                          className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
                         />
                       </div>
                       {/* Period (monthly/five_topics only) */}
                       {needsPeriod && (
                         <>
                           <div>
-                            <label className="block text-[11px] text-white/40 mb-1">ปี (พ.ศ.)</label>
+                            <label className="block text-[11px] text-black/40 mb-1">ปี (พ.ศ.)</label>
                             <input
                               type="number"
                               value={req.target_year}
                               onChange={(e) => setReq(req.id, 'target_year', e.target.value === '' ? '' : Number(e.target.value))}
                               placeholder="เช่น 2568"
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
                             />
                           </div>
                           <div>
-                            <label className="block text-[11px] text-white/40 mb-1">เดือน (1–12)</label>
+                            <label className="block text-[11px] text-black/40 mb-1">เดือน (1–12)</label>
                             <input
                               type="number"
                               min={1}
@@ -491,19 +491,19 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                               value={req.target_month}
                               onChange={(e) => setReq(req.id, 'target_month', e.target.value === '' ? '' : Number(e.target.value))}
                               placeholder="เช่น 5"
-                              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+                              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
                             />
                           </div>
                         </>
                       )}
                       {/* Due date */}
                       <div className={needsPeriod ? 'sm:col-span-2' : ''}>
-                        <label className="block text-[11px] text-white/40 mb-1">กำหนดส่ง (ไม่บังคับ)</label>
+                        <label className="block text-[11px] text-black/40 mb-1">กำหนดส่ง (ไม่บังคับ)</label>
                         <input
                           type="date"
                           value={req.due_date}
                           onChange={(e) => setReq(req.id, 'due_date', e.target.value)}
-                          className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60"
+                          className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60"
                         />
                       </div>
                     </div>
@@ -511,7 +511,7 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                     <button
                       type="button"
                       onClick={() => removeRequirement(req.id)}
-                      className="mt-5 text-white/25 hover:text-red-400 transition-colors shrink-0"
+                      className="mt-5 text-black/25 hover:text-red-400 transition-colors shrink-0"
                       aria-label="ลบรายการ"
                     >
                       <X size={15} />
@@ -546,9 +546,9 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                 </span>
               </div>
 
-              <p className="font-bold text-white text-sm">{form.title}</p>
+              <p className="font-bold text-[#12181F] text-sm">{form.title}</p>
 
-              <p className="text-sm text-white/55">
+              <p className="text-sm text-black/55">
                 {formatThaiPreview(form.scheduled_date)}
                 {form.scheduled_time && ` · ${form.scheduled_time} น.`}
                 {form.location && ` · ${form.location}`}
@@ -558,9 +558,9 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                 <p className="text-xs text-cyan-400 truncate">🔗 {form.meeting_link}</p>
               )}
 
-              <div className="border-t border-white/10 pt-2.5 space-y-1.5">
-                <p className="text-xs text-white/40">
-                  กลุ่มเป้าหมาย: <span className="text-white/70">{form.target_audience}</span>
+              <div className="border-t border-black/10 pt-2.5 space-y-1.5">
+                <p className="text-xs text-black/40">
+                  กลุ่มเป้าหมาย: <span className="text-black/70">{form.target_audience}</span>
                 </p>
                 {form.prep_required && (
                   <p className="text-xs text-amber-400">
@@ -568,12 +568,12 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
                   </p>
                 )}
                 {form.notification_message && (
-                  <p className="text-xs text-white/55">{form.notification_message}</p>
+                  <p className="text-xs text-black/55">{form.notification_message}</p>
                 )}
               </div>
 
-              <div className="border-t border-white/10 pt-2.5">
-                <div className="inline-flex items-center gap-1.5 text-xs bg-white/10 text-white/50 px-3 py-1.5 rounded-lg">
+              <div className="border-t border-black/10 pt-2.5">
+                <div className="inline-flex items-center gap-1.5 text-xs bg-black/10 text-black/50 px-3 py-1.5 rounded-lg">
                   ✓ กดรับทราบ (ตัวอย่าง)
                 </div>
               </div>
@@ -586,14 +586,14 @@ export function MeetingSetupForm({ backHref = '/meeting' }: MeetingSetupFormProp
         <button
           type="button"
           onClick={() => router.push(backHref)}
-          className="px-4 py-2.5 text-sm text-white/60 hover:text-white border border-white/15 rounded-lg transition-colors"
+          className="px-4 py-2.5 text-sm text-black/60 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
+          className="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
           {submitting ? 'กำลังสร้าง...' : 'สร้างการประชุม — ถัดไป'}
         </button>

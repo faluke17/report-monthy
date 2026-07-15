@@ -52,12 +52,12 @@ export interface ObstacleSummaryRow {
 // ─── style constants ──────────────────────────────────────────────────────────
 
 const INPUT =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60'
 const TEXTAREA =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none'
 const SELECT =
-  'bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60'
-const LABEL = 'block text-xs text-white/45 mb-1.5 font-medium uppercase tracking-wider'
+  'bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60'
+const LABEL = 'block text-xs text-black/45 mb-1.5 font-medium uppercase tracking-wider'
 
 // ─── state ────────────────────────────────────────────────────────────────────
 
@@ -109,7 +109,7 @@ const STATUS_COLOR: Record<string, string> = {
   'รอดำเนินการ':        'text-blue-400 bg-blue-500/10 border-blue-500/25',
   'ระหว่างดำเนินการ':   'text-amber-400 bg-amber-500/10 border-amber-500/25',
   'แล้วเสร็จ':          'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-  'ปิดประเด็น':         'text-white/40 bg-white/5 border-white/15',
+  'ปิดประเด็น':         'text-black/40 bg-black/5 border-black/15',
 }
 
 function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[] }) {
@@ -133,24 +133,24 @@ function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[
           {resolutions.map(res => {
             const pct = res.progress_pct ?? 0
             const barColor = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
-            const statusCls = STATUS_COLOR[res.status] ?? 'text-white/40 bg-white/5 border-white/15'
+            const statusCls = STATUS_COLOR[res.status] ?? 'text-black/40 bg-black/5 border-black/15'
             return (
-              <div key={res.id} className="bg-white/3 rounded-lg px-3 py-2.5 space-y-1.5">
+              <div key={res.id} className="bg-black/3 rounded-lg px-3 py-2.5 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-medium text-white/90 leading-snug flex-1">{res.title}</p>
+                  <p className="text-xs font-medium text-black/90 leading-snug flex-1">{res.title}</p>
                   <span className={cn('shrink-0 text-[10px] px-2 py-0.5 rounded-full border', statusCls)}>
                     {res.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-white/35">
+                <div className="flex items-center gap-3 text-[10px] text-black/35">
                   {res.responsible_branch && <span>{res.responsible_branch}</span>}
                   {res.due_date && <span>กำหนด {formatThaiDate(res.due_date, true)}</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+                  <div className="flex-1 h-1 rounded-full bg-black/8 overflow-hidden">
                     <div className={cn('h-full rounded-full', barColor)} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[10px] text-white/40 tabular-nums shrink-0">{pct}%</span>
+                  <span className="text-[10px] text-black/40 tabular-nums shrink-0">{pct}%</span>
                 </div>
               </div>
             )
@@ -194,7 +194,7 @@ function PdcaBranchPanel({ summaries, obstacles = [] }: { summaries: PdcaSummary
           </span>
         )}
         {selected && (
-          <button type="button" onClick={() => setSelected(null)} className="ml-auto text-[10px] text-white/30 hover:text-white/60 transition-colors">
+          <button type="button" onClick={() => setSelected(null)} className="ml-auto text-[10px] text-black/30 hover:text-black/60 transition-colors">
             <X size={12} />
           </button>
         )}
@@ -214,8 +214,8 @@ function PdcaBranchPanel({ summaries, obstacles = [] }: { summaries: PdcaSummary
                 active
                   ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
                   : hasPdca || hasObs
-                    ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
-                    : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
+                    ? 'bg-black/5 text-black/70 border-black/15 hover:border-violet-500/30 hover:text-violet-300'
+                    : 'bg-transparent text-black/25 border-black/8 hover:text-black/40',
               )}
             >
               {b.name_th}
@@ -234,37 +234,37 @@ function PdcaBranchPanel({ summaries, obstacles = [] }: { summaries: PdcaSummary
               </p>
               {detail.pdca_do && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">D — Do</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
+                  <p className="text-[10px] text-black/35 font-semibold uppercase tracking-wider">D — Do</p>
+                  <p className="text-xs text-black/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
                 </div>
               )}
               {detail.pdca_act && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">A — Act</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
+                  <p className="text-[10px] text-black/35 font-semibold uppercase tracking-wider">A — Act</p>
+                  <p className="text-xs text-black/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
+            <p className="text-xs text-black/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
           )}
 
           {/* Obstacles */}
           {branchObstacles.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-white/8">
+            <div className="space-y-2 pt-2 border-t border-black/8">
               <p className="text-[10px] text-red-400/70 font-semibold uppercase tracking-wider">อุปสรรค — {branchObstacles.length} รายการ</p>
               {branchObstacles.map((obs, i) => {
-                const statusCls = OBSTACLE_STATUS_COLOR[obs.status] ?? 'text-white/40 bg-white/5 border-white/15'
+                const statusCls = OBSTACLE_STATUS_COLOR[obs.status] ?? 'text-black/40 bg-black/5 border-black/15'
                 return (
-                  <div key={i} className="bg-white/3 rounded-lg px-3 py-2 space-y-1">
+                  <div key={i} className="bg-black/3 rounded-lg px-3 py-2 space-y-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-white/85">{obs.obstacle_type}</p>
+                      <p className="text-xs font-medium text-black/85">{obs.obstacle_type}</p>
                       <span className={cn('shrink-0 text-[10px] px-2 py-0.5 rounded-full border', statusCls)}>
                         {obs.status}
                       </span>
                     </div>
                     {obs.data_quality_impact && (
-                      <p className="text-[11px] text-white/50 leading-relaxed">{obs.data_quality_impact}</p>
+                      <p className="text-[11px] text-black/50 leading-relaxed">{obs.data_quality_impact}</p>
                     )}
                     {obs.resolution_plan && (
                       <p className="text-[11px] text-cyan-400/70 leading-relaxed">แนวทาง: {obs.resolution_plan}</p>
@@ -311,7 +311,7 @@ function PdcaRefPicker({
         )}
       </div>
       <div className="px-4 py-3 space-y-3">
-        <p className="text-[11px] text-white/40 leading-relaxed">
+        <p className="text-[11px] text-black/40 leading-relaxed">
           ระบุเดือนที่ต้องการนำ PDCA มาเสนอ — ระบบจะส่งแจ้งเตือนไปทุกสาขาให้กรอกรายงานเดือนนั้นก่อนประชุม
         </p>
         <div className="flex items-center gap-2 flex-wrap">
@@ -349,7 +349,7 @@ function PdcaRefPicker({
           <button
             type="button"
             onClick={() => { onChangeMonth(null); onChangeYear(null); onChangeDeadline('') }}
-            className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
+            className="text-[10px] text-black/30 hover:text-red-400 transition-colors"
           >
             ล้างค่า
           </button>
@@ -400,7 +400,7 @@ function ItemGroup({
             onChange={e => update(idx, e.target.value)}
           />
           {items.length > 1 && (
-            <button type="button" onClick={() => remove(idx)} className="text-white/25 hover:text-red-400 transition-colors shrink-0">
+            <button type="button" onClick={() => remove(idx)} className="text-black/25 hover:text-red-400 transition-colors shrink-0">
               <Trash2 size={13} />
             </button>
           )}
@@ -409,7 +409,7 @@ function ItemGroup({
       <button
         type="button"
         onClick={add}
-        className="flex items-center gap-1.5 text-xs text-cyan-400/60 hover:text-cyan-400 border border-dashed border-white/12 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 text-xs text-cyan-400/60 hover:text-cyan-400 border border-dashed border-black/12 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors"
       >
         <Plus size={11} /> เพิ่ม {agendaNo}.{items.length + 1}
       </button>
@@ -494,7 +494,7 @@ export function MeetingPreAgendaForm({
 
       {/* วาระ 1 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={1} /> วาระที่ 1 : เรื่องประธานแจ้งที่ประชุมทราบ
         </h3>
         <div>
@@ -511,7 +511,7 @@ export function MeetingPreAgendaForm({
 
       {/* วาระ 2 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={2} /> วาระที่ 2 : เรื่องรับรองรายงานการประชุม
         </h3>
         <div>
@@ -542,7 +542,7 @@ export function MeetingPreAgendaForm({
 
       {/* วาระ 3 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={3} /> วาระที่ 3 : เรื่องเพื่อทราบ
         </h3>
         <div>
@@ -553,7 +553,7 @@ export function MeetingPreAgendaForm({
 
       {/* วาระ 4 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2 flex-wrap">
           <AgendaNumBadge n={4} />
           <span>วาระที่ 4 :</span>
           <select
@@ -587,7 +587,7 @@ export function MeetingPreAgendaForm({
 
       {/* วาระ 5 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={5} /> วาระที่ 5 : {agenda5Label}
         </h3>
         {state.agenda4Type === 'เรื่องสืบเนื่อง' && (
@@ -612,7 +612,7 @@ export function MeetingPreAgendaForm({
       {/* วาระ 6 */}
       {showAgenda6 && (
         <div className="glass-card p-5 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
             <AgendaNumBadge n={6} /> วาระที่ 6 : เรื่องอื่นๆ
           </h3>
           <ItemGroup agendaNo={6} label="เรื่องอื่นๆ" items={state.items6} onChange={items => set('items6', items)} />
@@ -625,7 +625,7 @@ export function MeetingPreAgendaForm({
           type="button"
           disabled={isPending}
           onClick={handleDraftSave}
-          className="flex items-center gap-2 px-4 py-2 text-sm border border-white/20 text-white/60 hover:text-white hover:border-white/40 rounded-xl transition-colors disabled:opacity-40"
+          className="flex items-center gap-2 px-4 py-2 text-sm border border-black/20 text-black/60 hover:text-[#12181F] hover:border-black/40 rounded-xl transition-colors disabled:opacity-40"
         >
           <Save size={14} />
           {isPending ? 'กำลังบันทึก...' : 'บันทึกแบบร่าง'}
@@ -634,7 +634,7 @@ export function MeetingPreAgendaForm({
           type="button"
           disabled={isPending}
           onClick={handleSave}
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-5 py-2 rounded-xl text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#FFFFFF] font-semibold px-5 py-2 rounded-xl text-sm transition-colors"
         >
           {isPending ? 'กำลังบันทึก...' : 'บันทึกและถัดไป'}
           <ArrowRight size={14} />

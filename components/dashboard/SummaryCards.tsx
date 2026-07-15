@@ -61,10 +61,10 @@ const CARD_BORDER: Record<PanelKey, string> = {
   action:   'border-t-red-500/60',
 }
 const CARD_ACTIVE_RING: Record<PanelKey, string> = {
-  monthly:  'ring-1 ring-cyan-500/40  shadow-[0_0_20px_rgba(125,211,252,0.10)]',
-  five:     'ring-1 ring-green-500/40 shadow-[0_0_20px_rgba(74,222,128,0.10)]',
-  obstacle: 'ring-1 ring-amber-500/40 shadow-[0_0_20px_rgba(246,196,83,0.10)]',
-  action:   'ring-1 ring-red-500/40   shadow-[0_0_20px_rgba(251,113,133,0.10)]',
+  monthly:  'ring-1 ring-cyan-500/40  shadow-[0_0_20px_rgba(11,110,118,0.10)]',
+  five:     'ring-1 ring-green-500/40 shadow-[0_0_20px_rgba(30,122,90,0.10)]',
+  obstacle: 'ring-1 ring-amber-500/40 shadow-[0_0_20px_rgba(168,114,26,0.10)]',
+  action:   'ring-1 ring-red-500/40   shadow-[0_0_20px_rgba(179,57,44,0.10)]',
 }
 
 function CardBtn({
@@ -81,15 +81,15 @@ function CardBtn({
         CARD_BORDER[id], isOpen && CARD_ACTIVE_RING[id],
       )}
     >
-      <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 leading-tight min-h-[2rem] flex items-start">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-black/40 leading-tight min-h-[2rem] flex items-start">
         {label}
       </p>
       <div className="flex-1 flex items-end mt-1">
         {children}
       </div>
       <div className="flex items-center justify-between mt-2">
-        <p className="text-[10px] text-white/25">{sub}</p>
-        <ChevronDown size={11} className="text-white/20 group-hover:text-white/50 transition-colors" />
+        <p className="text-[10px] text-black/25">{sub}</p>
+        <ChevronDown size={11} className="text-black/20 group-hover:text-black/50 transition-colors" />
       </div>
     </button>
   )
@@ -119,7 +119,7 @@ function Drawer({ open, onClose, children }: { open: boolean; onClose: () => voi
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-1/2 flex flex-col bg-[#070e1c] border-l border-white/10 shadow-2xl animate-fadein">
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-1/2 flex flex-col bg-[#FFFFFF] border-l border-black/10 shadow-2xl animate-fadein">
         {children}
       </div>
     </>
@@ -130,19 +130,19 @@ function DrawerHeader({ title, subtitle, onClose, onBack }: {
   title: string; subtitle?: string; onClose: () => void; onBack?: () => void
 }) {
   return (
-    <div className="flex items-start justify-between p-5 border-b border-white/8 shrink-0">
+    <div className="flex items-start justify-between p-5 border-b border-black/8 shrink-0">
       <div className="flex items-start gap-2">
         {onBack && (
-          <button onClick={onBack} className="p-1.5 -ml-1 mt-0.5 rounded-lg text-white/40 hover:text-white hover:bg-white/8 transition-all shrink-0">
+          <button onClick={onBack} className="p-1.5 -ml-1 mt-0.5 rounded-lg text-black/40 hover:text-[#12181F] hover:bg-black/8 transition-all shrink-0">
             <ChevronLeft size={16} />
           </button>
         )}
         <div>
-          <h2 className="text-base font-bold text-white leading-tight">{title}</h2>
-          {subtitle && <p className="text-sm text-white/40 mt-0.5">{subtitle}</p>}
+          <h2 className="text-base font-bold text-[#12181F] leading-tight">{title}</h2>
+          {subtitle && <p className="text-sm text-black/40 mt-0.5">{subtitle}</p>}
         </div>
       </div>
-      <button onClick={onClose} className="p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/8 transition-all shrink-0">
+      <button onClick={onClose} className="p-2 rounded-xl text-black/30 hover:text-[#12181F] hover:bg-black/8 transition-all shrink-0">
         <X size={18} />
       </button>
     </div>
@@ -192,12 +192,12 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
   }, [reports.length, year, month])
 
   if (reports.length === 0) {
-    return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ยังไม่มีสาขาส่งรายงานประจำเดือน</div>
+    return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ยังไม่มีสาขาส่งรายงานประจำเดือน</div>
   }
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/30">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-black/30">
         <Loader2 size={24} className="animate-spin" />
         <p className="text-sm">กำลังโหลด...</p>
       </div>
@@ -206,7 +206,7 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+      <div className="flex-1 overflow-y-auto divide-y divide-black/5">
         {reports.map(r => {
           const agg = aggMap[r.branch_id]
           const nrwB = agg && agg.distBefore > 0 ? ((agg.distBefore - agg.soldBefore) / agg.distBefore) * 100 : null
@@ -220,12 +220,12 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
             <button
               key={r.branch_id}
               onClick={() => onSelect(r.branch_id)}
-              className="w-full text-left px-5 py-4 hover:bg-white/3 transition-colors flex items-start gap-3 group"
+              className="w-full text-left px-5 py-4 hover:bg-black/3 transition-colors flex items-start gap-3 group"
             >
               <div className="flex-1 min-w-0 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-white">{r.branches?.name_th ?? '—'}</span>
-                  {agg && <span className="text-[10px] text-white/25">{agg.areas} พื้นที่</span>}
+                  <span className="text-sm font-semibold text-[#12181F]">{r.branches?.name_th ?? '—'}</span>
+                  {agg && <span className="text-[10px] text-black/25">{agg.areas} พื้นที่</span>}
                 </div>
 
                 {/* Metrics row */}
@@ -233,9 +233,9 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
                   {/* NRW */}
                   {(nrwB != null || nrwA != null) && (
                     <div className="flex items-baseline gap-1">
-                      <span className="text-[10px] text-white/30">NRW</span>
-                      {nrwB != null && <span className="num text-xs text-white/50">{fmtNum(nrwB)}%</span>}
-                      {nrwB != null && nrwA != null && <span className="text-white/20 text-[10px]">→</span>}
+                      <span className="text-[10px] text-black/30">NRW</span>
+                      {nrwB != null && <span className="num text-xs text-black/50">{fmtNum(nrwB)}%</span>}
+                      {nrwB != null && nrwA != null && <span className="text-black/20 text-[10px]">→</span>}
                       {nrwA != null && (
                         <span className={cn('num text-xs font-bold', nrwA <= 20 ? 'text-green-400' : nrwA <= 25 ? 'text-amber-400' : 'text-red-400')}>
                           {fmtNum(nrwA)}%
@@ -251,9 +251,9 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
                   {/* MNF */}
                   {(mnfB != null || mnfA != null) && (
                     <div className="flex items-baseline gap-1">
-                      <span className="text-[10px] text-white/30">MNF</span>
-                      {mnfB != null && <span className="num text-xs text-white/50">{fmtNum(mnfB, 2)}</span>}
-                      {mnfB != null && mnfA != null && <span className="text-white/20 text-[10px]">→</span>}
+                      <span className="text-[10px] text-black/30">MNF</span>
+                      {mnfB != null && <span className="num text-xs text-black/50">{fmtNum(mnfB, 2)}</span>}
+                      {mnfB != null && mnfA != null && <span className="text-black/20 text-[10px]">→</span>}
                       {mnfA != null && (
                         <span className={cn('num text-xs font-bold', mnfImproved ? 'text-green-400' : 'text-red-400')}>
                           {fmtNum(mnfA, 2)}
@@ -264,19 +264,19 @@ function MonthlyDrawerContent({ reports, year, month, onSelect }: {
                           {mnfImproved ? '▼' : '▲'}{fmtNum(Math.abs(mnfA - mnfB), 2)}
                         </span>
                       )}
-                      <span className="text-[9px] text-white/20">ลบ.ม./ชม.</span>
+                      <span className="text-[9px] text-black/20">ลบ.ม./ชม.</span>
                     </div>
                   )}
-                  {!agg && <span className="text-[11px] text-white/20">ไม่มีข้อมูลตัวเลข</span>}
+                  {!agg && <span className="text-[11px] text-black/20">ไม่มีข้อมูลตัวเลข</span>}
                 </div>
               </div>
 
-              <ChevronDown size={14} className="text-white/20 group-hover:text-white/50 transition-colors shrink-0 mt-1 -rotate-90" />
+              <ChevronDown size={14} className="text-black/20 group-hover:text-black/50 transition-colors shrink-0 mt-1 -rotate-90" />
             </button>
           )
         })}
       </div>
-      <div className="shrink-0 border-t border-white/8 px-5 py-3 flex justify-end">
+      <div className="shrink-0 border-t border-black/8 px-5 py-3 flex justify-end">
         <Link href={`/pdca?year=${year}&month=${month}`} className="inline-flex items-center gap-1.5 text-xs text-cyan-400/70 hover:text-cyan-300 transition-colors">
           ดูรายงานทั้งหมด <ArrowRight size={12} />
         </Link>
@@ -306,7 +306,7 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/30">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-black/30">
         <Loader2 size={24} className="animate-spin" />
         <p className="text-sm">กำลังโหลด...</p>
       </div>
@@ -314,7 +314,7 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
   }
 
   if (areas.length === 0) {
-    return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ไม่พบข้อมูลพื้นที่</div>
+    return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ไม่พบข้อมูลพื้นที่</div>
   }
 
   return (
@@ -337,7 +337,7 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
             <div key={area.id} className="glass-card p-4 space-y-4 accent-bar-cyan">
               {/* Area header */}
               <div className="flex items-center justify-between gap-2">
-                <h3 className="font-semibold text-white text-sm leading-snug">{area.area_name}</h3>
+                <h3 className="font-semibold text-[#12181F] text-sm leading-snug">{area.area_name}</h3>
                 {obstCount > 0 && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/25 text-orange-300 font-bold shrink-0">
                     {obstCount} อุปสรรค
@@ -349,7 +349,7 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
               {hasAnyData && (
                 <div className="space-y-1.5">
                   {/* Header */}
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 text-[10px] font-bold uppercase tracking-widest text-white/25 px-0.5">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 text-[10px] font-bold uppercase tracking-widest text-black/25 px-0.5">
                     <span />
                     <span className="text-right w-16">ก่อน</span>
                     <span className="text-right w-16">หลัง</span>
@@ -361,17 +361,17 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
                     if (!hasBefore && !hasAfter) return null
                     const delta = hasBefore && hasAfter ? (row.after! - row.before!) : null
                     const improved = delta != null && (row.lowerBetter ? delta < 0 : delta > 0)
-                    const deltaColor = delta === null ? 'text-white/20' : improved ? 'text-green-400' : 'text-red-400'
+                    const deltaColor = delta === null ? 'text-black/20' : improved ? 'text-green-400' : 'text-red-400'
                     return (
-                      <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-baseline bg-white/3 rounded-lg px-3 py-2">
-                        <span className="text-[11px] text-white/50">{row.label}</span>
-                        <span className="num text-sm font-semibold text-white/70 text-right w-16">
+                      <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-baseline bg-black/3 rounded-lg px-3 py-2">
+                        <span className="text-[11px] text-black/50">{row.label}</span>
+                        <span className="num text-sm font-semibold text-black/70 text-right w-16">
                           {hasBefore ? `${fmtNum(row.before, row.dec)}` : '—'}
-                          {hasBefore && <span className="text-[9px] text-white/30 ml-0.5">{row.unit}</span>}
+                          {hasBefore && <span className="text-[9px] text-black/30 ml-0.5">{row.unit}</span>}
                         </span>
-                        <span className="num text-sm font-semibold text-white/70 text-right w-16">
+                        <span className="num text-sm font-semibold text-black/70 text-right w-16">
                           {hasAfter ? `${fmtNum(row.after, row.dec)}` : '—'}
-                          {hasAfter && <span className="text-[9px] text-white/30 ml-0.5">{row.unit}</span>}
+                          {hasAfter && <span className="text-[9px] text-black/30 ml-0.5">{row.unit}</span>}
                         </span>
                         <span className={cn('num text-xs font-bold text-right w-14', deltaColor)}>
                           {delta != null
@@ -386,18 +386,18 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
 
               {/* PDCA */}
               {(area.pdca_do || area.pdca_act) && (
-                <div className="space-y-2 border-t border-white/8 pt-3">
+                <div className="space-y-2 border-t border-black/8 pt-3">
                   <p className="text-[10px] font-bold text-blue-400/50 uppercase tracking-widest">Do / Act</p>
                   {area.pdca_do && (
                     <div>
-                      <p className="text-[10px] text-white/30 mb-1">D — สิ่งที่ดำเนินการ</p>
-                      <p className="text-sm text-white/75 leading-relaxed">{area.pdca_do}</p>
+                      <p className="text-[10px] text-black/30 mb-1">D — สิ่งที่ดำเนินการ</p>
+                      <p className="text-sm text-black/75 leading-relaxed">{area.pdca_do}</p>
                     </div>
                   )}
                   {area.pdca_act && (
                     <div>
-                      <p className="text-[10px] text-white/30 mb-1">A — แผนเดือนถัดไป</p>
-                      <p className="text-sm text-white/75 leading-relaxed">{area.pdca_act}</p>
+                      <p className="text-[10px] text-black/30 mb-1">A — แผนเดือนถัดไป</p>
+                      <p className="text-sm text-black/75 leading-relaxed">{area.pdca_act}</p>
                     </div>
                   )}
                 </div>
@@ -405,12 +405,12 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
 
               {/* Obstacles */}
               {area.area_obstacles && area.area_obstacles.length > 0 && (
-                <div className="space-y-2 border-t border-white/8 pt-3">
+                <div className="space-y-2 border-t border-black/8 pt-3">
                   <p className="text-[10px] font-bold text-orange-400/50 uppercase tracking-widest">อุปสรรค</p>
                   {area.area_obstacles.map((obs, i) => (
                     <div key={i} className="rounded-xl border border-orange-500/15 bg-orange-500/5 p-3 space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white/90">{obs.obstacle_type}</span>
+                        <span className="text-sm font-semibold text-black/90">{obs.obstacle_type}</span>
                         <span className={cn('ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full border',
                           obs.priority_order === 1
                             ? 'bg-red-500/20 border-red-500/35 text-red-300'
@@ -418,16 +418,16 @@ function MonthlyBranchDetailContent({ branchId, year, month }: { branchId: strin
                           {obs.priority_order === 1 ? 'สูง' : 'กลาง'}
                         </span>
                       </div>
-                      {obs.obstacle_detail && <p className="text-xs text-white/55 leading-relaxed">{obs.obstacle_detail}</p>}
+                      {obs.obstacle_detail && <p className="text-xs text-black/55 leading-relaxed">{obs.obstacle_detail}</p>}
                       {obs.resolution_plan && (
                         <div>
-                          <p className="text-[10px] text-white/30">แนวทางแก้ไข</p>
-                          <p className="text-xs text-white/65">{obs.resolution_plan}</p>
+                          <p className="text-[10px] text-black/30">แนวทางแก้ไข</p>
+                          <p className="text-xs text-black/65">{obs.resolution_plan}</p>
                         </div>
                       )}
                       {obs.region_support_needed && (
                         <div>
-                          <p className="text-[10px] text-white/30">ต้องการจากเขต</p>
+                          <p className="text-[10px] text-black/30">ต้องการจากเขต</p>
                           <p className="text-xs text-amber-300/80">{obs.region_support_needed}</p>
                         </div>
                       )}
@@ -449,7 +449,7 @@ function FiveTopicsListContent({ submitted, year, month, onSelect }: {
   submitted: SFiveTopic[]; year: number; month: number; onSelect: (id: string) => void
 }) {
   if (submitted.length === 0) {
-    return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ยังไม่มีสาขาส่งรายงาน 5 หัวข้อ</div>
+    return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ยังไม่มีสาขาส่งรายงาน 5 หัวข้อ</div>
   }
   const COLS = [
     { label: 'ข้อ 1\nStep Test', key: 't1_dma_count'       as const },
@@ -462,8 +462,8 @@ function FiveTopicsListContent({ submitted, year, month, onSelect }: {
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto overflow-x-auto">
         <table className="w-full text-sm min-w-[520px]">
-          <thead className="sticky top-0 bg-[#070e1c] z-10">
-            <tr className="border-b border-white/10 text-white/40 text-xs">
+          <thead className="sticky top-0 bg-[#FFFFFF] z-10">
+            <tr className="border-b border-black/10 text-black/40 text-xs">
               <th className="px-5 py-3 text-left font-medium">สาขา</th>
               {COLS.map(c => (
                 <th key={c.key} className="px-2 py-3 text-center font-medium whitespace-pre-line leading-tight">{c.label}</th>
@@ -477,13 +477,13 @@ function FiveTopicsListContent({ submitted, year, month, onSelect }: {
               const vals   = COLS.map(c => r[c.key])
               const filled = vals.filter(v => v != null).length
               return (
-                <tr key={r.branch_id} className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors">
-                  <td className="px-5 py-2.5 text-white/80 font-medium">{r.branches?.name_th ?? '—'}</td>
+                <tr key={r.branch_id} className="border-b border-black/5 last:border-0 hover:bg-black/3 transition-colors">
+                  <td className="px-5 py-2.5 text-black/80 font-medium">{r.branches?.name_th ?? '—'}</td>
                   {vals.map((v, i) => (
                     <td key={i} className="px-2 py-2.5 text-center">
                       {v != null
                         ? <span className="num text-xs text-green-300 font-semibold">{v.toLocaleString()}</span>
-                        : <Circle size={10} className="text-white/20 mx-auto" />}
+                        : <Circle size={10} className="text-black/20 mx-auto" />}
                     </td>
                   ))}
                   <td className="px-2 py-2.5 text-center">
@@ -503,7 +503,7 @@ function FiveTopicsListContent({ submitted, year, month, onSelect }: {
           </tbody>
         </table>
       </div>
-      <div className="shrink-0 border-t border-white/8 px-5 py-3 flex justify-end">
+      <div className="shrink-0 border-t border-black/8 px-5 py-3 flex justify-end">
         <Link href={`/five-topics?year=${year}&month=${month}`} className="inline-flex items-center gap-1.5 text-xs text-green-400/70 hover:text-green-300 transition-colors">
           ดูรายงานทั้งหมด <ArrowRight size={12} />
         </Link>
@@ -525,9 +525,9 @@ const BADGE_COLORS: Record<number, string> = {
 function NoteBlock({ text }: { text: string | null | undefined }) {
   if (!text) return null
   return (
-    <div className="flex gap-2 items-start bg-white/3 rounded-xl p-3 mt-1">
-      <span className="text-[10px] text-white/30 shrink-0 mt-0.5 font-bold tracking-wide uppercase">หมายเหตุ</span>
-      <p className="text-xs text-white/55 leading-relaxed">{text}</p>
+    <div className="flex gap-2 items-start bg-black/3 rounded-xl p-3 mt-1">
+      <span className="text-[10px] text-black/30 shrink-0 mt-0.5 font-bold tracking-wide uppercase">หมายเหตุ</span>
+      <p className="text-xs text-black/55 leading-relaxed">{text}</p>
     </div>
   )
 }
@@ -536,11 +536,11 @@ function MetricBlock({ label, value, unit, color }: {
   label: string; value: number | null | undefined; unit?: string; color: string
 }) {
   return (
-    <div className="bg-white/3 rounded-xl p-3">
-      <p className="text-[10px] text-white/40 mb-1.5">{label}</p>
+    <div className="bg-black/3 rounded-xl p-3">
+      <p className="text-[10px] text-black/40 mb-1.5">{label}</p>
       <div className="flex items-baseline gap-1">
         <span className={`num text-2xl font-bold ${color}`}>{value != null ? value.toLocaleString() : '—'}</span>
-        {unit && <span className="text-xs text-white/30">{unit}</span>}
+        {unit && <span className="text-xs text-black/30">{unit}</span>}
       </div>
     </div>
   )
@@ -549,8 +549,8 @@ function MetricBlock({ label, value, unit, color }: {
 function EmptyTopic() {
   return (
     <div className="flex flex-col items-center gap-2 py-6 text-center opacity-40">
-      <Circle size={24} className="text-white/30" />
-      <p className="text-sm text-white/40">ไม่มีข้อมูล</p>
+      <Circle size={24} className="text-black/30" />
+      <p className="text-sm text-black/40">ไม่มีข้อมูล</p>
     </div>
   )
 }
@@ -564,13 +564,13 @@ function DrawerTopicCard({ no, title, subtitle, filled, accentClass, children }:
         <div className="flex items-start gap-3">
           <span className={`shrink-0 w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold ${BADGE_COLORS[no]}`}>{no}</span>
           <div>
-            <p className="font-semibold text-white text-sm leading-snug">{title}</p>
-            <p className="text-xs text-white/40 mt-0.5">{subtitle}</p>
+            <p className="font-semibold text-[#12181F] text-sm leading-snug">{title}</p>
+            <p className="text-xs text-black/40 mt-0.5">{subtitle}</p>
           </div>
         </div>
-        {filled ? <CheckCircle2 size={16} className="text-green-400 shrink-0 mt-0.5" /> : <Circle size={16} className="text-white/20 shrink-0 mt-0.5" />}
+        {filled ? <CheckCircle2 size={16} className="text-green-400 shrink-0 mt-0.5" /> : <Circle size={16} className="text-black/20 shrink-0 mt-0.5" />}
       </div>
-      <div className="border-t border-white/8" />
+      <div className="border-t border-black/8" />
       {children}
     </div>
   )
@@ -592,7 +592,7 @@ function FiveTopicDetailContent({ id }: { id: string }) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-white/30">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-black/30">
         <Loader2 size={24} className="animate-spin" />
         <p className="text-sm">กำลังโหลด...</p>
       </div>
@@ -600,7 +600,7 @@ function FiveTopicDetailContent({ id }: { id: string }) {
   }
 
   const r = data
-  if (!r) return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ไม่พบข้อมูล</div>
+  if (!r) return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ไม่พบข้อมูล</div>
 
   const t1Filled = r.t1_dma_count != null
   const t2Filled = r.t2_leak_points != null
@@ -626,10 +626,10 @@ function FiveTopicDetailContent({ id }: { id: string }) {
             {r.status === 'submitted' ? 'ส่งแล้ว' : 'แบบร่าง'}
           </span>
           <span className={cn('inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border',
-            filledCount === 5 ? 'bg-green-500/10 text-green-400/80 border-green-500/20' : 'bg-white/5 text-white/40 border-white/10')}>
+            filledCount === 5 ? 'bg-green-500/10 text-green-400/80 border-green-500/20' : 'bg-black/5 text-black/40 border-black/10')}>
             กรอกข้อมูล {filledCount}/5 หัวข้อ
           </span>
-          {r.submitted_at && <span className="text-[11px] text-white/25 ml-auto">{formatThaiDate(r.submitted_at)}</span>}
+          {r.submitted_at && <span className="text-[11px] text-black/25 ml-auto">{formatThaiDate(r.submitted_at)}</span>}
         </div>
 
         {/* Overview strip */}
@@ -643,9 +643,9 @@ function FiveTopicDetailContent({ id }: { id: string }) {
           ].map(c => (
             <div key={c.no} className={cn('glass-card-sm p-2 flex flex-col items-center gap-1 text-center', c.accent, !c.filled && 'opacity-40')}>
               <span className={cn('w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold', BADGE_COLORS[c.no])}>{c.no}</span>
-              <span className="text-[8px] text-white/40 leading-tight">{c.label}</span>
-              {c.filled ? <CheckCircle2 size={12} className="text-green-400" /> : <Circle size={12} className="text-white/20" />}
-              <span className={cn('num text-xs font-bold', c.filled ? c.color : 'text-white/20')}>
+              <span className="text-[8px] text-black/40 leading-tight">{c.label}</span>
+              {c.filled ? <CheckCircle2 size={12} className="text-green-400" /> : <Circle size={12} className="text-black/20" />}
+              <span className={cn('num text-xs font-bold', c.filled ? c.color : 'text-black/20')}>
                 {c.value != null ? c.value.toLocaleString() : '—'}
               </span>
             </div>
@@ -658,7 +658,7 @@ function FiveTopicDetailContent({ id }: { id: string }) {
             <div className="space-y-3">
               <div className="flex items-baseline gap-2">
                 <span className="num text-4xl font-bold text-cyan-300">{r.t1_dma_count?.toLocaleString() ?? '—'}</span>
-                <span className="text-white/40 text-sm">DMA</span>
+                <span className="text-black/40 text-sm">DMA</span>
               </div>
               {r.t1_areas && r.t1_areas.length > 0 && (
                 <div>
@@ -666,8 +666,8 @@ function FiveTopicDetailContent({ id }: { id: string }) {
                   <div className="space-y-1.5">
                     {r.t1_areas.map((a, i) => (
                       <div key={i} className="glass-card-sm flex justify-between items-center px-3 py-2">
-                        <span className="text-sm text-white/80">{a.area_name || '—'}</span>
-                        <span className="num text-xs text-white/40">{a.conducted_date ? formatThaiDate(a.conducted_date) : '—'}</span>
+                        <span className="text-sm text-black/80">{a.area_name || '—'}</span>
+                        <span className="num text-xs text-black/40">{a.conducted_date ? formatThaiDate(a.conducted_date) : '—'}</span>
                       </div>
                     ))}
                   </div>
@@ -675,8 +675,8 @@ function FiveTopicDetailContent({ id }: { id: string }) {
               )}
               {(!r.t1_areas || r.t1_areas.length === 0) && r.t1_conducted_date && (
                 <div className="flex justify-between text-sm py-1.5">
-                  <span className="text-white/50">วันที่ดำเนินการ</span>
-                  <span className="text-white/70">{formatThaiDate(r.t1_conducted_date)}</span>
+                  <span className="text-black/50">วันที่ดำเนินการ</span>
+                  <span className="text-black/70">{formatThaiDate(r.t1_conducted_date)}</span>
                 </div>
               )}
               <NoteBlock text={r.t1_notes} />
@@ -695,25 +695,25 @@ function FiveTopicDetailContent({ id }: { id: string }) {
               {repairRatio != null && (
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-white/40">อัตราซ่อมสำเร็จ</span>
-                    <span className="num text-white/70 font-semibold">{repairRatio}%</span>
+                    <span className="text-black/40">อัตราซ่อมสำเร็จ</span>
+                    <span className="num text-black/70 font-semibold">{repairRatio}%</span>
                   </div>
                   <div className="prog-bg">
                     <div className={`prog-fill ${repairRatio >= 80 ? 'prog-good' : repairRatio >= 50 ? 'prog-warn' : 'prog-bad'}`} style={{ width: `${Math.min(repairRatio, 100)}%` }} />
                   </div>
                 </div>
               )}
-              <div className="space-y-1 divide-y divide-white/5">
+              <div className="space-y-1 divide-y divide-black/5">
                 {r.t2_frequency != null && (
                   <div className="flex justify-between text-sm py-1.5">
-                    <span className="text-white/50">จำนวนครั้ง/เดือน</span>
-                    <span className="num text-white/80">{r.t2_frequency} ครั้ง</span>
+                    <span className="text-black/50">จำนวนครั้ง/เดือน</span>
+                    <span className="num text-black/80">{r.t2_frequency} ครั้ง</span>
                   </div>
                 )}
                 {r.t2_water_loss_m3h != null && (
                   <div className="flex justify-between text-sm py-1.5">
-                    <span className="text-white/50">ปริมาณน้ำสูญเสีย</span>
-                    <span className="num text-white/80">{r.t2_water_loss_m3h.toLocaleString()} ลบ.ม./ชม.</span>
+                    <span className="text-black/50">ปริมาณน้ำสูญเสีย</span>
+                    <span className="num text-black/80">{r.t2_water_loss_m3h.toLocaleString()} ลบ.ม./ชม.</span>
                   </div>
                 )}
               </div>
@@ -731,9 +731,9 @@ function FiveTopicDetailContent({ id }: { id: string }) {
                 <MetricBlock label="PRV" value={r.t3_prv_pm_count} unit="แห่ง" color="text-violet-300" />
                 <MetricBlock label="P3"  value={r.t3_p3_pm_count}  unit="แห่ง" color="text-violet-300" />
               </div>
-              <div className="flex justify-between text-sm py-1.5 border-t border-white/8 pt-3">
-                <span className="text-white/50">รวมทั้งหมด</span>
-                <span className="num text-white font-bold">{t3Total} แห่ง</span>
+              <div className="flex justify-between text-sm py-1.5 border-t border-black/8 pt-3">
+                <span className="text-black/50">รวมทั้งหมด</span>
+                <span className="num text-[#12181F] font-bold">{t3Total} แห่ง</span>
               </div>
               <NoteBlock text={r.t3_notes} />
             </div>
@@ -759,8 +759,8 @@ function FiveTopicDetailContent({ id }: { id: string }) {
             <div className="space-y-2">
               <div className="flex flex-col items-center py-4 gap-1">
                 <span className="num text-5xl font-bold text-green-300">{r.t5_meters_replaced?.toLocaleString()}</span>
-                <span className="text-white/40 text-sm">เครื่อง</span>
-                <p className="text-[11px] text-white/25 mt-1">มาตรวัดน้ำชำรุดที่เปลี่ยนแทนแล้ว (MM-01)</p>
+                <span className="text-black/40 text-sm">เครื่อง</span>
+                <p className="text-[11px] text-black/25 mt-1">มาตรวัดน้ำชำรุดที่เปลี่ยนแทนแล้ว (MM-01)</p>
               </div>
               <NoteBlock text={r.t5_notes} />
             </div>
@@ -776,7 +776,7 @@ function FiveTopicDetailContent({ id }: { id: string }) {
 
 function ObstacleDrawerContent({ obstacles }: { obstacles: SObstacle[] }) {
   if (obstacles.length === 0) {
-    return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ไม่มีอุปสรรคเร่งด่วน</div>
+    return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ไม่มีอุปสรรคเร่งด่วน</div>
   }
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -786,22 +786,22 @@ function ObstacleDrawerContent({ obstacles }: { obstacles: SObstacle[] }) {
             <span className="num text-sm text-amber-400/50 shrink-0 w-5 text-right mt-0.5 font-bold">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                <span className="text-sm font-semibold text-white/90">{obs.branches?.name_th}</span>
+                <span className="text-sm font-semibold text-black/90">{obs.branches?.name_th}</span>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/20">
                   {obs.obstacle_type}
                 </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 border border-white/10">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/5 text-black/40 border border-black/10">
                   {obs.status}
                 </span>
               </div>
               {obs.data_quality_impact && (
-                <p className="text-sm text-white/50 leading-relaxed">{obs.data_quality_impact}</p>
+                <p className="text-sm text-black/50 leading-relaxed">{obs.data_quality_impact}</p>
               )}
             </div>
           </div>
         ))}
       </div>
-      <div className="shrink-0 border-t border-white/8 px-5 py-3 flex justify-end">
+      <div className="shrink-0 border-t border-black/8 px-5 py-3 flex justify-end">
         <Link href="/obstacle" className="inline-flex items-center gap-1.5 text-xs text-amber-400/70 hover:text-amber-300 transition-colors">
           ดูอุปสรรคทั้งหมด <ArrowRight size={12} />
         </Link>
@@ -814,7 +814,7 @@ function ObstacleDrawerContent({ obstacles }: { obstacles: SObstacle[] }) {
 
 function ActionDrawerContent({ actions }: { actions: SAction[] }) {
   if (actions.length === 0) {
-    return <div className="flex-1 flex items-center justify-center text-white/30 text-sm">ไม่มี Action เกินกำหนด</div>
+    return <div className="flex-1 flex items-center justify-center text-black/30 text-sm">ไม่มี Action เกินกำหนด</div>
   }
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -823,9 +823,9 @@ function ActionDrawerContent({ actions }: { actions: SAction[] }) {
           <div key={action.id} className="flex gap-3 items-start p-4 bg-red-500/5 border border-red-500/15 rounded-xl">
             <span className="num text-xs text-red-400 font-mono shrink-0 mt-0.5 w-14 pt-0.5">{action.code}</span>
             <div className="flex-1 min-w-0">
-              {action.branches?.name_th && <p className="text-[11px] text-white/40 mb-1">{action.branches.name_th}</p>}
-              <p className="text-sm text-white/85 leading-snug font-medium">{action.title}</p>
-              {action.owner && <p className="text-xs text-white/30 mt-1">{action.owner}</p>}
+              {action.branches?.name_th && <p className="text-[11px] text-black/40 mb-1">{action.branches.name_th}</p>}
+              <p className="text-sm text-black/85 leading-snug font-medium">{action.title}</p>
+              {action.owner && <p className="text-xs text-black/30 mt-1">{action.owner}</p>}
             </div>
             {action.due_date && (
               <span className="num text-[11px] text-red-400/80 shrink-0 whitespace-nowrap mt-0.5">
@@ -835,7 +835,7 @@ function ActionDrawerContent({ actions }: { actions: SAction[] }) {
           </div>
         ))}
       </div>
-      <div className="shrink-0 border-t border-white/8 px-5 py-3 flex justify-end">
+      <div className="shrink-0 border-t border-black/8 px-5 py-3 flex justify-end">
         <Link href="/action" className="inline-flex items-center gap-1.5 text-xs text-red-400/70 hover:text-red-300 transition-colors">
           ดู Action ทั้งหมด <ArrowRight size={12} />
         </Link>
@@ -896,7 +896,7 @@ export function SummaryCards({
 
         {/* NRW — non-clickable, same flex structure */}
         <div className="glass-card-sm px-4 pt-3 pb-3 border-t-2 border-t-cyan-500/70 flex flex-col h-full">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 leading-tight min-h-[2rem] flex items-start">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-black/40 leading-tight min-h-[2rem] flex items-start">
             NRW เฉลี่ยเขต
           </p>
           <div className="flex-1 flex items-end mt-1">
@@ -905,7 +905,7 @@ export function SummaryCards({
               <p className="text-[10px] text-cyan-400/50 mt-0.5">ค่าเฉลี่ย</p>
             </div>
           </div>
-          <p className="text-[10px] text-white/25 mt-2">จาก {reportsWithNrwCount} สาขา</p>
+          <p className="text-[10px] text-black/25 mt-2">จาก {reportsWithNrwCount} สาขา</p>
         </div>
 
         <CardBtn id="monthly" label="รายงานประจำเดือน / PDCA" sub={`จาก ${totalBranches} สาขา`} isOpen={openPanel === 'monthly'} onOpen={openDrawer}>
@@ -914,7 +914,7 @@ export function SummaryCards({
               <p className="num text-2xl font-bold text-green-400">{reports.length}</p>
               <p className="text-[10px] text-green-400/60 mt-0.5">ส่งแล้ว</p>
             </div>
-            <div className="w-px h-7 bg-white/10" />
+            <div className="w-px h-7 bg-black/10" />
             <div>
               <p className="num text-2xl font-bold text-red-400">{notSubmitted.length}</p>
               <p className="text-[10px] text-red-400/60 mt-0.5">ยังไม่ส่ง</p>
@@ -928,7 +928,7 @@ export function SummaryCards({
               <p className="num text-2xl font-bold text-green-400">{fiveTopics.length}</p>
               <p className="text-[10px] text-green-400/60 mt-0.5">ส่งแล้ว</p>
             </div>
-            <div className="w-px h-7 bg-white/10" />
+            <div className="w-px h-7 bg-black/10" />
             <div>
               <p className="num text-2xl font-bold text-red-400">{fiveNotSubmitted.length}</p>
               <p className="text-[10px] text-red-400/60 mt-0.5">ยังไม่ส่ง</p>

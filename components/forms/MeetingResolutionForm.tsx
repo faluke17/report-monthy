@@ -55,11 +55,11 @@ function calcDueDate(dueDays: number): string {
 }
 
 const fieldClass =
-  'w-full bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 resize-none'
+  'w-full bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 resize-none'
 
-const labelClass = 'block text-[11px] font-semibold text-white/40 uppercase tracking-wider mb-1.5'
+const labelClass = 'block text-[11px] font-semibold text-black/40 uppercase tracking-wider mb-1.5'
 
-const sectionClass = 'space-y-3 p-4 rounded-xl bg-white/3 border border-white/8'
+const sectionClass = 'space-y-3 p-4 rounded-xl bg-black/3 border border-black/8'
 
 interface Props {
   meeting: Meeting
@@ -120,17 +120,17 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
     <div className="space-y-3">
       {/* Section 1 */}
       <div className={sectionClass}>
-        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">ที่มาและความสำคัญ</p>
+        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">ที่มาและความสำคัญ</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>แหล่งที่มา</label>
             <Select value={form.source} onValueChange={v => set('source', v)}>
-              <SelectTrigger className="h-9 bg-[#0c1a30] border-white/15 text-sm text-white focus:ring-cyan-500/30 focus:border-cyan-500/50">
+              <SelectTrigger className="h-9 bg-[#FFFFFF] border-black/15 text-sm text-[#12181F] focus:ring-cyan-500/30 focus:border-cyan-500/50">
                 <SelectValue placeholder="เลือกแหล่งที่มา" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0c1a30] border-white/15">
+              <SelectContent className="bg-[#FFFFFF] border-black/15">
                 {SOURCES.map(s => (
-                  <SelectItem key={s} value={s} className="text-white focus:bg-white/10">{s}</SelectItem>
+                  <SelectItem key={s} value={s} className="text-[#12181F] focus:bg-black/10">{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -138,17 +138,17 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
           <div>
             <label className={labelClass}>ระดับความสำคัญ</label>
             <Select value={form.priority} onValueChange={v => set('priority', v as 'สูง' | 'กลาง')}>
-              <SelectTrigger className="h-9 bg-[#0c1a30] border-white/15 text-sm text-white focus:ring-cyan-500/30 focus:border-cyan-500/50">
+              <SelectTrigger className="h-9 bg-[#FFFFFF] border-black/15 text-sm text-[#12181F] focus:ring-cyan-500/30 focus:border-cyan-500/50">
                 <SelectValue placeholder="เลือกระดับ" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0c1a30] border-white/15">
-                <SelectItem value="สูง" className="text-white focus:bg-white/10">
+              <SelectContent className="bg-[#FFFFFF] border-black/15">
+                <SelectItem value="สูง" className="text-[#12181F] focus:bg-black/10">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
                     สูง
                   </span>
                 </SelectItem>
-                <SelectItem value="กลาง" className="text-white focus:bg-white/10">
+                <SelectItem value="กลาง" className="text-[#12181F] focus:bg-black/10">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
                     กลาง
@@ -184,17 +184,17 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
 
       {/* Section 2 */}
       <div className={sectionClass}>
-        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">ผู้รับผิดชอบและกำหนดการ</p>
+        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">ผู้รับผิดชอบและกำหนดการ</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className={labelClass}>สาขา</label>
             <Select value={form.responsible_branch} onValueChange={v => set('responsible_branch', v)}>
-              <SelectTrigger className="h-9 bg-[#0c1a30] border-white/15 text-sm text-white focus:ring-cyan-500/30 focus:border-cyan-500/50">
+              <SelectTrigger className="h-9 bg-[#FFFFFF] border-black/15 text-sm text-[#12181F] focus:ring-cyan-500/30 focus:border-cyan-500/50">
                 <SelectValue placeholder="เลือกสาขา" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0c1a30] border-white/15 max-h-60">
+              <SelectContent className="bg-[#FFFFFF] border-black/15 max-h-60">
                 {PWA_BRANCHES.map(b => (
-                  <SelectItem key={b.costcenter} value={b.costcenter} className="text-white focus:bg-white/10">
+                  <SelectItem key={b.costcenter} value={b.costcenter} className="text-[#12181F] focus:bg-black/10">
                     {b.name_th}
                   </SelectItem>
                 ))}
@@ -205,12 +205,12 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
           <div>
             <label className={labelClass}>หน่วยงาน</label>
             <Select value={form.responsible_dept} onValueChange={v => set('responsible_dept', v)}>
-              <SelectTrigger className="h-9 bg-[#0c1a30] border-white/15 text-sm text-white focus:ring-cyan-500/30 focus:border-cyan-500/50">
+              <SelectTrigger className="h-9 bg-[#FFFFFF] border-black/15 text-sm text-[#12181F] focus:ring-cyan-500/30 focus:border-cyan-500/50">
                 <SelectValue placeholder="เลือกหน่วยงาน" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0c1a30] border-white/15">
+              <SelectContent className="bg-[#FFFFFF] border-black/15">
                 {DEPTS.map(d => (
-                  <SelectItem key={d} value={d} className="text-white focus:bg-white/10">{d}</SelectItem>
+                  <SelectItem key={d} value={d} className="text-[#12181F] focus:bg-black/10">{d}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -222,12 +222,12 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
               value={form.due_days ? String(form.due_days) : ''}
               onValueChange={v => set('due_days', Number(v) as DueDays)}
             >
-              <SelectTrigger className="h-9 bg-[#0c1a30] border-white/15 text-sm text-white focus:ring-cyan-500/30 focus:border-cyan-500/50">
+              <SelectTrigger className="h-9 bg-[#FFFFFF] border-black/15 text-sm text-[#12181F] focus:ring-cyan-500/30 focus:border-cyan-500/50">
                 <SelectValue placeholder="เลือก" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0c1a30] border-white/15">
+              <SelectContent className="bg-[#FFFFFF] border-black/15">
                 {DUE_DAYS.map(d => (
-                  <SelectItem key={d} value={String(d)} className="text-white focus:bg-white/10">
+                  <SelectItem key={d} value={String(d)} className="text-[#12181F] focus:bg-black/10">
                     {d} วัน
                   </SelectItem>
                 ))}
@@ -239,7 +239,7 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
 
       {/* Section 3 */}
       <div className={sectionClass}>
-        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">หมายเหตุ</p>
+        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">หมายเหตุ</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelClass}>หมายเหตุผู้บริหาร</label>
@@ -285,47 +285,47 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
                 </span>
               )}
               {form.source && (
-                <span className="text-[11px] px-2 py-0.5 rounded-full border bg-white/5 text-white/50 border-white/15">
+                <span className="text-[11px] px-2 py-0.5 rounded-full border bg-black/5 text-black/50 border-black/15">
                   {form.source}
                 </span>
               )}
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-white leading-snug">{form.title}</p>
+              <p className="text-sm font-semibold text-[#12181F] leading-snug">{form.title}</p>
               {form.detail && (
-                <p className="text-xs text-white/50 mt-1 whitespace-pre-line">{form.detail}</p>
+                <p className="text-xs text-black/50 mt-1 whitespace-pre-line">{form.detail}</p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               {selectedBranchName && (
-                <p className="text-white/40">
-                  สาขา: <span className="text-white/70">{selectedBranchName}</span>
+                <p className="text-black/40">
+                  สาขา: <span className="text-black/70">{selectedBranchName}</span>
                 </p>
               )}
               {form.responsible_dept && (
-                <p className="text-white/40">
-                  หน่วยงาน: <span className="text-white/70">{form.responsible_dept}</span>
+                <p className="text-black/40">
+                  หน่วยงาน: <span className="text-black/70">{form.responsible_dept}</span>
                 </p>
               )}
               {form.due_days > 0 && (
-                <p className="text-white/40">
+                <p className="text-black/40">
                   กำหนดส่ง: <span className="text-cyan-400/80">{calcDueDate(form.due_days)}</span>
                 </p>
               )}
             </div>
 
             {(form.admin_notes || form.tracking_notes) && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs border-t border-white/8 pt-2">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs border-t border-black/8 pt-2">
                 {form.admin_notes && (
-                  <p className="text-white/40">
-                    หมายเหตุ: <span className="text-white/60">{form.admin_notes}</span>
+                  <p className="text-black/40">
+                    หมายเหตุ: <span className="text-black/60">{form.admin_notes}</span>
                   </p>
                 )}
                 {form.tracking_notes && (
-                  <p className="text-white/40">
-                    ติดตาม: <span className="text-white/60">{form.tracking_notes}</span>
+                  <p className="text-black/40">
+                    ติดตาม: <span className="text-black/60">{form.tracking_notes}</span>
                   </p>
                 )}
               </div>
@@ -339,9 +339,9 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
                 type="checkbox"
                 checked={form.notify_branch}
                 onChange={e => set('notify_branch', e.target.checked)}
-                className="w-4 h-4 rounded border-white/20 bg-[#0c1a30] accent-cyan-500"
+                className="w-4 h-4 rounded border-black/20 bg-[#FFFFFF] accent-cyan-500"
               />
-              <span className="text-xs text-white/60">
+              <span className="text-xs text-black/60">
                 ส่งแจ้งเตือนไปยังสาขา
                 {selectedBranchName && (
                   <span className="text-cyan-400 font-medium ml-1">{selectedBranchName}</span>
@@ -355,8 +355,8 @@ export function MeetingResolutionForm({ meeting, sequenceStart, onSaved }: Props
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all',
                 isPending
-                  ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                  : 'bg-cyan-500 hover:bg-cyan-400 text-[#061327]'
+                  ? 'bg-black/10 text-black/30 cursor-not-allowed'
+                  : 'bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF]'
               )}
             >
               {isPending ? 'กำลังบันทึก...' : 'บันทึกข้อสั่งการ'}

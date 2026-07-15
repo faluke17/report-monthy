@@ -28,21 +28,21 @@ export function MonthYearPicker({ activeYear, activeMonth }: { activeYear: numbe
   return (
     <div className="flex flex-wrap items-center gap-2">
       {/* Year selector */}
-      <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5">
+      <div className="flex items-center gap-1 bg-black/5 border border-black/10 rounded-xl px-2 py-1.5">
         <button
           onClick={() => nav(activeYear - 1, activeMonth)}
           disabled={activeYear <= currentYear - 2}
-          className="text-white/40 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-0.5"
+          className="text-black/40 hover:text-[#12181F] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-0.5"
         >
           <ChevronLeft size={14} />
         </button>
-        <span className="num text-sm font-semibold text-white px-1.5 min-w-[3.5rem] text-center">
+        <span className="num text-sm font-semibold text-[#12181F] px-1.5 min-w-[3.5rem] text-center">
           {toThaiYear(activeYear)}
         </span>
         <button
           onClick={() => nav(activeYear + 1, activeMonth)}
           disabled={activeYear >= currentYear}
-          className="text-white/40 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-0.5"
+          className="text-black/40 hover:text-[#12181F] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-0.5"
         >
           <ChevronRight size={14} />
         </button>
@@ -61,10 +61,10 @@ export function MonthYearPicker({ activeYear, activeMonth }: { activeYear: numbe
               disabled={future}
               className={
                 selected
-                  ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-[#061327] shadow-[0_0_12px_rgba(125,211,252,0.4)] transition-all'
+                  ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-[#FFFFFF] shadow-[0_0_12px_rgba(11,110,118,0.4)] transition-all'
                   : future
-                  ? 'px-3 py-1.5 rounded-xl text-xs text-white/20 cursor-not-allowed'
-                  : 'px-3 py-1.5 rounded-xl text-xs text-white/50 bg-white/5 hover:bg-white/10 hover:text-white transition-all'
+                  ? 'px-3 py-1.5 rounded-xl text-xs text-black/20 cursor-not-allowed'
+                  : 'px-3 py-1.5 rounded-xl text-xs text-black/50 bg-black/5 hover:bg-black/10 hover:text-[#12181F] transition-all'
               }
             >
               {label}

@@ -48,8 +48,8 @@ export function NotificationBell({
         style={{ border: '1px solid transparent' }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLElement
-          el.style.background = 'rgba(71,130,255,.09)'
-          el.style.borderColor = 'rgba(71,130,255,.18)'
+          el.style.background = '#F5F6F8'
+          el.style.borderColor = '#E3E7EC'
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLElement
@@ -57,15 +57,14 @@ export function NotificationBell({
           el.style.borderColor = 'transparent'
         }}
       >
-        <Bell size={17} style={{ color: totalCount > 0 ? '#FCD34D' : '#3D5380' }} />
+        <Bell size={17} style={{ color: totalCount > 0 ? '#A8721A' : '#8896A3' }} />
         {totalCount > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[9px] font-bold px-1"
             style={{
-              background: '#F87171',
+              background: '#B3392C',
               color: '#fff',
               fontFamily: 'var(--font-mono)',
-              boxShadow: '0 0 8px rgba(248,113,113,.50)',
             }}
           >
             {totalCount > 99 ? '99+' : totalCount}
@@ -78,28 +77,28 @@ export function NotificationBell({
         <div
           className="absolute right-0 top-12 w-[320px] anim-slide-down z-50 overflow-hidden"
           style={{
-            background: '#07102A',
-            border: '1px solid rgba(71,130,255,.20)',
+            background: '#FFFFFF',
+            border: '1px solid #E3E7EC',
             borderRadius: '14px',
-            boxShadow: '0 20px 60px rgba(0,0,0,.70), 0 0 0 1px rgba(71,130,255,.06) inset',
+            boxShadow: '0 12px 36px rgba(18,24,31,.12)',
           }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: '1px solid rgba(71,130,255,.10)' }}
+            style={{ borderBottom: '1px solid #E3E7EC' }}
           >
             <div className="flex items-center gap-2">
-              <Bell size={13} style={{ color: '#4782FF' }} />
-              <span className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>การแจ้งเตือน</span>
+              <Bell size={13} style={{ color: '#0B6E76' }} />
+              <span className="text-[13px] font-semibold" style={{ color: '#12181F' }}>การแจ้งเตือน</span>
             </div>
             {totalCount > 0 && (
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded"
                 style={{
-                  background: 'rgba(248,113,113,.14)',
-                  color: '#F87171',
-                  border: '1px solid rgba(248,113,113,.26)',
+                  background: '#FBEAE8',
+                  color: '#B3392C',
+                  border: '1px solid #B3392C40',
                   fontFamily: 'var(--font-mono)',
                 }}
               >
@@ -115,28 +114,28 @@ export function NotificationBell({
               <div className="px-3 pt-3 pb-1">
                 <p
                   className="text-[9px] font-bold uppercase tracking-[.18em] mb-2 px-1"
-                  style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#8896A3', fontFamily: 'var(--font-mono)' }}
                 >
                   ข้อสั่งการ / ประชุม
                 </p>
                 <button
                   onClick={() => { setOpen(false); router.push('/notify') }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
-                  style={{ border: '1px solid rgba(248,113,113,.14)', background: 'rgba(248,113,113,.06)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,.10)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,.06)' }}
+                  style={{ border: '1px solid #B3392C25', background: '#FBEAE8' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F7DDDA' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FBEAE8' }}
                 >
                   <span
                     className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(248,113,113,.14)' }}
+                    style={{ background: '#F7DDDA' }}
                   >
-                    <Bell size={13} style={{ color: '#F87171' }} />
+                    <Bell size={13} style={{ color: '#B3392C' }} />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium" style={{ color: '#E4ECFF' }}>ข้อสั่งการ / ประชุม</p>
-                    <p className="text-[11px]" style={{ color: '#F87171' }}>{notifyCount} รายการรอรับทราบ</p>
+                    <p className="text-[13px] font-medium" style={{ color: '#12181F' }}>ข้อสั่งการ / ประชุม</p>
+                    <p className="text-[11px]" style={{ color: '#B3392C' }}>{notifyCount} รายการรอรับทราบ</p>
                   </div>
-                  <ChevronRight size={13} style={{ color: '#3D5380' }} />
+                  <ChevronRight size={13} style={{ color: '#8896A3' }} />
                 </button>
               </div>
             )}
@@ -146,14 +145,14 @@ export function NotificationBell({
               <div className="px-3 pt-3 pb-2">
                 <p
                   className="text-[9px] font-bold uppercase tracking-[.18em] mb-2 px-1"
-                  style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}
+                  style={{ color: '#8896A3', fontFamily: 'var(--font-mono)' }}
                 >
                   {isRegion ? 'ภาพรวมการส่งข้อมูล' : 'สิ่งที่ต้องดำเนินการ'}
                 </p>
                 <div className="space-y-3">
                   {meetings.map((m) => (
                     <div key={m.id} className="space-y-1.5">
-                      <p className="text-[11px] font-semibold px-1 truncate" style={{ color: '#7B9CCC' }}>
+                      <p className="text-[11px] font-semibold px-1 truncate" style={{ color: '#4B5563' }}>
                         {m.title}
                       </p>
                       {m.requirements.map((req) => {
@@ -169,49 +168,49 @@ export function NotificationBell({
                             onClick={() => { setOpen(false); router.push(href) }}
                             className="w-full text-left px-3 py-2.5 rounded-xl transition-all"
                             style={{
-                              border: `1px solid ${done ? 'rgba(52,211,153,.16)' : 'rgba(71,130,255,.14)'}`,
-                              background: done ? 'rgba(52,211,153,.05)' : 'rgba(71,130,255,.06)',
+                              border: `1px solid ${done ? '#1E7A5A30' : '#E3E7EC'}`,
+                              background: done ? '#E7F3EE' : '#F5F6F8',
                             }}
                             onMouseEnter={e => {
-                              (e.currentTarget as HTMLElement).style.background = done ? 'rgba(52,211,153,.08)' : 'rgba(71,130,255,.10)'
+                              (e.currentTarget as HTMLElement).style.background = done ? '#DCEEE5' : '#EFF2F5'
                             }}
                             onMouseLeave={e => {
-                              (e.currentTarget as HTMLElement).style.background = done ? 'rgba(52,211,153,.05)' : 'rgba(71,130,255,.06)'
+                              (e.currentTarget as HTMLElement).style.background = done ? '#E7F3EE' : '#F5F6F8'
                             }}
                           >
                             <div className="flex items-center gap-2 mb-1.5">
                               <span
                                 className="w-5 h-5 rounded flex items-center justify-center shrink-0"
-                                style={{ background: done ? 'rgba(52,211,153,.18)' : 'rgba(252,211,77,.14)' }}
+                                style={{ background: done ? '#D5EBE1' : '#FBF1E1' }}
                               >
                                 {done
-                                  ? <CheckCircle size={11} style={{ color: '#34D399' }} />
-                                  : <Clock       size={11} style={{ color: '#FCD34D' }} />
+                                  ? <CheckCircle size={11} style={{ color: '#1E7A5A' }} />
+                                  : <Clock       size={11} style={{ color: '#A8721A' }} />
                                 }
                               </span>
                               <span
                                 className="text-[12px] font-medium flex-1 truncate"
-                                style={{ color: done ? '#7B9CCC' : '#E4ECFF' }}
+                                style={{ color: done ? '#4B5563' : '#12181F' }}
                               >
                                 {req.title}
                               </span>
                               {!isRegion && !done && (
-                                <ChevronRight size={11} style={{ color: '#4782FF' }} />
+                                <ChevronRight size={11} style={{ color: '#0B6E76' }} />
                               )}
                             </div>
 
                             {isRegion && (
                               <div className="pl-7 space-y-1">
-                                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(71,130,255,.10)' }}>
+                                <div className="h-1 rounded-full overflow-hidden" style={{ background: '#E3E7EC' }}>
                                   <div
                                     className="h-full rounded-full transition-all duration-500"
                                     style={{
                                       width: `${pct}%`,
-                                      background: done ? '#34D399' : '#4782FF',
+                                      background: done ? '#1E7A5A' : '#0B6E76',
                                     }}
                                   />
                                 </div>
-                                <p className="text-[10px]" style={{ color: '#3D5380' }}>
+                                <p className="text-[10px]" style={{ color: '#8896A3' }}>
                                   {fulfilled}/{total} สาขา
                                   {req.due_date && (
                                     <span className="ml-2">
@@ -226,7 +225,7 @@ export function NotificationBell({
                             )}
 
                             {!isRegion && req.target_month && (
-                              <p className="text-[10px] pl-7" style={{ color: '#3D5380' }}>
+                              <p className="text-[10px] pl-7" style={{ color: '#8896A3' }}>
                                 ข้อมูล {MONTH_TH[req.target_month]}
                                 {req.due_date && ` · ครบ ${new Date(req.due_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}`}
                               </p>
@@ -245,14 +244,14 @@ export function NotificationBell({
               <div className="flex flex-col items-center gap-3 py-10 px-4">
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(52,211,153,.10)', border: '1px solid rgba(52,211,153,.20)' }}
+                  style={{ background: '#E7F3EE', border: '1px solid #1E7A5A30' }}
                 >
-                  <CheckCircle size={22} style={{ color: '#34D399' }} />
+                  <CheckCircle size={22} style={{ color: '#1E7A5A' }} />
                 </div>
-                <p className="text-[13px] text-center" style={{ color: '#7B9CCC' }}>
+                <p className="text-[13px] text-center" style={{ color: '#4B5563' }}>
                   ไม่มีรายการค้าง
                 </p>
-                <p className="text-[11px] text-center" style={{ color: '#3D5380' }}>
+                <p className="text-[11px] text-center" style={{ color: '#8896A3' }}>
                   ทุกอย่างเรียบร้อยดี
                 </p>
               </div>
@@ -260,12 +259,12 @@ export function NotificationBell({
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid rgba(71,130,255,.10)' }}>
+          <div style={{ borderTop: '1px solid #E3E7EC' }}>
             <button
               onClick={() => { setOpen(false); router.push('/notify') }}
               className="w-full flex items-center justify-between px-4 py-2.5 transition-colors text-[12px]"
-              style={{ color: '#4782FF' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(71,130,255,.06)' }}
+              style={{ color: '#0B6E76' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F5F6F8' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
             >
               <span className="flex items-center gap-1.5">

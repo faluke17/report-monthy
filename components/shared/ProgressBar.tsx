@@ -21,14 +21,14 @@ export function ProgressBar({ value, showLabel = false, size = 'md', className }
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <div className={cn('flex-1 bg-white/10 rounded-full overflow-hidden', height)}>
+      <div className={cn('flex-1 bg-black/10 rounded-full overflow-hidden', height)}>
         <div
           className={cn('h-full rounded-full transition-all duration-500', color)}
           style={{ width: `${clampedValue}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-xs text-white/60 font-mono w-8 text-right">
+        <span className="text-xs text-black/60 font-mono w-8 text-right">
           {clampedValue}%
         </span>
       )}

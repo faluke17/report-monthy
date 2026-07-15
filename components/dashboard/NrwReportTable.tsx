@@ -38,15 +38,15 @@ function fmtNum(v: number | null | undefined, decimals = 2): string {
 }
 
 function nrwColor(rate: number | null, target: number | null): string {
-  if (rate === null) return 'text-white/50'
+  if (rate === null) return 'text-black/50'
   if (target !== null && rate <= target) return 'text-green-400'
   if (target !== null && rate > target * 1.2) return 'text-red-400'
   return 'text-amber-400'
 }
 
-const INPUT = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50'
-const LABEL = 'block text-xs font-medium text-white/40 uppercase tracking-wide mb-1'
-const CALC_BOX = 'w-full bg-white/3 border border-dashed border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-white/70'
+const INPUT = 'w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder-white/20 focus:outline-none focus:border-cyan-500/50'
+const LABEL = 'block text-xs font-medium text-black/40 uppercase tracking-wide mb-1'
+const CALC_BOX = 'w-full bg-black/3 border border-dashed border-black/10 rounded-lg px-3 py-2 text-sm font-mono text-black/70'
 
 // ─── Excel paste parser ───────────────────────────────────────────────────────
 
@@ -506,7 +506,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
           </button>
           <button
             onClick={() => setPasteOpen(true)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-black/5 text-black/60 border border-black/10 hover:bg-black/10 hover:text-[#12181F] transition-colors"
           >
             <ClipboardPaste size={14} />
             วางจาก Excel
@@ -517,7 +517,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
       <div className="glass-card overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-white/40 border-b border-white/10">
+            <tr className="text-black/40 border-b border-black/10">
               <th className="text-left px-4 py-3 font-medium w-8">#</th>
               <th className="text-left px-4 py-3 font-medium">สาขา</th>
               <th className="text-right px-4 py-3 font-medium">น้ำผลิตจ่าย<br/><span className="font-normal opacity-60">(ลบ.ม.)</span></th>
@@ -539,18 +539,18 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
               const hasData = !!r
 
               return (
-                <tr key={name} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                  <td className="px-4 py-2.5 text-white/30 font-mono">{idx + 1}</td>
-                  <td className="px-4 py-2.5 text-white font-medium">{name}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/70">{fmtNum(r?.water_produced)}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/70">{fmtNum(r?.water_sold)}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/70">{fmtNum(r?.water_free)}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/70">{fmtNum(r?.blow_off)}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/60">{fmtNum(loss)}</td>
+                <tr key={name} className="border-b border-black/5 hover:bg-black/3 transition-colors">
+                  <td className="px-4 py-2.5 text-black/30 font-mono">{idx + 1}</td>
+                  <td className="px-4 py-2.5 text-[#12181F] font-medium">{name}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-black/70">{fmtNum(r?.water_produced)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-black/70">{fmtNum(r?.water_sold)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-black/70">{fmtNum(r?.water_free)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-black/70">{fmtNum(r?.blow_off)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-black/60">{fmtNum(loss)}</td>
                   <td className={`px-4 py-2.5 text-right font-mono font-semibold ${nrwColor(rate, target)}`}>
                     {rate !== null ? `${fmtNum(rate, 2)}%` : '—'}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-white/50">
+                  <td className="px-4 py-2.5 text-right font-mono text-black/50">
                     {targets[name] != null ? `${fmtNum(targets[name], 2)}%` : '—'}
                   </td>
                   <td className="px-4 py-2.5 text-right">
@@ -559,7 +559,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                         onClick={() => openSheet(name)}
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                           hasData
-                            ? 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'
+                            ? 'bg-black/5 text-black/50 hover:bg-black/10 hover:text-[#12181F]'
                             : 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25'
                         }`}
                       >
@@ -573,13 +573,13 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
             })}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-white/15 bg-white/3">
-              <td className="px-4 py-3 text-white/40 font-medium text-xs" colSpan={2}>รวมเขต ({rows.length}/{BRANCH_ORDER.length} สาขา)</td>
-              <td className="px-4 py-3 text-right font-mono text-white/80 font-semibold text-xs">{fmtNum(totalProduced)}</td>
-              <td className="px-4 py-3 text-right font-mono text-white/80 text-xs">{fmtNum(totalSold)}</td>
-              <td className="px-4 py-3 text-right font-mono text-white/80 text-xs">{fmtNum(totalFree)}</td>
-              <td className="px-4 py-3 text-right font-mono text-white/80 text-xs">{fmtNum(totalBlowOff)}</td>
-              <td className="px-4 py-3 text-right font-mono text-white/70 text-xs">{fmtNum(totalLoss)}</td>
+            <tr className="border-t-2 border-black/15 bg-black/3">
+              <td className="px-4 py-3 text-black/40 font-medium text-xs" colSpan={2}>รวมเขต ({rows.length}/{BRANCH_ORDER.length} สาขา)</td>
+              <td className="px-4 py-3 text-right font-mono text-black/80 font-semibold text-xs">{fmtNum(totalProduced)}</td>
+              <td className="px-4 py-3 text-right font-mono text-black/80 text-xs">{fmtNum(totalSold)}</td>
+              <td className="px-4 py-3 text-right font-mono text-black/80 text-xs">{fmtNum(totalFree)}</td>
+              <td className="px-4 py-3 text-right font-mono text-black/80 text-xs">{fmtNum(totalBlowOff)}</td>
+              <td className="px-4 py-3 text-right font-mono text-black/70 text-xs">{fmtNum(totalLoss)}</td>
               <td className={`px-4 py-3 text-right font-mono font-bold text-xs ${nrwColor(totalRate, districtTarget)}`}>
                 {totalRate !== null ? `${fmtNum(totalRate, 2)}%` : '—'}
               </td>
@@ -590,20 +590,20 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
             </tr>
           </tfoot>
         </table>
-        <p className="px-4 py-2 text-xs text-white/25">* คำนวณอัตโนมัติ: น้ำสูญเสีย = น้ำผลิตจ่าย − น้ำจำหน่าย − น้ำจ่ายฟรี − Blow off</p>
+        <p className="px-4 py-2 text-xs text-black/25">* คำนวณอัตโนมัติ: น้ำสูญเสีย = น้ำผลิตจ่าย − น้ำจำหน่าย − น้ำจ่ายฟรี − Blow off</p>
       </div>
 
       {/* Sheet Sidebar */}
       {sheet && (
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={closeSheet} />
-          <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-[#061a38] border-l border-white/10 z-50 flex flex-col shadow-2xl animate-fadein">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-[#FFFFFF] border-l border-black/10 z-50 flex flex-col shadow-2xl animate-fadein">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
               <div>
-                <h3 className="text-sm font-semibold text-white">{sheet.branchName}</h3>
-                <p className="text-xs text-white/40 mt-0.5">กรอกข้อมูล NRW รายเดือน</p>
+                <h3 className="text-sm font-semibold text-[#12181F]">{sheet.branchName}</h3>
+                <p className="text-xs text-black/40 mt-0.5">กรอกข้อมูล NRW รายเดือน</p>
               </div>
-              <button onClick={closeSheet} className="text-white/40 hover:text-white">
+              <button onClick={closeSheet} className="text-black/40 hover:text-[#12181F]">
                 <X size={18} />
               </button>
             </div>
@@ -649,8 +649,8 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                   onChange={(e) => setForm((f) => ({ ...f, blow_off: e.target.value }))}
                   className={INPUT} />
               </div>
-              <div className="pt-2 border-t border-white/10 space-y-2">
-                <p className="text-xs text-white/40 font-medium uppercase tracking-wide">ผลคำนวณ (อัตโนมัติ)</p>
+              <div className="pt-2 border-t border-black/10 space-y-2">
+                <p className="text-xs text-black/40 font-medium uppercase tracking-wide">ผลคำนวณ (อัตโนมัติ)</p>
                 <div>
                   <label className={LABEL}>น้ำสูญเสีย (ลบ.ม.)</label>
                   <div className={CALC_BOX}>{previewLoss !== null ? fmtNum(previewLoss) : '—'}</div>
@@ -662,14 +662,14 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                   </div>
                 </div>
                 {previewTarget != null && (
-                  <p className="text-xs text-white/30">
-                    เป้าหมายปีงบ {fiscalYear}: <span className="text-white/50">{fmtNum(previewTarget)}%</span>
+                  <p className="text-xs text-black/30">
+                    เป้าหมายปีงบ {fiscalYear}: <span className="text-black/50">{fmtNum(previewTarget)}%</span>
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="px-5 py-4 border-t border-white/10 flex gap-2">
+            <div className="px-5 py-4 border-t border-black/10 flex gap-2">
               {sheet.existing && (
                 <button onClick={handleDelete} disabled={pending}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-50">
@@ -677,7 +677,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                 </button>
               )}
               <button onClick={closeSheet} disabled={pending}
-                className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 disabled:opacity-50">
+                className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-black/5 text-black/60 border border-black/10 hover:bg-black/10 disabled:opacity-50">
                 ยกเลิก
               </button>
               <button onClick={handleSubmit} disabled={pending}
@@ -705,40 +705,40 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
         <>
           <div className="fixed inset-0 bg-black/60 z-40" onClick={resetPaste} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#061a38] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-fadein">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+            <div className="bg-[#FFFFFF] border border-black/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-fadein">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
                 <div>
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-[#12181F] flex items-center gap-2">
                     <ClipboardPaste size={16} className="text-cyan-400" />
                     วางข้อมูลจาก Excel
                   </h3>
-                  <p className="text-xs text-white/40 mt-0.5">
+                  <p className="text-xs text-black/40 mt-0.5">
                     Copy ช่วง cell จาก Excel แล้ววางด้านล่าง — ไม่บังคับต้องมี header
                   </p>
                 </div>
-                <button onClick={resetPaste} className="text-white/40 hover:text-white">
+                <button onClick={resetPaste} className="text-black/40 hover:text-[#12181F]">
                   <X size={18} />
                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                <div className="bg-white/3 border border-white/10 rounded-xl p-3 text-xs text-white/50 space-y-1">
-                  <p className="font-medium text-white/70">รูปแบบที่รองรับ (มี header หรือไม่มีก็ได้):</p>
+                <div className="bg-black/3 border border-black/10 rounded-xl p-3 text-xs text-black/50 space-y-1">
+                  <p className="font-medium text-black/70">รูปแบบที่รองรับ (มี header หรือไม่มีก็ได้):</p>
                   <p>
                     <span className="text-cyan-400/80">สาขา</span>
                     {' | '}น้ำผลิตจ่าย | น้ำจำหน่าย | น้ำจ่ายฟรี | Blow off
                   </p>
-                  <p className="text-white/30">ระบบ detect ชื่อสาขา คอลัมน์ และเดือนอัตโนมัติ แม้ลำดับต่างกัน</p>
+                  <p className="text-black/30">ระบบ detect ชื่อสาขา คอลัมน์ และเดือนอัตโนมัติ แม้ลำดับต่างกัน</p>
                 </div>
 
                 {/* Month selector — hidden for multi-month format */}
                 {!parsedRows?.some(r => r.month !== undefined) && (
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-white/40 shrink-0">บันทึกเดือน:</span>
+                    <span className="text-xs text-black/40 shrink-0">บันทึกเดือน:</span>
                     <select
                       value={pasteMonth}
                       onChange={(e) => setPasteMonth(parseInt(e.target.value))}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                      className="flex-1 bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                     >
                       {[10,11,12,1,2,3,4,5,6,7,8,9].map((m) => (
                         <option key={m} value={m}>{getThaiMonthName(m)}</option>
@@ -756,7 +756,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                     onChange={(e) => setPasteText(e.target.value)}
                     placeholder={'วางข้อมูลจาก Excel ที่นี่...\n\nตัวอย่าง (มี header):\nสาขา\tน้ำผลิตจ่าย\tน้ำจำหน่าย\tน้ำจ่ายฟรี\tBlow off\nพิษณุโลก\t1234567\t980000\t5000\t2000\n\nหรือไม่มี header:\nพิษณุโลก\t1234567\t980000\t5000\t2000\n\nถ้ามีชื่อเดือน เช่น "ตุลาคม" ในข้อมูล ระบบจะ detect ให้อัตโนมัติ'}
                     rows={12}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 font-mono focus:outline-none focus:border-cyan-500/50 resize-none"
+                    className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-xs text-[#12181F] placeholder-white/20 font-mono focus:outline-none focus:border-cyan-500/50 resize-none"
                   />
                 )}
 
@@ -776,20 +776,20 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                     return (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-white/50">
+                          <span className="text-xs text-black/50">
                             ตรวจพบ <span className="text-cyan-400 font-medium">{months.length} เดือน</span>
                             {' × '}
                             <span className="text-green-400 font-medium">{matchedCount}</span>
                             {unknownCount > 0 && <span className="text-amber-400"> (รอระบุ {unknownCount})</span>}
-                            <span className="text-white/30"> / {uniqueBranches.length} สาขา</span>
+                            <span className="text-black/30"> / {uniqueBranches.length} สาขา</span>
                           </span>
-                          <button onClick={() => setParsedRows(null)} className="text-xs text-white/30 hover:text-white underline">แก้ไข</button>
+                          <button onClick={() => setParsedRows(null)} className="text-xs text-black/30 hover:text-[#12181F] underline">แก้ไข</button>
                         </div>
 
-                        <div className="overflow-x-auto rounded-xl border border-white/10 max-h-72 overflow-y-auto">
+                        <div className="overflow-x-auto rounded-xl border border-black/10 max-h-72 overflow-y-auto">
                           <table className="w-full text-xs">
-                            <thead className="sticky top-0 bg-[#061a38]">
-                              <tr className="text-white/40 border-b border-white/10">
+                            <thead className="sticky top-0 bg-[#FFFFFF]">
+                              <tr className="text-black/40 border-b border-black/10">
                                 <th className="text-left px-3 py-2 min-w-36">สาขา</th>
                                 {months.map(m => (
                                   <th key={m} className="px-2 py-2 text-center whitespace-nowrap">{getThaiMonthName(m)}</th>
@@ -800,10 +800,10 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                               {uniqueBranches.map((r) => {
                                 const isOk = r.matched || !!manualMap[r.rawBranch]
                                 return (
-                                  <tr key={r.rawBranch} className="border-b border-white/5">
+                                  <tr key={r.rawBranch} className="border-b border-black/5">
                                     <td className="px-3 py-1.5 min-w-36">
                                       {isOk ? (
-                                        <span className="flex items-center gap-1 text-white">
+                                        <span className="flex items-center gap-1 text-[#12181F]">
                                           <CheckCircle2 size={11} className="text-green-400 shrink-0" />
                                           {manualMap[r.rawBranch] ?? r.branch_name}
                                         </span>
@@ -811,12 +811,12 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                         <div className="space-y-1">
                                           <span className="flex items-center gap-1">
                                             <AlertCircle size={11} className="text-amber-400 shrink-0" />
-                                            <span className="font-mono text-white/40 text-xs truncate max-w-28" title={r.rawBranch}>&ldquo;{r.rawBranch}&rdquo;</span>
+                                            <span className="font-mono text-black/40 text-xs truncate max-w-28" title={r.rawBranch}>&ldquo;{r.rawBranch}&rdquo;</span>
                                           </span>
                                           <select
                                             value={manualMap[r.rawBranch] ?? ''}
                                             onChange={(e) => setManualMap(prev => ({ ...prev, [r.rawBranch]: e.target.value }))}
-                                            className="w-full bg-white/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                                            className="w-full bg-black/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                                           >
                                             <option value="">— ระบุสาขา —</option>
                                             {BRANCH_ORDER.map(b => <option key={b} value={b}>{b}</option>)}
@@ -828,7 +828,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                       <td key={m} className="px-2 py-1.5 text-center">
                                         {isOk
                                           ? <span className="text-green-400">✓</span>
-                                          : <span className="text-white/20">—</span>}
+                                          : <span className="text-black/20">—</span>}
                                       </td>
                                     ))}
                                   </tr>
@@ -848,19 +848,19 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                   return (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/50">
+                        <span className="text-xs text-black/50">
                           อัตโนมัติ <span className="text-green-400 font-medium">{autoMatched}</span>
                           {manualCount > 0 && <span className="text-cyan-400"> + เลือกเอง {manualCount}</span>}
                           {stillUnknown > 0 && <span className="text-amber-400"> / รอระบุ {stillUnknown}</span>}
-                          <span className="text-white/30"> จาก {parsedRows.length} แถว</span>
+                          <span className="text-black/30"> จาก {parsedRows.length} แถว</span>
                         </span>
-                        <button onClick={() => setParsedRows(null)} className="text-xs text-white/30 hover:text-white underline">แก้ไข</button>
+                        <button onClick={() => setParsedRows(null)} className="text-xs text-black/30 hover:text-[#12181F] underline">แก้ไข</button>
                       </div>
 
-                      <div className="overflow-x-auto rounded-xl border border-white/10 max-h-72 overflow-y-auto">
+                      <div className="overflow-x-auto rounded-xl border border-black/10 max-h-72 overflow-y-auto">
                         <table className="w-full text-xs">
-                          <thead className="sticky top-0 bg-[#061a38]">
-                            <tr className="text-white/40 border-b border-white/10">
+                          <thead className="sticky top-0 bg-[#FFFFFF]">
+                            <tr className="text-black/40 border-b border-black/10">
                               <th className="text-left px-3 py-2 min-w-40">สาขา</th>
                               <th className="text-right px-3 py-2">ผลิตจ่าย</th>
                               <th className="text-right px-3 py-2">จำหน่าย</th>
@@ -874,10 +874,10 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                               const isManual = !!manualMap[key]
                               const isOk   = r.matched || isManual
                               return (
-                                <tr key={i} className="border-b border-white/5">
+                                <tr key={i} className="border-b border-black/5">
                                   <td className="px-3 py-1.5 min-w-40">
                                     {isOk ? (
-                                      <span className="flex items-center gap-1 text-white font-medium">
+                                      <span className="flex items-center gap-1 text-[#12181F] font-medium">
                                         <CheckCircle2 size={11} className="text-green-400 shrink-0" />
                                         {isManual ? manualMap[key] : r.branch_name}
                                       </span>
@@ -885,12 +885,12 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                       <div className="space-y-1">
                                         <span className="flex items-center gap-1">
                                           <AlertCircle size={11} className="text-amber-400 shrink-0" />
-                                          <span className="font-mono text-white/40 text-xs truncate max-w-32" title={r.rawBranch}>&ldquo;{r.rawBranch}&rdquo;</span>
+                                          <span className="font-mono text-black/40 text-xs truncate max-w-32" title={r.rawBranch}>&ldquo;{r.rawBranch}&rdquo;</span>
                                         </span>
                                         <select
                                           value={manualMap[key] ?? ''}
                                           onChange={(e) => setManualMap(prev => ({ ...prev, [key]: e.target.value }))}
-                                          className="w-full bg-white/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                                          className="w-full bg-black/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                                         >
                                           <option value="">— ระบุสาขา —</option>
                                           {BRANCH_ORDER.map(b => <option key={b} value={b}>{b}</option>)}
@@ -898,10 +898,10 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-3 py-1.5 text-right font-mono text-white/70">{fmtNum(r.water_produced)}</td>
-                                  <td className="px-3 py-1.5 text-right font-mono text-white/70">{fmtNum(r.water_sold)}</td>
-                                  <td className="px-3 py-1.5 text-right font-mono text-white/70">{fmtNum(r.water_free)}</td>
-                                  <td className="px-3 py-1.5 text-right font-mono text-white/70">{fmtNum(r.blow_off)}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.water_produced)}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.water_sold)}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.water_free)}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.blow_off)}</td>
                                 </tr>
                               )
                             })}
@@ -913,14 +913,14 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                 })()}
               </div>
 
-              <div className="px-5 py-4 border-t border-white/10 flex gap-2">
+              <div className="px-5 py-4 border-t border-black/10 flex gap-2">
                 <button onClick={resetPaste}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/60 border border-white/10 hover:bg-white/10">
+                  className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-black/5 text-black/60 border border-black/10 hover:bg-black/10">
                   ยกเลิก
                 </button>
                 {!parsedRows ? (
                   <button onClick={handlePastePreview} disabled={!pasteText.trim()}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/10 text-white border border-white/20 hover:bg-white/15 disabled:opacity-40">
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-black/10 text-[#12181F] border border-black/20 hover:bg-black/15 disabled:opacity-40">
                     ตรวจสอบข้อมูล
                   </button>
                 ) : (

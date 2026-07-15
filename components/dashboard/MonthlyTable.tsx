@@ -22,7 +22,7 @@ const columns: ColumnDef<MonthlyRow>[] = [
     key: 'period',
     header: 'เดือน',
     render: (r) => (
-      <span className="num text-sm text-white">
+      <span className="num text-sm text-[#12181F]">
         {formatThaiMonthYear(r.report_year, r.report_month)}
       </span>
     ),
@@ -32,8 +32,8 @@ const columns: ColumnDef<MonthlyRow>[] = [
     header: 'สาขา',
     render: (r) => (
       <div>
-        <p className="font-bold text-white text-sm">{r.branches?.name_th}</p>
-        <p className="text-[10px] text-white/35 num">{r.branches?.code}</p>
+        <p className="font-bold text-[#12181F] text-sm">{r.branches?.name_th}</p>
+        <p className="text-[10px] text-black/35 num">{r.branches?.code}</p>
       </div>
     ),
   },
@@ -43,7 +43,7 @@ const columns: ColumnDef<MonthlyRow>[] = [
     sortable: true,
     render: (r) => {
       const nrw = r.nrw_pct
-      const color = nrw === null ? 'text-white/25' : nrw > 20 ? 'text-red-400' : 'text-green-400'
+      const color = nrw === null ? 'text-black/25' : nrw > 20 ? 'text-red-400' : 'text-green-400'
       return (
         <div className="space-y-1">
           <span className={`num font-bold text-sm ${color}`}>
@@ -65,7 +65,7 @@ const columns: ColumnDef<MonthlyRow>[] = [
     key: 'volume_distributed',
     header: 'น้ำจ่าย (ลบ.ม.)',
     render: (r) => (
-      <span className="num text-sm text-white/70">
+      <span className="num text-sm text-black/70">
         {r.volume_distributed !== null ? formatThaiNumber(r.volume_distributed, 0) : '—'}
       </span>
     ),
@@ -74,7 +74,7 @@ const columns: ColumnDef<MonthlyRow>[] = [
     key: 'leaks_found',
     header: 'จุดรั่ว พบ/ซ่อม',
     render: (r) => (
-      <span className="num text-sm text-white/60">
+      <span className="num text-sm text-black/60">
         {r.leaks_found ?? 0} / {r.leaks_repaired ?? 0}
       </span>
     ),

@@ -15,42 +15,42 @@ type ObstacleRow = Obstacle & { branches?: Branch }
 
 const CATEGORY_COLOR: Record<string, { accent: string; glow: string; badge: string; border: string }> = {
   MM:   {
-    accent: '#4782FF',
-    glow:   'shadow-[0_0_24px_rgba(71,130,255,.10)]',
-    badge:  'bg-[#4782FF]/12 border-[#4782FF]/30 text-[#93C5FD]',
-    border: 'border-l-[#4782FF]',
+    accent: '#0B6E76',
+    glow:   'shadow-[0_0_24px_rgba(11,110,118,.10)]',
+    badge:  'bg-[#0B6E76]/12 border-[#0B6E76]/30 text-[#0B6E76]',
+    border: 'border-l-[#0B6E76]',
   },
   DMA:  {
-    accent: '#22D3EE',
-    glow:   'shadow-[0_0_24px_rgba(34,211,238,.10)]',
-    badge:  'bg-[#22D3EE]/12 border-[#22D3EE]/30 text-[#22D3EE]',
-    border: 'border-l-[#22D3EE]',
+    accent: '#0B6E76',
+    glow:   'shadow-[0_0_24px_rgba(11,110,118,.10)]',
+    badge:  'bg-[#0B6E76]/12 border-[#0B6E76]/30 text-[#0B6E76]',
+    border: 'border-l-[#0B6E76]',
   },
   P3:   {
-    accent: '#A78BFA',
-    glow:   'shadow-[0_0_24px_rgba(167,139,250,.10)]',
-    badge:  'bg-[#A78BFA]/12 border-[#A78BFA]/30 text-[#A78BFA]',
-    border: 'border-l-[#A78BFA]',
+    accent: '#6B4FA0',
+    glow:   'shadow-[0_0_24px_rgba(107,79,160,.10)]',
+    badge:  'bg-[#6B4FA0]/12 border-[#6B4FA0]/30 text-[#6B4FA0]',
+    border: 'border-l-[#6B4FA0]',
   },
   อื่นๆ: {
-    accent: '#7B9CCC',
+    accent: '#4B5563',
     glow:   '',
-    badge:  'bg-white/5 border-white/15 text-[#7B9CCC]',
-    border: 'border-l-[#3D5380]',
+    badge:  'bg-black/5 border-black/15 text-[#4B5563]',
+    border: 'border-l-[#8896A3]',
   },
 }
 function getCat(cat: string) { return CATEGORY_COLOR[cat] ?? CATEGORY_COLOR['อื่นๆ'] }
 
 const PRIORITY_META: Record<number, { dot: string; badge: string; label: string; urgentGlow: string }> = {
   1: {
-    dot:        'bg-[#F87171]',
-    badge:      'bg-[#F87171]/12 border-[#F87171]/30 text-[#F87171]',
+    dot:        'bg-[#B3392C]',
+    badge:      'bg-[#B3392C]/12 border-[#B3392C]/30 text-[#B3392C]',
     label:      'เร่งด่วน',
-    urgentGlow: 'shadow-[inset_0_0_0_1px_rgba(248,113,113,.12)]',
+    urgentGlow: 'shadow-[inset_0_0_0_1px_rgba(179,57,44,.12)]',
   },
   2: {
-    dot:        'bg-[#FCD34D]/80',
-    badge:      'bg-[#FCD34D]/10 border-[#FCD34D]/25 text-[#FCD34D]',
+    dot:        'bg-[#A8721A]/80',
+    badge:      'bg-[#A8721A]/10 border-[#A8721A]/25 text-[#A8721A]',
     label:      'ปกติ',
     urgentGlow: '',
   },
@@ -58,9 +58,9 @@ const PRIORITY_META: Record<number, { dot: string; badge: string; label: string;
 function getPri(order: number | null) { return PRIORITY_META[order ?? 2] ?? PRIORITY_META[2] }
 
 const ENTRY_STYLE: Record<string, { dot: string; badge: string; label: string }> = {
-  branch_update: { dot: 'bg-[#22D3EE]', badge: 'bg-[#22D3EE]/12 border-[#22D3EE]/30 text-[#22D3EE]', label: 'สาขา' },
-  region_note:   { dot: 'bg-[#FCD34D]', badge: 'bg-[#FCD34D]/12 border-[#FCD34D]/30 text-[#FCD34D]', label: 'เขต'  },
-  system:        { dot: 'bg-[#3D5380]', badge: 'bg-white/5 border-white/10 text-[#7B9CCC]',           label: 'ระบบ' },
+  branch_update: { dot: 'bg-[#0B6E76]', badge: 'bg-[#0B6E76]/12 border-[#0B6E76]/30 text-[#0B6E76]', label: 'สาขา' },
+  region_note:   { dot: 'bg-[#A8721A]', badge: 'bg-[#A8721A]/12 border-[#A8721A]/30 text-[#A8721A]', label: 'เขต'  },
+  system:        { dot: 'bg-[#8896A3]', badge: 'bg-black/5 border-black/10 text-[#4B5563]',           label: 'ระบบ' },
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ function formatDateTime(dateStr: string): string {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-bold text-[#7B9CCC] uppercase tracking-[.18em] font-mono">
+    <p className="text-[10px] font-bold text-[#4B5563] uppercase tracking-[.18em] font-mono">
       {children}
     </p>
   )
@@ -89,16 +89,16 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function DetailRow({ label, value, accent }: { label: string; value?: string | null; accent?: string }) {
   if (!value) return null
   return (
-    <div className="rounded-xl border border-[#1E2E50] bg-[#0a1228] overflow-hidden">
+    <div className="rounded-xl border border-[#EFF2F5] bg-[#FFFFFF] overflow-hidden">
       <div
-        className="px-3.5 py-2 border-b border-[#1E2E50] flex items-center gap-2"
-        style={{ background: accent ? `${accent}0D` : 'rgba(71,130,255,.04)' }}
+        className="px-3.5 py-2 border-b border-[#EFF2F5] flex items-center gap-2"
+        style={{ background: accent ? `${accent}0D` : 'rgba(11,110,118,.04)' }}
       >
-        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accent ?? '#7B9CCC' }} />
-        <p className="text-xs font-semibold text-[#E4ECFF]">{label}</p>
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accent ?? '#4B5563' }} />
+        <p className="text-xs font-semibold text-[#12181F]">{label}</p>
       </div>
       <div className="px-3.5 py-3">
-        <p className="text-sm text-[#E4ECFF] leading-relaxed whitespace-pre-wrap">{value}</p>
+        <p className="text-sm text-[#12181F] leading-relaxed whitespace-pre-wrap">{value}</p>
       </div>
     </div>
   )
@@ -111,7 +111,7 @@ function ProgressMini({ value }: { value: number }) {
       <div className="prog-bg flex-1 max-w-[90px]">
         <div className={`prog-fill ${cls}`} style={{ width: `${value}%` }} />
       </div>
-      <span className="text-xs text-[#7B9CCC] num w-7 text-right">{value}%</span>
+      <span className="text-xs text-[#4B5563] num w-7 text-right">{value}%</span>
     </div>
   )
 }
@@ -120,38 +120,38 @@ function LogTimeline({ logs }: { logs: ObstacleProgressLog[] }) {
   if (logs.length === 0) {
     return (
       <div className="py-8 text-center">
-        <p className="text-sm text-[#3D5380]">ยังไม่มีการอัพเดท</p>
+        <p className="text-sm text-[#8896A3]">ยังไม่มีการอัพเดท</p>
       </div>
     )
   }
   return (
     <div className="relative pl-5">
-      <div className="absolute left-[7px] top-3 bottom-3 w-px bg-[#1E2E50]" />
+      <div className="absolute left-[7px] top-3 bottom-3 w-px bg-[#EFF2F5]" />
       <div className="space-y-5">
         {logs.map((log, i) => {
           const s = ENTRY_STYLE[log.entry_type] ?? ENTRY_STYLE.system
           return (
             <div key={log.id} className="relative">
-              <div className={`absolute -left-5 top-[5px] w-3.5 h-3.5 rounded-full border-[3px] border-[#070E22] ${s.dot}`} />
+              <div className={`absolute -left-5 top-[5px] w-3.5 h-3.5 rounded-full border-[3px] border-[#FFFFFF] ${s.dot}`} />
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${s.badge}`}>
                     {s.label}
                   </span>
                   {i === 0 && !log.is_closed && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#4782FF]/10 border border-[#4782FF]/25 text-[#93C5FD]">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#0B6E76]/10 border border-[#0B6E76]/25 text-[#0B6E76]">
                       ล่าสุด
                     </span>
                   )}
                   {log.is_closed && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#34D399]/12 border border-[#34D399]/30 text-[#34D399]">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#1E7A5A]/12 border border-[#1E7A5A]/30 text-[#1E7A5A]">
                       ✓ ปิดประเด็น
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-[#E4ECFF] leading-relaxed">{log.message}</p>
+                <p className="text-sm text-[#12181F] leading-relaxed">{log.message}</p>
                 {log.progress_pct !== null && <ProgressMini value={log.progress_pct} />}
-                <p className="text-[11px] text-[#3D5380]">
+                <p className="text-[11px] text-[#8896A3]">
                   {formatDateTime(log.created_at)} · {log.created_by}
                 </p>
               </div>
@@ -231,14 +231,14 @@ export function ObstacleTable({
   if (data.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="text-sm text-[#3D5380]">ไม่มีอุปสรรคที่รอดำเนินการ</p>
+        <p className="text-sm text-[#8896A3]">ไม่มีอุปสรรคที่รอดำเนินการ</p>
       </div>
     )
   }
 
   return (
     <>
-      <div className="divide-y divide-[#1E2E50]">
+      <div className="divide-y divide-[#EFF2F5]">
         {data.map((row) => {
           const cat       = getCat(row.category)
           const pri       = getPri(row.priority_order)
@@ -255,10 +255,10 @@ export function ObstacleTable({
               className={[
                 'w-full text-left px-5 py-4 transition-all group',
                 'border-l-[3px]',
-                isClosed ? 'border-l-[#1E2E50] opacity-60' : cat.border,
+                isClosed ? 'border-l-[#EFF2F5] opacity-60' : cat.border,
                 isUrgent
-                  ? 'hover:bg-[#F87171]/5 bg-[#F87171]/[.03]'
-                  : 'hover:bg-[#4782FF]/5',
+                  ? 'hover:bg-[#B3392C]/5 bg-[#B3392C]/[.03]'
+                  : 'hover:bg-[#0B6E76]/5',
                 cat.glow,
               ].join(' ')}
             >
@@ -274,7 +274,7 @@ export function ObstacleTable({
                       </span>
                     )}
                     <span className={`text-[15px] font-semibold leading-snug ${
-                      isClosed ? 'text-[#3D5380] line-through' : 'text-[#E4ECFF]'
+                      isClosed ? 'text-[#8896A3] line-through' : 'text-[#12181F]'
                     }`}>
                       {row.obstacle_type}
                     </span>
@@ -282,28 +282,28 @@ export function ObstacleTable({
 
                   {/* meta */}
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="text-xs font-medium text-[#7B9CCC]">{row.branches?.name_th}</span>
+                    <span className="text-xs font-medium text-[#4B5563]">{row.branches?.name_th}</span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${cat.badge}`}>
                       {row.category}
                     </span>
                     {row.due_date && (
-                      <span className={`text-xs flex items-center gap-1 ${overdue ? 'text-[#F87171] font-medium' : 'text-[#7B9CCC]'}`}>
+                      <span className={`text-xs flex items-center gap-1 ${overdue ? 'text-[#B3392C] font-medium' : 'text-[#4B5563]'}`}>
                         {overdue && <AlertCircle size={10} />}
                         กำหนด {formatThaiDate(row.due_date, true)}
                       </span>
                     )}
                     {isStale && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FCD34D]/10 border border-[#FCD34D]/25 text-[#FCD34D] flex items-center gap-1">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#A8721A]/10 border border-[#A8721A]/25 text-[#A8721A] flex items-center gap-1">
                         <Clock size={9} /> {staleDays}ว. ไม่มีอัพเดท
                       </span>
                     )}
                     {row.last_log_message && !isClosed && (
-                      <span className="text-xs text-[#3D5380] italic truncate max-w-[220px]">
+                      <span className="text-xs text-[#8896A3] italic truncate max-w-[220px]">
                         &quot;{row.last_log_message}&quot;
                       </span>
                     )}
                     {isClosed && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#34D399]/10 border border-[#34D399]/25 text-[#34D399]">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#1E7A5A]/10 border border-[#1E7A5A]/25 text-[#1E7A5A]">
                         ✓ ปิดแล้ว
                       </span>
                     )}
@@ -317,7 +317,7 @@ export function ObstacleTable({
                       <ProgressMini value={row.progress_pct ?? 0} />
                     </div>
                   )}
-                  <ChevronRight size={15} className="text-[#3D5380] group-hover:text-[#7B9CCC] transition-colors" />
+                  <ChevronRight size={15} className="text-[#8896A3] group-hover:text-[#4B5563] transition-colors" />
                 </div>
               </div>
             </button>
@@ -327,7 +327,7 @@ export function ObstacleTable({
 
       {/* ── Dialog ──────────────────────────────────────────────────────────────── */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && handleClose()}>
-        <DialogContent className="w-[98vw] max-w-[1400px] bg-[#070E22] border-[#1E2E50] p-0 gap-0 max-h-[92vh] flex flex-col rounded-2xl overflow-hidden">
+        <DialogContent className="w-[98vw] max-w-[1400px] bg-[#FFFFFF] border-[#EFF2F5] p-0 gap-0 max-h-[92vh] flex flex-col rounded-2xl overflow-hidden">
           {selected && (() => {
             const cat = getCat(selected.category)
             const pri = getPri(selected.priority_order)
@@ -342,7 +342,7 @@ export function ObstacleTable({
 
                 {/* ── Header ───────────────────────────────────────────────── */}
                 <div
-                  className="px-7 pt-5 pb-5 border-b border-[#1E2E50] shrink-0"
+                  className="px-7 pt-5 pb-5 border-b border-[#EFF2F5] shrink-0"
                   style={{
                     background: `radial-gradient(ellipse 60% 100% at 0% 50%, ${cat.accent}0D, transparent)`,
                   }}
@@ -354,10 +354,10 @@ export function ObstacleTable({
                       style={{ background: cat.accent }}
                     />
                     <div className="flex-1 min-w-0">
-                      <DialogTitle className="text-2xl font-bold text-[#E4ECFF] leading-snug">
+                      <DialogTitle className="text-2xl font-bold text-[#12181F] leading-snug">
                         {selected.obstacle_type}
                       </DialogTitle>
-                      <p className="text-sm text-[#7B9CCC] mt-1 font-medium">{selected.branches?.name_th}</p>
+                      <p className="text-sm text-[#4B5563] mt-1 font-medium">{selected.branches?.name_th}</p>
                     </div>
                   </div>
 
@@ -373,13 +373,13 @@ export function ObstacleTable({
                       {selected.priority_order === 1 ? '🔴' : '🟡'} {pri.label}
                     </span>
                     {selected.due_date && (
-                      <span className={`text-xs font-medium flex items-center gap-1 ${isOverdue(selected.due_date) ? 'text-[#F87171]' : 'text-[#7B9CCC]'}`}>
+                      <span className={`text-xs font-medium flex items-center gap-1 ${isOverdue(selected.due_date) ? 'text-[#B3392C]' : 'text-[#4B5563]'}`}>
                         {isOverdue(selected.due_date) && <AlertCircle size={11} />}
                         กำหนด {formatThaiDate(selected.due_date, true)}
                       </span>
                     )}
                     {isClosed && (
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#34D399]/12 border border-[#34D399]/30 text-[#34D399]">
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#1E7A5A]/12 border border-[#1E7A5A]/30 text-[#1E7A5A]">
                         ✓ ปิดประเด็นแล้ว
                       </span>
                     )}
@@ -390,7 +390,7 @@ export function ObstacleTable({
                 <div className="flex flex-col sm:flex-row flex-1 min-h-0 overflow-hidden">
 
                   {/* ซ้าย: รายละเอียด */}
-                  <div className="sm:w-[36%] px-7 py-6 space-y-5 border-b sm:border-b-0 sm:border-r border-[#1E2E50] overflow-y-auto">
+                  <div className="sm:w-[36%] px-7 py-6 space-y-5 border-b sm:border-b-0 sm:border-r border-[#EFF2F5] overflow-y-auto">
                     <SectionLabel>รายละเอียด</SectionLabel>
                     <DetailRow label="รายละเอียดอุปสรรค"    value={selected.data_quality_impact} accent={cat.accent} />
                     <DetailRow label="ผลกระทบ / พื้นที่"    value={selected.area}                 accent={cat.accent} />
@@ -399,31 +399,31 @@ export function ObstacleTable({
 
                     {(selected.progress_pct ?? 0) > 0 && (
                       <div className="space-y-1.5">
-                        <p className="text-[11px] font-semibold text-[#7B9CCC]">ความคืบหน้ารวม</p>
+                        <p className="text-[11px] font-semibold text-[#4B5563]">ความคืบหน้ารวม</p>
                         <ProgressMini value={selected.progress_pct ?? 0} />
                       </div>
                     )}
 
                     {canDelete && (
-                      <div className="pt-3 border-t border-[#1E2E50]">
+                      <div className="pt-3 border-t border-[#EFF2F5]">
                         {!confirmDelete ? (
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(true)}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#F87171]/20 text-[#F87171] text-sm font-semibold hover:bg-[#F87171]/8 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[#B3392C]/20 text-[#B3392C] text-sm font-semibold hover:bg-[#B3392C]/8 transition-colors"
                           >
                             <Trash2 size={13} /> ลบอุปสรรคนี้
                           </button>
                         ) : (
-                          <div className="rounded-xl border border-[#F87171]/30 bg-[#F87171]/6 p-4 space-y-3">
-                            <p className="text-sm text-[#F87171] text-center font-bold">ยืนยันการลบ?</p>
-                            <p className="text-xs text-[#7B9CCC] text-center">ไม่สามารถกู้คืนได้</p>
+                          <div className="rounded-xl border border-[#B3392C]/30 bg-[#B3392C]/6 p-4 space-y-3">
+                            <p className="text-sm text-[#B3392C] text-center font-bold">ยืนยันการลบ?</p>
+                            <p className="text-xs text-[#4B5563] text-center">ไม่สามารถกู้คืนได้</p>
                             <div className="flex gap-2">
                               <button
                                 type="button"
                                 onClick={() => setConfirmDelete(false)}
                                 disabled={deletePending}
-                                className="flex-1 py-2 rounded-lg bg-white/5 text-[#7B9CCC] text-sm font-semibold hover:bg-white/8 disabled:opacity-40 transition-colors"
+                                className="flex-1 py-2 rounded-lg bg-black/5 text-[#4B5563] text-sm font-semibold hover:bg-black/8 disabled:opacity-40 transition-colors"
                               >
                                 ยกเลิก
                               </button>
@@ -431,7 +431,7 @@ export function ObstacleTable({
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={deletePending}
-                                className="flex-1 py-2 rounded-lg bg-[#F87171] hover:bg-[#f98585] text-white text-sm font-bold disabled:opacity-40 transition-colors"
+                                className="flex-1 py-2 rounded-lg bg-[#B3392C] hover:bg-[#B3392C] text-[#12181F] text-sm font-bold disabled:opacity-40 transition-colors"
                               >
                                 {deletePending ? 'กำลังลบ...' : 'ลบเลย'}
                               </button>
@@ -449,7 +449,7 @@ export function ObstacleTable({
                     <div className="flex-1 px-7 py-6 overflow-y-auto space-y-4">
                       <SectionLabel>ความคืบหน้า</SectionLabel>
                       {logsLoading ? (
-                        <p className="text-sm text-[#3D5380] py-4">กำลังโหลด...</p>
+                        <p className="text-sm text-[#8896A3] py-4">กำลังโหลด...</p>
                       ) : (
                         <LogTimeline logs={logs} />
                       )}
@@ -457,7 +457,7 @@ export function ObstacleTable({
 
                     {/* Add log */}
                     {!isClosed && (
-                      <div className="px-7 py-5 border-t border-[#1E2E50] space-y-3 shrink-0 bg-[#040A18]">
+                      <div className="px-7 py-5 border-t border-[#EFF2F5] space-y-3 shrink-0 bg-[#FFFFFF]">
                         {isRegion && (
                           <div className="flex gap-2">
                             {(['branch_update', 'region_note'] as const).map((t) => {
@@ -468,7 +468,7 @@ export function ObstacleTable({
                                   type="button"
                                   onClick={() => setEntryType(t)}
                                   className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                                    entryType === t ? s.badge : 'bg-white/4 border-[#1E2E50] text-[#3D5380] hover:text-[#7B9CCC]'
+                                    entryType === t ? s.badge : 'bg-black/4 border-[#EFF2F5] text-[#8896A3] hover:text-[#4B5563]'
                                   }`}
                                 >
                                   {s.label}
@@ -483,7 +483,7 @@ export function ObstacleTable({
                           onChange={(e) => setMessage(e.target.value)}
                           rows={2}
                           placeholder="บันทึกความคืบหน้า เช่น ช่างลงพื้นที่แล้ว รอผลทดสอบ..."
-                          className="w-full bg-[#0C1535] border border-[#1E2E50] rounded-xl px-4 py-3 text-sm text-[#E4ECFF] placeholder:text-[#3D5380] focus:outline-none focus:border-[#4782FF]/50 resize-none"
+                          className="w-full bg-[#FFFFFF] border border-[#EFF2F5] rounded-xl px-4 py-3 text-sm text-[#12181F] placeholder:text-[#8896A3] focus:outline-none focus:border-[#0B6E76]/50 resize-none"
                         />
 
                         <div className="flex items-center gap-3">
@@ -491,7 +491,7 @@ export function ObstacleTable({
                             type="button"
                             onClick={() => setShowPct((v) => !v)}
                             className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-                              showPct ? 'text-[#93C5FD]' : 'text-[#3D5380] hover:text-[#7B9CCC]'
+                              showPct ? 'text-[#0B6E76]' : 'text-[#8896A3] hover:text-[#4B5563]'
                             }`}
                           >
                             <SlidersHorizontal size={11} /> ระบุ %
@@ -501,25 +501,25 @@ export function ObstacleTable({
                               type="checkbox"
                               checked={closingNow}
                               onChange={(e) => setClosingNow(e.target.checked)}
-                              className="w-3.5 h-3.5 rounded accent-[#34D399] cursor-pointer"
+                              className="w-3.5 h-3.5 rounded accent-[#1E7A5A] cursor-pointer"
                             />
-                            <span className={`text-xs font-semibold transition-colors ${closingNow ? 'text-[#34D399]' : 'text-[#7B9CCC]'}`}>
+                            <span className={`text-xs font-semibold transition-colors ${closingNow ? 'text-[#1E7A5A]' : 'text-[#4B5563]'}`}>
                               ปิดประเด็น
                             </span>
                           </label>
                         </div>
 
                         {showPct && (
-                          <div className="space-y-2 bg-[#0C1535] rounded-xl p-3 border border-[#1E2E50]">
+                          <div className="space-y-2 bg-[#FFFFFF] rounded-xl p-3 border border-[#EFF2F5]">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-[#7B9CCC]">ความคืบหน้า</span>
-                              <span className="text-sm font-bold num text-[#E4ECFF]">{pct ?? 0}%</span>
+                              <span className="text-xs text-[#4B5563]">ความคืบหน้า</span>
+                              <span className="text-sm font-bold num text-[#12181F]">{pct ?? 0}%</span>
                             </div>
                             <input
                               type="range" min={0} max={100} step={5}
                               value={pct ?? 0}
                               onChange={(e) => setPct(Number(e.target.value))}
-                              className="w-full h-1 rounded-full appearance-none cursor-pointer accent-[#4782FF]"
+                              className="w-full h-1 rounded-full appearance-none cursor-pointer accent-[#0B6E76]"
                             />
                             <div className="prog-bg">
                               <div
@@ -533,12 +533,12 @@ export function ObstacleTable({
                         <button
                           onClick={handleSubmitLog}
                           disabled={pending || !message.trim()}
-                          className="w-full py-3 font-bold text-sm rounded-xl disabled:opacity-35 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-white"
+                          className="w-full py-3 font-bold text-sm rounded-xl disabled:opacity-35 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-[#12181F]"
                           style={{
                             background: message.trim()
                               ? `linear-gradient(135deg, ${cat.accent}, ${cat.accent}cc)`
                               : undefined,
-                            backgroundColor: !message.trim() ? '#1E2E50' : undefined,
+                            backgroundColor: !message.trim() ? '#EFF2F5' : undefined,
                           }}
                         >
                           <MessageSquarePlus size={14} />

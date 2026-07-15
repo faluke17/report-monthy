@@ -153,14 +153,14 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
       {/* Summary bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'ทั้งหมด',     value: total,       color: 'text-white',        bg: '' },
+          { label: 'ทั้งหมด',     value: total,       color: 'text-[#12181F]',        bg: '' },
           { label: 'กำลังดำเนิน', value: inProgress,  color: 'text-cyan-300',     bg: 'border-l-2 border-cyan-500/40' },
           { label: 'เสร็จแล้ว',   value: completed,   color: 'text-emerald-300',  bg: 'border-l-2 border-emerald-500/40' },
           { label: 'รอข้อมูล',    value: incomplete6, color: 'text-amber-300',    bg: 'border-l-2 border-amber-500/40' },
           { label: 'เกินกำหนด',   value: overdue,     color: 'text-red-400',      bg: 'border-l-2 border-red-500/40' },
         ].map(s => (
           <div key={s.label} className={`glass-card px-4 py-4 ${s.bg}`}>
-            <p className="text-xs text-white/50 mb-1.5 font-medium">{s.label}</p>
+            <p className="text-xs text-black/50 mb-1.5 font-medium">{s.label}</p>
             <p className={`text-3xl font-bold num ${s.color}`}>{s.value}</p>
           </div>
         ))}
@@ -176,11 +176,11 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่อโครงการ หรือรหัส..."
-              className="w-full bg-white/5 border border-white/12 rounded-lg pl-8 pr-3 py-2 text-sm text-white/85 placeholder-white/35 focus:outline-none focus:border-cyan-500/40"
+              className="w-full bg-black/5 border border-black/12 rounded-lg pl-8 pr-3 py-2 text-sm text-black/85 placeholder-white/35 focus:outline-none focus:border-cyan-500/40"
             />
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60">
                 <X size={12} />
               </button>
             )}
@@ -191,7 +191,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
             <select
               value={filterBranchId}
               onChange={e => setFilterBranchId(e.target.value)}
-              className="flex-1 min-w-[140px] max-w-[200px] bg-white/5 border border-white/12 rounded-lg px-3 py-2 text-sm text-white/75 focus:outline-none focus:border-cyan-500/40"
+              className="flex-1 min-w-[140px] max-w-[200px] bg-black/5 border border-black/12 rounded-lg px-3 py-2 text-sm text-black/75 focus:outline-none focus:border-cyan-500/40"
             >
               <option value="">ทุกสาขา</option>
               {activeBranches.map(b => (
@@ -201,11 +201,11 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
           )}
 
           <div className="flex items-center justify-between flex-1 min-w-0">
-            <p className="text-sm text-white/55 truncate font-medium">
+            <p className="text-sm text-black/55 truncate font-medium">
               {groupName}
               {(q || filterBranchId)
                 ? <span className="text-cyan-400 ml-1">· {total} โครงการ (กรอง)</span>
-                : <span className="text-white/40 ml-1">· {total} โครงการ</span>
+                : <span className="text-black/40 ml-1">· {total} โครงการ</span>
               }
             </p>
             <button
@@ -221,14 +221,14 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
       {/* Project Table */}
       <div className="glass-card overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center text-white/25 text-sm">
+          <div className="py-16 text-center text-black/25 text-sm">
             {filterBranchId ? 'ไม่มีโครงการในสาขาที่เลือก' : 'ยังไม่มีโครงการ'}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-white/45 uppercase tracking-wider border-b border-white/8">
+                <tr className="text-xs text-black/45 uppercase tracking-wider border-b border-black/8">
                   <th className="text-center px-4 py-3 font-semibold w-10">#</th>
                   <th className="text-left px-4 py-3 font-semibold">สาขา</th>
                   <th className="text-left px-4 py-3 font-semibold">ชื่อโครงการ</th>
@@ -248,16 +248,16 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                     <tr
                       key={project.id}
                       onClick={() => { setSelected(project); setExpandedPhase(getAutoExpandPhase(project)); setConfirmDelete(false) }}
-                      className="border-b border-white/4 hover:bg-white/3 cursor-pointer transition-colors"
+                      className="border-b border-black/4 hover:bg-black/3 cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-4 text-center text-white/40 text-sm num">{idx + 1}</td>
-                      <td className="px-4 py-4 text-white/65 text-sm whitespace-nowrap font-medium">
+                      <td className="px-4 py-4 text-center text-black/40 text-sm num">{idx + 1}</td>
+                      <td className="px-4 py-4 text-black/65 text-sm whitespace-nowrap font-medium">
                         {project.branches?.name_th ?? '-'}
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-white font-semibold leading-snug text-sm">{project.project_name}</p>
+                        <p className="text-[#12181F] font-semibold leading-snug text-sm">{project.project_name}</p>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          {project.code && <p className="text-xs text-white/40 font-mono">{project.code}</p>}
+                          {project.code && <p className="text-xs text-black/40 font-mono">{project.code}</p>}
                           {project.project_type === 'dma' && (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20">DMA</span>
                           )}
@@ -270,7 +270,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                             phase === 6 && !incomplete ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                             : phase === 6 &&  incomplete ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                             : phase > 0                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
-                            :                              'bg-white/5 text-white/40 border-white/10'
+                            :                              'bg-black/5 text-black/40 border-black/10'
                           }`}>
                             {phase === 6 && incomplete ? 'รอข้อมูล' : PHASE_LABELS[phase]}
                           </span>
@@ -278,7 +278,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                           {/* Progress % — phase 5 pipe */}
                           {phase === 5 && pct !== null && (
                             <div className="w-20 space-y-1">
-                              <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
+                              <div className="h-1.5 rounded-full bg-black/8 overflow-hidden">
                                 <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-300 transition-all" style={{ width: `${Math.min(pct,100)}%` }} />
                               </div>
                               <p className="text-xs text-cyan-400 num text-center font-semibold">{pct}%</p>
@@ -290,7 +290,7 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
                             <span className={`text-xs flex items-center gap-1 font-medium ${
                               dl.level === 'overdue' ? 'text-red-400'
                               : dl.level === 'near'  ? 'text-amber-400'
-                              :                        'text-white/40'
+                              :                        'text-black/40'
                             }`}>
                               <Calendar size={10} /> {dl.text}
                             </span>
@@ -320,13 +320,13 @@ export function ProjectProgressTable({ projects, yearId, groupId, groupName, bra
           <div className="relative z-10 w-full max-w-2xl glass-card rounded-2xl overflow-hidden animate-fadein flex flex-col max-h-[88vh] shadow-2xl">
 
             {/* Mac titlebar */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/8 bg-white/3 shrink-0">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-black/8 bg-black/3 shrink-0">
               <button
                 onClick={closeDetail}
                 className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors shrink-0"
               />
               <div className="flex-1 text-center min-w-0">
-                <p className="text-sm font-semibold text-white/80 truncate">{selected.project_name}</p>
+                <p className="text-sm font-semibold text-black/80 truncate">{selected.project_name}</p>
               </div>
               <div className="w-3 shrink-0" />
             </div>
@@ -440,11 +440,11 @@ function DetailBody({
     <div className="p-6 space-y-5">
       {/* Meta row */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-white/60 bg-white/6 px-3 py-1 rounded-full font-medium border border-white/8">
+        <span className="text-sm text-black/60 bg-black/6 px-3 py-1 rounded-full font-medium border border-black/8">
           {project.branches?.name_th ?? '-'}
         </span>
         {project.code && (
-          <span className="text-xs text-white/45 font-mono bg-white/5 px-2.5 py-1 rounded-full border border-white/8">
+          <span className="text-xs text-black/45 font-mono bg-black/5 px-2.5 py-1 rounded-full border border-black/8">
             {project.code}
           </span>
         )}
@@ -456,8 +456,8 @@ function DetailBody({
       </div>
 
       {/* ── Phase Stepper — primary visual ── */}
-      <div className="bg-white/3 rounded-xl px-4 pt-4 pb-3 border border-white/6">
-        <p className="text-xs text-white/45 uppercase tracking-widest mb-3 font-semibold">ขั้นตอนการดำเนินงาน</p>
+      <div className="bg-black/3 rounded-xl px-4 pt-4 pb-3 border border-black/6">
+        <p className="text-xs text-black/45 uppercase tracking-widest mb-3 font-semibold">ขั้นตอนการดำเนินงาน</p>
         <PhaseTimeline
           project={project}
           selectedPhase={expandedPhase}
@@ -509,7 +509,7 @@ function DetailBody({
 
       {/* Budget */}
       <div>
-        <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">งบประมาณ</p>
+        <p className="text-xs text-black/50 uppercase tracking-widest mb-2 font-semibold">งบประมาณ</p>
         <div className="grid grid-cols-3 gap-2">
           <BudgetCell label="งบประมาณ (ไม่รวม VAT)" value={project.budget_excl_vat} />
           <BudgetCell label="งบจัดจ้าง (รวม VAT)" value={project.contract_incl_vat} />
@@ -534,7 +534,7 @@ function DetailBody({
 
       {/* Delete */}
       {isAdmin && (
-        <div className="pt-1 border-t border-white/6">
+        <div className="pt-1 border-t border-black/6">
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
@@ -546,7 +546,7 @@ function DetailBody({
             <div className="flex items-center gap-3">
               <p className="text-xs text-red-400 flex-1">ยืนยันลบโครงการ? ไม่สามารถกู้คืนได้</p>
               <button onClick={() => setConfirmDelete(false)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white/70">
+                className="text-xs px-3 py-1.5 rounded-lg border border-black/10 text-black/40 hover:text-black/70">
                 ยกเลิก
               </button>
               <button disabled={isPending}
@@ -593,15 +593,15 @@ function ContractInfo({ contract: c, deadlineSt }: {
 
   return (
     <div>
-      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">รายละเอียดสัญญา</p>
-      <div className="bg-white/4 rounded-xl divide-y divide-white/5">
+      <p className="text-xs text-black/50 uppercase tracking-widest mb-2 font-semibold">รายละเอียดสัญญา</p>
+      <div className="bg-black/4 rounded-xl divide-y divide-black/5">
         {rows.map(r => (
           <div key={r.label} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
-            <span className="text-xs text-white/55 shrink-0">{r.label}</span>
+            <span className="text-xs text-black/55 shrink-0">{r.label}</span>
             <span className={`text-xs text-right font-semibold break-all ${
               r.highlight
                 ? deadlineSt === 'overdue' ? 'text-red-400' : 'text-amber-400'
-                : 'text-white/80'
+                : 'text-black/80'
             }`}>
               {r.value}
             </span>
@@ -640,12 +640,12 @@ function CompletionInfo({ project }: { project: BudgetProject }) {
 
   return (
     <div>
-      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">ข้อมูลการแล้วเสร็จ</p>
-      <div className="bg-white/4 rounded-xl divide-y divide-white/5">
+      <p className="text-xs text-black/50 uppercase tracking-widest mb-2 font-semibold">ข้อมูลการแล้วเสร็จ</p>
+      <div className="bg-black/4 rounded-xl divide-y divide-black/5">
         {rows.map(r => (
           <div key={r.label} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
-            <span className="text-xs text-white/55 shrink-0">{r.label}</span>
-            <span className={`text-xs text-right font-semibold ${r.highlight ? 'text-emerald-400' : 'text-white/80'}`}>
+            <span className="text-xs text-black/55 shrink-0">{r.label}</span>
+            <span className={`text-xs text-right font-semibold ${r.highlight ? 'text-emerald-400' : 'text-black/80'}`}>
               {r.value}
             </span>
           </div>
@@ -659,12 +659,12 @@ function CompletionInfo({ project }: { project: BudgetProject }) {
 
 function BudgetCell({ label, value, note }: { label: string; value: number | null | undefined; note?: string }) {
   return (
-    <div className="bg-white/4 rounded-xl p-3.5">
-      <p className="text-xs text-white/50 mb-2 leading-tight font-medium">{label}</p>
-      <p className="text-sm font-bold text-white num">
+    <div className="bg-black/4 rounded-xl p-3.5">
+      <p className="text-xs text-black/50 mb-2 leading-tight font-medium">{label}</p>
+      <p className="text-sm font-bold text-[#12181F] num">
         {value != null ? `฿${value.toLocaleString('th-TH', { maximumFractionDigits: 2 })}` : '-'}
       </p>
-      {note && <p className="text-xs text-white/35 mt-0.5">{note}</p>}
+      {note && <p className="text-xs text-black/35 mt-0.5">{note}</p>}
     </div>
   )
 }
@@ -742,14 +742,14 @@ function PhaseEditForm({
       <form onSubmit={handlePhase123} className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-white/55 mb-1 font-medium">วันที่เสร็จสิ้น</label>
+            <label className="block text-xs text-black/55 mb-1 font-medium">วันที่เสร็จสิ้น</label>
             <input type="date" name={dateKey} defaultValue={project[dateKey] as string ?? ''}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div>
-            <label className="block text-xs text-white/55 mb-1 font-medium">หมายเหตุ</label>
+            <label className="block text-xs text-black/55 mb-1 font-medium">หมายเหตุ</label>
             <input type="text" name={notesKey} defaultValue={project[notesKey] as string ?? ''}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50" />
           </div>
         </div>
         <SaveBtn isPending={isPending} />
@@ -774,7 +774,7 @@ function PhaseEditForm({
         </div>
         {computedEnd && (
           <div className="bg-cyan-500/10 rounded-lg px-3.5 py-2.5">
-            <p className="text-xs text-white/55 font-medium">วันหมดสัญญา (คำนวณอัตโนมัติ)</p>
+            <p className="text-xs text-black/55 font-medium">วันหมดสัญญา (คำนวณอัตโนมัติ)</p>
             <p className="text-sm text-cyan-300 font-medium mt-0.5">
               {new Date(computedEnd).toLocaleDateString('th-TH', { dateStyle: 'long' })}
             </p>
@@ -801,33 +801,33 @@ function PhaseEditForm({
         )}
         {updates.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-xs text-white/50 font-semibold">ประวัติอัปเดต</p>
+            <p className="text-xs text-black/50 font-semibold">ประวัติอัปเดต</p>
             {updates.map(u => {
               const p = isPipe && est && est > 0 && u.pipe_length_completed != null
                 ? Math.round((u.pipe_length_completed / est) * 100)
                 : null
               return (
-                <div key={u.id} className="bg-white/4 rounded-lg px-3.5 py-2.5 text-xs">
+                <div key={u.id} className="bg-black/4 rounded-lg px-3.5 py-2.5 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-white/60 font-medium">{new Date(u.reported_date).toLocaleDateString('th-TH')}</span>
+                    <span className="text-black/60 font-medium">{new Date(u.reported_date).toLocaleDateString('th-TH')}</span>
                     {isPipe && u.pipe_length_completed != null ? (
                       <span className="text-cyan-300 font-semibold num">
                         {u.pipe_length_completed.toLocaleString('th-TH')} ม.
-                        {p !== null && <span className="text-white/40 ml-1">({p}%)</span>}
+                        {p !== null && <span className="text-black/40 ml-1">({p}%)</span>}
                       </span>
                     ) : (
                       <span className="text-cyan-400/70 text-xs">บันทึกแล้ว</span>
                     )}
                   </div>
-                  {u.notes && <p className="text-white/55 mt-1">{u.notes}</p>}
+                  {u.notes && <p className="text-black/55 mt-1">{u.notes}</p>}
                 </div>
               )
             })}
           </div>
         )}
         {project.current_phase >= 5 && (
-          <form onSubmit={handleAddProgress} className="space-y-2 border-t border-white/8 pt-3">
-            <p className="text-xs text-white/55 font-semibold">เพิ่มอัปเดต</p>
+          <form onSubmit={handleAddProgress} className="space-y-2 border-t border-black/8 pt-3">
+            <p className="text-xs text-black/55 font-semibold">เพิ่มอัปเดต</p>
             <div className="grid grid-cols-2 gap-2">
               <InputField name="reported_date" label="วันที่" type="date"
                 defaultValue={new Date().toISOString().split('T')[0]} />
@@ -836,7 +836,7 @@ function PhaseEditForm({
               )}
             </div>
             <textarea name="notes" placeholder="หมายเหตุ / สถานะงาน" rows={2}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50 placeholder-white/20" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] resize-none focus:outline-none focus:border-cyan-500/50 placeholder-white/20" />
             <SaveBtn isPending={isPending} label="เพิ่มอัปเดต" />
           </form>
         )}
@@ -855,9 +855,9 @@ function PhaseEditForm({
               defaultValue={project.completion_inspection_date ?? ''} />
           </div>
           <div>
-            <label className="block text-xs text-white/55 mb-1 font-medium">หมายเหตุ</label>
+            <label className="block text-xs text-black/55 mb-1 font-medium">หมายเหตุ</label>
             <textarea name="completion_notes" defaultValue={project.completion_notes ?? ''} rows={2}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] resize-none focus:outline-none focus:border-cyan-500/50" />
           </div>
           <SaveBtn isPending={isPending} />
         </form>
@@ -907,8 +907,8 @@ function CertificateSection({ project, onRefresh }: {
 
   return (
     <div>
-      <p className="text-xs text-white/50 uppercase tracking-widest mb-2 font-semibold">ใบรับรองผลงาน</p>
-      <div className="bg-white/4 rounded-xl p-3">
+      <p className="text-xs text-black/50 uppercase tracking-widest mb-2 font-semibold">ใบรับรองผลงาน</p>
+      <div className="bg-black/4 rounded-xl p-3">
         {project.certificate_url ? (
           <div className="flex items-center gap-2 flex-wrap">
             <a
@@ -922,7 +922,7 @@ function CertificateSection({ project, onRefresh }: {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/40 border border-white/10 hover:text-white/70 hover:border-white/20 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-black/40 border border-black/10 hover:text-black/70 hover:border-black/20 disabled:opacity-40 transition-colors"
             >
               <Paperclip size={12} /> {uploading ? 'กำลังอัปโหลด...' : 'เปลี่ยนไฟล์'}
             </button>
@@ -931,7 +931,7 @@ function CertificateSection({ project, onRefresh }: {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-black/5 text-black/50 border border-black/10 hover:bg-black/10 hover:text-black/70 disabled:opacity-40 transition-colors"
           >
             <Paperclip size={12} /> {uploading ? 'กำลังอัปโหลด...' : 'แนบใบรับรอง PDF'}
           </button>
@@ -975,17 +975,17 @@ function NewProjectModal({ yearId, groupId, branches, sessionBranchId, isRegion,
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-md glass-card rounded-2xl overflow-hidden animate-fadein shadow-2xl">
         {/* Mac titlebar */}
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/8 bg-white/3">
+        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-black/8 bg-black/3">
           <button onClick={onClose} className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-          <p className="flex-1 text-center text-sm font-semibold text-white/70">เพิ่มโครงการใหม่</p>
+          <p className="flex-1 text-center text-sm font-semibold text-black/70">เพิ่มโครงการใหม่</p>
           <div className="w-3" />
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           {isRegion && (
             <div>
-              <label className="block text-xs text-white/55 mb-1 font-medium">สาขา</label>
+              <label className="block text-xs text-black/55 mb-1 font-medium">สาขา</label>
               <select name="branch_id" required
-                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50">
                 <option value="">เลือกสาขา...</option>
                 {branches.map(b => (
                   <option key={b.id} value={b.id}>{b.name_th}</option>
@@ -997,38 +997,38 @@ function NewProjectModal({ yearId, groupId, branches, sessionBranchId, isRegion,
             <input type="hidden" name="branch_id" value={sessionBranchId} />
           )}
           <div>
-            <label className="block text-xs text-white/40 mb-1">ประเภทโครงการ</label>
+            <label className="block text-xs text-black/40 mb-1">ประเภทโครงการ</label>
             <select name="project_type" defaultValue="pipe"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50">
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50">
               <option value="pipe">ปรับปรุงท่อ (มีการวัดความยาวท่อ)</option>
               <option value="dma">DMA / มาตรวัดน้ำ / PRV (ไม่มีความยาวท่อ)</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-white/40 mb-1">รหัสโครงการ</label>
+            <label className="block text-xs text-black/40 mb-1">รหัสโครงการ</label>
             <input type="text" name="code" placeholder="เช่น ผด.07-2568-001"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div>
-            <label className="block text-xs text-white/40 mb-1">ชื่อโครงการ <span className="text-red-400">*</span></label>
+            <label className="block text-xs text-black/40 mb-1">ชื่อโครงการ <span className="text-red-400">*</span></label>
             <input type="text" name="project_name" required placeholder="กรอกชื่อโครงการ..."
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-white/55 mb-1 font-medium">งบประมาณ (ไม่รวม VAT)</label>
+              <label className="block text-xs text-black/55 mb-1 font-medium">งบประมาณ (ไม่รวม VAT)</label>
               <input type="number" name="budget_excl_vat" step="0.01" min="0" placeholder="0.00"
-                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
+                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-xs text-white/55 mb-1 font-medium">งบจัดจ้าง (รวม VAT)</label>
+              <label className="block text-xs text-black/55 mb-1 font-medium">งบจัดจ้าง (รวม VAT)</label>
               <input type="number" name="contract_incl_vat" step="0.01" min="0" placeholder="0.00"
-                className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
+                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50" />
             </div>
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2 rounded-lg text-sm text-white/50 hover:text-white/80 border border-white/10 transition-colors">
+              className="flex-1 py-2 rounded-lg text-sm text-black/50 hover:text-black/80 border border-black/10 transition-colors">
               ยกเลิก
             </button>
             <button type="submit" disabled={isPending}
@@ -1051,9 +1051,9 @@ function InputField({ name, label, type = 'text', defaultValue, value, onChange,
   const props = value !== undefined ? { value, onChange } : { defaultValue }
   return (
     <div>
-      <label className="block text-xs text-white/55 mb-1 font-medium">{label}</label>
+      <label className="block text-xs text-black/55 mb-1 font-medium">{label}</label>
       <input type={type} name={name} step={step} {...props}
-        className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50" />
+        className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/50" />
     </div>
   )
 }

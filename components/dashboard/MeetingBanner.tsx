@@ -27,7 +27,7 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
   const pendingReqs = requirements.filter(r => r.pending_count > 0).length
   const hasReqs     = totalReqs > 0
 
-  const urgencyColor = isUrgent ? '#F87171' : isSoon ? '#FCD34D' : '#4782FF'
+  const urgencyColor = isUrgent ? '#B3392C' : isSoon ? '#A8721A' : '#0B6E76'
 
   return (
     <div className="flex items-start gap-3 py-3.5 px-4">
@@ -42,16 +42,16 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
       <div className="flex-1 min-w-0 space-y-1.5">
         {/* Title + urgency */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[14px] font-semibold truncate" style={{ color: '#E4ECFF' }}>
+          <span className="text-[14px] font-semibold truncate" style={{ color: '#12181F' }}>
             {meeting.title}
           </span>
           {days <= 7 && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0"
               style={{
-                background: isUrgent ? 'rgba(248,113,113,.14)' : 'rgba(252,211,77,.12)',
-                color: isUrgent ? '#F87171' : '#FCD34D',
-                border: `1px solid ${isUrgent ? 'rgba(248,113,113,.26)' : 'rgba(252,211,77,.24)'}`,
+                background: isUrgent ? 'rgba(179,57,44,.14)' : 'rgba(168,114,26,.12)',
+                color: isUrgent ? '#B3392C' : '#A8721A',
+                border: `1px solid ${isUrgent ? 'rgba(179,57,44,.26)' : 'rgba(168,114,26,.24)'}`,
                 fontFamily: 'var(--font-mono)',
               }}
             >
@@ -62,8 +62,8 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
 
         {/* Meta row */}
         <div className="flex items-center gap-3 flex-wrap">
-          <p className="text-[11px] flex items-center gap-1" style={{ color: '#7B9CCC' }}>
-            <Calendar size={10} style={{ color: '#3D5380' }} />
+          <p className="text-[11px] flex items-center gap-1" style={{ color: '#4B5563' }}>
+            <Calendar size={10} style={{ color: '#8896A3' }} />
             {formatThaiDate(meeting.scheduled_date, true)} · {meeting.scheduled_time.slice(0, 5)} น.
             {meeting.location && ` · ${meeting.location}`}
           </p>
@@ -72,9 +72,9 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
             <span
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded"
               style={{
-                background: 'rgba(71,130,255,.12)',
-                color: '#93C5FD',
-                border: '1px solid rgba(71,130,255,.22)',
+                background: 'rgba(11,110,118,.12)',
+                color: '#0B6E76',
+                border: '1px solid rgba(11,110,118,.22)',
               }}
             >
               <FileText size={9} />
@@ -86,8 +86,8 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
             <span
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded"
               style={pendingReqs === 0
-                ? { background: 'rgba(52,211,153,.10)',  color: '#34D399', border: '1px solid rgba(52,211,153,.24)' }
-                : { background: 'rgba(252,211,77,.10)',  color: '#FCD34D', border: '1px solid rgba(252,211,77,.24)' }
+                ? { background: 'rgba(30,122,90,.10)',  color: '#1E7A5A', border: '1px solid rgba(30,122,90,.24)' }
+                : { background: 'rgba(168,114,26,.10)',  color: '#A8721A', border: '1px solid rgba(168,114,26,.24)' }
               }
             >
               {pendingReqs === 0
@@ -99,15 +99,15 @@ function MeetingSlide({ meeting, requirements }: MeetingSlideProps) {
         </div>
 
         {meeting.notification_message && (
-          <p className="text-[11px]" style={{ color: '#7B9CCC' }}>{meeting.notification_message}</p>
+          <p className="text-[11px]" style={{ color: '#4B5563' }}>{meeting.notification_message}</p>
         )}
       </div>
 
       <Link
         href="/notify"
         className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all"
-        style={{ color: '#4782FF' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(71,130,255,.12)' }}
+        style={{ color: '#0B6E76' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(11,110,118,.12)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
         title="ดูรายละเอียด"
       >
@@ -144,7 +144,7 @@ export function MeetingBanner({ meetings, requirementsByMeetingId }: MeetingBann
   const days    = daysUntilDate(meeting.scheduled_date)
   const reqs    = requirementsByMeetingId[meeting.id] ?? []
 
-  const accentColor = days <= 3 ? '#F87171' : days <= 7 ? '#FCD34D' : '#4782FF'
+  const accentColor = days <= 3 ? '#B3392C' : days <= 7 ? '#A8721A' : '#0B6E76'
 
   return (
     <div
@@ -158,7 +158,7 @@ export function MeetingBanner({ meetings, requirementsByMeetingId }: MeetingBann
       {total > 1 && (
         <div
           className="flex items-center justify-between px-4 pb-3 pt-0"
-          style={{ borderTop: '1px solid rgba(71,130,255,.08)' }}
+          style={{ borderTop: '1px solid rgba(11,110,118,.08)' }}
         >
           <div className="flex items-center gap-1.5">
             {meetings.map((_, i) => (
@@ -169,7 +169,7 @@ export function MeetingBanner({ meetings, requirementsByMeetingId }: MeetingBann
                 style={{
                   width:  i === currentIndex ? '16px' : '6px',
                   height: '6px',
-                  background: i === currentIndex ? '#4782FF' : 'rgba(71,130,255,.25)',
+                  background: i === currentIndex ? '#0B6E76' : 'rgba(11,110,118,.25)',
                 }}
                 aria-label={`ไปยังการประชุม ${i + 1}`}
               />
@@ -180,25 +180,25 @@ export function MeetingBanner({ meetings, requirementsByMeetingId }: MeetingBann
             <button
               onClick={prev}
               className="p-1.5 rounded-lg transition-all"
-              style={{ color: '#3D5380' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#93C5FD' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3D5380' }}
+              style={{ color: '#8896A3' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#0B6E76' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8896A3' }}
               aria-label="ก่อนหน้า"
             >
               <ChevronLeft size={13} />
             </button>
             <span
               className="text-[10px] min-w-[28px] text-center"
-              style={{ color: '#3D5380', fontFamily: 'var(--font-mono)' }}
+              style={{ color: '#8896A3', fontFamily: 'var(--font-mono)' }}
             >
               {currentIndex + 1}/{total}
             </span>
             <button
               onClick={next}
               className="p-1.5 rounded-lg transition-all"
-              style={{ color: '#3D5380' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#93C5FD' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3D5380' }}
+              style={{ color: '#8896A3' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#0B6E76' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8896A3' }}
               aria-label="ถัดไป"
             >
               <ChevronRight size={13} />

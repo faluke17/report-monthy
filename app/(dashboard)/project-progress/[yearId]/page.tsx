@@ -43,11 +43,11 @@ export default async function YearGroupsPage({
     <div className="space-y-5 animate-fadein">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm flex-wrap">
-        <Link href="/project-progress" className="text-white/40 hover:text-white/70 transition-colors">
+        <Link href="/project-progress" className="text-black/40 hover:text-black/70 transition-colors">
           ความก้าวหน้าโครงการ
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-white/60">{year.name}</span>
+        <span className="text-black/20">/</span>
+        <span className="text-black/60">{year.name}</span>
       </div>
 
       <BudgetGroupList

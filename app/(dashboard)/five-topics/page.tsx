@@ -68,15 +68,15 @@ export default async function FiveTopicsPage({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">รายงาน 5 หัวข้อ</h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <h1 className="text-xl font-bold text-[#12181F]">รายงาน 5 หัวข้อ</h1>
+          <p className="text-sm text-black/40 mt-0.5">
             {getThaiMonthName(filterMonth)} {toThaiYear(filterYear)}
             {activeBranchName ? ` · ${activeBranchName}` : ''}
           </p>
         </div>
         <Link
           href="/five-topics/new"
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
         >
           <Plus size={15} />
           เพิ่มรายงาน
@@ -94,13 +94,13 @@ export default async function FiveTopicsPage({
       {/* Table */}
       <div className="glass-card overflow-hidden">
         {rows.length === 0 ? (
-          <div className="py-16 text-center text-white/30 text-sm">
+          <div className="py-16 text-center text-black/30 text-sm">
             ยังไม่มีรายงาน 5 หัวข้อสำหรับเดือนนี้
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-white/40 text-xs">
+              <tr className="border-b border-black/10 text-black/40 text-xs">
                 <th className="px-4 py-3 text-left font-medium">สาขา</th>
                 <th className="px-4 py-3 text-left font-medium">เดือน/ปี</th>
                 <th className="px-4 py-3 text-center font-medium">ข้อ 1</th>
@@ -118,21 +118,21 @@ export default async function FiveTopicsPage({
                 const filled = topicFilled(r)
                 const filledCount = filled.filter(Boolean).length
                 return (
-                  <tr key={r.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                  <tr key={r.id} className="border-b border-black/5 hover:bg-black/3 transition-colors">
                     <td className="px-4 py-3">
-                      <Link href={`/five-topics/${r.id}`} className="font-medium text-white hover:text-cyan-300 transition-colors">
+                      <Link href={`/five-topics/${r.id}`} className="font-medium text-[#12181F] hover:text-cyan-300 transition-colors">
                         {r.branches?.name_th ?? '—'}
                       </Link>
-                      <span className="ml-1.5 text-[11px] text-white/35">{r.branches?.code}</span>
+                      <span className="ml-1.5 text-[11px] text-black/35">{r.branches?.code}</span>
                     </td>
-                    <td className="px-4 py-3 text-white/70 num">
+                    <td className="px-4 py-3 text-black/70 num">
                       {getThaiMonthName(r.report_month)} {toThaiYear(r.report_year)}
                     </td>
                     {filled.map((ok, i) => (
                       <td key={i} className="px-4 py-3 text-center">
                         {ok
                           ? <CheckCircle2 size={16} className="text-green-400 mx-auto" />
-                          : <Circle size={16} className="text-white/20 mx-auto" />}
+                          : <Circle size={16} className="text-black/20 mx-auto" />}
                       </td>
                     ))}
                     <td className="px-4 py-3 text-center">

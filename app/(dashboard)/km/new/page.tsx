@@ -25,17 +25,17 @@ export default async function KmNewPage() {
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center gap-3">
-        <Link href="/km" className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition-colors">
+        <Link href="/km" className="flex items-center gap-1 text-sm text-black/50 hover:text-[#12181F] transition-colors">
           <ChevronLeft size={16} />
           KM
         </Link>
-        <span className="text-white/20">/</span>
-        <span className="text-sm text-white">เพิ่ม KM Case</span>
+        <span className="text-black/20">/</span>
+        <span className="text-sm text-[#12181F]">เพิ่ม KM Case</span>
       </div>
 
       <div>
-        <h1 className="text-xl font-bold text-white">เพิ่ม KM Best Practice ใหม่</h1>
-        <p className="text-sm text-white/40 mt-0.5">
+        <h1 className="text-xl font-bold text-[#12181F]">เพิ่ม KM Best Practice ใหม่</h1>
+        <p className="text-sm text-black/40 mt-0.5">
           บันทึกกรณีศึกษาที่ประสบความสำเร็จในการลด NRW เพื่อแบ่งปันกับสาขาอื่น
         </p>
       </div>

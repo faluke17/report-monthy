@@ -4,8 +4,8 @@ import { useState, useTransition, useEffect } from 'react'
 import { getChildNodes } from '@/app/actions/water-nodes'
 import type { WaterNodeOption } from '@/lib/types'
 
-const SELECT = 'w-full bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60 disabled:opacity-40'
-const LABEL = 'block text-xs text-white/50 mb-1'
+const SELECT = 'w-full bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60 disabled:opacity-40'
+const LABEL = 'block text-xs text-black/50 mb-1'
 
 interface Props {
   branchId: string

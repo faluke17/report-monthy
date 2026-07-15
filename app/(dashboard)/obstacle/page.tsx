@@ -57,17 +57,17 @@ export default async function ObstaclePage({
     <div className="space-y-5 animate-fadein">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Obstacle Tracker</h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <h1 className="text-xl font-bold text-[#12181F]">Obstacle Tracker</h1>
+          <p className="text-sm text-black/40 mt-0.5">
             ติดตามและแก้ไขอุปสรรค MM / DMA / P3
             {rows.length > 0 && (
-              <span className="ml-2 text-white/30">({rows.length} รายการ)</span>
+              <span className="ml-2 text-black/30">({rows.length} รายการ)</span>
             )}
           </p>
         </div>
         <Link
           href="/obstacle/new"
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-bold px-4 py-2 rounded-xl text-sm transition-colors"
         >
           <Plus size={15} />
           รายงานอุปสรรค

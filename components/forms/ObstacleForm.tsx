@@ -47,9 +47,9 @@ const STATUSES = [
   { value: 'ปิดประเด็น',   color: 'text-green-400',  bg: 'bg-green-500/15 border-green-500/30' },
 ] as const
 
-const SELECT = 'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/60'
-const TEXTAREA = 'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none'
-const LABEL = 'block text-sm text-white/60 mb-1.5'
+const SELECT = 'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60'
+const TEXTAREA = 'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none'
+const LABEL = 'block text-sm text-black/60 mb-1.5'
 
 interface Props {
   branches: Branch[]
@@ -174,7 +174,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
               onChange={(e) => set('other_text', e.target.value)}
               placeholder="ระบุอุปสรรคที่พบ..."
               required
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
         )}
@@ -212,7 +212,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
                       ? isHigh
                         ? 'bg-red-500/20 border-red-500/60 text-red-300'
                         : 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                      : 'bg-white/5 border-white/15 text-white/40 hover:border-white/30'
+                      : 'bg-black/5 border-black/15 text-black/40 hover:border-black/30'
                   }`}
                 >
                   {isHigh ? '🔴' : '🟡'} {lvl}
@@ -307,7 +307,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={LABEL + ' mb-0'}>ความคืบหน้าการแก้ไข</label>
-            <span className="text-lg font-bold num text-white">{pct}%</span>
+            <span className="text-lg font-bold num text-[#12181F]">{pct}%</span>
           </div>
           <input
             type="range"
@@ -318,14 +318,14 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
             onChange={(e) => set('progress_pct', e.target.value)}
             className="w-full h-2 rounded-full appearance-none cursor-pointer accent-cyan-500"
           />
-          <div className="flex justify-between text-[10px] text-white/25 mt-1">
+          <div className="flex justify-between text-[10px] text-black/25 mt-1">
             <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
           </div>
         </div>
 
         {/* Summary card — ที่ผู้บริหารเห็น */}
         <div className={`rounded-xl border p-4 space-y-3 ${statusMeta.bg}`}>
-          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">สรุปสถานะ — มุมมองผู้บริหาร</p>
+          <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest">สรุปสถานะ — มุมมองผู้บริหาร</p>
           <div className="flex items-center gap-3">
             <span className={`text-sm font-bold px-3 py-1 rounded-full border ${statusMeta.bg} ${statusMeta.color}`}>
               {form.status}
@@ -337,11 +337,11 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
             )}
           </div>
           <div>
-            <div className="flex justify-between text-xs text-white/50 mb-1">
+            <div className="flex justify-between text-xs text-black/50 mb-1">
               <span>ความคืบหน้า</span>
-              <span className="num font-semibold text-white">{pct}%</span>
+              <span className="num font-semibold text-[#12181F]">{pct}%</span>
             </div>
-            <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-black/10 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
                   pct >= 80 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
@@ -351,7 +351,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
             </div>
           </div>
           {form.due_date && (
-            <p className={`text-xs ${isOverdue ? 'text-red-400' : 'text-white/50'}`}>
+            <p className={`text-xs ${isOverdue ? 'text-red-400' : 'text-black/50'}`}>
               กำหนดแก้ไข: {new Date(form.due_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
               {isOverdue && ' — เกินกำหนดแล้ว'}
             </p>
@@ -361,7 +361,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
 
       {/* ─── ตัวเลือกเพิ่มเติม ─── */}
       <div className="glass-card p-5 space-y-3">
-        <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">การดำเนินการเพิ่มเติม</p>
+        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">การดำเนินการเพิ่มเติม</p>
         {[
           { key: 'auto_create_action',   label: 'สร้าง Action Item อัตโนมัติ' },
           { key: 'send_to_meeting',      label: 'นำเข้าวาระการประชุม' },
@@ -374,7 +374,7 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
               onChange={(e) => set(key, e.target.checked ? 'true' : 'false')}
               className="w-4 h-4 accent-cyan-500"
             />
-            <span className="text-sm text-white/70">{label}</span>
+            <span className="text-sm text-black/70">{label}</span>
           </label>
         ))}
       </div>
@@ -384,14 +384,14 @@ export function ObstacleForm({ branches, profile, plans: _plans }: Props) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2.5 text-sm text-white/60 hover:text-white border border-white/15 rounded-lg transition-colors"
+          className="px-4 py-2.5 text-sm text-black/60 hover:text-[#12181F] border border-black/15 rounded-lg transition-colors"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold rounded-lg disabled:opacity-40 transition-colors"
+          className="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold rounded-lg disabled:opacity-40 transition-colors"
         >
           {submitting ? 'กำลังบันทึก...' : 'รายงานอุปสรรค'}
         </button>

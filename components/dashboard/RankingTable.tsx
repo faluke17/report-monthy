@@ -24,15 +24,15 @@ const columns: ColumnDef<RankRow>[] = [
   {
     key: 'rank',
     header: '#',
-    render: (r) => <span className="num text-white/40 text-sm">#{r.rank}</span>,
+    render: (r) => <span className="num text-black/40 text-sm">#{r.rank}</span>,
   },
   {
     key: 'branch',
     header: 'สาขา',
     render: (r) => (
       <div>
-        <p className="font-bold text-white text-sm">{r.branches?.name_th}</p>
-        <p className="text-[10px] text-white/35 num mt-0.5">{r.branches?.code} · {r.branches?.province_th}</p>
+        <p className="font-bold text-[#12181F] text-sm">{r.branches?.name_th}</p>
+        <p className="text-[10px] text-black/35 num mt-0.5">{r.branches?.code} · {r.branches?.province_th}</p>
       </div>
     ),
   },
@@ -42,7 +42,7 @@ const columns: ColumnDef<RankRow>[] = [
     sortable: true,
     render: (r) => {
       const nrw = r.nrw_pct
-      const color = nrw === null ? 'text-white/25' : nrw > 20 ? 'text-red-400' : 'text-green-400'
+      const color = nrw === null ? 'text-black/25' : nrw > 20 ? 'text-red-400' : 'text-green-400'
       return (
         <div className="space-y-1">
           <span className={`num font-bold text-sm ${color}`}>
@@ -65,7 +65,7 @@ const columns: ColumnDef<RankRow>[] = [
     header: 'น้ำจ่าย (ลบ.ม.)',
     sortable: true,
     render: (r) => (
-      <span className="num text-white/70 text-sm">
+      <span className="num text-black/70 text-sm">
         {r.volume_distributed !== null ? formatThaiNumber(r.volume_distributed, 0) : '—'}
       </span>
     ),
@@ -75,7 +75,7 @@ const columns: ColumnDef<RankRow>[] = [
     header: 'MNF Factor',
     sortable: true,
     render: (r) => (
-      <span className={`num text-sm ${(r.mnf_factor ?? 0) > 0.5 ? 'text-amber-400' : 'text-white/70'}`}>
+      <span className={`num text-sm ${(r.mnf_factor ?? 0) > 0.5 ? 'text-amber-400' : 'text-black/70'}`}>
         {r.mnf_factor !== null ? r.mnf_factor.toFixed(3) : '—'}
       </span>
     ),
@@ -84,7 +84,7 @@ const columns: ColumnDef<RankRow>[] = [
     key: 'leaks_found',
     header: 'จุดรั่ว พบ/ซ่อม',
     render: (r) => (
-      <span className="num text-white/60 text-sm">
+      <span className="num text-black/60 text-sm">
         {r.leaks_found ?? 0} / {r.leaks_repaired ?? 0}
       </span>
     ),

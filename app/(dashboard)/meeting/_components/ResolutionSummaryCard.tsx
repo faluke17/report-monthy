@@ -15,7 +15,7 @@ const DEPT_COLORS: Record<string, string> = {
   'งานจัดเก็บ':  'bg-teal-500/15 text-teal-300 border-teal-400/35',
 }
 function deptClass(dept: string) {
-  return DEPT_COLORS[dept] ?? 'bg-white/8 text-white/65 border-white/15'
+  return DEPT_COLORS[dept] ?? 'bg-black/8 text-black/65 border-black/15'
 }
 
 // ─── Stages ──────────────────────────────────────────────────
@@ -77,7 +77,7 @@ function StageTrack({ pct, status }: { pct: number; status: string }) {
             {i > 0 && (
               <div className={cn(
                 'h-[2px] flex-1 mt-[6px] mx-1 rounded-full',
-                isPast || isActive ? 'bg-cyan-500/60' : 'bg-white/15',
+                isPast || isActive ? 'bg-cyan-500/60' : 'bg-black/15',
               )} />
             )}
 
@@ -88,7 +88,7 @@ function StageTrack({ pct, status }: { pct: number; status: string }) {
                 isActive && done  ? 'bg-emerald-400 border-emerald-300 ring-2 ring-emerald-400/30' :
                 isActive          ? 'bg-cyan-400 border-cyan-200 ring-2 ring-cyan-400/30' :
                 isPast            ? 'bg-cyan-500/70 border-cyan-400/60' :
-                                    'bg-white/10 border-white/25',
+                                    'bg-black/10 border-black/25',
               )} />
 
               {/* Label */}
@@ -96,8 +96,8 @@ function StageTrack({ pct, status }: { pct: number; status: string }) {
                 'text-[10px] leading-tight text-center max-w-[56px] font-medium',
                 isActive && done  ? 'text-emerald-300 font-bold' :
                 isActive          ? 'text-cyan-300 font-bold' :
-                isPast            ? 'text-white/55' :
-                                    'text-white/30',
+                isPast            ? 'text-black/55' :
+                                    'text-black/30',
               )}>
                 {label}
               </span>
@@ -143,8 +143,8 @@ export function ResolutionSummaryCard({ r }: Props) {
     <Link
       href="/action"
       className={cn(
-        'block rounded-xl border border-white/12 border-l-4 transition-all group',
-        'hover:border-white/25 hover:shadow-xl hover:shadow-black/25 hover:-translate-y-px',
+        'block rounded-xl border border-black/12 border-l-4 transition-all group',
+        'hover:border-black/25 hover:shadow-xl hover:shadow-black/25 hover:-translate-y-px',
         borderL, cardBg,
         done ? 'opacity-60' : '',
       )}
@@ -167,7 +167,7 @@ export function ResolutionSummaryCard({ r }: Props) {
               </span>
             )}
             {r.source && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/55 border border-white/15">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/8 text-black/55 border border-black/15">
                 {r.source}
               </span>
             )}
@@ -183,7 +183,7 @@ export function ResolutionSummaryCard({ r }: Props) {
         {/* ── Row 2: title ── */}
         <p className={cn(
           'text-base font-semibold leading-snug tracking-tight transition-colors',
-          done ? 'text-white/55' : 'text-white group-hover:text-cyan-50',
+          done ? 'text-black/55' : 'text-[#12181F] group-hover:text-cyan-50',
         )}>
           {r.title}
         </p>
@@ -191,10 +191,10 @@ export function ResolutionSummaryCard({ r }: Props) {
         {/* ── Row 3: branch · dept · due date ── */}
         <div className="flex items-center gap-2 flex-wrap">
           {branchLabel && (
-            <span className="text-sm font-semibold text-white/85">{branchLabel}</span>
+            <span className="text-sm font-semibold text-black/85">{branchLabel}</span>
           )}
           {branchLabel && r.responsible_dept && (
-            <span className="text-white/30">·</span>
+            <span className="text-black/30">·</span>
           )}
           {r.responsible_dept && (
             <span className={cn(
@@ -209,7 +209,7 @@ export function ResolutionSummaryCard({ r }: Props) {
               'ml-auto flex items-center gap-1.5 text-xs font-medium',
               overdue              ? 'text-red-300' :
               days !== null && days <= 7 ? 'text-amber-300' :
-                                   'text-white/50',
+                                   'text-black/50',
             )}>
               <Clock size={11} />
               ครบ {formatThaiDate(r.due_date, true)}
@@ -226,7 +226,7 @@ export function ResolutionSummaryCard({ r }: Props) {
 
             {/* Progress bar */}
             <div className="flex items-center gap-2.5">
-              <div className="flex-1 h-2.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="flex-1 h-2.5 rounded-full bg-black/10 overflow-hidden">
                 <div
                   className={cn('h-full rounded-full transition-all duration-700 shadow-sm', barColor)}
                   style={{ width: `${r.progress_pct}%` }}
@@ -236,21 +236,21 @@ export function ResolutionSummaryCard({ r }: Props) {
                 'num text-sm font-bold w-10 text-right shrink-0',
                 done    ? 'text-emerald-300' :
                 overdue ? 'text-red-300' :
-                          'text-white/80',
+                          'text-black/80',
               )}>
                 {r.progress_pct}%
               </span>
             </div>
 
             {r.progress_note && (
-              <p className="text-xs text-white/50 truncate leading-snug">{r.progress_note}</p>
+              <p className="text-xs text-black/50 truncate leading-snug">{r.progress_note}</p>
             )}
           </div>
         </div>
 
         {/* ── Row 5: footer ── */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/8">
-          <span className="text-xs text-white/40">
+        <div className="flex items-center justify-between pt-2 border-t border-black/8">
+          <span className="text-xs text-black/40">
             {r.progress_updated_at
               ? `อัพเดตล่าสุด ${new Date(r.progress_updated_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}${r.progress_updated_by ? ` · ${r.progress_updated_by}` : ''}`
               : 'ยังไม่มีการอัพเดต'}

@@ -13,12 +13,12 @@ import type { PreviousMeetingRow, OpenResolutionRow, PdcaSummaryRow } from '@/ap
 // ─── style constants ──────────────────────────────────────────────────────────
 
 const INPUT =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60'
 const TEXTAREA =
-  'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none'
+  'w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2.5 text-sm text-[#12181F] placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none'
 const SELECT =
-  'bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/60'
-const LABEL = 'block text-xs text-white/45 mb-1.5 font-medium uppercase tracking-wider'
+  'bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] focus:outline-none focus:border-cyan-500/60'
+const LABEL = 'block text-xs text-black/45 mb-1.5 font-medium uppercase tracking-wider'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -282,7 +282,7 @@ function TableEditor({ table, onChange }: { table: DetailTable; onChange: (t: De
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto rounded-lg border border-white/12">
+      <div className="overflow-x-auto rounded-lg border border-black/12">
         <table
           className="text-sm border-collapse"
           style={{ tableLayout: 'fixed', width: totalW + 'px' }}
@@ -292,21 +292,21 @@ function TableEditor({ table, onChange }: { table: DetailTable; onChange: (t: De
             <col style={{ width: '36px' }} />
           </colgroup>
           <thead>
-            <tr className="bg-white/5 border-b border-white/10">
+            <tr className="bg-black/5 border-b border-black/10">
               {table.headers.map((h, ci) => (
                 <th
                   key={ci}
-                  className="relative border-r border-white/10 last:border-r-0 overflow-hidden"
+                  className="relative border-r border-black/10 last:border-r-0 overflow-hidden"
                 >
                   <div className="flex items-center pl-2 pr-4 py-1.5 gap-1">
                     <input
-                      className="flex-1 min-w-0 bg-transparent text-xs text-white/70 font-semibold focus:outline-none focus:text-white"
+                      className="flex-1 min-w-0 bg-transparent text-xs text-black/70 font-semibold focus:outline-none focus:text-[#12181F]"
                       value={h}
                       onChange={e => setHeader(ci, e.target.value)}
                       placeholder="หัวข้อ"
                     />
                     <button type="button" onClick={() => removeColumn(ci)}
-                      className="shrink-0 text-white/20 hover:text-red-400 transition-colors">
+                      className="shrink-0 text-black/20 hover:text-red-400 transition-colors">
                       <X size={10} />
                     </button>
                   </div>
@@ -317,7 +317,7 @@ function TableEditor({ table, onChange }: { table: DetailTable; onChange: (t: De
                   />
                 </th>
               ))}
-              <th className="border-l border-white/10 text-center">
+              <th className="border-l border-black/10 text-center">
                 <button type="button" onClick={addColumn}
                   className="text-cyan-400/60 hover:text-cyan-400 transition-colors p-1" title="เพิ่มคอลัมน์">
                   <Plus size={12} />
@@ -327,20 +327,20 @@ function TableEditor({ table, onChange }: { table: DetailTable; onChange: (t: De
           </thead>
           <tbody>
             {table.rows.map((row, ri) => (
-              <tr key={ri} className="border-b border-white/6 last:border-0 group/row">
+              <tr key={ri} className="border-b border-black/6 last:border-0 group/row">
                 {row.map((cell, ci) => (
                   <td key={ci}
-                    className="border-r border-white/6 last:border-r-0 px-2 py-1 overflow-hidden">
+                    className="border-r border-black/6 last:border-r-0 px-2 py-1 overflow-hidden">
                     <input
-                      className="w-full bg-transparent text-xs text-white/80 focus:outline-none focus:text-white"
+                      className="w-full bg-transparent text-xs text-black/80 focus:outline-none focus:text-[#12181F]"
                       value={cell}
                       onChange={e => setCell(ri, ci, e.target.value)}
                     />
                   </td>
                 ))}
-                <td className="border-l border-white/6 text-center">
+                <td className="border-l border-black/6 text-center">
                   <button type="button" onClick={() => removeRow(ri)}
-                    className="text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100 p-1">
+                    className="text-black/20 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100 p-1">
                     <Trash2 size={11} />
                   </button>
                 </td>
@@ -398,7 +398,7 @@ function DetailEditor({
           </p>
           <textarea
             ref={pasteRef}
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-cyan-500/60 resize-none font-mono"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-xs text-black/60 placeholder:text-black/20 focus:outline-none focus:border-cyan-500/60 resize-none font-mono"
             rows={5}
             placeholder="กด Ctrl+V (หรือ ⌘V) เพื่อวางข้อมูลที่นี่..."
             onPaste={handlePasteZone}
@@ -410,7 +410,7 @@ function DetailEditor({
             </p>
           )}
           <button type="button" onClick={() => { setShowPasteZone(false); setPasteError(false) }}
-            className="text-[11px] text-white/30 hover:text-white/60 transition-colors">
+            className="text-[11px] text-black/30 hover:text-black/60 transition-colors">
             ยกเลิก
           </button>
         </div>
@@ -423,7 +423,7 @@ function DetailEditor({
             'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors',
             showTable
               ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
-              : 'text-white/35 border-white/12 hover:text-white/60 hover:border-white/20',
+              : 'text-black/35 border-black/12 hover:text-black/60 hover:border-black/20',
           )}>
           <Table2 size={11} />
           {showTable ? 'ซ่อนตาราง' : 'เพิ่มตาราง'}
@@ -456,14 +456,14 @@ function SubItemGroup({
   return (
     <div className="space-y-4">
       {items.map((item, idx) => (
-        <div key={idx} className="bg-white/3 rounded-xl p-4 border border-white/8 space-y-3">
+        <div key={idx} className="bg-black/3 rounded-xl p-4 border border-black/8 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-cyan-400/70 shrink-0">{agendaNo}.{idx + 1}</span>
             <input className={cn(INPUT, 'flex-1')} placeholder={`${label} ${agendaNo}.${idx + 1}...`}
               value={item.title} onChange={e => update(idx, { title: e.target.value })} />
             {items.length > 1 && (
               <button type="button" onClick={() => remove(idx)}
-                className="text-white/25 hover:text-red-400 transition-colors shrink-0">
+                className="text-black/25 hover:text-red-400 transition-colors shrink-0">
                 <Trash2 size={14} />
               </button>
             )}
@@ -483,7 +483,7 @@ function SubItemGroup({
         </div>
       ))}
       <button type="button" onClick={add}
-        className="flex items-center gap-1.5 text-xs text-cyan-400/60 hover:text-cyan-400 border border-dashed border-white/12 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors">
+        className="flex items-center gap-1.5 text-xs text-cyan-400/60 hover:text-cyan-400 border border-dashed border-black/12 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-colors">
         <Plus size={12} /> เพิ่ม {agendaNo}.{items.length + 1}
       </button>
     </div>
@@ -496,7 +496,7 @@ const STATUS_COLOR: Record<string, string> = {
   'รอดำเนินการ':        'text-blue-400 bg-blue-500/10 border-blue-500/25',
   'ระหว่างดำเนินการ':   'text-amber-400 bg-amber-500/10 border-amber-500/25',
   'แล้วเสร็จ':          'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-  'ปิดประเด็น':         'text-white/40 bg-white/5 border-white/15',
+  'ปิดประเด็น':         'text-black/40 bg-black/5 border-black/15',
 }
 
 function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[] }) {
@@ -521,24 +521,24 @@ function OpenResolutionsPanel({ resolutions }: { resolutions: OpenResolutionRow[
           {resolutions.map(res => {
             const pct = res.progress_pct ?? 0
             const barColor = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
-            const statusCls = STATUS_COLOR[res.status] ?? 'text-white/40 bg-white/5 border-white/15'
+            const statusCls = STATUS_COLOR[res.status] ?? 'text-black/40 bg-black/5 border-black/15'
             return (
-              <div key={res.id} className="bg-white/3 rounded-lg px-3 py-2.5 space-y-1.5">
+              <div key={res.id} className="bg-black/3 rounded-lg px-3 py-2.5 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-medium text-white/90 leading-snug flex-1">{res.title}</p>
+                  <p className="text-xs font-medium text-black/90 leading-snug flex-1">{res.title}</p>
                   <span className={cn('shrink-0 text-[10px] px-2 py-0.5 rounded-full border', statusCls)}>
                     {res.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-white/35">
+                <div className="flex items-center gap-3 text-[10px] text-black/35">
                   {res.responsible_branch && <span>{res.responsible_branch}</span>}
                   {res.due_date && <span>กำหนด {formatThaiDate(res.due_date, true)}</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+                  <div className="flex-1 h-1 rounded-full bg-black/8 overflow-hidden">
                     <div className={cn('h-full rounded-full', barColor)} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[10px] text-white/40 tabular-nums shrink-0">{pct}%</span>
+                  <span className="text-[10px] text-black/40 tabular-nums shrink-0">{pct}%</span>
                 </div>
               </div>
             )
@@ -565,7 +565,7 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
           <button
             type="button"
             onClick={() => setSelected(null)}
-            className="ml-auto text-[10px] text-white/30 hover:text-white/60 transition-colors"
+            className="ml-auto text-[10px] text-black/30 hover:text-black/60 transition-colors"
           >
             <X size={12} />
           </button>
@@ -587,8 +587,8 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
                 active
                   ? 'bg-violet-500/25 text-violet-300 border-violet-500/50'
                   : has
-                    ? 'bg-white/5 text-white/70 border-white/15 hover:border-violet-500/30 hover:text-violet-300'
-                    : 'bg-transparent text-white/25 border-white/8 hover:text-white/40',
+                    ? 'bg-black/5 text-black/70 border-black/15 hover:border-violet-500/30 hover:text-violet-300'
+                    : 'bg-transparent text-black/25 border-black/8 hover:text-black/40',
               )}
             >
               {b.name_th}
@@ -607,19 +607,19 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
               </p>
               {detail.pdca_do && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">D — Do (ลงมือทำ)</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
+                  <p className="text-[10px] text-black/35 font-semibold uppercase tracking-wider">D — Do (ลงมือทำ)</p>
+                  <p className="text-xs text-black/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_do}</p>
                 </div>
               )}
               {detail.pdca_act && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">A — Act (ปรับปรุง)</p>
-                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
+                  <p className="text-[10px] text-black/35 font-semibold uppercase tracking-wider">A — Act (ปรับปรุง)</p>
+                  <p className="text-xs text-black/70 leading-relaxed whitespace-pre-wrap">{detail.pdca_act}</p>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-xs text-white/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
+            <p className="text-xs text-black/30 italic">ยังไม่มีข้อมูล PDCA สำหรับสาขา{selected}</p>
           )}
         </div>
       )}
@@ -632,7 +632,7 @@ function PdcaBranchPanel({ summaries }: { summaries: PdcaSummaryRow[] }) {
 function ResolutionBadge({ value, detail }: { value: Resolution; detail: string }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-white/35 font-medium">มติที่ประชุม :</span>
+      <span className="text-xs text-black/35 font-medium">มติที่ประชุม :</span>
       {value === 'รับทราบ' ? (
         <span className="inline-flex items-center gap-1 text-xs bg-teal-500/15 text-teal-400 border border-teal-500/25 px-2.5 py-0.5 rounded-full">
           <CheckCircle size={10} /> รับทราบ
@@ -659,7 +659,7 @@ function TableView({ table }: { table: DetailTable }) {
   const totalW = table.colWidths.reduce((s, w) => s + w, 0)
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/10 mt-1">
+    <div className="overflow-x-auto rounded-xl border border-black/10 mt-1">
       <table
         className="text-sm border-collapse"
         style={{ tableLayout: 'fixed', width: totalW + 'px', minWidth: '100%' }}
@@ -668,10 +668,10 @@ function TableView({ table }: { table: DetailTable }) {
           {table.colWidths.map((w, i) => <col key={i} style={{ width: w + 'px' }} />)}
         </colgroup>
         <thead>
-          <tr className="border-b border-white/12" style={{ background: 'rgba(6,147,227,0.09)' }}>
+          <tr className="border-b border-black/12" style={{ background: 'rgba(6,147,227,0.09)' }}>
             {table.headers.map((h, i) => (
               <th key={i}
-                className="px-3 py-2.5 text-left text-xs font-bold text-cyan-300/90 border-r border-white/8 last:border-r-0 leading-snug">
+                className="px-3 py-2.5 text-left text-xs font-bold text-cyan-300/90 border-r border-black/8 last:border-r-0 leading-snug">
                 {h}
               </th>
             ))}
@@ -681,20 +681,20 @@ function TableView({ table }: { table: DetailTable }) {
           {rows.length === 0 ? (
             <tr>
               <td colSpan={table.headers.length}
-                className="px-3 py-4 text-xs text-white/25 italic text-center">
+                className="px-3 py-4 text-xs text-black/25 italic text-center">
                 ไม่มีข้อมูล
               </td>
             </tr>
           ) : rows.map((row, ri) => (
             <tr key={ri}
               className={cn(
-                'border-b border-white/6 last:border-0',
+                'border-b border-black/6 last:border-0',
                 ri % 2 === 1 ? 'bg-white/[0.02]' : '',
               )}>
               {row.map((cell, ci) => (
                 <td key={ci}
-                  className="px-3 py-2.5 text-xs text-white/80 border-r border-white/6 last:border-r-0 align-middle whitespace-pre-wrap break-words leading-relaxed">
-                  {cell || <span className="text-white/20">—</span>}
+                  className="px-3 py-2.5 text-xs text-black/80 border-r border-black/6 last:border-r-0 align-middle whitespace-pre-wrap break-words leading-relaxed">
+                  {cell || <span className="text-black/20">—</span>}
                 </td>
               ))}
             </tr>
@@ -715,17 +715,17 @@ function AgendaNumBadge({ n }: { n: number }) {
 
 function SubItemsView({ agendaNo, items }: { agendaNo: number; items: SubItem[] }) {
   const filled = items.filter(it => it.title.trim() || it.detail.trim())
-  if (filled.length === 0) return <p className="text-sm text-white/25 italic px-1">ไม่มีรายการ</p>
+  if (filled.length === 0) return <p className="text-sm text-black/25 italic px-1">ไม่มีรายการ</p>
   return (
-    <div className="divide-y divide-white/6">
+    <div className="divide-y divide-black/6">
       {filled.map((item, idx) => (
         <div key={idx} className="py-4 first:pt-0 space-y-2">
-          <p className="text-sm font-semibold text-white">
+          <p className="text-sm font-semibold text-[#12181F]">
             <span className="text-cyan-400/70 mr-2 font-bold">{agendaNo}.{idx + 1}</span>
             {item.title}
           </p>
           {item.detail && (
-            <p className="text-sm text-white/70 pl-5 whitespace-pre-wrap leading-relaxed">{item.detail}</p>
+            <p className="text-sm text-black/70 pl-5 whitespace-pre-wrap leading-relaxed">{item.detail}</p>
           )}
           {item.showTable && item.detailTable.rows.length > 0 && (
             <div className="pl-5">
@@ -760,13 +760,13 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
         <button
           type="button"
           onClick={() => setExpanded(p => !p)}
-          className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-white/3 transition-colors"
+          className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-black/3 transition-colors"
         >
           <div className="flex-1 min-w-0 space-y-0.5">
-            <p className="text-xs text-white/35 font-medium">
+            <p className="text-xs text-black/35 font-medium">
               วาระการประชุม · เริ่มเวลา {state.startTime} น. · {totalAgendas} วาระ
             </p>
-            <p className="text-sm font-bold text-white truncate">{meeting.title}</p>
+            <p className="text-sm font-bold text-[#12181F] truncate">{meeting.title}</p>
             {!expanded && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {[
@@ -778,7 +778,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
                   ...(showAgenda6 ? ['อื่นๆ'] : []),
                 ].map((label, i) => (
                   <span key={i}
-                    className="text-[10px] bg-white/5 border border-white/10 text-white/45 px-2 py-0.5 rounded-full">
+                    className="text-[10px] bg-black/5 border border-black/10 text-black/45 px-2 py-0.5 rounded-full">
                     {i + 1}. {label}
                   </span>
                 ))}
@@ -787,22 +787,22 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
           </div>
           <ChevronDown
             size={15}
-            className={cn('text-white/35 transition-transform duration-200 shrink-0', expanded && 'rotate-180')}
+            className={cn('text-black/35 transition-transform duration-200 shrink-0', expanded && 'rotate-180')}
           />
         </button>
 
         {/* ── Expanded: all agendas ── */}
         {expanded && (
-          <div className="border-t border-white/8 divide-y divide-white/6">
+          <div className="border-t border-black/8 divide-y divide-black/6">
 
             {/* วาระ 1 */}
             <div className="px-5 py-4 space-y-2">
               <div className="flex items-center gap-2">
                 <AgendaNumBadge n={1} />
-                <span className="text-xs font-semibold text-white/70">เรื่องประธานแจ้งที่ประชุมทราบ</span>
+                <span className="text-xs font-semibold text-black/70">เรื่องประธานแจ้งที่ประชุมทราบ</span>
               </div>
-              <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed pl-8">
-                {state.agenda1Detail || <span className="text-white/25 italic">—</span>}
+              <p className="text-sm text-black/70 whitespace-pre-wrap leading-relaxed pl-8">
+                {state.agenda1Detail || <span className="text-black/25 italic">—</span>}
               </p>
               <div className="pl-8">
                 <ResolutionBadge value={state.agenda1Resolution} detail={state.agenda1ResolutionDetail} />
@@ -813,7 +813,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
             <div className="px-5 py-4 space-y-2">
               <div className="flex items-center gap-2">
                 <AgendaNumBadge n={2} />
-                <span className="text-xs font-semibold text-white/70">
+                <span className="text-xs font-semibold text-black/70">
                   เรื่องรับรองรายงานการประชุมครั้งที่{' '}
                   <span className="text-cyan-400">{state.agenda2MeetingNo || '—'}</span>
                 </span>
@@ -827,7 +827,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
             <div className="px-5 py-4 space-y-2">
               <div className="flex items-center gap-2">
                 <AgendaNumBadge n={3} />
-                <span className="text-xs font-semibold text-white/70">เรื่องเพื่อทราบ</span>
+                <span className="text-xs font-semibold text-black/70">เรื่องเพื่อทราบ</span>
               </div>
               <div className="pl-8">
                 <SubItemsView agendaNo={3} items={state.items3} />
@@ -838,7 +838,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
             <div className="px-5 py-4 space-y-2">
               <div className="flex items-center gap-2">
                 <AgendaNumBadge n={4} />
-                <span className="text-xs font-semibold text-white/70">{state.agenda4Type}</span>
+                <span className="text-xs font-semibold text-black/70">{state.agenda4Type}</span>
               </div>
               <div className="pl-8">
                 <SubItemsView agendaNo={4} items={state.items4} />
@@ -849,7 +849,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
             <div className="px-5 py-4 space-y-2">
               <div className="flex items-center gap-2">
                 <AgendaNumBadge n={5} />
-                <span className="text-xs font-semibold text-white/70">{agenda5Label}</span>
+                <span className="text-xs font-semibold text-black/70">{agenda5Label}</span>
               </div>
               <div className="pl-8">
                 <SubItemsView agendaNo={5} items={state.items5} />
@@ -861,7 +861,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
               <div className="px-5 py-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <AgendaNumBadge n={6} />
-                  <span className="text-xs font-semibold text-white/70">เรื่องอื่นๆ</span>
+                  <span className="text-xs font-semibold text-black/70">เรื่องอื่นๆ</span>
                 </div>
                 <div className="pl-8">
                   <SubItemsView agendaNo={6} items={state.items6} />
@@ -871,7 +871,7 @@ function AgendaViewMode({ state, meeting, isAdmin, onEdit }: {
 
             {/* Footer */}
             {isAdmin && (
-              <div className="px-5 py-3 flex justify-end bg-white/2">
+              <div className="px-5 py-3 flex justify-end bg-black/2">
                 <button type="button" onClick={onEdit}
                   className="flex items-center gap-1.5 text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 px-3 py-1.5 rounded-lg transition-colors">
                   <Pencil size={11} /> แก้ไขวาระ
@@ -924,18 +924,18 @@ function PrevMeetingReportPanel({
       </button>
 
       {expanded && (
-        <div className="border-t border-emerald-500/15 divide-y divide-white/6 text-xs">
+        <div className="border-t border-emerald-500/15 divide-y divide-black/6 text-xs">
           {header?.agenda1_detail && (
             <div className="px-4 py-3 space-y-1">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ 1 — ประธานแจ้งที่ประชุมทราบ</p>
-              <p className="text-white/70 whitespace-pre-wrap leading-relaxed">{header.agenda1_detail}</p>
+              <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">วาระ 1 — ประธานแจ้งที่ประชุมทราบ</p>
+              <p className="text-black/70 whitespace-pre-wrap leading-relaxed">{header.agenda1_detail}</p>
               <p className="text-cyan-400">มติ: {header.agenda1_resolution}{header.agenda1_resolution_detail ? ` — ${header.agenda1_resolution_detail}` : ''}</p>
             </div>
           )}
 
           {header?.agenda2_meeting_no && (
             <div className="px-4 py-3 space-y-1">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ 2 — รับรองรายงาน {header.agenda2_meeting_no}</p>
+              <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">วาระ 2 — รับรองรายงาน {header.agenda2_meeting_no}</p>
               <p className="text-cyan-400">มติ: {header.agenda2_resolution}{header.agenda2_resolution_detail ? ` — ${header.agenda2_resolution_detail}` : ''}</p>
             </div>
           )}
@@ -945,11 +945,11 @@ function PrevMeetingReportPanel({
             if (items.length === 0) return null
             return (
               <div key={n} className="px-4 py-3 space-y-2">
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">วาระ {n} — {AGENDA_LABELS[n]}</p>
+                <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">วาระ {n} — {AGENDA_LABELS[n]}</p>
                 {items.map((item, idx) => (
                   <div key={idx} className="space-y-0.5">
-                    <p className="text-white/70 font-medium">{item.item_no}. {item.title}</p>
-                    {item.detail && <p className="text-white/45 pl-4 leading-relaxed">{item.detail}</p>}
+                    <p className="text-black/70 font-medium">{item.item_no}. {item.title}</p>
+                    {item.detail && <p className="text-black/45 pl-4 leading-relaxed">{item.detail}</p>}
                     <p className="text-cyan-400 pl-4">มติ: {item.resolution}{item.resolution_detail ? ` — ${item.resolution_detail}` : ''}</p>
                   </div>
                 ))}
@@ -1014,7 +1014,7 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
 
       {/* Agenda 1 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={1} /> วาระที่ 1 : เรื่องประธานแจ้งที่ประชุมทราบ
         </h3>
         <div>
@@ -1028,7 +1028,7 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
 
       {/* Agenda 2 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={2} /> วาระที่ 2 : เรื่องรับรองรายงานการประชุม
         </h3>
         <div>
@@ -1060,18 +1060,18 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
 
         {prevMeetingId && (
           loadingPrev ? (
-            <p className="text-xs text-white/30 py-1">กำลังโหลดรายงาน...</p>
+            <p className="text-xs text-black/30 py-1">กำลังโหลดรายงาน...</p>
           ) : prevReport ? (
             <PrevMeetingReportPanel header={prevReport.header} subitems={prevReport.subitems} />
           ) : (
-            <p className="text-xs text-white/25 italic py-1">การประชุมครั้งนี้ยังไม่มีรายงานที่บันทึกไว้</p>
+            <p className="text-xs text-black/25 italic py-1">การประชุมครั้งนี้ยังไม่มีรายงานที่บันทึกไว้</p>
           )
         )}
       </div>
 
       {/* Agenda 3 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={3} /> วาระที่ 3 : เรื่องเพื่อทราบ
         </h3>
         <SubItemGroup agendaNo={3} label="เรื่องเพื่อทราบ" items={state.items3}
@@ -1080,7 +1080,7 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
 
       {/* Agenda 4 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2 flex-wrap">
           <AgendaNumBadge n={4} />
           <span>วาระที่ 4 :</span>
           <select className={cn(SELECT, 'text-sm font-semibold')} value={state.agenda4Type}
@@ -1099,7 +1099,7 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
 
       {/* Agenda 5 */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
           <AgendaNumBadge n={5} /> วาระที่ 5 : {agenda5Label}
         </h3>
         {state.agenda4Type === 'เรื่องสืบเนื่อง' && pdcaSummaries && (
@@ -1112,7 +1112,7 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
       {/* Agenda 6 (conditional) */}
       {showAgenda6 && (
         <div className="glass-card p-5 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-[#12181F] flex items-center gap-2">
             <AgendaNumBadge n={6} /> วาระที่ 6 : เรื่องอื่นๆ
           </h3>
           <SubItemGroup agendaNo={6} label="เรื่องอื่นๆ" items={state.items6}
@@ -1123,11 +1123,11 @@ function AgendaEditMode({ state, setState, meeting: _meeting, isAdmin: _isAdmin,
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-2">
         <button type="button" onClick={onCancel}
-          className="text-sm text-white/40 hover:text-white/70 px-4 py-2 rounded-xl border border-white/10 transition-colors">
+          className="text-sm text-black/40 hover:text-black/70 px-4 py-2 rounded-xl border border-black/10 transition-colors">
           ยกเลิก
         </button>
         <button type="button" disabled={isPending} onClick={onSave}
-          className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-5 py-2 rounded-xl text-sm transition-colors">
+          className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#FFFFFF] font-semibold px-5 py-2 rounded-xl text-sm transition-colors">
           {isPending ? 'กำลังบันทึก...' : 'บันทึกวาระการประชุม'}
         </button>
       </div>
@@ -1206,7 +1206,7 @@ export function MeetingAgendaForm({
 
   if (!isAdmin && !initialHeader) {
     return (
-      <div className="glass-card p-12 text-center text-white/30 text-sm">
+      <div className="glass-card p-12 text-center text-black/30 text-sm">
         ยังไม่มีข้อมูลวาระการประชุม
       </div>
     )

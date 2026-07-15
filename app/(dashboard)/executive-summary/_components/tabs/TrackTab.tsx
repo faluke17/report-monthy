@@ -22,10 +22,10 @@ function ObsHistory({ obstacleId }: { obstacleId: string }) {
   }, [obstacleId])
 
   if (logs === null) return (
-    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>// กำลังโหลดประวัติ...</div>
+    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>{'// กำลังโหลดประวัติ...'}</div>
   )
   if (logs.length === 0) return (
-    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>// ยังไม่มีประวัติการอัปเดต</div>
+    <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO }}>{'// ยังไม่มีประวัติการอัปเดต'}</div>
   )
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -66,7 +66,7 @@ function ObsPanel({ obstacles }: { obstacles: ObstacleRow[] }) {
   if (!obstacles.length) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10 }}>
       <div style={{ fontSize: 22, color: C.good, textShadow: `0 0 16px ${C.good}` }}>✓</div>
-      <div style={{ fontSize: 12, color: C.good, fontFamily: MONO }}>// ไม่มีอุปสรรคที่เปิดอยู่</div>
+      <div style={{ fontSize: 12, color: C.good, fontFamily: MONO }}>{'// ไม่มีอุปสรรคที่เปิดอยู่'}</div>
     </div>
   )
   return (
@@ -77,7 +77,7 @@ function ObsPanel({ obstacles }: { obstacles: ObstacleRow[] }) {
         return (
           <div
             key={obs.id}
-            style={{ position: 'relative', background: isOpen ? 'rgba(34,211,238,0.05)' : C.panel, border: `1px solid ${isOpen ? C.borderH : C.border}`, cursor: 'pointer', transition: 'border-color .15s' }}
+            style={{ position: 'relative', background: isOpen ? 'rgba(11,110,118,0.06)' : C.panel, border: `1px solid ${isOpen ? C.borderH : C.border}`, cursor: 'pointer', transition: 'border-color .15s' }}
             onClick={() => setOpenId(isOpen ? null : obs.id)}
           >
             <Corners s={5} c={isOpen ? C.borderH : C.border} />
@@ -192,7 +192,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
         flexShrink: 0,
       }}>
         {/* header */}
-        <div style={{ flexShrink: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, background: 'rgba(34,211,238,0.04)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flexShrink: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {selected ? (
             <>
               <button
@@ -203,13 +203,13 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                 {THAI_MONTHS[selected.month]} {selected.gregorian_year + 543}
               </span>
               {selected.has_report && (
-                <span style={{ fontSize: 9, padding: '1px 6px', background: 'rgba(34,211,238,0.1)', border: `1px solid ${C.border}`, color: C.muted, fontFamily: MONO }}>
+                <span style={{ fontSize: 9, padding: '1px 6px', background: 'rgba(11,110,118,0.10)', border: `1px solid ${C.border}`, color: C.muted, fontFamily: MONO }}>
                   {selected.area_count} พื้นที่
                 </span>
               )}
             </>
           ) : (
-            <span style={{ fontSize: 9, color: C.accent, fontFamily: MONO, letterSpacing: 1.5, fontWeight: 700 }}>// รายงานรายเดือน</span>
+            <span style={{ fontSize: 9, color: C.accent, fontFamily: MONO, letterSpacing: 1.5, fontWeight: 700 }}>{'// รายงานรายเดือน'}</span>
           )}
         </div>
 
@@ -219,15 +219,15 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
             /* detail view */
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* NRW summary */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 {[
                   { l: 'NRW%', v: selected.nrw_pct != null ? `${selected.nrw_pct.toFixed(1)}%` : '—', c: color(selected.nrw_pct) },
                   { l: 'น้ำจ่าย (m³)', v: selected.water_produced != null ? selected.water_produced.toLocaleString('th-TH') : '—', c: C.accent },
                   { l: 'จำหน่าย (m³)', v: selected.water_sold != null ? selected.water_sold.toLocaleString('th-TH') : '—', c: C.text },
                 ].map(({ l, v, c }) => (
-                  <div key={l} style={{ padding: '10px 12px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center' }}>
+                  <div key={l} style={{ padding: '10px 12px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center', minWidth: 0 }}>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO, marginBottom: 5 }}>{l}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: c, fontFamily: MONO }}>{v}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: c, fontFamily: MONO, overflowWrap: 'anywhere' }}>{v}</div>
                   </div>
                 ))}
               </div>
@@ -237,9 +237,9 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                 const nrwA = area.water_dist_after  ? ((area.water_dist_after  - (area.water_sold_after  ?? 0)) / area.water_dist_after)  * 100 : null
                 const delta = nrwA != null && nrwB != null ? nrwA - nrwB : null
                 return (
-                  <div key={area.id} style={{ border: `1px solid ${C.border}`, background: 'rgba(8,14,26,0.5)' }}>
+                  <div key={area.id} style={{ border: `1px solid ${C.border}`, background: C.panel }}>
                     {/* area header */}
-                    <div style={{ padding: '7px 12px', borderBottom: `1px solid ${C.border}`, background: 'rgba(34,211,238,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '7px 12px', borderBottom: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 11, color: C.accent, fontFamily: MONO, fontWeight: 700 }}>{area.area_name}</span>
                       {delta != null && (
                         <span style={{ fontSize: 10, color: delta < 0 ? C.good : delta > 0 ? C.crit : C.muted, fontFamily: MONO, fontWeight: 700 }}>
@@ -250,7 +250,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
 
                     <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {/* ตาราง before/after */}
-                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : '1fr 1fr 1fr 1fr 1fr', gap: 5 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))', gap: 5 }}>
                         {[
                           { l: 'น้ำจ่าย ก่อน',  v: area.water_dist_before,  c: C.text },
                           { l: 'น้ำจ่าย หลัง',  v: area.water_dist_after,   c: C.accent },
@@ -258,9 +258,9 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                           { l: 'NRW% หลัง',      v: nrwA != null ? +nrwA.toFixed(1) : null, c: color(nrwA), suffix: '%' },
                           { l: 'MNF หลัง',       v: area.mnf_after,          c: C.text },
                         ].map(({ l, v, c, suffix }) => (
-                          <div key={l} style={{ padding: '7px 8px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center' }}>
+                          <div key={l} style={{ padding: '7px 8px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center', minWidth: 0 }}>
                             <div style={{ fontSize: 9, color: C.muted, fontFamily: MONO, marginBottom: 3 }}>{l}</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: v != null ? c : C.dim, fontFamily: MONO }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: v != null ? c : C.dim, fontFamily: MONO, overflowWrap: 'anywhere' }}>
                               {v != null ? `${typeof v === 'number' && v > 999 ? v.toLocaleString('th-TH') : v}${suffix ?? ''}` : '—'}
                             </div>
                           </div>
@@ -318,13 +318,13 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                 )
               }) : (
                 <div style={{ padding: '14px 16px', background: C.row, border: `1px solid ${C.border}`, fontSize: 11, color: C.dim, fontFamily: MONO }}>
-                  // ยังไม่มีรายงานพื้นที่สำหรับเดือนนี้
+                  {'// ยังไม่มีรายงานพื้นที่สำหรับเดือนนี้'}
                 </div>
               )}
             </div>
           ) : monthlyTrack.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: C.dim, fontFamily: MONO }}>// ยังไม่มีข้อมูล NRW รายเดือน</div>
+              <div style={{ fontSize: 11, color: C.dim, fontFamily: MONO }}>{'// ยังไม่มีข้อมูล NRW รายเดือน'}</div>
             </div>
           ) : (
             /* list view */
@@ -341,7 +341,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                     background: 'transparent', border: 'none', borderBottom: `1px solid ${C.border}`,
                     cursor: 'pointer',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(34,211,238,0.06)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(11,110,118,0.07)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   {/* dot สี NRW */}
@@ -373,9 +373,9 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
 
       {/* ── ขวา: อุปสรรค ── */}
       <div style={{ display: 'flex', flexDirection: 'column', overflow: isMobile ? 'visible' : 'hidden', flexShrink: 0 }}>
-        <div style={{ flexShrink: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, background: 'rgba(34,211,238,0.04)' }}>
+        <div style={{ flexShrink: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.05)' }}>
           <span style={{ fontSize: 9, color: C.accent, fontFamily: MONO, letterSpacing: 1.5, fontWeight: 700 }}>
-            // อุปสรรค{obstacles.length > 0 ? ` (${obstacles.length})` : ''}
+            {`// อุปสรรค${obstacles.length > 0 ? ` (${obstacles.length})` : ''}`}
           </span>
         </div>
         <div style={{ flex: isMobile ? undefined : 1, overflowY: isMobile ? 'visible' : 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>

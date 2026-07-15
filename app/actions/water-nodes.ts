@@ -38,6 +38,11 @@ export type NodeNrwStat = {
   gross_flow: number | null
   net_flow: number | null
   distribute_all: number | null
+  nrw_pct: number | null
+  data_source: string | null
+  days_data: number | null
+  days_total: number | null
+  has_device_fail: boolean | null
 }
 
 // ── Fetch monthly average MNF per logger for a given year/month pair ──────────
@@ -103,10 +108,22 @@ export async function getNodeNrwStats(year: number, month: number): Promise<Node
   const supabase = await createClient()
   const { data } = await (supabase as any)
     .from('node_nrw_monthly')
-    .select('water_node_id, report_year, report_month, gross_flow, net_flow, distribute_all')
+    .select('water_node_id, report_year, report_month, gross_flow, net_flow, distribute_all, nrw_pct, data_source, days_data, days_total, has_device_fail')
     .in('report_year', [year - 1, year])
     .eq('report_month', month)
   return (data ?? []) as NodeNrwStat[]
+}
+
+// ── Latest month/year that has synced flow data (for default selector) ──────
+export async function getLatestFlowPeriod(): Promise<{ year: number; month: number } | null> {
+  const supabase = await createClient()
+  const { data } = await (supabase as any)
+    .from('node_flow_daily')
+    .select('report_year, report_month')
+    .order('synced_at', { ascending: false })
+    .limit(1)
+  const row = (data ?? [])[0] as { report_year: number; report_month: number } | undefined
+  return row ? { year: row.report_year, month: row.report_month } : null
 }
 
 // ── Update existing node ───────────────────────────────────────────────────────

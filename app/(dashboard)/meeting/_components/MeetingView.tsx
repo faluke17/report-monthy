@@ -42,7 +42,7 @@ interface MeetingCardProps {
 
 function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksByMeeting, deletingId, onDelete }: MeetingCardProps) {
   const days = daysUntil(m.scheduled_date)
-  const typeClass = TYPE_COLOR[m.meeting_type] ?? 'bg-white/10 text-white/50 border-white/15'
+  const typeClass = TYPE_COLOR[m.meeting_type] ?? 'bg-black/10 text-black/50 border-black/15'
   const isAcked = ackedSet.has(m.id)
   const myAck = myAcks.find((a) => a.meeting_id === m.id)
   const acks = acksByMeeting[m.id] ?? []
@@ -64,16 +64,16 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
             )}
           </div>
 
-          <p className="font-bold text-white text-sm leading-snug">{m.title}</p>
+          <p className="font-bold text-[#12181F] text-sm leading-snug">{m.title}</p>
 
           <div className="space-y-0.5">
-            <p className="text-xs text-white/50 flex items-center gap-1.5">
-              <Calendar size={11} className="text-white/30" />
+            <p className="text-xs text-black/50 flex items-center gap-1.5">
+              <Calendar size={11} className="text-black/30" />
               {formatThaiDate(m.scheduled_date)} · {m.scheduled_time.slice(0, 5)} น.
             </p>
             {m.location && (
-              <p className="text-xs text-white/45 flex items-center gap-1.5">
-                <MapPin size={11} className="text-white/30" />
+              <p className="text-xs text-black/45 flex items-center gap-1.5">
+                <MapPin size={11} className="text-black/30" />
                 {m.location}
               </p>
             )}
@@ -91,11 +91,11 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
           </div>
 
           {(m.target_audience || m.prep_required) && (
-            <div className="border-t border-white/8 pt-2 space-y-1">
+            <div className="border-t border-black/8 pt-2 space-y-1">
               {m.target_audience && (
-                <p className="text-xs text-white/40 flex items-center gap-1.5">
-                  <Users size={11} className="text-white/25" />
-                  กลุ่มเป้าหมาย: <span className="text-white/60">{m.target_audience}</span>
+                <p className="text-xs text-black/40 flex items-center gap-1.5">
+                  <Users size={11} className="text-black/25" />
+                  กลุ่มเป้าหมาย: <span className="text-black/60">{m.target_audience}</span>
                 </p>
               )}
               {m.prep_required && (
@@ -105,30 +105,30 @@ function MeetingCard({ m, showAck, isAdmin, branchName, ackedSet, myAcks, acksBy
                 </p>
               )}
               {m.notification_message && (
-                <p className="text-xs text-white/40">{m.notification_message}</p>
+                <p className="text-xs text-black/40">{m.notification_message}</p>
               )}
             </div>
           )}
 
           {isAdmin && (
-            <div className="flex items-center gap-3 pt-1 border-t border-white/8">
+            <div className="flex items-center gap-3 pt-1 border-t border-black/8">
               <Link
                 href={`/meeting/${m.id}/agenda`}
-                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-cyan-400 transition-colors"
+                className="flex items-center gap-1.5 text-[11px] text-black/40 hover:text-cyan-400 transition-colors"
               >
                 <Pencil size={10} />
                 วาระ
               </Link>
               <Link
                 href={`/meeting/${m.id}/report`}
-                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-violet-400 transition-colors"
+                className="flex items-center gap-1.5 text-[11px] text-black/40 hover:text-violet-400 transition-colors"
               >
                 <ClipboardList size={10} />
                 รายงาน
               </Link>
               <Link
                 href={`/meeting/${m.id}/preview`}
-                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-emerald-400 transition-colors"
+                className="flex items-center gap-1.5 text-[11px] text-black/40 hover:text-emerald-400 transition-colors"
               >
                 <Eye size={10} />
                 Preview
@@ -243,17 +243,17 @@ export function MeetingView({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">วาระ / มติ / สั่งการ</h1>
+          <h1 className="text-xl font-bold text-[#12181F]">วาระ / มติ / สั่งการ</h1>
           {latestMeeting ? (
             <>
-              <p className="text-sm text-white/40 mt-0.5">{latestMeeting.title}</p>
-              <p className="text-xs text-white/30 mt-0.5">
+              <p className="text-sm text-black/40 mt-0.5">{latestMeeting.title}</p>
+              <p className="text-xs text-black/30 mt-0.5">
                 {formatThaiDate(latestMeeting.scheduled_date)} · {latestMeeting.scheduled_time.slice(0, 5)} น.
                 {latestMeeting.location && ` · ${latestMeeting.location}`}
               </p>
             </>
           ) : (
-            <p className="text-sm text-white/40 mt-0.5">ติดตามวาระการประชุมและมติสั่งการ</p>
+            <p className="text-sm text-black/40 mt-0.5">ติดตามวาระการประชุมและมติสั่งการ</p>
           )}
         </div>
         {latestMeeting && (
@@ -264,8 +264,14 @@ export function MeetingView({
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-white/10 pb-3 overflow-x-auto">
+      {/* Tabs — overflow-x-auto อยู่แล้ว (scroll ได้บนมือถือ) เพิ่ม mask fade ขอบขวาให้เห็นว่ายังเลื่อนได้ */}
+      <div
+        className="flex gap-1 border-b border-black/10 pb-3 overflow-x-auto"
+        style={{
+          WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent 100%)',
+          maskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent 100%)',
+        }}
+      >
         {TABS.map(t => (
           <button
             key={t.key}
@@ -273,8 +279,8 @@ export function MeetingView({
             className={cn(
               'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap',
               tab === t.key
-                ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                : 'text-white/40 hover:text-white/70 border border-transparent'
+                ? 'bg-[#0B6E76]/15 text-[#0B6E76] border border-[#0B6E76]/30'
+                : 'text-black/40 hover:text-black/70 border border-transparent'
             )}
           >
             {t.label}
@@ -282,7 +288,7 @@ export function MeetingView({
               <span
                 className={cn(
                   'text-[10px] px-1.5 py-0.5 rounded-full',
-                  tab === t.key ? 'bg-cyan-500/25 text-cyan-300' : 'bg-white/10 text-white/40'
+                  tab === t.key ? 'bg-[#0B6E76]/25 text-[#0B6E76]' : 'bg-black/10 text-black/40'
                 )}
               >
                 {t.count}
@@ -299,7 +305,7 @@ export function MeetingView({
             <div className="flex justify-end">
               <Link
                 href="/meeting/setup"
-                className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
+                className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
               >
                 <Plus size={15} />
                 สร้างการประชุม
@@ -309,9 +315,9 @@ export function MeetingView({
 
           {/* กำหนดการล่วงหน้า */}
           <div className="space-y-3">
-            <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">กำหนดการล่วงหน้า</h2>
+            <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">กำหนดการล่วงหน้า</h2>
             {upcomingMeetings.length === 0 ? (
-              <div className="glass-card-sm p-6 text-center text-white/25 text-sm">
+              <div className="glass-card-sm p-6 text-center text-black/25 text-sm">
                 ยังไม่มีการประชุมที่กำหนดไว้
                 {isAdmin && (
                   <div className="mt-3">
@@ -357,7 +363,7 @@ export function MeetingView({
           {/* ประวัติ */}
           {pastMeetings.length > 0 && (
             <div className="space-y-3">
-              <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest">ประวัติการประชุม</h2>
+              <h2 className="text-xs font-bold text-black/40 uppercase tracking-widest">ประวัติการประชุม</h2>
               {pastMeetings.map((m) => (
                 <MeetingCard
                   key={m.id} m={m} showAck={false}
@@ -370,7 +376,7 @@ export function MeetingView({
           )}
 
           {totalScheduled === 0 && (
-            <div className="glass-card-sm p-10 text-center text-white/25 text-sm">
+            <div className="glass-card-sm p-10 text-center text-black/25 text-sm">
               ยังไม่มีรายการประชุมในระบบ
             </div>
           )}
@@ -382,13 +388,13 @@ export function MeetingView({
         <div className="space-y-3 max-w-2xl">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-white">รายงานการประชุม</h2>
-              <p className="text-xs text-white/35 mt-0.5">รายงานที่กรอกเสร็จแล้วหลังการประชุม</p>
+              <h2 className="text-sm font-bold text-[#12181F]">รายงานการประชุม</h2>
+              <p className="text-xs text-black/35 mt-0.5">รายงานที่กรอกเสร็จแล้วหลังการประชุม</p>
             </div>
             {isAdmin && (
               <Link
                 href="/meeting/report-new"
-                className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-xl text-sm transition-colors shrink-0"
+                className="flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold px-4 py-2 rounded-xl text-sm transition-colors shrink-0"
               >
                 <Plus size={14} />
                 สร้างรายงานการประชุม
@@ -401,10 +407,10 @@ export function MeetingView({
             if (reportedMeetings.length === 0) {
               return (
                 <div className="glass-card p-12 text-center">
-                  <ClipboardList size={32} className="text-white/15 mx-auto mb-3" />
-                  <p className="text-white/30 text-sm">ยังไม่มีรายงานการประชุมที่กรอกเสร็จแล้ว</p>
+                  <ClipboardList size={32} className="text-black/15 mx-auto mb-3" />
+                  <p className="text-black/30 text-sm">ยังไม่มีรายงานการประชุมที่กรอกเสร็จแล้ว</p>
                   {isAdmin && allMeetings.length === 0 && (
-                    <p className="text-xs text-white/20 mt-1">สร้างการประชุมก่อนได้ที่แท็บ ตารางประชุม</p>
+                    <p className="text-xs text-black/20 mt-1">สร้างการประชุมก่อนได้ที่แท็บ ตารางประชุม</p>
                   )}
                 </div>
               )
@@ -418,20 +424,20 @@ export function MeetingView({
 
                     {/* Info */}
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-sm font-semibold text-white leading-snug truncate">{m.title}</p>
-                      <div className="flex items-center gap-3 text-xs text-white/40 flex-wrap">
+                      <p className="text-sm font-semibold text-[#12181F] leading-snug truncate">{m.title}</p>
+                      <div className="flex items-center gap-3 text-xs text-black/40 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <Calendar size={10} className="text-white/25" />
+                          <Calendar size={10} className="text-black/25" />
                           {formatThaiDate(m.scheduled_date)}
                         </span>
                         {m.location && (
                           <span className="flex items-center gap-1">
-                            <MapPin size={10} className="text-white/25" />
+                            <MapPin size={10} className="text-black/25" />
                             {m.location}
                           </span>
                         )}
                         {m.meeting_type && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/35">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/5 border border-black/10 text-black/35">
                             {m.meeting_type}
                           </span>
                         )}
@@ -443,7 +449,7 @@ export function MeetingView({
                       {isAdmin && (
                         <Link
                           href={`/meeting/${m.id}/report`}
-                          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-cyan-400 border border-white/10 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-all"
+                          className="flex items-center gap-1.5 text-xs text-black/40 hover:text-cyan-400 border border-black/10 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-all"
                         >
                           <Pencil size={11} />
                           แก้ไข
@@ -471,18 +477,18 @@ export function MeetingView({
       {/* ══ Tab 2: มติ / ข้อสั่งการ ══ */}
       {tab === 'resolution' && (
         !latestMeeting ? (
-          <div className="glass-card p-12 text-center text-white/30 text-sm">
+          <div className="glass-card p-12 text-center text-black/30 text-sm">
             ยังไม่มีการประชุม
           </div>
         ) : (
           <div className="space-y-4">
             {/* Header row */}
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-black/40">
                 ข้อสั่งการจาก{' '}
-                <b className="text-white/60">{latestMeeting.title}</b>
+                <b className="text-black/60">{latestMeeting.title}</b>
                 {latestResolutions.length > 0 && (
-                  <span className="ml-2 text-white/25">({latestResolutions.length} ข้อ)</span>
+                  <span className="ml-2 text-black/25">({latestResolutions.length} ข้อ)</span>
                 )}
               </p>
               {isAdmin && (
@@ -491,7 +497,7 @@ export function MeetingView({
                   className={cn(
                     'flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all',
                     showResolutionForm
-                      ? 'bg-white/8 text-white/50 border-white/15 hover:bg-white/12'
+                      ? 'bg-black/8 text-black/50 border-black/15 hover:bg-black/12'
                       : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/25'
                   )}
                 >
@@ -516,7 +522,7 @@ export function MeetingView({
             {/* Resolution list */}
             {latestResolutions.length === 0 ? (
               <div className="glass-card p-10 text-center">
-                <p className="text-white/30 text-sm">ยังไม่มีข้อสั่งการสำหรับการประชุมนี้</p>
+                <p className="text-black/30 text-sm">ยังไม่มีข้อสั่งการสำหรับการประชุมนี้</p>
                 {isAdmin && !showResolutionForm && (
                   <button
                     onClick={() => setShowResolutionForm(true)}
@@ -543,14 +549,14 @@ export function MeetingView({
         <div className="space-y-4">
           {prevMeeting ? (
             <>
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-black/40">
                 ติดตามมติจาก:{' '}
-                <b className="text-white/60">{prevMeeting.title}</b>
+                <b className="text-black/60">{prevMeeting.title}</b>
                 {' '}· {formatThaiDate(prevMeeting.scheduled_date)}
               </p>
 
               {prevResolutions.length === 0 ? (
-                <div className="glass-card p-10 text-center text-white/30 text-sm">
+                <div className="glass-card p-10 text-center text-black/30 text-sm">
                   ไม่มีข้อสั่งการที่บันทึกไว้จากการประชุมครั้งก่อน
                 </div>
               ) : (
@@ -558,33 +564,33 @@ export function MeetingView({
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[560px]">
                       <thead>
-                        <tr className="border-b border-white/10 bg-white/3">
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-4 py-2.5">ลำดับ</th>
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-3 py-2.5">ข้อสั่งการ</th>
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-3 py-2.5">ผู้รับผิดชอบ</th>
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-3 py-2.5">กำหนด</th>
-                          <th className="text-left text-[10px] text-white/30 uppercase tracking-wider px-3 py-2.5 pr-4">สถานะ</th>
+                        <tr className="border-b border-black/10 bg-black/3">
+                          <th className="text-left text-[10px] text-black/30 uppercase tracking-wider px-4 py-2.5">ลำดับ</th>
+                          <th className="text-left text-[10px] text-black/30 uppercase tracking-wider px-3 py-2.5">ข้อสั่งการ</th>
+                          <th className="text-left text-[10px] text-black/30 uppercase tracking-wider px-3 py-2.5">ผู้รับผิดชอบ</th>
+                          <th className="text-left text-[10px] text-black/30 uppercase tracking-wider px-3 py-2.5">กำหนด</th>
+                          <th className="text-left text-[10px] text-black/30 uppercase tracking-wider px-3 py-2.5 pr-4">สถานะ</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/6">
+                      <tbody className="divide-y divide-black/6">
                         {prevResolutions.map(r => {
                           const done = r.status === 'แล้วเสร็จ' || r.status === 'ปิดประเด็น'
                           const overdue = isOverdue(r.due_date) && !done
                           return (
                             <tr
                               key={r.id}
-                              className={cn('hover:bg-white/3 transition-colors', done ? 'opacity-55' : '')}
+                              className={cn('hover:bg-black/3 transition-colors', done ? 'opacity-55' : '')}
                             >
                               <td className="px-4 py-3 num text-xs font-bold text-cyan-400">#{r.sequence_no}</td>
-                              <td className="px-3 py-3 text-sm text-white max-w-xs">{r.title}</td>
-                              <td className="px-3 py-3 text-xs text-white/45">{r.responsible_party || '—'}</td>
+                              <td className="px-3 py-3 text-sm text-[#12181F] max-w-xs">{r.title}</td>
+                              <td className="px-3 py-3 text-xs text-black/45">{r.responsible_party || '—'}</td>
                               <td className="px-3 py-3">
                                 {r.due_date ? (
-                                  <span className={cn('num text-xs', overdue ? 'text-red-400' : 'text-white/40')}>
+                                  <span className={cn('num text-xs', overdue ? 'text-red-400' : 'text-black/40')}>
                                     {formatThaiDate(r.due_date, true)}
                                   </span>
                                 ) : (
-                                  <span className="text-white/20">—</span>
+                                  <span className="text-black/20">—</span>
                                 )}
                               </td>
                               <td className="px-3 py-3 pr-4">
@@ -600,7 +606,7 @@ export function MeetingView({
               )}
             </>
           ) : (
-            <div className="glass-card p-10 text-center text-white/30 text-sm">
+            <div className="glass-card p-10 text-center text-black/30 text-sm">
               ยังไม่มีการประชุมก่อนหน้า
             </div>
           )}

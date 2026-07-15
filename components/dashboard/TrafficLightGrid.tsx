@@ -9,10 +9,10 @@ interface TrafficLightGridProps {
 type Light = 'green' | 'yellow' | 'red' | 'grey'
 
 const LIGHT_CFG: Record<Light, { dot: string; bg: string; border: string; text: string; label: string; glow: string }> = {
-  green:  { dot: '#4ADE80', bg: 'rgba(74,222,128,.12)',   border: 'rgba(74,222,128,.35)',  text: '#4ADE80', label: 'ลดได้ตามเป้า',   glow: 'rgba(74,222,128,.45)' },
-  yellow: { dot: '#FCD34D', bg: 'rgba(252,211,77,.12)',   border: 'rgba(252,211,77,.35)',  text: '#FCD34D', label: 'ต้องติดตาม',     glow: 'rgba(252,211,77,.45)' },
-  red:    { dot: '#F87171', bg: 'rgba(248,113,113,.12)',  border: 'rgba(248,113,113,.35)', text: '#F87171', label: 'ไม่ลด / ต้อง Act', glow: 'rgba(248,113,113,.45)' },
-  grey:   { dot: '#3D5380', bg: 'rgba(255,255,255,.04)',  border: 'rgba(71,130,255,.14)',  text: '#4A6189', label: 'ยังไม่ส่งข้อมูล', glow: 'transparent' },
+  green:  { dot: '#1E7A5A', bg: 'rgba(30,122,90,.12)',   border: 'rgba(30,122,90,.35)',  text: '#1E7A5A', label: 'ลดได้ตามเป้า',   glow: 'rgba(30,122,90,.45)' },
+  yellow: { dot: '#A8721A', bg: 'rgba(168,114,26,.12)',   border: 'rgba(168,114,26,.35)',  text: '#A8721A', label: 'ต้องติดตาม',     glow: 'rgba(168,114,26,.45)' },
+  red:    { dot: '#B3392C', bg: 'rgba(179,57,44,.12)',  border: 'rgba(179,57,44,.35)', text: '#B3392C', label: 'ไม่ลด / ต้อง Act', glow: 'rgba(179,57,44,.45)' },
+  grey:   { dot: '#8896A3', bg: 'rgba(0,0,0,.04)',  border: 'rgba(11,110,118,.14)',  text: '#6B7686', label: 'ยังไม่ส่งข้อมูล', glow: 'transparent' },
 }
 
 export function TrafficLightGrid({ reports, branches, targetNrw = 20 }: TrafficLightGridProps) {
@@ -35,8 +35,8 @@ export function TrafficLightGrid({ reports, branches, targetNrw = 20 }: TrafficL
     <div className="glass-card p-5">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full" style={{ background: '#4782FF', boxShadow: '0 0 6px rgba(71,130,255,.60)' }} />
-        <h3 className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>
+        <div className="w-2 h-2 rounded-full" style={{ background: '#0B6E76', boxShadow: '0 0 6px rgba(11,110,118,.60)' }} />
+        <h3 className="text-[13px] font-semibold" style={{ color: '#12181F' }}>
           Traffic Light — สถานะสาขา
         </h3>
       </div>
@@ -89,7 +89,7 @@ export function TrafficLightGrid({ reports, branches, targetNrw = 20 }: TrafficL
         })}
       </div>
 
-      <p className="text-[10px] mt-3" style={{ color: '#243254', fontFamily: 'var(--font-mono)' }}>
+      <p className="text-[10px] mt-3" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)' }}>
         ดี ≤ {targetNrw}% · เตือน ≤ {targetNrw + 3}% · ไม่ดี &gt; {targetNrw + 3}%
       </p>
     </div>

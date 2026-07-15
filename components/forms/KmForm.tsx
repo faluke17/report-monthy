@@ -96,15 +96,15 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Section: ข้อมูลทั่วไป */}
       <div className="glass-card p-6 space-y-4">
-        <h2 className="font-semibold text-white border-b border-white/10 pb-2">ข้อมูลทั่วไป</h2>
+        <h2 className="font-semibold text-[#12181F] border-b border-black/10 pb-2">ข้อมูลทั่วไป</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm text-white/70">สาขา <span className="text-red-400">*</span></label>
+            <label className="text-sm text-black/70">สาขา <span className="text-red-400">*</span></label>
             <select
               {...register('branch_id')}
               disabled={!isRegionAdmin && !!userBranchId}
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500/60 disabled:opacity-50"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm focus:outline-none focus:border-cyan-500/60 disabled:opacity-50"
             >
               <option value="">-- เลือกสาขา --</option>
               {branches.map((b) => (
@@ -118,18 +118,18 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm text-white/70">ชื่อ KM Case <span className="text-red-400">*</span></label>
+          <label className="text-sm text-black/70">ชื่อ KM Case <span className="text-red-400">*</span></label>
           <input
             {...register('title')}
             placeholder="เช่น การลด NRW ด้วยการติดตั้ง PRV ในเขต DMA-1"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
           />
           {errors.title && <p className="text-xs text-red-400">{errors.title.message}</p>}
         </div>
 
         {/* Approach tags */}
         <div className="space-y-2">
-          <label className="text-sm text-white/70">แนวทาง / วิธีการ</label>
+          <label className="text-sm text-black/70">แนวทาง / วิธีการ</label>
           <div className="flex flex-wrap gap-2">
             {APPROACH_OPTIONS.map((tag) => (
               <button
@@ -139,7 +139,7 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
                 className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                   selectedTags.includes(tag)
                     ? 'bg-purple-500/25 text-purple-300 border-purple-500/50'
-                    : 'bg-white/5 text-white/50 border-white/15 hover:border-white/30'
+                    : 'bg-black/5 text-black/50 border-black/15 hover:border-black/30'
                 }`}
               >
                 {selectedTags.includes(tag) && <span className="mr-1">✓</span>}
@@ -152,11 +152,11 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
 
       {/* Section: ผลลัพธ์เชิงตัวเลข */}
       <div className="glass-card p-6 space-y-4">
-        <h2 className="font-semibold text-white border-b border-white/10 pb-2">ผลลัพธ์เชิงตัวเลข</h2>
+        <h2 className="font-semibold text-[#12181F] border-b border-black/10 pb-2">ผลลัพธ์เชิงตัวเลข</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1">
-            <label className="text-xs text-white/60">NRW ก่อน (%)</label>
+            <label className="text-xs text-black/60">NRW ก่อน (%)</label>
             <input
               {...register('nrw_before')}
               type="number"
@@ -164,11 +164,11 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
               min="0"
               max="100"
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-white/60">NRW หลัง (%)</label>
+            <label className="text-xs text-black/60">NRW หลัง (%)</label>
             <input
               {...register('nrw_after')}
               type="number"
@@ -176,54 +176,54 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
               min="0"
               max="100"
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-white/60">MNF ก่อน (ลบ.ม./ชม.)</label>
+            <label className="text-xs text-black/60">MNF ก่อน (ลบ.ม./ชม.)</label>
             <input
               {...register('mnf_before')}
               type="number"
               step="0.01"
               min="0"
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-white/60">MNF หลัง (ลบ.ม./ชม.)</label>
+            <label className="text-xs text-black/60">MNF หลัง (ลบ.ม./ชม.)</label>
             <input
               {...register('mnf_after')}
               type="number"
               step="0.01"
               min="0"
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs text-white/60">น้ำที่ประหยัดได้ (ลบ.ม./วัน)</label>
+            <label className="text-xs text-black/60">น้ำที่ประหยัดได้ (ลบ.ม./วัน)</label>
             <input
               {...register('water_saved_daily')}
               type="number"
               step="0.01"
               min="0"
               placeholder="0.00"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-white/60">มูลค่าที่ประหยัดได้ (บาท/เดือน)</label>
+            <label className="text-xs text-black/60">มูลค่าที่ประหยัดได้ (บาท/เดือน)</label>
             <input
               {...register('value_saved_monthly')}
               type="number"
               step="1"
               min="0"
               placeholder="0"
-              className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm num placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm num placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60"
             />
           </div>
         </div>
@@ -231,26 +231,26 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
 
       {/* Section: รายละเอียด */}
       <div className="glass-card p-6 space-y-4">
-        <h2 className="font-semibold text-white border-b border-white/10 pb-2">รายละเอียดแนวทาง</h2>
+        <h2 className="font-semibold text-[#12181F] border-b border-black/10 pb-2">รายละเอียดแนวทาง</h2>
 
         <div className="space-y-1">
-          <label className="text-sm text-white/70">แนวทางหลักที่ใช้ <span className="text-red-400">*</span></label>
+          <label className="text-sm text-black/70">แนวทางหลักที่ใช้ <span className="text-red-400">*</span></label>
           <textarea
             {...register('key_approach')}
             rows={4}
             placeholder="อธิบายแนวทาง วิธีการ และขั้นตอนที่ใช้ในการแก้ไขปัญหา..."
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
           {errors.key_approach && <p className="text-xs text-red-400">{errors.key_approach.message}</p>}
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm text-white/70">บทเรียนที่ได้รับ</label>
+          <label className="text-sm text-black/70">บทเรียนที่ได้รับ</label>
           <textarea
             {...register('lessons_learned')}
             rows={3}
             placeholder="สิ่งที่เรียนรู้ ข้อควรระวัง หรือข้อแนะนำสำหรับสาขาอื่น..."
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-cyan-500/60 resize-none"
+            className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-[#12181F] text-sm placeholder:text-black/25 focus:outline-none focus:border-cyan-500/60 resize-none"
           />
         </div>
       </div>
@@ -260,14 +260,14 @@ export function KmForm({ branches, userBranchId, isRegionAdmin }: KmFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+          className="px-4 py-2 text-sm text-black/60 hover:text-[#12181F] transition-colors"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#061327] font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-[#FFFFFF] font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
         >
           {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
           {submitting ? 'กำลังบันทึก...' : 'บันทึก KM Case'}

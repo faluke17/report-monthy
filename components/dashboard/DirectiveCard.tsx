@@ -80,13 +80,13 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
 
   return (
     <div className={cn(
-      'rounded-xl border border-white/10 border-l-4 overflow-hidden transition-opacity',
+      'rounded-xl border border-black/10 border-l-4 overflow-hidden transition-opacity',
       borderColor,
       done && !myBranchStatus ? 'opacity-70' : '',
     )}>
 
       {/* ── Header ── */}
-      <div className="px-5 pt-4 pb-3 bg-white/2">
+      <div className="px-5 pt-4 pb-3 bg-black/2">
         <div className="flex items-start gap-3">
           <span className="num text-xs font-bold text-cyan-400 w-7 shrink-0 text-right pt-0.5">
             #{r.sequence_no}
@@ -105,12 +105,12 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                 </span>
               )}
               {r.source && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/40 border-white/12">
+                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-black/5 text-black/40 border-black/12">
                   {r.source}
                 </span>
               )}
               {isAdmin && totalBranches > 0 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-white/5 text-white/35 border-white/10">
+                <span className="text-[10px] px-2 py-0.5 rounded-full border bg-black/5 text-black/35 border-black/10">
                   <span className="num">{doneBranches}/{totalBranches}</span> สาขา
                 </span>
               )}
@@ -121,18 +121,18 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
               )}
             </div>
 
-            <p className="text-sm font-semibold text-white leading-snug">{r.title}</p>
+            <p className="text-sm font-semibold text-[#12181F] leading-snug">{r.title}</p>
 
             <div className="flex items-center gap-2 flex-wrap text-xs">
               {r.responsible_dept && (
-                <span className="px-2 py-0.5 rounded bg-white/6 border border-white/10 text-white/45">
+                <span className="px-2 py-0.5 rounded bg-black/6 border border-black/10 text-black/45">
                   {r.responsible_dept}
                 </span>
               )}
               {r.due_date && (
                 <span className={cn(
                   'flex items-center gap-1',
-                  overdue ? 'text-red-400' : days !== null && days <= 7 ? 'text-amber-400' : 'text-white/40'
+                  overdue ? 'text-red-400' : days !== null && days <= 7 ? 'text-amber-400' : 'text-black/40'
                 )}>
                   <Clock size={10} />
                   ครบ {formatThaiDate(r.due_date, true)}
@@ -163,7 +163,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
             {isAdmin && (
               <button
                 onClick={() => setExpanded(v => !v)}
-                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-cyan-400 transition-colors"
+                className="flex items-center gap-1 text-[10px] text-black/30 hover:text-cyan-400 transition-colors"
               >
                 {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 <span>{expanded ? 'ซ่อน' : 'รายละเอียด'}</span>
@@ -175,7 +175,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
         {/* Overall progress bar */}
         <div className="ml-10 mt-2.5">
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
+            <div className="flex-1 h-1 rounded-full bg-black/8 overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-500',
@@ -186,7 +186,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
             </div>
             <span className={cn(
               'num text-[10px] font-bold w-8 text-right',
-              done ? 'text-emerald-400' : 'text-white/40'
+              done ? 'text-emerald-400' : 'text-black/40'
             )}>
               {r.progress_pct}%
             </span>
@@ -197,8 +197,8 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
       {/* ── Inline update form — branch users (visible by default) ── */}
       {!isAdmin && canUpdate && (
         <div className={cn(
-          'px-5 py-3 border-t border-white/8',
-          done ? 'bg-emerald-500/5' : 'bg-white/2'
+          'px-5 py-3 border-t border-black/8',
+          done ? 'bg-emerald-500/5' : 'bg-black/2'
         )}>
           {done ? (
             <div className="flex items-center gap-2 text-sm text-emerald-400">
@@ -213,7 +213,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
             </div>
           ) : (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider">
+              <p className="text-[10px] font-bold text-black/30 uppercase tracking-wider">
                 อัปเดตความก้าวหน้า
               </p>
 
@@ -229,7 +229,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                         ? step === 100
                           ? 'bg-emerald-500/25 text-emerald-400 border-emerald-500/50'
                           : 'bg-cyan-500/25 text-cyan-400 border-cyan-500/50'
-                        : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                        : 'bg-black/5 text-black/35 border-black/10 hover:border-black/25 hover:text-black/60'
                     )}
                   >
                     {step}%
@@ -245,7 +245,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                   onChange={e => { setNote(e.target.value); setSaveOk(false) }}
                   onKeyDown={e => e.key === 'Enter' && !isPending && handleSave()}
                   placeholder="หมายเหตุ (optional)..."
-                  className="flex-1 bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40"
+                  className="flex-1 bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-xs text-[#12181F] placeholder:text-black/20 focus:outline-none focus:border-cyan-500/40"
                 />
                 <button
                   onClick={handleSave}
@@ -253,7 +253,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                   className={cn(
                     'px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0',
                     isPending
-                      ? 'bg-white/8 text-white/25 cursor-not-allowed'
+                      ? 'bg-black/8 text-black/25 cursor-not-allowed'
                       : saveOk
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                       : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
@@ -271,7 +271,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
 
               {/* Last update info */}
               {r.progress_updated_at && (
-                <p className="text-[10px] text-white/20">
+                <p className="text-[10px] text-black/20">
                   อัปเดตล่าสุด: {formatThaiDate(r.progress_updated_at, true)}
                   {r.progress_updated_by && ` · ${r.progress_updated_by}`}
                 </p>
@@ -283,19 +283,19 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
 
       {/* ── Admin expanded detail ── */}
       {isAdmin && expanded && (
-        <div className="border-t border-white/8 bg-white/1 px-5 py-4 space-y-5">
+        <div className="border-t border-black/8 bg-black/1 px-5 py-4 space-y-5">
 
           {r.detail && (
             <div className="space-y-1">
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider">รายละเอียด</p>
-              <p className="text-sm text-white/65 leading-relaxed whitespace-pre-line pl-1">{r.detail}</p>
+              <p className="text-[10px] font-bold text-black/30 uppercase tracking-wider">รายละเอียด</p>
+              <p className="text-sm text-black/65 leading-relaxed whitespace-pre-line pl-1">{r.detail}</p>
             </div>
           )}
 
           {/* Per-branch list (expanded traffic) */}
           {branch_statuses.length > 0 && (
             <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
                 <Target size={10} />
                 ความก้าวหน้าต่อสาขา
               </div>
@@ -308,8 +308,8 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
           )}
 
           {/* Admin update form */}
-          <div className="border-t border-white/8 pt-4 space-y-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+          <div className="border-t border-black/8 pt-4 space-y-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
               <TrendingUp size={10} />
               อัปเดตความก้าวหน้า (Admin)
             </div>
@@ -325,7 +325,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                       ? step === 100
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
                         : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
-                      : 'bg-white/5 text-white/35 border-white/10 hover:border-white/25 hover:text-white/60'
+                      : 'bg-black/5 text-black/35 border-black/10 hover:border-black/25 hover:text-black/60'
                   )}
                 >
                   {step}%
@@ -339,7 +339,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                 value={note}
                 onChange={e => { setNote(e.target.value); setSaveOk(false) }}
                 placeholder="รายละเอียดความก้าวหน้า..."
-                className="flex-1 bg-[#0c1a30] border border-white/15 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/40 resize-none"
+                className="flex-1 bg-[#FFFFFF] border border-black/15 rounded-lg px-3 py-2 text-xs text-[#12181F] placeholder:text-black/20 focus:outline-none focus:border-cyan-500/40 resize-none"
               />
               <button
                 onClick={handleSave}
@@ -347,7 +347,7 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
                 className={cn(
                   'px-3 py-2 rounded-lg text-xs font-semibold self-end transition-all shrink-0',
                   isPending
-                    ? 'bg-white/8 text-white/25 cursor-not-allowed'
+                    ? 'bg-black/8 text-black/25 cursor-not-allowed'
                     : saveOk
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30'
@@ -366,8 +366,8 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
 
           {/* Progress timeline */}
           {logs.length > 0 && (
-            <div className="border-t border-white/8 pt-4 space-y-2">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+            <div className="border-t border-black/8 pt-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/30 uppercase tracking-wider">
                 <Activity size={10} />
                 ประวัติการอัพเดต
               </div>
@@ -377,17 +377,17 @@ export function DirectiveCard({ summary, isAdmin, branchCostcenter, branchName }
 
           {/* Admin / tracking notes */}
           {(r.admin_notes || r.tracking_notes) && (
-            <div className="border-t border-white/8 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="border-t border-black/8 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {r.admin_notes && (
                 <div>
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1">หมายเหตุผู้บริหาร</p>
-                  <p className="text-xs text-white/55 leading-relaxed">{r.admin_notes}</p>
+                  <p className="text-[10px] font-bold text-black/30 uppercase tracking-wider mb-1">หมายเหตุผู้บริหาร</p>
+                  <p className="text-xs text-black/55 leading-relaxed">{r.admin_notes}</p>
                 </div>
               )}
               {r.tracking_notes && (
                 <div>
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1">การติดตาม</p>
-                  <p className="text-xs text-white/55 leading-relaxed">{r.tracking_notes}</p>
+                  <p className="text-[10px] font-bold text-black/30 uppercase tracking-wider mb-1">การติดตาม</p>
+                  <p className="text-xs text-black/55 leading-relaxed">{r.tracking_notes}</p>
                 </div>
               )}
             </div>

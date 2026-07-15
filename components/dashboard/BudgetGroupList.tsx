@@ -19,7 +19,7 @@ interface Props {
 }
 
 const PHASES = [
-  { label: 'ยังไม่เริ่ม', bar: 'bg-white/20',    pill: 'bg-white/6 text-white/35',          border: 'border-white/10' },
+  { label: 'ยังไม่เริ่ม', bar: 'bg-black/20',    pill: 'bg-black/6 text-black/35',          border: 'border-black/10' },
   { label: 'ราคากลาง',    bar: 'bg-violet-500',   pill: 'bg-violet-500/15 text-violet-300',  border: 'border-violet-500/25' },
   { label: 'TOR',         bar: 'bg-blue-500',     pill: 'bg-blue-500/15 text-blue-300',      border: 'border-blue-500/25' },
   { label: 'พิจารณาผล',  bar: 'bg-indigo-400',   pill: 'bg-indigo-500/15 text-indigo-300',  border: 'border-indigo-500/25' },
@@ -157,8 +157,8 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{yearName}</h1>
-          <p className="text-sm text-white/40 mt-1">ภาพรวมโครงการก่อสร้าง / วางท่อ</p>
+          <h1 className="text-2xl font-bold text-[#12181F] tracking-tight">{yearName}</h1>
+          <p className="text-sm text-black/40 mt-1">ภาพรวมโครงการก่อสร้าง / วางท่อ</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative" ref={searchRef}>
@@ -168,21 +168,21 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
               onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true) }}
               onFocus={() => { if (q) setShowDropdown(true) }}
               placeholder="ค้นหาชื่อโครงการ หรือรหัส..."
-              className="w-64 bg-white/5 border border-white/12 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-cyan-500/40"
+              className="w-64 bg-black/5 border border-black/12 rounded-lg pl-8 pr-7 py-1.5 text-xs text-black/80 placeholder-white/25 focus:outline-none focus:border-cyan-500/40"
             />
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black/25" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             {searchQuery && (
-              <button onClick={() => { setSearchQuery(''); setShowDropdown(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+              <button onClick={() => { setSearchQuery(''); setShowDropdown(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60">
                 <X size={12} />
               </button>
             )}
             {showDropdown && q && (
-              <div className="absolute top-full left-0 mt-1.5 w-80 bg-[#141824] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+              <div className="absolute top-full left-0 mt-1.5 w-80 bg-[#FFFFFF] border border-black/10 rounded-xl shadow-2xl z-50 overflow-hidden">
                 {dropdownResults.length === 0 ? (
-                  <p className="px-4 py-3 text-xs text-white/30">ไม่พบโครงการที่ค้นหา</p>
+                  <p className="px-4 py-3 text-xs text-black/30">ไม่พบโครงการที่ค้นหา</p>
                 ) : (
                   <>
-                    <p className="px-4 pt-2.5 pb-1 text-[10px] text-white/25 uppercase tracking-widest">พบ {dropdownResults.length} รายการ</p>
+                    <p className="px-4 pt-2.5 pb-1 text-[10px] text-black/25 uppercase tracking-widest">พบ {dropdownResults.length} รายการ</p>
                     {dropdownResults.map(r => (
                       <button
                         key={r.id}
@@ -191,22 +191,22 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                           setSearchQuery('')
                           setShowDropdown(false)
                         }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-white/6 transition-colors border-t border-white/5 first:border-0 flex items-start gap-2.5"
+                        className="w-full text-left px-4 py-2.5 hover:bg-black/6 transition-colors border-t border-black/5 first:border-0 flex items-start gap-2.5"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-white/85 font-medium leading-snug truncate">
+                          <p className="text-xs text-black/85 font-medium leading-snug truncate">
                             <Highlight text={r.project_name} query={q} />
                           </p>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             {r.code && (
-                              <span className="text-[10px] text-white/30 font-mono">
+                              <span className="text-[10px] text-black/30 font-mono">
                                 <Highlight text={r.code} query={q} />
                               </span>
                             )}
                             <span className="text-[10px] text-cyan-400/60">{r.groupName}</span>
                           </div>
                         </div>
-                        <ChevronRight size={12} className="text-white/20 shrink-0 mt-0.5" />
+                        <ChevronRight size={12} className="text-black/20 shrink-0 mt-0.5" />
                       </button>
                     ))}
                   </>
@@ -226,7 +226,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
       </div>
 
       {budgetGroups.length === 0 ? (
-        <div className="glass-card p-16 text-center text-white/30">
+        <div className="glass-card p-16 text-center text-black/30">
           <Folders size={40} className="mx-auto mb-3 opacity-30" />
           <p>ยังไม่มีชื่องบประมาณ</p>
         </div>
@@ -234,7 +234,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
         <>
           {/* ── Type tabs ────────────────────────────────────────────────── */}
           {(pipeCount > 0 && dmaCount > 0) && (
-            <div className="flex items-center gap-2 p-1 bg-white/4 rounded-xl w-fit border border-white/8">
+            <div className="flex items-center gap-2 p-1 bg-black/4 rounded-xl w-fit border border-black/8">
               {([
                 { key: 'all',  label: 'ทั้งหมด',     count: pipeCount + dmaCount },
                 { key: 'pipe', label: 'ปรับปรุงท่อ', count: pipeCount },
@@ -249,12 +249,12 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                         ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40'
                         : t.key === 'pipe'
                           ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                          : 'bg-white/10 text-white border border-white/20'
-                      : 'text-white/40 hover:text-white/70 border border-transparent'
+                          : 'bg-black/10 text-[#12181F] border border-black/20'
+                      : 'text-black/40 hover:text-black/70 border border-transparent'
                   }`}
                 >
                   <span>{t.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full num ${activeType === t.key ? 'bg-white/15' : 'bg-white/8'}`}>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full num ${activeType === t.key ? 'bg-black/15' : 'bg-black/8'}`}>
                     {t.count}
                   </span>
                 </button>
@@ -274,7 +274,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all max-w-[220px] truncate ${
                     active
                       ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                      : 'bg-white/4 text-white/40 border-white/8 hover:bg-white/8 hover:text-white/70'
+                      : 'bg-black/4 text-black/40 border-black/8 hover:bg-black/8 hover:text-black/70'
                   }`}
                 >
                   {label}
@@ -286,8 +286,8 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {/* ── KPI Strip ────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <KpiCard
-              icon={<Layers size={16} className="text-white/70" />}
-              iconBg="bg-white/8"
+              icon={<Layers size={16} className="text-black/70" />}
+              iconBg="bg-black/8"
               accentColor="border-l-white/20"
               label="โครงการทั้งหมด"
               value={String(s.total)}
@@ -336,7 +336,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
           {/* ── Phase Distribution ──────────────────────────────────────── */}
           <div className="glass-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-white/45 uppercase tracking-widest">ความก้าวหน้าตาม Phase</p>
+              <p className="text-xs font-semibold text-black/45 uppercase tracking-widest">ความก้าวหน้าตาม Phase</p>
               {s.overdue > 0 && (
                 <span className="flex items-center gap-1.5 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full font-medium">
                   <AlertTriangle size={11} /> เกินกำหนด {s.overdue} โครงการ
@@ -374,13 +374,13 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                 </div>
               </>
             ) : (
-              <p className="text-sm text-white/25 text-center py-4">ยังไม่มีโครงการ</p>
+              <p className="text-sm text-black/25 text-center py-4">ยังไม่มีโครงการ</p>
             )}
           </div>
 
           {/* ── Group list ───────────────────────────────────────────────── */}
           <div className="space-y-2">
-            <p className="text-[11px] text-white/30 uppercase tracking-widest px-1">ชื่องบประมาณ</p>
+            <p className="text-[11px] text-black/30 uppercase tracking-widest px-1">ชื่องบประมาณ</p>
             {visibleGroups.map(group => {
               const gProjects       = group.budget_projects ?? []
               const gs              = computeStats(gProjects)
@@ -395,7 +395,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                   : 'bg-gradient-to-b from-cyan-500/60 to-cyan-500/10'
 
               return (
-                <div key={group.id} className="glass-card overflow-hidden hover:border-white/20 hover:bg-white/[0.02] transition-all group/row">
+                <div key={group.id} className="glass-card overflow-hidden hover:border-black/20 hover:bg-white/[0.02] transition-all group/row">
                   <div className="flex items-stretch">
                     {/* Status accent strip */}
                     <div className={`w-1 shrink-0 ${stripColor}`} />
@@ -408,7 +408,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-white leading-snug truncate">{group.name}</p>
+                            <p className="text-sm font-semibold text-[#12181F] leading-snug truncate">{group.name}</p>
                             {(() => {
                               const gps     = group.budget_projects ?? []
                               const hasPipe = gps.some(p => p.project_type === 'pipe')
@@ -417,14 +417,14 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                                 <>
                                   {hasPipe && !hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 shrink-0">ท่อ</span>}
                                   {hasDma && !hasPipe && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 shrink-0">DMA</span>}
-                                  {hasPipe && hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/45 border border-white/12 shrink-0">ท่อ+DMA</span>}
+                                  {hasPipe && hasDma && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/8 text-black/45 border border-black/12 shrink-0">ท่อ+DMA</span>}
                                 </>
                               )
                             })()}
                           </div>
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">
-                            <span className="text-[11px] text-white/40 num">{gs.total} โครงการ</span>
+                            <span className="text-[11px] text-black/40 num">{gs.total} โครงการ</span>
                             {gs.byPhase[6] > 0 && (
                               <span className="text-[11px] text-emerald-400 num font-medium">✓ เสร็จ {gs.byPhase[6]}</span>
                             )}
@@ -438,7 +438,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                               <span className="text-[11px] text-amber-300/60 num">{fmtMillion(gs.budget)}</span>
                             )}
                             {gs.estPipe > 0 && (
-                              <span className="text-[11px] text-white/25 num">{fmtMeter(gs.estPipe)} ม.</span>
+                              <span className="text-[11px] text-black/25 num">{fmtMeter(gs.estPipe)} ม.</span>
                             )}
                           </div>
 
@@ -455,10 +455,10 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                         </div>
 
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <ChevronRight size={16} className="text-white/20 group-hover/row:text-cyan-400 group-hover/row:translate-x-0.5 transition-all" />
+                          <ChevronRight size={16} className="text-black/20 group-hover/row:text-cyan-400 group-hover/row:translate-x-0.5 transition-all" />
                           {gs.total > 0 && (
                             <span className={`text-[10px] font-bold num ${
-                              allDone ? 'text-emerald-400' : hasOverdue ? 'text-red-400/70' : 'text-white/25'
+                              allDone ? 'text-emerald-400' : hasOverdue ? 'text-red-400/70' : 'text-black/25'
                             }`}>{gs.donePct}%</span>
                           )}
                         </div>
@@ -467,11 +467,11 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
 
                     {/* Delete zone */}
                     {canCreate && (
-                      <div className="shrink-0 flex items-center px-3 border-l border-white/5">
+                      <div className="shrink-0 flex items-center px-3 border-l border-black/5">
                         {!isConfirmDelete ? (
                           <button
                             onClick={() => setConfirmDeleteId(group.id)}
-                            className="p-1.5 text-white/15 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                            className="p-1.5 text-black/15 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -482,7 +482,7 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
                               ลบ
                             </button>
                             <button onClick={() => setConfirmDeleteId(null)}
-                              className="text-[10px] text-white/30 px-2 py-0.5 rounded border border-white/10">
+                              className="text-[10px] text-black/30 px-2 py-0.5 rounded border border-black/10">
                               ยกเลิก
                             </button>
                           </div>
@@ -502,24 +502,24 @@ export function BudgetGroupList({ budgetGroups, yearId, yearName, canCreate, ini
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative z-10 w-full max-w-sm glass-card rounded-2xl overflow-hidden animate-fadein shadow-2xl">
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/8 bg-white/3">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-black/8 bg-black/3">
               <button onClick={() => setShowForm(false)} className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-              <p className="flex-1 text-center text-sm font-semibold text-white/70">เพิ่มชื่องบประมาณ</p>
+              <p className="flex-1 text-center text-sm font-semibold text-black/70">เพิ่มชื่องบประมาณ</p>
               <div className="w-3" />
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              <p className="text-xs text-white/40">ภายใต้ {yearName}</p>
+              <p className="text-xs text-black/40">ภายใต้ {yearName}</p>
               <input
                 type="text"
                 value={groupName}
                 onChange={e => setGroupName(e.target.value)}
                 placeholder="เช่น รายได้ปกติ, งบเร่งด่วน..."
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-black/5 border border-black/15 rounded-xl px-4 py-2.5 text-sm text-[#12181F] placeholder-white/25 focus:outline-none focus:border-cyan-500/50"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button type="button" onClick={() => { setShowForm(false); setGroupName('') }}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white/80 border border-white/10 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl text-sm text-black/50 hover:text-black/80 border border-black/10 transition-colors">
                   ยกเลิก
                 </button>
                 <button type="submit" disabled={isPending || !groupName.trim()}
@@ -551,7 +551,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ icon, iconBg, accentColor, label, value, sub, subColor = 'text-white/30', highlight = false }: {
+function KpiCard({ icon, iconBg, accentColor, label, value, sub, subColor = 'text-black/30', highlight = false }: {
   icon: React.ReactNode
   iconBg: string
   accentColor: string
@@ -567,8 +567,8 @@ function KpiCard({ icon, iconBg, accentColor, label, value, sub, subColor = 'tex
         {icon}
       </div>
       <div>
-        <p className="text-[10px] text-white/35 mb-1 leading-tight">{label}</p>
-        <p className="text-2xl font-bold text-white num leading-none">{value}</p>
+        <p className="text-[10px] text-black/35 mb-1 leading-tight">{label}</p>
+        <p className="text-2xl font-bold text-[#12181F] num leading-none">{value}</p>
         {sub && <p className={`text-[11px] mt-1.5 ${subColor}`}>{sub}</p>}
       </div>
     </div>

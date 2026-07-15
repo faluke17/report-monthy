@@ -26,7 +26,7 @@ interface Props {
 }
 
 function nrwColor(v: number | null) {
-  if (v == null) return { text: 'text-white/25', strip: 'bg-white/10' }
+  if (v == null) return { text: 'text-black/25', strip: 'bg-black/10' }
   if (v <= 20)   return { text: 'text-green-400', strip: 'bg-green-500' }
   if (v <= 25)   return { text: 'text-amber-400', strip: 'bg-amber-500' }
   return           { text: 'text-red-400',   strip: 'bg-red-500'   }
@@ -67,54 +67,54 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* ส่งแล้ว */}
           <div className="glass-card-sm p-4 space-y-1">
-            <p className="text-xs text-white/40">ส่งแล้ว</p>
+            <p className="text-xs text-black/40">ส่งแล้ว</p>
             <p className="text-2xl font-bold text-cyan-400 num">
               {submitted.length}
-              <span className="text-base font-normal text-white/30"> / {total}</span>
+              <span className="text-base font-normal text-black/30"> / {total}</span>
             </p>
-            <p className="text-xs text-white/30">สาขา</p>
+            <p className="text-xs text-black/30">สาขา</p>
           </div>
 
           {/* ลด NRW ได้ */}
           <div className="glass-card-sm p-4 space-y-1">
-            <p className="text-xs text-white/40">ลด NRW ได้</p>
-            <p className={`text-2xl font-bold num ${nrwReduced > 0 ? 'text-green-400' : 'text-white/25'}`}>
+            <p className="text-xs text-black/40">ลด NRW ได้</p>
+            <p className={`text-2xl font-bold num ${nrwReduced > 0 ? 'text-green-400' : 'text-black/25'}`}>
               {nrwReduced}
-              <span className="text-base font-normal text-white/30"> / {submitted.length}</span>
+              <span className="text-base font-normal text-black/30"> / {submitted.length}</span>
             </p>
-            <p className="text-xs text-white/30">สาขา (หลัง &lt; ก่อน)</p>
+            <p className="text-xs text-black/30">สาขา (หลัง &lt; ก่อน)</p>
           </div>
 
           {/* อุปสรรคเร่งด่วน */}
           <div className="glass-card-sm p-4 space-y-1">
-            <p className="text-xs text-white/40">อุปสรรคเร่งด่วน</p>
-            <p className={`text-2xl font-bold num ${highPrio > 0 ? 'text-red-400' : 'text-white/25'}`}>
+            <p className="text-xs text-black/40">อุปสรรคเร่งด่วน</p>
+            <p className={`text-2xl font-bold num ${highPrio > 0 ? 'text-red-400' : 'text-black/25'}`}>
               {highPrio}
             </p>
-            <p className="text-xs text-white/30">รายการ</p>
+            <p className="text-xs text-black/30">รายการ</p>
           </div>
 
           {/* พื้นที่รายงาน */}
           <div className="glass-card-sm p-4 space-y-1">
-            <p className="text-xs text-white/40">พื้นที่รายงาน</p>
+            <p className="text-xs text-black/40">พื้นที่รายงาน</p>
             <p className="text-2xl font-bold text-teal-400 num">{totalAreas}</p>
-            <p className="text-xs text-white/30">พื้นที่</p>
+            <p className="text-xs text-black/30">พื้นที่</p>
           </div>
         </div>
 
         {/* ── Progress Bar ─────────────────────────── */}
         <div className="glass-card-sm p-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-white/60 font-medium">ความคืบหน้าการส่งรายงาน</span>
-            <span className="font-bold text-white num">{pct}%</span>
+            <span className="text-black/60 font-medium">ความคืบหน้าการส่งรายงาน</span>
+            <span className="font-bold text-[#12181F] num">{pct}%</span>
           </div>
-          <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="h-2.5 rounded-full bg-black/10 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${progressColor}`}
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="text-xs text-white/40 num">
+          <p className="text-xs text-black/40 num">
             ส่งแล้ว {submitted.length} / {total} สาขา
             {notSubmitted.length > 0 && ` · รอ ${notSubmitted.length} สาขา`}
           </p>
@@ -136,7 +136,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                   className="flex items-center gap-1.5 border border-orange-500/25 bg-orange-500/5 rounded-lg px-3 py-1.5"
                 >
                   <span className="text-[10px] font-bold text-orange-400/60 num">{s.code}</span>
-                  <span className="text-sm text-white/70">{s.name_th}</span>
+                  <span className="text-sm text-black/70">{s.name_th}</span>
                 </div>
               ))}
             </div>
@@ -146,7 +146,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
         {/* ── ส่งแล้ว ──────────────────────────────── */}
         {sortedSubmitted.length > 0 && (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-white/60">
+            <p className="text-sm font-semibold text-black/60">
               ส่งแล้ว ({sortedSubmitted.length} สาขา) · เรียงตาม NRW สูงสุดก่อน
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -158,8 +158,8 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                   <button
                     key={s.branch_id}
                     onClick={() => setSelectedBranchId(s.branch_id)}
-                    className={`glass-card-sm text-left overflow-hidden transition-all hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer w-full
-                      ${hasHighPrio ? 'border-red-500/30' : 'border-white/10'}`}
+                    className={`glass-card-sm text-left overflow-hidden transition-all hover:border-cyan-500/30 hover:bg-black/5 cursor-pointer w-full
+                      ${hasHighPrio ? 'border-red-500/30' : 'border-black/10'}`}
                   >
                     {/* Colored top strip */}
                     <div className={`h-1 w-full ${strip}`} />
@@ -167,7 +167,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                     <div className="p-4 space-y-3">
                       {/* Code + status */}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-bold num bg-white/10 px-1.5 py-0.5 rounded text-white/50 shrink-0">
+                        <span className="text-[10px] font-bold num bg-black/10 px-1.5 py-0.5 rounded text-black/50 shrink-0">
                           {s.code}
                         </span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shrink-0">
@@ -176,19 +176,19 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                       </div>
 
                       {/* Branch name */}
-                      <p className="text-sm font-semibold text-white leading-tight">{s.name_th}</p>
+                      <p className="text-sm font-semibold text-[#12181F] leading-tight">{s.name_th}</p>
 
                       {/* NRW big number */}
                       <div>
                         <p className={`text-3xl font-bold num ${text}`}>
                           {s.avgNrwAfter != null ? `${s.avgNrwAfter.toFixed(1)}%` : '—'}
                         </p>
-                        <p className="text-[10px] text-white/30 mt-0.5">NRW หลังดำเนินการ</p>
+                        <p className="text-[10px] text-black/30 mt-0.5">NRW หลังดำเนินการ</p>
                       </div>
 
                       {/* Footer */}
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">{s.areaCount} พื้นที่</span>
+                        <span className="text-xs text-black/40">{s.areaCount} พื้นที่</span>
                         {s.totalObstacles > 0 && (
                           <span className={`flex items-center gap-1 text-xs font-bold ${
                             hasHighPrio ? 'text-red-400' : 'text-amber-400'
@@ -212,7 +212,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
       <Sheet open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-[50vw] bg-[#0c1a30] border-white/10 overflow-y-auto flex flex-col gap-0 p-0"
+          className="w-full sm:max-w-[50vw] bg-[#FFFFFF] border-black/10 overflow-y-auto flex flex-col gap-0 p-0"
         >
           {sheetReports.length > 0 && (
             <AreaDetailSheetBody reports={sheetReports} canDelete={canDelete} />

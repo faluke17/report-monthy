@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
+import { getLatestFlowPeriod, getNodeNrwStats } from '@/app/actions/water-nodes'
 import { WaterTreeClient } from './_components/WaterTreeClient'
 import type { Branch, WaterNode } from '@/lib/types'
 
@@ -36,12 +37,22 @@ export default async function WaterTreePage() {
     ? branches.find(b => b.code === session.costcenter) ?? null
     : null
 
+  // เดือน/ปีล่าสุดที่มีข้อมูล flow sync แล้ว — ใช้เป็นค่าเริ่มต้นของผังการไหล
+  const now = new Date()
+  const latestPeriod = await getLatestFlowPeriod()
+  const flowYear  = latestPeriod?.year  ?? now.getFullYear()
+  const flowMonth = latestPeriod?.month ?? now.getMonth() + 1
+  const flowStats = await getNodeNrwStats(flowYear, flowMonth)
+
   return (
     <div className="-m-4 -mb-20 md:-m-6 md:-mb-6 overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
       <WaterTreeClient
         branches={branches}
         nodes={nodes}
         defaultBranchId={myBranch?.id ?? null}
+        initialFlowYear={flowYear}
+        initialFlowMonth={flowMonth}
+        initialFlowStats={flowStats.filter(f => f.report_year === flowYear)}
       />
     </div>
   )

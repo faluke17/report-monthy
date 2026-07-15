@@ -21,7 +21,6 @@ interface TopbarProps {
 }
 
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
-  '/dashboard':          { kicker: 'Executive View',  title: 'ภาพรวมเขต 10' },
   '/ranking':            { kicker: 'Performance',     title: 'Ranking สาขา' },
   '/pdca':               { kicker: 'PDCA Report',     title: 'กรอกผล / PDCA รายพื้นที่' },
   '/plans':              { kicker: 'Plan Tracker',    title: 'แผนลดน้ำสูญเสีย' },
@@ -66,24 +65,23 @@ export function Topbar({
       className="h-14 md:h-15 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-20"
       style={{
         height: '56px',
-        background: 'rgba(4,8,22,.96)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        borderBottom: '1px solid rgba(71,130,255,.18)',
-        boxShadow: '0 1px 0 rgba(59,130,246,.08), 0 4px 24px rgba(0,0,0,.40)',
+        background: 'rgba(245,246,248,.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #E3E7EC',
       }}
     >
       {/* ── Page title (left) ── */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="hidden sm:flex items-center gap-2 text-[10px]" style={{ color: '#243254', fontFamily: 'var(--font-mono)', letterSpacing: '.10em', textTransform: 'uppercase' }}>
+        <div className="hidden sm:flex items-center gap-2 text-[10px]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', letterSpacing: '.10em', textTransform: 'uppercase' }}>
           <span>กปภ.เขต 10</span>
-          <ChevronRight size={10} style={{ color: '#243254' }} />
-          <span style={{ color: '#4782FF' }}>{meta.kicker}</span>
+          <ChevronRight size={10} style={{ color: '#98A2AF' }} />
+          <span style={{ color: '#0B6E76' }}>{meta.kicker}</span>
         </div>
-        <div className="hidden sm:block w-px h-4" style={{ background: 'rgba(71,130,255,.18)' }} />
+        <div className="hidden sm:block w-px h-4" style={{ background: '#E3E7EC' }} />
         <p
           className="text-[15px] md:text-[16px] font-semibold leading-tight truncate"
-          style={{ color: '#E4ECFF' }}
+          style={{ color: '#12181F' }}
         >
           {meta.title}
         </p>
@@ -93,7 +91,7 @@ export function Topbar({
       <div className="flex items-center gap-2 shrink-0">
         {session.branch_name && (
           <span className="scope-chip hidden sm:inline-flex">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#4782FF' }} />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#0B6E76' }} />
             สาขา{session.branch_name}
           </span>
         )}
@@ -120,8 +118,8 @@ export function Topbar({
               style={{ border: '1px solid transparent' }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement
-                el.style.background = 'rgba(71,130,255,.08)'
-                el.style.borderColor = 'rgba(71,130,255,.18)'
+                el.style.background = '#F5F6F8'
+                el.style.borderColor = '#E3E7EC'
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement
@@ -133,9 +131,9 @@ export function Topbar({
                 <AvatarFallback
                   className="text-xs font-bold"
                   style={{
-                    background: 'rgba(71,130,255,.18)',
-                    color: '#93C5FD',
-                    border: '1px solid rgba(71,130,255,.30)',
+                    background: '#EAF1F0',
+                    color: '#0B6E76',
+                    border: '1px solid #0B6E7640',
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
@@ -143,10 +141,10 @@ export function Topbar({
                 </AvatarFallback>
               </Avatar>
               <div className="hidden sm:block text-left">
-                <p className="text-[13px] font-semibold leading-tight" style={{ color: '#E4ECFF' }}>
+                <p className="text-[13px] font-semibold leading-tight" style={{ color: '#12181F' }}>
                   {fullName || 'ผู้ใช้งาน'}
                 </p>
-                <p className="text-[10px] leading-tight" style={{ color: '#3D5380' }}>
+                <p className="text-[10px] leading-tight" style={{ color: '#8896A3' }}>
                   {role}
                 </p>
               </div>
@@ -157,42 +155,42 @@ export function Topbar({
             align="end"
             className="min-w-[220px] anim-slide-down"
             style={{
-              background: '#080F25',
-              border: '1px solid rgba(71,130,255,.20)',
-              boxShadow: '0 16px 48px rgba(0,0,0,.70), 0 0 0 1px rgba(71,130,255,.06) inset',
+              background: '#FFFFFF',
+              border: '1px solid #E3E7EC',
+              boxShadow: '0 8px 28px rgba(18,24,31,.10)',
               borderRadius: '12px',
-              color: '#E4ECFF',
+              color: '#12181F',
             }}
           >
             <DropdownMenuLabel className="pb-2.5 pt-2.5 px-3">
-              <p className="text-[13px] font-semibold" style={{ color: '#E4ECFF' }}>{fullName}</p>
-              <p className="text-[11px] mt-0.5" style={{ color: '#3D5380' }}>{role}</p>
+              <p className="text-[13px] font-semibold" style={{ color: '#12181F' }}>{fullName}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: '#8896A3' }}>{role}</p>
               {session.branch_name && (
                 <div
                   className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded text-[10px] font-medium"
-                  style={{ background: 'rgba(71,130,255,.12)', color: '#93C5FD', border: '1px solid rgba(71,130,255,.20)' }}
+                  style={{ background: '#EAF1F0', color: '#0B6E76', border: '1px solid #0B6E7635' }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4782FF]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0B6E76]" />
                   สาขา{session.branch_name}
                 </div>
               )}
             </DropdownMenuLabel>
 
-            <DropdownMenuSeparator style={{ background: 'rgba(71,130,255,.12)', margin: '0' }} />
+            <DropdownMenuSeparator style={{ background: '#E3E7EC', margin: '0' }} />
 
             <DropdownMenuItem
               className="gap-2.5 cursor-pointer text-[13px] mx-1 my-0.5 rounded-lg px-3"
-              style={{ color: '#7B9CCC' }}
+              style={{ color: '#4B5563' }}
             >
-              <User size={14} style={{ color: '#4782FF' }} />
+              <User size={14} style={{ color: '#0B6E76' }} />
               โปรไฟล์
             </DropdownMenuItem>
 
-            <DropdownMenuSeparator style={{ background: 'rgba(71,130,255,.12)', margin: '0' }} />
+            <DropdownMenuSeparator style={{ background: '#E3E7EC', margin: '0' }} />
 
             <DropdownMenuItem
               className="gap-2.5 cursor-pointer text-[13px] mx-1 my-0.5 rounded-lg px-3"
-              style={{ color: '#F87171' }}
+              style={{ color: '#B3392C' }}
               onClick={handleSignOut}
             >
               <LogOut size={14} />

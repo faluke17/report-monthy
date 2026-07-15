@@ -51,8 +51,8 @@ export function NrwTrendChart() {
   if (loading) {
     return (
       <div className="glass-card p-5">
-        <div className="h-5 w-40 bg-white/10 rounded animate-pulse mb-4" />
-        <div className="h-48 bg-white/5 rounded-lg animate-pulse" />
+        <div className="h-5 w-40 bg-black/10 rounded animate-pulse mb-4" />
+        <div className="h-48 bg-black/5 rounded-lg animate-pulse" />
       </div>
     )
   }
@@ -61,44 +61,44 @@ export function NrwTrendChart() {
     <div className="glass-card p-5">
       <div className="flex items-center gap-2 mb-4">
         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-        <h3 className="text-sm font-bold text-white">แนวโน้ม NRW เฉลี่ยเขต (6 เดือน)</h3>
+        <h3 className="text-sm font-bold text-[#12181F]">แนวโน้ม NRW เฉลี่ยเขต (6 เดือน)</h3>
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
           <XAxis
             dataKey="label"
-            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+            tick={{ fill: 'rgba(0,0,0,0.4)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+            tick={{ fill: 'rgba(0,0,0,0.4)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `${v}%`}
           />
           <Tooltip
             contentStyle={{
-              background: '#0b1d3a',
+              background: '#FFFFFF',
               border: '1px solid rgba(177,203,255,0.16)',
               borderRadius: '8px',
-              color: '#f3f7ff',
+              color: '#FFFFFF',
             }}
             formatter={(value) => [`${Number(value).toFixed(2)}%`, 'NRW เฉลี่ย']}
           />
-          <ReferenceLine y={20} stroke="rgba(74,222,128,0.4)" strokeDasharray="4 4" />
+          <ReferenceLine y={20} stroke="rgba(30,122,90,0.4)" strokeDasharray="4 4" />
           <Line
             type="monotone"
             dataKey="avg_nrw"
-            stroke="#7dd3fc"
+            stroke="#0B6E76"
             strokeWidth={2}
-            dot={{ fill: '#7dd3fc', r: 4 }}
+            dot={{ fill: '#0B6E76', r: 4 }}
             activeDot={{ r: 6 }}
           />
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-xs text-white/30 mt-2">เส้นประสีเขียว = เป้าหมาย 20%</p>
+      <p className="text-xs text-black/30 mt-2">เส้นประสีเขียว = เป้าหมาย 20%</p>
     </div>
   )
 }

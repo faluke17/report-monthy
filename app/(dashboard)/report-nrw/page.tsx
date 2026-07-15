@@ -73,8 +73,8 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Report NRW</h1>
-          <p className="text-sm text-white/50 mt-1">
+          <h1 className="text-xl font-bold text-[#12181F]">Report NRW</h1>
+          <p className="text-sm text-black/50 mt-1">
             ข้อมูลน้ำสูญเสียรายสาขา — ปีงบ {fiscalYear} เดือน{monthName}
           </p>
         </div>
@@ -85,16 +85,16 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
 
       <div className="flex flex-wrap gap-3">
         <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
-          <span className="text-xs text-white/40">สาขาที่กรอกแล้ว</span>
-          <span className="text-lg font-bold text-white">{rows.length} <span className="text-sm font-normal text-white/40">/ 26</span></span>
+          <span className="text-xs text-black/40">สาขาที่กรอกแล้ว</span>
+          <span className="text-lg font-bold text-[#12181F]">{rows.length} <span className="text-sm font-normal text-black/40">/ 26</span></span>
         </div>
         <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
-          <span className="text-xs text-white/40">ยังไม่กรอก</span>
+          <span className="text-xs text-black/40">ยังไม่กรอก</span>
           <span className="text-lg font-bold text-amber-400">{26 - rows.length}</span>
         </div>
         <div className="glass-card px-4 py-3 flex flex-col gap-0.5 min-w-32">
-          <span className="text-xs text-white/40">ตั้งเป้าหมายแล้ว</span>
-          <span className="text-lg font-bold text-cyan-400">{targetMap.size} <span className="text-sm font-normal text-white/40">/ 26</span></span>
+          <span className="text-xs text-black/40">ตั้งเป้าหมายแล้ว</span>
+          <span className="text-lg font-bold text-cyan-400">{targetMap.size} <span className="text-sm font-normal text-black/40">/ 26</span></span>
         </div>
         {monthlyRes.error && (
           <div className="glass-card px-4 py-3 border-red-500/30">

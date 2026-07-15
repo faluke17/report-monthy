@@ -68,7 +68,6 @@ export async function submitMeeting(formData: FormData): Promise<ActionResult<st
 
   revalidatePath('/meeting')
   revalidatePath('/notify')
-  revalidatePath('/dashboard')
   return { success: true, data: created?.id }
 }
 
@@ -89,7 +88,6 @@ export async function sendMeetingNotification(meetingId: string): Promise<Action
 
   revalidatePath('/notify')
   revalidatePath('/meeting')
-  revalidatePath('/dashboard')
   return { success: true, data: { notified_at: now } }
 }
 
@@ -115,7 +113,6 @@ export async function closeMeeting(meetingId: string): Promise<ActionResult<{ pe
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/meeting')
-  revalidatePath('/dashboard')
   return { success: true, data: { pendingCount: count ?? 0 } }
 }
 
@@ -130,7 +127,6 @@ export async function deleteMeeting(meetingId: string): Promise<ActionResult> {
 
   revalidatePath('/meeting')
   revalidatePath('/notify')
-  revalidatePath('/dashboard')
   return { success: true }
 }
 

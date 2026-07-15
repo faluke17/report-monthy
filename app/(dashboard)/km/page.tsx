@@ -21,12 +21,12 @@ export default async function KmPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">ความรู้ (KM Best Practice)</h1>
-          <p className="text-sm text-white/50 mt-0.5">กรณีศึกษาการลด NRW ที่ประสบความสำเร็จ</p>
+          <h1 className="text-xl font-bold text-[#12181F]">ความรู้ (KM Best Practice)</h1>
+          <p className="text-sm text-black/50 mt-0.5">กรณีศึกษาการลด NRW ที่ประสบความสำเร็จ</p>
         </div>
         <Link
           href="/km/new"
-          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#061327] font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-[#FFFFFF] font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
         >
           <Plus size={16} />
           เพิ่ม KM Case
@@ -34,7 +34,7 @@ export default async function KmPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="glass-card p-12 text-center text-white/30">ยังไม่มี KM Case</div>
+        <div className="glass-card p-12 text-center text-black/30">ยังไม่มี KM Case</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {rows.map((km) => (
@@ -43,8 +43,8 @@ export default async function KmPage() {
                 <CodeBadge code={km.code} />
                 <StatusPill status={km.verification_status} />
               </div>
-              <h3 className="font-semibold text-white leading-snug">{km.title}</h3>
-              <p className="text-xs text-white/50">{km.branches?.name_th}</p>
+              <h3 className="font-semibold text-[#12181F] leading-snug">{km.title}</h3>
+              <p className="text-xs text-black/50">{km.branches?.name_th}</p>
 
               {km.approach_tags && km.approach_tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
@@ -62,7 +62,7 @@ export default async function KmPage() {
                   <TrendingDown size={14} className="text-green-400" />
                   <span className="num text-green-400 font-semibold">{km.nrw_after}%</span>
                   {km.water_saved_daily && (
-                    <span className="text-xs text-white/40">
+                    <span className="text-xs text-black/40">
                       ประหยัด {formatThaiNumber(km.water_saved_daily, 0)} ลบ.ม./วัน
                     </span>
                   )}
@@ -70,7 +70,7 @@ export default async function KmPage() {
               )}
 
               {km.key_approach && (
-                <p className="text-xs text-white/60 line-clamp-2">{km.key_approach}</p>
+                <p className="text-xs text-black/60 line-clamp-2">{km.key_approach}</p>
               )}
             </div>
           ))}
