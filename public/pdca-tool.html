@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDCA รายพื้นที่ — เครื่องมือสาขา</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg:            #F2F6F6;
+    --surface:       #FFFFFF;
+    --surface-alt:   #F7FAFA;
+    --border:        #DCE7E7;
+    --border-strong: #C7D6D5;
+    --ink:           #0E1E20;
+    --ink-2:         #4C6367;
+    --ink-muted:     #85989B;
+    --accent:        #0E7C86;
+    --accent-ink:    #FFFFFF;
+    --accent-soft:   #E3F1F1;
+    --accent-soft-ink:#0A5760;
+    --ref-bar:       #C9D5D4;
+    --ref-ink:       #5C7073;
+    --good:          #147A3D;
+    --good-soft:     #E4F5EA;
+    --warning:       #9A6300;
+    --warning-soft:  #FCEED0;
+    --critical:      #B23434;
+    --critical-soft: #FBE4E1;
+    --shadow:        0 1px 2px rgba(14,30,32,0.04), 0 8px 24px -12px rgba(14,30,32,0.14);
+    --radius-lg:     18px;
+    --radius-md:     12px;
+    --radius-sm:     8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --bg:            #0A1414;
+      --surface:       #10201F;
+      --surface-alt:   #142726;
+      --border:        rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.16);
+      --ink:           #EAF3F2;
+      --ink-2:         #A9C2C1;
+      --ink-muted:     #6E8A89;
+      --accent:        #34B7BF;
+      --accent-ink:    #04211F;
+      --accent-soft:   rgba(52,183,191,0.14);
+      --accent-soft-ink:#79D9DE;
+      --ref-bar:       #33484A;
+      --ref-ink:       #8FA6A6;
+      --good:          #35C574;
+      --good-soft:     rgba(53,197,116,0.14);
+      --warning:       #E8A93E;
+      --warning-soft:  rgba(232,169,62,0.14);
+      --critical:      #E36A63;
+      --critical-soft: rgba(227,106,99,0.14);
+      --shadow:        0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:            #0A1414;
+    --surface:       #10201F;
+    --surface-alt:   #142726;
+    --border:        rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --ink:           #EAF3F2;
+    --ink-2:         #A9C2C1;
+    --ink-muted:     #6E8A89;
+    --accent:        #34B7BF;
+    --accent-ink:    #04211F;
+    --accent-soft:   rgba(52,183,191,0.14);
+    --accent-soft-ink:#79D9DE;
+    --ref-bar:       #33484A;
+    --ref-ink:       #8FA6A6;
+    --good:          #35C574;
+    --good-soft:     rgba(53,197,116,0.14);
+    --warning:       #E8A93E;
+    --warning-soft:  rgba(232,169,62,0.14);
+    --critical:      #E36A63;
+    --critical-soft: rgba(227,106,99,0.14);
+    --shadow:        0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #F2F6F6; --surface:#FFFFFF; --surface-alt:#F7FAFA; --border:#DCE7E7; --border-strong:#C7D6D5;
+    --ink:#0E1E20; --ink-2:#4C6367; --ink-muted:#85989B;
+    --accent:#0E7C86; --accent-ink:#FFFFFF; --accent-soft:#E3F1F1; --accent-soft-ink:#0A5760;
+    --ref-bar:#C9D5D4; --ref-ink:#5C7073;
+    --good:#147A3D; --good-soft:#E4F5EA; --warning:#9A6300; --warning-soft:#FCEED0; --critical:#B23434; --critical-soft:#FBE4E1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── shell ───────────────────────────────────────────── */
+  .shell { max-width: 1040px; margin: 0 auto; padding: 0 20px 64px; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    max-width: 1040px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(160deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #0a3a3f));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-text { min-width: 0; }
+  .brand-text .t1 { font-size: 13px; font-weight: 700; letter-spacing: .01em; }
+  .brand-text .t2 { font-size: 11.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .segmented {
+    display: inline-flex; background: var(--surface-alt); border: 1px solid var(--border);
+    border-radius: 999px; padding: 3px; gap: 2px;
+  }
+  .segmented button {
+    border: none; background: transparent; color: var(--ink-2); font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; border-radius: 999px; transition: background .15s, color .15s;
+  }
+  .segmented button.active { background: var(--accent); color: var(--accent-ink); }
+  .segmented button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .iconbtn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2);
+    font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 10px;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .iconbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .iconbtn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .iconbtn.primary:hover { filter: brightness(1.06); color: var(--accent-ink); }
+  .iconbtn.ghost { border-color: transparent; background: transparent; }
+  .iconbtn svg { width: 14px; height: 14px; }
+
+  .toolrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* ── layout primitives ──────────────────────────────── */
+  .view { display: none; padding-top: 22px; }
+  .view.active { display: block; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+  .card-pad { padding: 20px 22px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+
+  .eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 11.5px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .03em; }
+  .field input[type=text], .field input[type=number], .field select, .field textarea {
+    background: var(--surface-alt); border: 1px solid var(--border-strong); color: var(--ink);
+    border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13.5px; width: 100%;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 56px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+
+  .calc-box {
+    border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 9px 12px;
+    font-size: 13px; color: var(--ink-2); min-height: 38px; display: flex; align-items: center; background: var(--bg);
+  }
+
+  /* ── area card (form) ───────────────────────────────── */
+  .area-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+  .area-head {
+    display: flex; align-items: center; gap: 10px; padding: 14px 18px; cursor: pointer; user-select: none;
+  }
+  .area-badge {
+    width: 24px; height: 24px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-soft-ink);
+    font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .area-name-preview { flex: 1; font-size: 13.5px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .area-name-preview.empty { color: var(--ink-muted); font-weight: 400; }
+  .chevron { transition: transform .18s; color: var(--ink-muted); flex: none; }
+  .area-card.collapsed .chevron { transform: rotate(-90deg); }
+  .area-body { border-top: 1px solid var(--border); padding: 18px; display: flex; flex-direction: column; gap: 20px; }
+  .area-card.collapsed .area-body { display: none; }
+
+  .section-label {
+    font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; margin: 0 0 10px;
+  }
+  .section-label.before { color: var(--warning); }
+  .section-label.after  { color: var(--good); }
+  .section-label.pdca-do  { color: var(--accent); }
+  .section-label.pdca-act { color: var(--good); }
+  .section-label.obstacle { color: var(--critical); }
+
+  .row-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--accent);
+    font-size: 12px; font-weight: 700; padding: 4px 0;
+  }
+  .row-btn:hover { text-decoration: underline; }
+  .row-btn.danger { color: var(--critical); }
+
+  .pdca-block { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .pdca-block-head {
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 14px;
+    background: var(--surface-alt); border-bottom: 1px solid var(--border);
+  }
+  .pdca-block-head .name { font-size: 12.5px; font-weight: 700; }
+  .pdca-items { display: flex; flex-direction: column; }
+  .pdca-item { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .pdca-item:last-child { border-bottom: none; }
+  .pdca-item-top { display: flex; align-items: center; gap: 8px; }
+  .pdca-item-num {
+    width: 18px; height: 18px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-soft-ink);
+    font-size: 9.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .pdca-item input[type=text] { flex: 1; }
+  .pdca-item textarea { margin-left: 26px; width: calc(100% - 26px); }
+  .pdca-item .rm { flex: none; }
+
+  .steptest-scroll { overflow-x: auto; }
+  .steptest-table { min-width: 480px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .steptest-head, .steptest-row {
+    display: grid; grid-template-columns: 34px 1fr 82px 82px 82px 26px; gap: 8px; align-items: center;
+    padding: 8px 12px;
+  }
+  .steptest-head { background: var(--surface-alt); border-bottom: 1px solid var(--border); }
+  .steptest-head span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); }
+  .steptest-head span.c { text-align: center; }
+  .steptest-row { border-bottom: 1px solid var(--border); }
+  .steptest-row:last-child { border-bottom: none; }
+  .steptest-row .step-no { font-size: 12px; font-weight: 700; color: var(--ink-muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .steptest-row input[type=number] { width: 100%; background: var(--surface-alt); border: 1px solid var(--border-strong); color: var(--ink); border-radius: var(--radius-sm); padding: 7px 9px; font-size: 12.5px; }
+  .steptest-row input[type=number]:focus { border-color: var(--accent); }
+  .steptest-row .calc-box { padding: 7px 9px; min-height: 0; font-size: 12.5px; justify-content: center; }
+  .steptest-row .rm { color: var(--critical); opacity: .55; }
+  .steptest-row .rm:hover { opacity: 1; }
+  .steptest-summary { padding: 10px 14px; font-size: 12px; color: var(--ink-2); background: var(--surface-alt); border-top: 1px dashed var(--border); }
+  .steptest-summary b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .toggle-pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border-strong); background: var(--surface-alt); font-size: 12px; font-weight: 700; color: var(--ink-2);
+  }
+  .toggle-pill.on { background: var(--critical-soft); border-color: var(--critical); color: var(--critical); }
+  .toggle-dot { width: 10px; height: 10px; border-radius: 999px; border: 2px solid var(--ink-muted); }
+  .toggle-pill.on .toggle-dot { background: var(--critical); border-color: var(--critical); }
+  .toggle-pill.on.accent { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-soft-ink); }
+  .toggle-pill.on.accent .toggle-dot { background: var(--accent); border-color: var(--accent); }
+
+  .meter-card { padding: 20px 22px; }
+  .meter-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .meter-body { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .meter-block { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; background: var(--surface-alt); }
+  .meter-block-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .meter-block-num {
+    width: 20px; height: 20px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-soft-ink);
+    font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .meter-block-title { font-size: 12.5px; font-weight: 700; }
+  .meter-block-hint { font-size: 11px; color: var(--ink-muted); margin: -6px 0 10px 28px; }
+
+  .meter-topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 720px) { .meter-topics-grid { grid-template-columns: 1fr; } }
+  .meter-topic-card { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; background: var(--surface-alt); }
+  .meter-topic-card .mt-title { font-size: 11.5px; font-weight: 800; margin-bottom: 8px; }
+  .meter-topic-card .mt-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-2); padding: 3px 0; }
+  .meter-topic-card .mt-row + .mt-row { border-top: 1px solid var(--border); }
+  .meter-topic-card .mt-row b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
+
+  .priority-toggle { display: flex; gap: 8px; }
+  .priority-toggle button {
+    flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+    background: var(--surface-alt); color: var(--ink-2); font-size: 12px; font-weight: 700;
+  }
+  .priority-toggle button.on.high { background: var(--critical-soft); border-color: var(--critical); color: var(--critical); }
+  .priority-toggle button.on.mid  { background: var(--warning-soft); border-color: var(--warning); color: var(--warning); }
+
+  .add-area-btn {
+    width: 100%; padding: 14px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-lg);
+    background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: color .15s, border-color .15s;
+  }
+  .add-area-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .cta-row { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+
+  /* ── dashboard ───────────────────────────────────────── */
+  .dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .dash-title h1 { font-size: 20px; font-weight: 800; }
+  .dash-title p { margin: 4px 0 0; color: var(--ink-muted); font-size: 12.5px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  @media (max-width: 1000px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 560px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-tile { padding: 16px 16px; }
+  .kpi-tile .lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); margin-bottom: 8px; }
+  .kpi-tile .val { font-size: 24px; font-weight: 800; }
+  .kpi-tile .val .unit { font-size: 12px; font-weight: 600; color: var(--ink-muted); margin-left: 3px; }
+  .kpi-tile .delta { margin-top: 6px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; }
+  .kpi-tile .delta.good { color: var(--good); background: var(--good-soft); }
+  .kpi-tile .delta.bad { color: var(--critical); background: var(--critical-soft); }
+  .kpi-tile .delta.flat { color: var(--ink-muted); background: var(--surface-alt); }
+
+  .charts-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+  @media (max-width: 1000px) { .charts-pair { grid-template-columns: 1fr; } }
+  .charts-pair .chart-card { margin-top: 0; min-width: 0; }
+  .chart-card { padding: 20px 22px 8px; margin-top: 16px; }
+  .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 4px; }
+  .chart-head .segmented { padding: 2px; }
+  .chart-head .segmented button { padding: 5px 11px; font-size: 11.5px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .chart-scroll { overflow-x: auto; overflow-y: hidden; }
+  .chart-svg-wrap { position: relative; min-width: 100%; }
+  .bar-tooltip {
+    position: absolute; pointer-events: none; background: var(--ink); color: var(--bg);
+    font-size: 11.5px; padding: 8px 10px; border-radius: 8px; box-shadow: var(--shadow); z-index: 5;
+    opacity: 0; transition: opacity .1s; white-space: nowrap; line-height: 1.5;
+  }
+  .bar-tooltip.show { opacity: 1; }
+  .bar-tooltip b { color: var(--accent-soft-ink); }
+
+  details.table-toggle { margin: 12px 2px 18px; }
+  details.table-toggle summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--accent); list-style: none; }
+  details.table-toggle summary::-webkit-details-marker { display: none; }
+  .data-table-wrap { overflow-x: auto; margin-top: 10px; }
+  table.data-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  table.data-table th, table.data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.data-table th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); font-weight: 700; }
+  table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .area-list { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+  .area-dash-card { display: flex; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; box-shadow: var(--shadow); }
+  .stripe { width: 5px; flex: none; }
+  .stripe.crit { background: var(--critical); }
+  .stripe.warn { background: var(--warning); }
+  .stripe.ok { background: var(--good); }
+  .area-dash-body { flex: 1; padding: 16px 20px; min-width: 0; }
+  .area-dash-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .area-dash-top h3 { font-size: 14.5px; font-weight: 700; }
+  .chip { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+  .chip.crit { background: var(--critical-soft); color: var(--critical); }
+  .chip.warn { background: var(--warning-soft); color: var(--warning); }
+  .nrw-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; flex-wrap: wrap; color: var(--ink-2); }
+  .nrw-line .pct { font-weight: 800; font-size: 15px; color: var(--ink); }
+  .arrow-good { color: var(--good); font-weight: 800; }
+  .arrow-bad { color: var(--critical); font-weight: 800; }
+  .mini-stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin-bottom: 14px; }
+  .mini-stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+  .mini-block-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .mini-block-title.d { color: var(--accent); }
+  .mini-block-title.a { color: var(--good); }
+  .mini-list { display: flex; flex-direction: column; gap: 8px; }
+  .mini-list-item { display: flex; gap: 8px; font-size: 12.5px; }
+  .mini-list-item .n { flex: none; width: 16px; height: 16px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border-strong); font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px; color: var(--ink-muted); }
+  .mini-list-item .t { min-width: 0; }
+  .mini-list-item .t .title { font-weight: 600; }
+  .mini-list-item .t .detail { color: var(--ink-muted); font-size: 12px; margin-top: 1px; }
+
+  .obstacle-box { margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; background: var(--surface-alt); }
+  .obstacle-box .ob-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .obstacle-box .ob-type { font-size: 12.5px; font-weight: 700; }
+  .obstacle-box .ob-block { margin-top: 10px; }
+  .obstacle-box .ob-block:first-of-type { margin-top: 0; }
+  .obstacle-box .ob-label {
+    font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    margin-bottom: 3px; display: flex; align-items: center; gap: 5px;
+  }
+  .obstacle-box .ob-label.problem { color: var(--critical); }
+  .obstacle-box .ob-label.fix { color: var(--good); }
+  .obstacle-box .ob-detail, .obstacle-box .ob-plan { font-size: 12.5px; color: var(--ink-2); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-muted); }
+  .empty-state svg { margin-bottom: 14px; opacity: .5; }
+  .empty-state p { max-width: 340px; margin: 6px auto 0; font-size: 13px; }
+
+  .footnote { text-align: center; color: var(--ink-muted); font-size: 11px; margin-top: 28px; line-height: 1.7; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(6,14,15,0.55); z-index: 50;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto;
+    padding: 22px;
+  }
+  .modal-card h2 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+  .modal-card .modal-sub { font-size: 12px; color: var(--ink-muted); margin-bottom: 14px; }
+  .modal-card textarea {
+    width: 100%; height: 220px; background: var(--surface-alt); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); color: var(--ink); font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 11.5px; padding: 10px; resize: vertical; margin-bottom: 12px;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .copy-status { font-size: 12px; color: var(--good); margin-right: auto; align-self: center; display: none; }
+  .copy-status.show { display: inline; }
+
+  @media print {
+    .topbar, .cta-row, .row-btn, #importInput, .modal-overlay { display: none !important; }
+    body { background: #fff; }
+    .card, .area-dash-card { box-shadow: none !important; border-color: #ccc !important; }
+    .view { display: none !important; padding-top: 0; }
+    .view.print-active { display: block !important; }
+    .charts-pair { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 5 11.2 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11.2 12 3 12 3Z" fill="white" fill-opacity="0.95"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="t1">PDCA รายพื้นที่ · เครื่องมือสาขา</div>
+        <div class="t2" id="metaLine">ยังไม่ได้ระบุสาขา/รอบรายงาน</div>
+      </div>
+    </div>
+    <div class="toolrow">
+      <div class="segmented">
+        <button id="tabForm" class="active" onclick="showView('form')">กรอกข้อมูล</button>
+        <button id="tabDash" onclick="showView('dashboard')">แดชบอร์ด</button>
+      </div>
+      <button class="iconbtn" id="importBtn" title="นำเข้าไฟล์ข้อมูล (.json) ที่เคยบันทึกไว้">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        นำเข้า
+      </button>
+      <input type="file" id="importInput" accept="application/json" style="display:none">
+      <button class="iconbtn" id="exportBtn" title="คัดลอก/ดาวน์โหลดข้อมูลเป็น .json เพื่อส่งให้เขต">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 3h16"/></svg>
+        ส่งออก
+      </button>
+      <button class="iconbtn" id="printBtn" title="พิมพ์ / บันทึกเป็น PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-5a1 1 0 011-1h16a1 1 0 011 1v5a1 1 0 01-1 1h-2M6 14h12v7H6v-7z"/></svg>
+        พิมพ์
+      </button>
+      <button class="iconbtn" id="demoBtn" title="โหลดข้อมูลตัวอย่างเพื่อดูแดชบอร์ด (สำหรับทดลองใช้เท่านั้น)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v5.2a2 2 0 01-.4 1.2L5.5 15.6A2 2 0 007 19h10a2 2 0 001.5-3.4L14.4 9.4A2 2 0 0114 8.2V3"/></svg>
+        ตัวอย่าง
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ══════════ FORM VIEW ══════════ -->
+  <div class="view active" id="viewForm">
+    <div class="stack">
+      <div class="card card-pad">
+        <p class="eyebrow">ข้อมูลทั่วไป</p>
+        <div class="grid-3">
+          <div class="field">
+            <label>ชื่อสาขา</label>
+            <input type="text" id="metaBranch" placeholder="เช่น กปภ.สาขาขอนแก่น">
+          </div>
+          <div class="field">
+            <label>เดือน</label>
+            <select id="metaMonth"></select>
+          </div>
+          <div class="field">
+            <label>ปี (พ.ศ.)</label>
+            <select id="metaYear"></select>
+          </div>
+        </div>
+      </div>
+
+      <div id="areasContainer" class="stack"></div>
+
+      <button class="add-area-btn" id="addAreaBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        เพิ่มพื้นที่ (MM / DMA)
+      </button>
+
+      <div class="card meter-card">
+        <div class="meter-head">
+          <div>
+            <p class="eyebrow" style="margin:0 0 2px">มาตรวัดน้ำ (ทางเลือก)</p>
+            <p style="font-size:12px;color:var(--ink-muted);margin:0">กิจกรรมเปลี่ยน/ตรวจสอบมาตรประจำเดือน — ไม่บังคับ กรอกเฉพาะสาขาที่มีข้อมูล</p>
+          </div>
+          <button type="button" class="toggle-pill" id="meterToggle">
+            <span class="toggle-dot"></span><span class="lbl">ไม่มีข้อมูล</span>
+          </button>
+        </div>
+
+        <div class="meter-body" id="meterBody" style="display:none">
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">1</span><span class="meter-block-title">เปลี่ยนมาตรชำรุด / มาตรตาย / มาตรแนวโน้มชำรุด</span></div>
+            <div class="grid-3">
+              <div class="field"><label>จำนวนเครื่องที่เปลี่ยน (เดือนนี้)</label><input type="number" data-key="changed_count" placeholder="0"></div>
+              <div class="field"><label>น้ำที่ได้คืน (ลบ.ม.)</label><input type="number" data-key="recovered_water" placeholder="0"></div>
+              <div class="field"><label>คิดเป็นมูลค่า (บาท)</label><input type="number" data-key="recovered_value" placeholder="0"></div>
+            </div>
+            <div class="grid-2" style="margin-top:10px">
+              <div class="field"><label>ขนาดมาตรที่เปลี่ยน</label><input type="text" data-key="meter_size" placeholder='เช่น 1/2", 3/4"'></div>
+              <div class="field"><label>ยอดสะสมรายเดือน (ต.ค.–ก.ย. ปีงบฯ)</label><input type="number" data-key="cumulative_fy" placeholder="0"></div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">2</span><span class="meter-block-title">ตรวจสอบมาตร 0 คิว (ไม่มีการใช้น้ำ)</span></div>
+            <div class="grid-3">
+              <div class="field"><label>จำนวนรายที่ตรวจสอบ</label><input type="number" data-key="zero_checked" placeholder="0"></div>
+              <div class="field"><label>0 คิว ไม่เกิน 12 เดือน (ราย)</label><input type="number" data-key="zero_under12" placeholder="0"></div>
+              <div class="field"><label>0 คิว เกิน 12 เดือน (ราย)</label><input type="number" data-key="zero_over12" placeholder="0"></div>
+            </div>
+            <div class="grid-2" style="margin-top:10px">
+              <div class="field"><label>ผลตรวจ พบมาตรตาย (เครื่อง)</label><input type="number" data-key="zero_dead" placeholder="0"></div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">3</span><span class="meter-block-title">ตรวจสอบมาตรแนวโน้มชำรุด</span></div>
+            <p class="meter-block-hint">ตรวจจากโปรแกรม Dmama / WATCH Center</p>
+            <div class="grid-3">
+              <div class="field"><label>จำนวนรายที่ตรวจ</label><input type="number" data-key="trend_checked" placeholder="0"></div>
+              <div class="field"><label>ผล มาตรเดินปกติ (ราย)</label><input type="number" data-key="trend_normal" placeholder="0"></div>
+              <div class="field"><label>ผล พบชำรุด (ราย)</label><input type="number" data-key="trend_broken" placeholder="0"></div>
+            </div>
+            <div class="grid-2" style="margin-top:10px">
+              <div class="field"><label>ระบุสาเหตุ</label><input type="text" data-key="trend_reason" placeholder="เช่น ใช้น้ำน้อย / ไม่มีผู้อยู่อาศัย"></div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">4</span><span class="meter-block-title">ตรวจน้ำสูง-ต่ำ ที่พนักงานอ่านมาตรแจ้ง</span></div>
+            <div class="grid-2">
+              <div class="field"><label>จำนวนรายที่แจ้ง</label><input type="number" data-key="highlow_reported" placeholder="0"></div>
+              <div class="field"><label>พบมาตรตาย/ผิดปกติ (ราย)</label><input type="number" data-key="highlow_abnormal" placeholder="0"></div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">5</span><span class="meter-block-title">สุ่มตรวจมาตร (5%)</span></div>
+            <div class="grid-3">
+              <div class="field"><label>จำนวนที่สุ่มตรวจ (เครื่อง/ราย)</label><input type="number" data-key="sample_checked" placeholder="0"></div>
+              <div class="field"><label>พบความผิดปกติ (ราย)</label><input type="number" data-key="sample_abnormal" placeholder="0"></div>
+              <div class="field"><label>ไม่พบความผิดปกติ (ราย)</label><input type="number" data-key="sample_normal" placeholder="0"></div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">6</span><span class="meter-block-title">อ่านมาตร / ติดตามมาตรรายใหญ่</span></div>
+            <div class="grid-2">
+              <div class="field"><label>จำนวนเครื่องมาตรรายใหญ่ที่อ่าน</label><input type="number" data-key="bigmeter_read" placeholder="0"></div>
+              <div class="field"><label>ติดตามมาตรรายใหญ่ประจำสัปดาห์ (WATCH Center)</label>
+                <select data-key="watch_followup"><option value="">— เลือก —</option><option value="ทำแล้ว">ทำแล้ว</option><option value="ยังไม่ทำ">ยังไม่ทำ</option></select>
+              </div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">7</span><span class="meter-block-title">โครงการเปลี่ยนมาตรตามอายุ (เช่น โครงการ 10 ปี)</span></div>
+            <div class="grid-3">
+              <div class="field"><label>เป้าหมายจำนวนเครื่อง</label><input type="number" data-key="project_target" placeholder="0"></div>
+              <div class="field"><label>ดำเนินการแล้ว (เครื่อง)</label><input type="number" data-key="project_done" placeholder="0"></div>
+              <div class="field"><label>สถานะ</label>
+                <select data-key="project_status"><option value="">— เลือก —</option><option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option><option value="เสร็จสิ้น">เสร็จสิ้น</option></select>
+              </div>
+            </div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">8</span><span class="meter-block-title">รวมยอดตรวจมาตรทั้งหมดในเดือน</span></div>
+            <div class="field"><label>ยอดรวมทุกกิจกรรมตรวจมาตร (เครื่อง/ราย) — คำนวณอัตโนมัติ</label><div class="calc-box num" data-calc="meter_total">0</div></div>
+          </section>
+
+          <section class="meter-block">
+            <div class="meter-block-head"><span class="meter-block-num">9</span><span class="meter-block-title">ติดตั้งมาตรชั่วคราว / เฉพาะกิจ (ถ้ามี)</span></div>
+            <div class="field"><label>รายละเอียด / วัตถุประสงค์</label><input type="text" data-key="temp_desc" placeholder="เช่น ติดตั้งมาตรน้ำใช้งานเทศกาล"></div>
+            <div class="grid-2" style="margin-top:10px">
+              <div class="field"><label>ปริมาณน้ำ (ลบ.ม.)</label><input type="number" data-key="temp_volume" placeholder="0"></div>
+              <div class="field"><label>มูลค่าที่เรียกเก็บ (บาท)</label><input type="number" data-key="temp_value" placeholder="0"></div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <button class="iconbtn" id="resetBtn">เริ่มรายงานใหม่</button>
+        <button class="iconbtn primary" id="goDashBtn">
+          บันทึกและดูแดชบอร์ด
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M5 12h14m0 0l-6-6m6 6l-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ DASHBOARD VIEW ══════════ -->
+  <div class="view" id="viewDashboard"></div>
+
+  <p class="footnote">
+    ข้อมูลถูกบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น (localStorage) — ยังไม่ส่งขึ้นระบบ NRW Tracker กลาง<br>
+    กด “ส่งออก” เพื่อคัดลอก/ดาวน์โหลดข้อมูล หรือ “พิมพ์” เพื่อบันทึกเป็น PDF (ถ้ากดแล้วไม่มีอะไรเกิดขึ้นในหน้าตัวอย่างนี้ ให้ลองกด Ctrl+P หรือเปิดไฟล์นี้ในแท็บเบราว์เซอร์โดยตรง)
+  </p>
+</div>
+
+<div class="bar-tooltip" id="barTooltip"></div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-card">
+    <h2>ส่งออกข้อมูล (.json)</h2>
+    <p class="modal-sub" id="exportFilename">pdca_data.json</p>
+    <textarea id="exportText" readonly onclick="this.select()"></textarea>
+    <div class="modal-actions">
+      <span class="copy-status" id="copyStatus">คัดลอกแล้ว ✓</span>
+      <button class="iconbtn" id="closeExportBtn">ปิด</button>
+      <a class="iconbtn" id="downloadExportBtn" download>ดาวน์โหลดไฟล์</a>
+      <button class="iconbtn primary" id="copyExportBtn">คัดลอกข้อความ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-card" style="max-width:380px">
+    <h2 id="confirmTitle">ยืนยัน</h2>
+    <p class="modal-sub" id="confirmMessage" style="margin-bottom:18px"></p>
+    <div class="modal-actions">
+      <button class="iconbtn" id="confirmCancelBtn">ยกเลิก</button>
+      <button class="iconbtn primary" id="confirmOkBtn">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var OBSTACLE_TYPES = [
+    "MM/DMA Zero Test ไม่ผ่าน", "Step Test Zero Test ไม่ผ่าน", "MM/DMA/P3 ชำรุด",
+    "จุดค้างซ่อม", "มาตรผิดปกติ", "ปัญหาแรงดันน้ำไหลอ่อน", "ขาด logger / P3", "อื่น"
+  ];
+  var MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var STORE_KEY = "nrw_pdca_offline_v1";
+  var uidCounter = 0;
+  function uid(p) { uidCounter += 1; return p + "_" + Date.now().toString(36) + "_" + uidCounter; }
+
+  var areasContainer = document.getElementById("areasContainer");
+  var metaMonthSel = document.getElementById("metaMonth");
+  var metaYearSel = document.getElementById("metaYear");
+  var metaBranchInp = document.getElementById("metaBranch");
+
+  // ---- populate month/year selects ----
+  MONTHS.forEach(function (m, i) {
+    var o = document.createElement("option");
+    o.value = i + 1; o.textContent = m;
+    metaMonthSel.appendChild(o);
+  });
+  var nowBE = new Date().getFullYear() + 543;
+  for (var y = nowBE - 1; y <= nowBE + 1; y++) {
+    var oy = document.createElement("option");
+    oy.value = y; oy.textContent = y;
+    metaYearSel.appendChild(oy);
+  }
+  var now = new Date();
+  var defaultMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+  metaMonthSel.value = defaultMonth;
+  metaYearSel.value = now.getMonth() === 0 ? nowBE - 1 : nowBE;
+
+  // ---------------------------------------------------------------------
+  // DOM builders (imperative, uncontrolled inputs — values live in the DOM)
+  // ---------------------------------------------------------------------
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function fieldNum(label, key) {
+    var wrap = el("div", "field");
+    wrap.innerHTML = '<label>' + label + '</label><input type="number" step="any" data-key="' + key + '" placeholder="0">';
+    return wrap;
+  }
+
+  function calcRow(area) {
+    // recompute a single area's before/after loss+pct display boxes
+    var b = readAreaNumbers(area, "before");
+    var a = readAreaNumbers(area, "after");
+    var bLossBox = area.querySelector('[data-calc="before-loss"]');
+    var bPctBox = area.querySelector('[data-calc="before-pct"]');
+    var aLossBox = area.querySelector('[data-calc="after-loss"]');
+    var aPctBox = area.querySelector('[data-calc="after-pct"]');
+    bLossBox.textContent = b.dist ? fmt(b.dist - b.sold) : "—";
+    bPctBox.textContent = b.dist ? fmt(b.pct) + "%" : "—";
+    aLossBox.textContent = a.dist ? fmt(a.dist - a.sold) : "—";
+    if (a.dist) {
+      var txt = fmt(a.pct) + "%";
+      if (b.dist) {
+        var diff = b.pct - a.pct;
+        txt += diff >= 0 ? "  ▼ ดีขึ้น " + fmt(Math.abs(diff)) : "  ▲ แย่ลง " + fmt(Math.abs(diff));
+      }
+      aPctBox.textContent = txt;
+      aPctBox.style.color = b.dist && a.pct <= b.pct ? "var(--good)" : (b.dist ? "var(--critical)" : "");
+    } else {
+      aPctBox.textContent = "—";
+      aPctBox.style.color = "";
+    }
+    // step test rows + summary
+    var rows = area.querySelectorAll(".steptest-row");
+    var totFound = 0, totRepaired = 0, totLoss = 0;
+    rows.forEach(function (row) {
+      var f = parseFloat(row.querySelector('[data-role="found"]').value) || 0;
+      var r = parseFloat(row.querySelector('[data-role="repaired"]').value) || 0;
+      var l = parseFloat(row.querySelector('[data-role="estLoss"]').value) || 0;
+      row.querySelector('[data-calc="pending"]').textContent = Math.max(0, f - r);
+      totFound += f; totRepaired += r; totLoss += l;
+    });
+    var summaryEl = area.querySelector(".steptest-summary");
+    if (summaryEl) {
+      summaryEl.innerHTML = "รวม — สูญเสียคาดการณ์ <b>" + fmt(totLoss, 2) + "</b> ลบ.ม./ชม. · พบ <b>" + totFound +
+        "</b> จุด · ซ่อมแล้ว <b>" + totRepaired + "</b> จุด · ค้างซ่อม <b>" + Math.max(0, totFound - totRepaired) + "</b> จุด";
+    }
+    saveDebounced();
+  }
+
+  function addStepRow(container) {
+    var row = el("div", "steptest-row");
+    var idx = container.children.length + 1;
+    row.innerHTML =
+      '<span class="step-no">' + idx + '</span>' +
+      '<input type="number" step="any" data-role="estLoss" placeholder="0.000">' +
+      '<input type="number" step="any" data-role="found" placeholder="0">' +
+      '<input type="number" step="any" data-role="repaired" placeholder="0">' +
+      '<div class="calc-box num" data-calc="pending">—</div>' +
+      '<button type="button" class="row-btn rm" title="ลบสเต็ป">✕</button>';
+    row.querySelector(".rm").onclick = function () {
+      if (container.children.length <= 1) return;
+      var bodyEl = row.closest(".area-body");
+      row.remove();
+      renumberSteps(container);
+      calcRow(bodyEl);
+    };
+    row.addEventListener("input", function () { calcRow(row.closest(".area-body")); });
+    container.appendChild(row);
+    return row;
+  }
+
+  function renumberSteps(container) {
+    Array.prototype.forEach.call(container.children, function (row, i) {
+      row.querySelector(".step-no").textContent = i + 1;
+    });
+  }
+
+  function readAreaNumbers(area, phase) {
+    var dist = parseFloat(area.querySelector('[data-key="' + phase + 'Dist"]').value) || 0;
+    var sold = parseFloat(area.querySelector('[data-key="' + phase + 'Sold"]').value) || 0;
+    var pct = dist > 0 ? ((dist - sold) / dist) * 100 : 0;
+    return { dist: dist, sold: sold, pct: pct };
+  }
+
+  function fmt(n, dec) {
+    dec = dec === undefined ? 2 : dec;
+    return Number(n).toLocaleString("th-TH", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function pdcaBlock(kind, area) {
+    // kind: 'do' | 'act'
+    var isDo = kind === "do";
+    var block = el("div", "pdca-block");
+    block.dataset.kind = kind;
+    var head = el("div", "pdca-block-head");
+    head.innerHTML =
+      '<span class="name" style="color:' + (isDo ? "var(--accent)" : "var(--good)") + '">' +
+      (isDo ? "D — สิ่งที่ดำเนินการ" : "A — แผนเดือนถัดไป") + "</span>";
+    var addBtn = el("button", "row-btn", "+ เพิ่มข้อ");
+    addBtn.type = "button";
+    addBtn.onclick = function () { addPdcaItem(block); };
+    head.appendChild(addBtn);
+    block.appendChild(head);
+    var items = el("div", "pdca-items");
+    block.appendChild(items);
+    addPdcaItem(block); // seed one row
+    return block;
+  }
+
+  function addPdcaItem(block) {
+    var items = block.querySelector(".pdca-items");
+    var row = el("div", "pdca-item");
+    var idx = items.children.length + 1;
+    row.innerHTML =
+      '<div class="pdca-item-top">' +
+        '<span class="pdca-item-num">' + idx + '</span>' +
+        '<input type="text" data-role="title" placeholder="ชื่อหัวข้อ / กิจกรรม...">' +
+        '<button type="button" class="row-btn danger rm">✕</button>' +
+      '</div>' +
+      '<textarea data-role="detail" rows="2" placeholder="รายละเอียด..."></textarea>';
+    row.querySelector(".rm").onclick = function () {
+      row.remove();
+      renumber(items);
+      saveDebounced();
+    };
+    row.addEventListener("input", saveDebounced);
+    items.appendChild(row);
+  }
+
+  function renumber(items) {
+    Array.prototype.forEach.call(items.children, function (row, i) {
+      row.querySelector(".pdca-item-num").textContent = i + 1;
+    });
+  }
+
+  function obstacleBlock() {
+    var wrap = el("div", "obstacle-form");
+    wrap.innerHTML =
+      '<div class="field"><label>อุปสรรคเรื่อง</label><select data-key="obType"><option value="">— เลือกประเภท —</option>' +
+      OBSTACLE_TYPES.map(function (t) { return '<option value="' + t + '">' + t + "</option>"; }).join("") +
+      '</select></div>' +
+      '<div class="field" data-role="otherWrap" style="display:none;margin-top:10px"><label>ระบุอุปสรรค</label><input type="text" data-key="obOther" placeholder="ระบุอุปสรรคที่พบ..."></div>' +
+      '<div class="field" style="margin-top:10px"><label>รายละเอียดอุปสรรค</label><textarea data-key="obDetail" rows="2" placeholder="อธิบายสภาพปัญหาที่พบ..."></textarea></div>' +
+      '<div class="field" style="margin-top:10px"><label>แนวทางการแก้ไข</label><textarea data-key="obPlan" rows="2" placeholder="แนวทางที่จะดำเนินการแก้ไข..."></textarea></div>' +
+      '<div class="field" style="margin-top:10px"><label>ระดับความเร่งด่วน</label>' +
+      '<div class="priority-toggle">' +
+        '<button type="button" data-pri="สูง">🔴 สูง</button>' +
+        '<button type="button" data-pri="กลาง" class="on mid">🟡 กลาง</button>' +
+      '</div></div>';
+
+    var typeSel = wrap.querySelector('[data-key="obType"]');
+    var otherWrap = wrap.querySelector('[data-role="otherWrap"]');
+    typeSel.addEventListener("change", function () {
+      otherWrap.style.display = typeSel.value === "อื่น" ? "" : "none";
+      saveDebounced();
+    });
+
+    var priBtns = wrap.querySelectorAll(".priority-toggle button");
+    priBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        priBtns.forEach(function (b) { b.classList.remove("on", "high", "mid"); });
+        btn.classList.add("on", btn.dataset.pri === "สูง" ? "high" : "mid");
+        saveDebounced();
+      });
+    });
+
+    wrap.addEventListener("input", saveDebounced);
+    return wrap;
+  }
+
+  function createAreaCard(index) {
+    var card = el("div", "area-card");
+    var id = uid("area");
+    card.dataset.id = id;
+
+    var head = el("div", "area-head");
+    head.innerHTML =
+      '<span class="area-badge">' + (index + 1) + '</span>' +
+      '<span class="area-name-preview empty">พื้นที่ที่ ' + (index + 1) + '</span>' +
+      '<button type="button" class="row-btn danger rm-area" title="ลบพื้นที่">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg>' +
+      '</button>' +
+      '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
+    card.appendChild(head);
+
+    var body = el("div", "area-body");
+
+    // Section 1: name
+    var s1 = el("section");
+    s1.innerHTML = '<p class="eyebrow" style="margin-bottom:8px">พื้นที่ (MM / DMA)</p>';
+    var nameField = el("div", "field");
+    nameField.innerHTML = '<label>ชื่อพื้นที่</label><input type="text" data-key="name" placeholder="เช่น DMA สนามบิน">';
+    s1.appendChild(nameField);
+    body.appendChild(s1);
+
+    // Section 2: before
+    var s2 = el("section");
+    s2.innerHTML = '<p class="section-label before">ก่อนดำเนินการ</p>';
+    var g2 = el("div", "grid-3");
+    g2.appendChild(fieldNum("น้ำจ่าย (ลบ.ม.)", "beforeDist"));
+    g2.appendChild(fieldNum("น้ำขาย (ลบ.ม.)", "beforeSold"));
+    g2.appendChild(fieldNum("MNF (ลบ.ม./ชม.)", "beforeMnf"));
+    s2.appendChild(g2);
+    var g2b = el("div", "grid-2", '');
+    g2b.style.marginTop = "10px";
+    g2b.innerHTML =
+      '<div class="field"><label>น้ำสูญเสีย</label><div class="calc-box num" data-calc="before-loss">—</div></div>' +
+      '<div class="field"><label>อัตราน้ำสูญเสีย</label><div class="calc-box num" data-calc="before-pct">—</div></div>';
+    s2.appendChild(g2b);
+    body.appendChild(s2);
+
+    // Section 3: step test
+    var s3 = el("section");
+    var s3headRow = el("div", "");
+    s3headRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:8px";
+    s3headRow.innerHTML = '<p class="section-label" style="color:var(--ink-muted);margin:0">ผล Step Test</p>';
+    var addStepBtn = el("button", "row-btn", "+ เพิ่มสเต็ป");
+    addStepBtn.type = "button";
+    s3headRow.appendChild(addStepBtn);
+    s3.appendChild(s3headRow);
+
+    var stepScroll = el("div", "steptest-scroll");
+    var stepTable = el("div", "steptest-table");
+    stepTable.innerHTML =
+      '<div class="steptest-head"><span>สเต็ป</span><span>สูญเสียคาดการณ์ (ลบ.ม./ชม.)</span>' +
+      '<span class="c">จุดรั่ว</span><span class="c">ซ่อมแล้ว</span><span class="c">ค้างซ่อม</span><span></span></div>';
+    var stepRows = el("div", "steptest-rows");
+    stepTable.appendChild(stepRows);
+    var stepSummary = el("div", "steptest-summary");
+    stepTable.appendChild(stepSummary);
+    stepScroll.appendChild(stepTable);
+    s3.appendChild(stepScroll);
+    addStepBtn.onclick = function () { addStepRow(stepRows); calcRow(body); };
+    addStepRow(stepRows); // seed one row
+    body.appendChild(s3);
+
+    // Section 4: after
+    var s4 = el("section");
+    s4.innerHTML = '<p class="section-label after">หลังดำเนินการ</p>';
+    var g4 = el("div", "grid-3");
+    g4.appendChild(fieldNum("น้ำจ่าย (ลบ.ม.)", "afterDist"));
+    g4.appendChild(fieldNum("น้ำขาย (ลบ.ม.)", "afterSold"));
+    g4.appendChild(fieldNum("MNF (ลบ.ม./ชม.)", "afterMnf"));
+    s4.appendChild(g4);
+    var g4b = el("div", "grid-2");
+    g4b.style.marginTop = "10px";
+    g4b.innerHTML =
+      '<div class="field"><label>น้ำสูญเสีย</label><div class="calc-box num" data-calc="after-loss">—</div></div>' +
+      '<div class="field"><label>อัตราน้ำสูญเสีย</label><div class="calc-box num" data-calc="after-pct">—</div></div>';
+    s4.appendChild(g4b);
+    body.appendChild(s4);
+
+    // Section 5: Do / Act
+    var s5 = el("section");
+    s5.appendChild(pdcaBlock("do", body));
+    var spacer = el("div"); spacer.style.height = "14px"; s5.appendChild(spacer);
+    s5.appendChild(pdcaBlock("act", body));
+    body.appendChild(s5);
+
+    // Section 6: obstacle
+    var s6 = el("section");
+    var s6head = el("div", "");
+    s6head.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:10px";
+    s6head.innerHTML = '<p class="section-label obstacle" style="margin:0">อุปสรรค</p>';
+    var toggle = el("button", "toggle-pill");
+    toggle.type = "button";
+    toggle.innerHTML = '<span class="toggle-dot"></span><span class="lbl">ไม่มีอุปสรรค</span>';
+    s6head.appendChild(toggle);
+    s6.appendChild(s6head);
+    var obWrap = obstacleBlock();
+    obWrap.style.display = "none";
+    s6.appendChild(obWrap);
+    toggle.addEventListener("click", function () {
+      var on = toggle.classList.toggle("on");
+      toggle.querySelector(".lbl").textContent = on ? "มีอุปสรรค" : "ไม่มีอุปสรรค";
+      obWrap.style.display = on ? "" : "none";
+      saveDebounced();
+    });
+    body.appendChild(s6);
+
+    card.appendChild(body);
+
+    // wire head interactions
+    head.addEventListener("click", function (e) {
+      if (e.target.closest(".rm-area")) return;
+      card.classList.toggle("collapsed");
+    });
+    head.querySelector(".rm-area").addEventListener("click", function () {
+      if (areasContainer.children.length <= 1) { card.querySelector('[data-key="name"]').value = ""; updatePreview(card); saveDebounced(); return; }
+      card.remove();
+      renumberAreas();
+      saveDebounced();
+    });
+    var nameInput = nameField.querySelector("input");
+    nameInput.addEventListener("input", function () { updatePreview(card); saveDebounced(); });
+
+    // live calc wiring for numeric fields
+    body.querySelectorAll('input[type="number"]').forEach(function (inp) {
+      inp.addEventListener("input", function () { calcRow(body); });
+    });
+
+    return card;
+  }
+
+  function updatePreview(card) {
+    var name = card.querySelector('[data-key="name"]').value.trim();
+    var prev = card.querySelector(".area-name-preview");
+    if (name) { prev.textContent = name; prev.classList.remove("empty"); }
+    else {
+      var idx = Array.prototype.indexOf.call(areasContainer.children, card);
+      prev.textContent = "พื้นที่ที่ " + (idx + 1);
+      prev.classList.add("empty");
+    }
+  }
+
+  function renumberAreas() {
+    Array.prototype.forEach.call(areasContainer.children, function (card, i) {
+      card.querySelector(".area-badge").textContent = i + 1;
+      updatePreview(card);
+    });
+  }
+
+  function addArea() {
+    var card = createAreaCard(areasContainer.children.length);
+    areasContainer.appendChild(card);
+    calcRow(card.querySelector(".area-body"));
+    return card;
+  }
+
+  document.getElementById("addAreaBtn").addEventListener("click", function () { addArea(); saveDebounced(); });
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    showConfirm("ล้างข้อมูลทั้งหมดและเริ่มรายงานใหม่?", function () {
+      localStorage.removeItem(STORE_KEY);
+      location.reload();
+    });
+  });
+  metaBranchInp.addEventListener("input", function () { updateMetaLine(); saveDebounced(); });
+  metaMonthSel.addEventListener("change", function () { updateMetaLine(); saveDebounced(); });
+  metaYearSel.addEventListener("change", function () { updateMetaLine(); saveDebounced(); });
+
+  function updateMetaLine() {
+    var branch = metaBranchInp.value.trim();
+    var m = MONTHS[Number(metaMonthSel.value) - 1];
+    var y = metaYearSel.value;
+    document.getElementById("metaLine").textContent =
+      (branch || "ยังไม่ได้ระบุสาขา") + " · " + m + " " + y;
+  }
+
+  // ---------------------------------------------------------------------
+  // Meter (มาตร) section — single optional block, report-level (not per area)
+  // ---------------------------------------------------------------------
+  var meterToggle = document.getElementById("meterToggle");
+  var meterBody = document.getElementById("meterBody");
+  var meterOn = false;
+
+  function setMeterOn(on) {
+    meterOn = on;
+    meterToggle.classList.toggle("on", on);
+    meterToggle.classList.toggle("accent", on);
+    meterToggle.querySelector(".lbl").textContent = on ? "มีข้อมูล" : "ไม่มีข้อมูล";
+    meterBody.style.display = on ? "" : "none";
+  }
+  meterToggle.addEventListener("click", function () { setMeterOn(!meterOn); calcMeterTotal(); saveDebounced(); });
+
+  function mq(key) { return meterBody.querySelector('[data-key="' + key + '"]'); }
+  function mNum(key) { return parseFloat(mq(key).value) || 0; }
+
+  function calcMeterTotal() {
+    var total = mNum("changed_count") + mNum("zero_checked") + mNum("trend_checked") +
+      mNum("highlow_reported") + mNum("sample_checked") + mNum("bigmeter_read");
+    meterBody.querySelector('[data-calc="meter_total"]').textContent = fmt(total, 0);
+  }
+  meterBody.addEventListener("input", function () { calcMeterTotal(); saveDebounced(); });
+  meterBody.addEventListener("change", function () { saveDebounced(); });
+
+  var METER_NUM_KEYS = [
+    "changed_count", "recovered_water", "recovered_value", "cumulative_fy",
+    "zero_checked", "zero_under12", "zero_over12", "zero_dead",
+    "trend_checked", "trend_normal", "trend_broken",
+    "highlow_reported", "highlow_abnormal",
+    "sample_checked", "sample_abnormal", "sample_normal",
+    "bigmeter_read", "project_target", "project_done",
+    "temp_volume", "temp_value"
+  ];
+  var METER_TEXT_KEYS = ["meter_size", "trend_reason", "watch_followup", "project_status", "temp_desc"];
+
+  function harvestMeter() {
+    var m = {};
+    METER_NUM_KEYS.forEach(function (k) { m[k] = mNum(k); });
+    METER_TEXT_KEYS.forEach(function (k) { m[k] = mq(k).value.trim(); });
+    m.total = METER_NUM_KEYS.reduce(function (s, k) {
+      return ["changed_count", "zero_checked", "trend_checked", "highlow_reported", "sample_checked", "bigmeter_read"].indexOf(k) >= 0 ? s + m[k] : s;
+    }, 0);
+    return m;
+  }
+
+  function hydrateMeter(m) {
+    if (!m) {
+      METER_NUM_KEYS.forEach(function (k) { mq(k).value = ""; });
+      METER_TEXT_KEYS.forEach(function (k) { mq(k).value = ""; });
+      setMeterOn(false);
+      calcMeterTotal();
+      return;
+    }
+    METER_NUM_KEYS.forEach(function (k) { mq(k).value = m[k] || ""; });
+    METER_TEXT_KEYS.forEach(function (k) { mq(k).value = m[k] || ""; });
+    setMeterOn(true);
+    calcMeterTotal();
+  }
+
+  // ---------------------------------------------------------------------
+  // Harvest DOM -> plain data object
+  // ---------------------------------------------------------------------
+  function harvest() {
+    var data = {
+      meta: {
+        branch: metaBranchInp.value.trim(),
+        month: Number(metaMonthSel.value),
+        year: Number(metaYearSel.value)
+      },
+      areas: []
+    };
+    Array.prototype.forEach.call(areasContainer.children, function (card) {
+      var q = function (k) { return card.querySelector('[data-key="' + k + '"]'); };
+      var name = q("name").value.trim();
+      var before = { dist: parseFloat(q("beforeDist").value) || 0, sold: parseFloat(q("beforeSold").value) || 0, mnf: parseFloat(q("beforeMnf").value) || null };
+      var after  = { dist: parseFloat(q("afterDist").value) || 0, sold: parseFloat(q("afterSold").value) || 0, mnf: parseFloat(q("afterMnf").value) || null };
+
+      var stepTests = [];
+      card.querySelectorAll(".steptest-row").forEach(function (row, i) {
+        var estLoss = parseFloat(row.querySelector('[data-role="estLoss"]').value) || 0;
+        var found = parseFloat(row.querySelector('[data-role="found"]').value) || 0;
+        var repaired = parseFloat(row.querySelector('[data-role="repaired"]').value) || 0;
+        if (estLoss || found || repaired) stepTests.push({ step: i + 1, estLoss: estLoss, found: found, repaired: repaired });
+      });
+      var leaksFound = stepTests.reduce(function (s, r) { return s + r.found; }, 0);
+      var leaksRepaired = stepTests.reduce(function (s, r) { return s + r.repaired; }, 0);
+
+      function harvestPdca(kind) {
+        var block = card.querySelector('.pdca-block[data-kind="' + kind + '"]');
+        var out = [];
+        block.querySelectorAll(".pdca-item").forEach(function (row) {
+          var title = row.querySelector('[data-role="title"]').value.trim();
+          var detail = row.querySelector('[data-role="detail"]').value.trim();
+          if (title || detail) out.push({ title: title, detail: detail });
+        });
+        return out;
+      }
+
+      var toggle = card.querySelector(".toggle-pill");
+      var hasObstacle = toggle.classList.contains("on");
+      var obstacle = null;
+      if (hasObstacle) {
+        var obWrap = card.querySelector(".obstacle-form");
+        var type = obWrap.querySelector('[data-key="obType"]').value;
+        var priBtn = obWrap.querySelector(".priority-toggle button.on");
+        obstacle = {
+          type: type,
+          other: obWrap.querySelector('[data-key="obOther"]').value.trim(),
+          detail: obWrap.querySelector('[data-key="obDetail"]').value.trim(),
+          plan: obWrap.querySelector('[data-key="obPlan"]').value.trim(),
+          priority: priBtn ? priBtn.dataset.pri : "กลาง"
+        };
+      }
+
+      if (!name && before.dist === 0 && after.dist === 0) return; // skip fully empty rows
+
+      data.areas.push({
+        name: name || "(ไม่ระบุชื่อพื้นที่)",
+        before: before, after: after,
+        stepTests: stepTests, leaksFound: leaksFound, leaksRepaired: leaksRepaired,
+        pdcaDo: harvestPdca("do"), pdcaAct: harvestPdca("act"),
+        hasObstacle: hasObstacle, obstacle: obstacle
+      });
+    });
+    data.meter = meterOn ? harvestMeter() : null;
+    return data;
+  }
+
+  // ---------------------------------------------------------------------
+  // Rebuild DOM from a plain data object (import / restore)
+  // ---------------------------------------------------------------------
+  function hydrate(data) {
+    areasContainer.innerHTML = "";
+    if (data.meta) {
+      metaBranchInp.value = data.meta.branch || "";
+      if (data.meta.month) metaMonthSel.value = data.meta.month;
+      if (data.meta.year) metaYearSel.value = data.meta.year;
+    }
+    (data.areas || []).forEach(function (a) {
+      var card = addArea();
+      var q = function (k) { return card.querySelector('[data-key="' + k + '"]'); };
+      q("name").value = a.name === "(ไม่ระบุชื่อพื้นที่)" ? "" : (a.name || "");
+      q("beforeDist").value = a.before.dist || "";
+      q("beforeSold").value = a.before.sold || "";
+      q("beforeMnf").value = a.before.mnf || "";
+      q("afterDist").value = a.after.dist || "";
+      q("afterSold").value = a.after.sold || "";
+      q("afterMnf").value = a.after.mnf || "";
+
+      var stepRowsWrap = card.querySelector(".steptest-rows");
+      stepRowsWrap.innerHTML = "";
+      var steps = (a.stepTests && a.stepTests.length) ? a.stepTests : [{ estLoss: "", found: "", repaired: "" }];
+      steps.forEach(function (st) {
+        var row = addStepRow(stepRowsWrap);
+        row.querySelector('[data-role="estLoss"]').value = st.estLoss || "";
+        row.querySelector('[data-role="found"]').value = st.found || "";
+        row.querySelector('[data-role="repaired"]').value = st.repaired || "";
+      });
+
+      function hydratePdca(kind, items) {
+        var block = card.querySelector('.pdca-block[data-kind="' + kind + '"]');
+        var itemsWrap = block.querySelector(".pdca-items");
+        itemsWrap.innerHTML = "";
+        (items.length ? items : [{ title: "", detail: "" }]).forEach(function () { addPdcaItem(block); });
+        var rows = itemsWrap.querySelectorAll(".pdca-item");
+        items.forEach(function (it, i) {
+          if (!rows[i]) return;
+          rows[i].querySelector('[data-role="title"]').value = it.title || "";
+          rows[i].querySelector('[data-role="detail"]').value = it.detail || "";
+        });
+      }
+      hydratePdca("do", a.pdcaDo || []);
+      hydratePdca("act", a.pdcaAct || []);
+
+      if (a.hasObstacle && a.obstacle) {
+        var toggle = card.querySelector(".toggle-pill");
+        toggle.classList.add("on");
+        toggle.querySelector(".lbl").textContent = "มีอุปสรรค";
+        var obWrap = card.querySelector(".obstacle-form");
+        obWrap.style.display = "";
+        obWrap.querySelector('[data-key="obType"]').value = a.obstacle.type || "";
+        obWrap.querySelector('[data-role="otherWrap"]').style.display = a.obstacle.type === "อื่น" ? "" : "none";
+        obWrap.querySelector('[data-key="obOther"]').value = a.obstacle.other || "";
+        obWrap.querySelector('[data-key="obDetail"]').value = a.obstacle.detail || "";
+        obWrap.querySelector('[data-key="obPlan"]').value = a.obstacle.plan || "";
+        var priBtns = obWrap.querySelectorAll(".priority-toggle button");
+        priBtns.forEach(function (b) {
+          b.classList.remove("on", "high", "mid");
+          if (b.dataset.pri === (a.obstacle.priority || "กลาง")) b.classList.add("on", b.dataset.pri === "สูง" ? "high" : "mid");
+        });
+      }
+      updatePreview(card);
+      calcRow(card.querySelector(".area-body"));
+    });
+    if (!data.areas || !data.areas.length) addArea();
+    hydrateMeter(data.meter || null);
+    updateMetaLine();
+  }
+
+  // ---------------------------------------------------------------------
+  // persistence
+  // ---------------------------------------------------------------------
+  var saveTimer = null;
+  function saveDebounced() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(harvest())); } catch (e) {}
+      updateMetaLine();
+    }, 350);
+  }
+
+  // ---------------------------------------------------------------------
+  // Views
+  // ---------------------------------------------------------------------
+  function showView(name) {
+    document.getElementById("tabForm").classList.toggle("active", name === "form");
+    document.getElementById("tabDash").classList.toggle("active", name === "dashboard");
+    document.getElementById("viewForm").classList.toggle("active", name === "form");
+    var dv = document.getElementById("viewDashboard");
+    dv.classList.toggle("active", name === "dashboard");
+    if (name === "dashboard") renderDashboard(harvest());
+  }
+  window.showView = showView;
+
+  document.getElementById("goDashBtn").addEventListener("click", function () {
+    var data = harvest();
+    if (!data.areas.length) { showAlert("กรุณากรอกอย่างน้อย 1 พื้นที่ ก่อนดูแดชบอร์ด"); return; }
+    saveDebounced();
+    showView("dashboard");
+  });
+
+  // Export: shown in a modal so it still works when the surrounding page blocks
+  // automatic file downloads (e.g. an embedded preview) — copy-to-clipboard is
+  // the guaranteed path; the download link is offered as a bonus shortcut.
+  var exportModal = document.getElementById("exportModal");
+  var exportText = document.getElementById("exportText");
+  var exportFilenameEl = document.getElementById("exportFilename");
+  var downloadExportBtn = document.getElementById("downloadExportBtn");
+  var copyStatus = document.getElementById("copyStatus");
+  var lastExportUrl = null;
+
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    var data = harvest();
+    var json = JSON.stringify(data, null, 2);
+    var fname = "pdca_" + (data.meta.branch || "สาขา").replace(/\s+/g, "_") + "_" + data.meta.year + "-" + String(data.meta.month).padStart(2, "0") + ".json";
+
+    exportText.value = json;
+    exportFilenameEl.textContent = fname;
+    copyStatus.classList.remove("show");
+
+    if (lastExportUrl) URL.revokeObjectURL(lastExportUrl);
+    var blob = new Blob([json], { type: "application/json" });
+    lastExportUrl = URL.createObjectURL(blob);
+    downloadExportBtn.href = lastExportUrl;
+    downloadExportBtn.download = fname;
+
+    exportModal.classList.add("show");
+    exportText.focus();
+    exportText.select();
+  });
+
+  document.getElementById("copyExportBtn").addEventListener("click", function () {
+    exportText.select();
+    var done = function () {
+      copyStatus.classList.add("show");
+      setTimeout(function () { copyStatus.classList.remove("show"); }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(exportText.value).then(done, function () {
+        try { document.execCommand("copy"); done(); } catch (e) { showAlert("คัดลอกไม่สำเร็จ กรุณาเลือกข้อความในกล่องแล้วกด Ctrl+C ด้วยตนเอง"); }
+      });
+    } else {
+      try { document.execCommand("copy"); done(); } catch (e) { showAlert("คัดลอกไม่สำเร็จ กรุณาเลือกข้อความในกล่องแล้วกด Ctrl+C ด้วยตนเอง"); }
+    }
+  });
+
+  document.getElementById("closeExportBtn").addEventListener("click", function () {
+    exportModal.classList.remove("show");
+  });
+  exportModal.addEventListener("click", function (e) {
+    if (e.target === exportModal) exportModal.classList.remove("show");
+  });
+
+  // In-page confirm/alert — native confirm()/alert() require the "allow-modals"
+  // sandbox permission, which embedded preview panels commonly omit; when
+  // blocked, confirm() silently returns false, which looks like a dead button.
+  var confirmModal = document.getElementById("confirmModal");
+  var confirmMessageEl = document.getElementById("confirmMessage");
+  var confirmOkBtn = document.getElementById("confirmOkBtn");
+  var confirmCancelBtn = document.getElementById("confirmCancelBtn");
+
+  function showConfirm(message, onOk) {
+    confirmMessageEl.textContent = message;
+    confirmCancelBtn.style.display = onOk ? "" : "none";
+    confirmModal.classList.add("show");
+    confirmOkBtn.onclick = function () { confirmModal.classList.remove("show"); if (onOk) onOk(); };
+    confirmCancelBtn.onclick = function () { confirmModal.classList.remove("show"); };
+  }
+  function showAlert(message) { showConfirm(message, null); }
+  confirmModal.addEventListener("click", function (e) {
+    if (e.target === confirmModal) confirmModal.classList.remove("show");
+  });
+
+  document.getElementById("importBtn").addEventListener("click", function () {
+    document.getElementById("importInput").click();
+  });
+  document.getElementById("importInput").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        hydrate(data);
+        saveDebounced();
+        showView("form");
+      } catch (err) { showAlert("ไฟล์ไม่ถูกต้อง กรุณาตรวจสอบไฟล์ .json"); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  document.getElementById("printBtn").addEventListener("click", function () {
+    // window.print() must stay inside the click handler's own call stack —
+    // deferring it (setTimeout etc.) can silently drop the user-activation
+    // some embedded/sandboxed viewers require to allow the print dialog.
+    if (!document.getElementById("viewDashboard").classList.contains("active")) {
+      showView("dashboard");
+    }
+    document.getElementById("viewDashboard").classList.add("print-active");
+    window.print();
+    document.getElementById("viewDashboard").classList.remove("print-active");
+  });
+
+  // Sample data — lets anyone preview the dashboard without typing anything.
+  // Not real branch data; overwrites the current form (with confirmation).
+  function demoData() {
+    return {
+      meta: { branch: "กปภ.สาขา Claude", month: 6, year: 2569 },
+      areas: [
+        {
+          name: "DMA สนามบิน",
+          before: { dist: 45000, sold: 33000, mnf: 8.5 },
+          after:  { dist: 44500, sold: 37500, mnf: 5.2 },
+          stepTests: [
+            { estLoss: 3.2, found: 4, repaired: 4 },
+            { estLoss: 1.5, found: 2, repaired: 0 },
+            { estLoss: 0.8, found: 0, repaired: 0 }
+          ],
+          pdcaDo: [
+            { title: "Step Test ครบ 3 โซนย่อย", detail: "ตรวจ Step Test ทั้ง 3 โซนย่อยในพื้นที่ DMA สนามบิน พบจุดรั่วรวม 6 จุด" },
+            { title: "ซ่อมท่อแตกบริเวณซอย 5", detail: "ซ่อมท่อ PVC ขนาด 2 นิ้ว แตกบริเวณซอย 5 เสร็จเรียบร้อย" }
+          ],
+          pdcaAct: [
+            { title: "ติดตามซ่อมจุดรั่วที่เหลือ 2 จุด", detail: "วางแผนซ่อมจุดรั่วที่ค้างในโซน 2 ภายในต้นเดือนหน้า" },
+            { title: "ติดตั้ง Logger เพิ่มอีก 1 ตัว", detail: "เพื่อเฝ้าระวัง MNF ในโซนที่ยังไม่มีการวัด" }
+          ],
+          hasObstacle: true,
+          obstacle: {
+            type: "จุดค้างซ่อม", other: "",
+            detail: "พบท่อรั่วใต้ถนนสายหลัก ต้องขุดผิวจราจร ซึ่งต้องขออนุญาตหน่วยงานท้องถิ่นก่อนเริ่มซ่อม",
+            plan: "ประสานเทศบาลขอใบอนุญาตขุดถนน คาดว่าจะเริ่มซ่อมได้ภายใน 2 สัปดาห์",
+            priority: "สูง"
+          }
+        },
+        {
+          name: "MM ตลาดเก่า",
+          before: { dist: 28000, sold: 24500, mnf: 3.1 },
+          after:  { dist: 27800, sold: 25200, mnf: 2.4 },
+          stepTests: [ { estLoss: 0.6, found: 1, repaired: 1 } ],
+          pdcaDo: [ { title: "Flush ท่อประจำเดือน", detail: "ดำเนินการ Flush ท่อ 4 จุดตามแผนบำรุงรักษา" } ],
+          pdcaAct: [ { title: "เปลี่ยนมาตรรายใหญ่ 2 ราย", detail: "ประสานลูกค้าเพื่อนัดเปลี่ยนมาตรที่มีอายุการใช้งานเกิน 10 ปี" } ],
+          hasObstacle: false,
+          obstacle: null
+        },
+        {
+          name: "DMA หนองบัว",
+          before: { dist: 15000, sold: 9000, mnf: 6.0 },
+          after:  { dist: 15200, sold: 9500, mnf: 6.4 },
+          stepTests: [
+            { estLoss: 2.1, found: 3, repaired: 1 },
+            { estLoss: 1.0, found: 2, repaired: 2 }
+          ],
+          pdcaDo: [ { title: "สำรวจ Step Test เบื้องต้น", detail: "เริ่มสำรวจแบ่งโซนย่อยจำนวน 2 โซน" } ],
+          pdcaAct: [
+            { title: "เร่งซ่อมจุดรั่วที่เหลือ 2 จุด", detail: "" },
+            { title: "ขอกำลังเสริมจากเขต", detail: "ทีมช่างสาขาไม่พอ พื้นที่กว้าง ต้องการทีมเขตช่วยสำรวจเพิ่ม" }
+          ],
+          hasObstacle: true,
+          obstacle: {
+            type: "ปัญหาแรงดันน้ำไหลอ่อน", other: "",
+            detail: "พื้นที่ปลายท่อแรงดันต่ำ ทำให้ตรวจจุดรั่วด้วย Step Test ได้ไม่แม่นยำ",
+            plan: "ขอสนับสนุนปั๊มเสริมแรงดันจากเขต ระหว่างดำเนินการ Step Test รอบถัดไป",
+            priority: "กลาง"
+          }
+        }
+      ],
+      meter: {
+        changed_count: 12, recovered_water: 450, recovered_value: 13500, meter_size: "1/2\", 3/4\"", cumulative_fy: 86,
+        zero_checked: 40, zero_under12: 25, zero_over12: 15, zero_dead: 6,
+        trend_checked: 30, trend_normal: 24, trend_broken: 6, trend_reason: "ใช้น้ำน้อย / บ้านปิดร้าง",
+        highlow_reported: 10, highlow_abnormal: 3,
+        sample_checked: 55, sample_abnormal: 4, sample_normal: 51,
+        bigmeter_read: 8, watch_followup: "ทำแล้ว",
+        project_target: 100, project_done: 62, project_status: "อยู่ระหว่างดำเนินการ",
+        temp_desc: "ติดตั้งมาตรชั่วคราวช่วงงานประเพณีลอยกระทง", temp_volume: 120, temp_value: 3600,
+        total: 12 + 40 + 30 + 10 + 55 + 8
+      }
+    };
+  }
+
+  document.getElementById("demoBtn").addEventListener("click", function () {
+    var current = harvest();
+    var hasRealData = current.meta.branch.trim() || current.areas.length || current.meter;
+    function loadDemo() {
+      hydrate(demoData());
+      saveDebounced();
+      showView("dashboard");
+    }
+    if (hasRealData) {
+      showConfirm("โหลดข้อมูลตัวอย่างจะเขียนทับข้อมูลที่กรอกอยู่ตอนนี้ ต้องการดำเนินการต่อหรือไม่?", loadDemo);
+      return;
+    }
+    loadDemo();
+  });
+
+  // ---------------------------------------------------------------------
+  // Dashboard rendering
+  // ---------------------------------------------------------------------
+  function computeAgg(data) {
+    var t = { distB: 0, soldB: 0, distA: 0, soldA: 0, found: 0, repaired: 0, obHigh: 0, obMid: 0 };
+    var mnfBSum = 0, mnfBCount = 0, mnfASum = 0, mnfACount = 0;
+    data.areas.forEach(function (a) {
+      t.distB += a.before.dist; t.soldB += a.before.sold;
+      t.distA += a.after.dist; t.soldA += a.after.sold;
+      t.found += a.leaksFound; t.repaired += a.leaksRepaired;
+      if (a.before.mnf !== null && a.before.mnf !== undefined) { mnfBSum += a.before.mnf; mnfBCount++; }
+      if (a.after.mnf !== null && a.after.mnf !== undefined) { mnfASum += a.after.mnf; mnfACount++; }
+      if (a.hasObstacle && a.obstacle) {
+        if (a.obstacle.priority === "สูง") t.obHigh++; else t.obMid++;
+      }
+    });
+    t.pctB = t.distB > 0 ? ((t.distB - t.soldB) / t.distB) * 100 : null;
+    t.pctA = t.distA > 0 ? ((t.distA - t.soldA) / t.distA) * 100 : null;
+    t.lossB = t.distB - t.soldB;
+    t.lossA = t.distA - t.soldA;
+    t.mnfB = mnfBCount ? mnfBSum / mnfBCount : null;
+    t.mnfA = mnfACount ? mnfASum / mnfACount : null;
+    return t;
+  }
+
+  // metric accessor shared by the NRW/MNF grouped bar chart + table
+  function metricValue(a, phase, metric) {
+    var o = a[phase];
+    if (metric === "mnf") return (o.mnf === null || o.mnf === undefined) ? null : o.mnf;
+    return o.dist ? ((o.dist - o.sold) / o.dist) * 100 : null;
+  }
+
+  function niceCeil(v) {
+    if (v <= 0) return 1;
+    var exp = Math.floor(Math.log10(v));
+    var base = Math.pow(10, exp);
+    var f = v / base;
+    var nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+    return nf * base;
+  }
+
+  function kpiTile(label, value, unit, delta) {
+    var tile = el("div", "card kpi-tile");
+    var html = '<div class="lbl">' + label + '</div><div class="val num">' + value + (unit ? '<span class="unit">' + unit + "</span>" : "") + "</div>";
+    if (delta) html += '<div class="delta ' + delta.cls + '">' + delta.text + "</div>";
+    tile.innerHTML = html;
+    return tile;
+  }
+
+  function svgBarChart(data, metric) {
+    metric = metric || "nrw";
+    var unit = metric === "mnf" ? "ลบ.ม./ชม." : "%";
+    var decimals = metric === "mnf" ? 2 : 1;
+    var W = Math.max(400, data.areas.length * 96 + 80);
+    var H = 260;
+    var padL = 46, padR = 16, padT = 16, padB = 44;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var maxVal = 0;
+    data.areas.forEach(function (a) {
+      var vB = metricValue(a, "before", metric);
+      var vA = metricValue(a, "after", metric);
+      if (vB !== null) maxVal = Math.max(maxVal, vB);
+      if (vA !== null) maxVal = Math.max(maxVal, vA);
+    });
+    maxVal = niceCeil(Math.max(maxVal * 1.15, metric === "mnf" ? 0.5 : 10));
+
+    var groupW = plotW / data.areas.length;
+    var barW = Math.min(26, groupW * 0.3);
+
+    var gridLines = "";
+    var ticks = 4;
+    for (var i = 0; i <= ticks; i++) {
+      var yv = (maxVal / ticks) * i;
+      var y = padT + plotH - (yv / maxVal) * plotH;
+      gridLines += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>';
+      gridLines += '<text x="' + (padL - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="var(--ink-muted)" class="num">' + fmt(yv, metric === "mnf" ? 1 : 0) + '</text>';
+    }
+
+    var bars = "";
+    var hitAreas = "";
+    data.areas.forEach(function (a, i) {
+      var cx = padL + groupW * i + groupW / 2;
+      var vB = metricValue(a, "before", metric);
+      var vA = metricValue(a, "after", metric);
+      var hB = vB !== null ? (vB / maxVal) * plotH : 0;
+      var hA = vA !== null ? (vA / maxVal) * plotH : 0;
+      var xB = cx - barW - 3;
+      var xA = cx + 3;
+
+      bars +=
+        '<rect x="' + xB + '" y="' + (padT + plotH - hB) + '" width="' + barW + '" height="' + hB + '" rx="4" fill="var(--ref-bar)"/>' +
+        '<rect x="' + xA + '" y="' + (padT + plotH - hA) + '" width="' + barW + '" height="' + hA + '" rx="4" fill="var(--accent)"/>';
+
+      if (vB !== null) bars += '<text x="' + (xB + barW / 2) + '" y="' + (padT + plotH - hB - 6) + '" text-anchor="middle" font-size="10" fill="var(--ref-ink)" class="num">' + fmt(vB, decimals) + '</text>';
+      if (vA !== null) bars += '<text x="' + (xA + barW / 2) + '" y="' + (padT + plotH - hA - 6) + '" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent)" class="num">' + fmt(vA, decimals) + '</text>';
+
+      var label = a.name.length > 12 ? a.name.slice(0, 11) + "…" : a.name;
+      bars += '<text x="' + cx + '" y="' + (padT + plotH + 18) + '" text-anchor="middle" font-size="10.5" fill="var(--ink-2)">' + escapeHtml(label) + '</text>';
+
+      hitAreas += '<rect data-idx="' + i + '" x="' + (padL + groupW * i) + '" y="' + padT + '" width="' + groupW + '" height="' + plotH + '" fill="transparent" style="cursor:pointer"/>';
+    });
+
+    var svg =
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="display:block">' +
+      gridLines + bars + hitAreas +
+      '</svg>';
+
+    var wrap = el("div", "chart-svg-wrap");
+    wrap.innerHTML = svg;
+
+    var tooltip = document.getElementById("barTooltip");
+    wrap.querySelectorAll("rect[data-idx]").forEach(function (hit) {
+      hit.addEventListener("mousemove", function (e) {
+        var a = data.areas[Number(hit.dataset.idx)];
+        var vB = metricValue(a, "before", metric);
+        var vA = metricValue(a, "after", metric);
+        tooltip.innerHTML =
+          "<b>" + escapeHtml(a.name) + "</b><br>ก่อน: " + (vB !== null ? fmt(vB, decimals) + " " + unit : "—") +
+          "<br>หลัง: " + (vA !== null ? fmt(vA, decimals) + " " + unit : "—");
+        tooltip.classList.add("show");
+        var rect = wrap.getBoundingClientRect();
+        tooltip.style.left = (e.clientX - rect.left + wrap.scrollLeft + 14) + "px";
+        tooltip.style.top = (e.clientY - rect.top - 10) + "px";
+      });
+      hit.addEventListener("mouseleave", function () { tooltip.classList.remove("show"); });
+    });
+
+    return wrap;
+  }
+
+  // Per-area Step Test chart: bar = estimated loss (m3/hr), colored by leak status
+  function svgStepChart(a) {
+    var steps = a.stepTests || [];
+    if (!steps.length) return null;
+    var W = Math.max(steps.length * 78 + 50, 220);
+    var H = 190;
+    var padL = 36, padR = 10, padT = 34, padB = 32;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var maxLoss = 0;
+    steps.forEach(function (s) { maxLoss = Math.max(maxLoss, s.estLoss || 0); });
+    maxLoss = niceCeil(Math.max(maxLoss * 1.25, 0.5));
+
+    var groupW = plotW / steps.length;
+    var barW = Math.min(34, groupW * 0.5);
+
+    var gridLines = "";
+    var ticks = 3;
+    for (var i = 0; i <= ticks; i++) {
+      var yv = (maxLoss / ticks) * i;
+      var y = padT + plotH - (yv / maxLoss) * plotH;
+      gridLines += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>';
+      gridLines += '<text x="' + (padL - 7) + '" y="' + (y + 3) + '" text-anchor="end" font-size="9.5" fill="var(--ink-muted)" class="num">' + fmt(yv, 1) + '</text>';
+    }
+
+    var bars = "", hit = "";
+    steps.forEach(function (s, i) {
+      var cx = padL + groupW * i + groupW / 2;
+      var loss = s.estLoss || 0;
+      var h = maxLoss > 0 ? (loss / maxLoss) * plotH : 0;
+      var pending = Math.max(0, s.found - s.repaired);
+      var color = s.found > 0 ? (pending > 0 ? "var(--critical)" : "var(--good)") : "var(--ref-bar)";
+      var x = cx - barW / 2;
+
+      bars += '<rect x="' + x + '" y="' + (padT + plotH - h) + '" width="' + barW + '" height="' + h + '" rx="4" fill="' + color + '"/>';
+      bars += '<text x="' + cx + '" y="' + (padT + plotH - h - 6) + '" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" class="num">' + fmt(loss, 2) + '</text>';
+      if (s.found > 0) {
+        bars += '<text x="' + cx + '" y="' + (padT - 18) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + color + '">💧 ' + s.found + '</text>';
+      }
+      bars += '<text x="' + cx + '" y="' + (padT + plotH + 17) + '" text-anchor="middle" font-size="10" fill="var(--ink-muted)">สเต็ป ' + (i + 1) + '</text>';
+
+      hit += '<rect data-i="' + i + '" x="' + (padL + groupW * i) + '" y="0" width="' + groupW + '" height="' + H + '" fill="transparent" style="cursor:pointer"/>';
+    });
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" style="display:block">' + gridLines + bars + hit + '</svg>';
+    var wrap = el("div", "chart-svg-wrap");
+    wrap.innerHTML = svg;
+
+    var tooltip = document.getElementById("barTooltip");
+    wrap.querySelectorAll("rect[data-i]").forEach(function (hitEl) {
+      hitEl.addEventListener("mousemove", function (e) {
+        var s = steps[Number(hitEl.dataset.i)];
+        var pending = Math.max(0, s.found - s.repaired);
+        tooltip.innerHTML =
+          "<b>สเต็ป " + (Number(hitEl.dataset.i) + 1) + "</b><br>สูญเสียคาดการณ์: " + fmt(s.estLoss || 0, 2) + " ลบ.ม./ชม." +
+          "<br>จุดรั่วพบ: " + s.found + " · ซ่อมแล้ว: " + s.repaired + " · ค้างซ่อม: " + pending;
+        tooltip.classList.add("show");
+        var rect = wrap.getBoundingClientRect();
+        tooltip.style.left = (e.clientX - rect.left + wrap.scrollLeft + 14) + "px";
+        tooltip.style.top = (e.clientY - rect.top - 10) + "px";
+      });
+      hitEl.addEventListener("mouseleave", function () { tooltip.classList.remove("show"); });
+    });
+
+    return wrap;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function dataTable(data, metric) {
+    metric = metric || "nrw";
+    var unit = metric === "mnf" ? " ลบ.ม./ชม." : "%";
+    var decimals = metric === "mnf" ? 2 : 1;
+    var colLabel = metric === "mnf" ? "MNF" : "NRW";
+    var rows = data.areas.map(function (a) {
+      var vB = metricValue(a, "before", metric);
+      var vA = metricValue(a, "after", metric);
+      var diff = (vB !== null && vA !== null) ? vB - vA : null;
+      return '<tr><td>' + escapeHtml(a.name) + '</td>' +
+        '<td class="num">' + (vB !== null ? fmt(vB, decimals) + unit : "—") + '</td>' +
+        '<td class="num">' + (vA !== null ? fmt(vA, decimals) + unit : "—") + '</td>' +
+        '<td class="num" style="color:' + (diff === null ? "" : diff >= 0 ? "var(--good)" : "var(--critical)") + '">' +
+        (diff !== null ? (diff >= 0 ? "▼ " : "▲ ") + fmt(Math.abs(diff), decimals) + unit : "—") + "</td></tr>";
+    }).join("");
+    var d = el("details", "table-toggle");
+    d.innerHTML =
+      "<summary>แสดงตารางข้อมูล (สำหรับผู้ใช้โปรแกรมอ่านหน้าจอ / คัดลอกไปยัง Excel)</summary>" +
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      "<th>พื้นที่</th><th class=\"num\">" + colLabel + " ก่อน</th><th class=\"num\">" + colLabel + " หลัง</th><th class=\"num\">เปลี่ยนแปลง</th>" +
+      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+    return d;
+  }
+
+  function buildMetricChartCard(data, metric) {
+    var card = el("div", "card chart-card");
+    var chartHead = el("div", "chart-head");
+    var title = metric === "mnf"
+      ? "MNF (Minimum Night Flow) ก่อน–หลัง รายพื้นที่ (ลบ.ม./ชม.)"
+      : "อัตราน้ำสูญเสีย (NRW%) ก่อน–หลัง รายพื้นที่";
+    var chartEyebrow = el("p", "eyebrow", title);
+    chartEyebrow.style.margin = "0";
+    var chartLegend = el("div", "legend");
+    chartLegend.innerHTML =
+      '<span class="legend-item"><span class="legend-swatch" style="background:var(--ref-bar)"></span>ก่อน</span>' +
+      '<span class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span>หลัง</span>';
+    chartHead.appendChild(chartEyebrow);
+    chartHead.appendChild(chartLegend);
+    card.appendChild(chartHead);
+
+    var scroll = el("div", "chart-scroll");
+    scroll.appendChild(svgBarChart(data, metric));
+    card.appendChild(scroll);
+    card.appendChild(dataTable(data, metric));
+    return card;
+  }
+
+  // Builds the descriptor list for the meter topics that actually have data —
+  // topics left completely empty are skipped so the card doesn't pad itself
+  // with nine blank entries for branches that only filled in one or two.
+  function meterTopics(m) {
+    return [
+      { title: "1 · เปลี่ยนมาตรชำรุด / มาตรตาย / แนวโน้มชำรุด", items: [
+          ["จำนวนที่เปลี่ยน", m.changed_count, "เครื่อง"],
+          ["น้ำที่ได้คืน", m.recovered_water, "ลบ.ม."],
+          ["มูลค่า", m.recovered_value, "บาท"],
+          ["ขนาดมาตร", m.meter_size, ""],
+          ["ยอดสะสมปีงบฯ", m.cumulative_fy, "เครื่อง"]
+        ] },
+      { title: "2 · ตรวจสอบมาตร 0 คิว", items: [
+          ["ตรวจสอบ", m.zero_checked, "ราย"],
+          ["0 คิว ไม่เกิน 12 ด.", m.zero_under12, "ราย"],
+          ["0 คิว เกิน 12 ด.", m.zero_over12, "ราย"],
+          ["พบมาตรตาย", m.zero_dead, "เครื่อง"]
+        ] },
+      { title: "3 · ตรวจมาตรแนวโน้มชำรุด (Dmama/WATCH)", items: [
+          ["ตรวจ", m.trend_checked, "ราย"],
+          ["ปกติ", m.trend_normal, "ราย"],
+          ["พบชำรุด", m.trend_broken, "ราย"],
+          ["สาเหตุ", m.trend_reason, ""]
+        ] },
+      { title: "4 · น้ำสูง-ต่ำ ที่พนักงานแจ้ง", items: [
+          ["แจ้ง", m.highlow_reported, "ราย"],
+          ["พบตาย/ผิดปกติ", m.highlow_abnormal, "ราย"]
+        ] },
+      { title: "5 · สุ่มตรวจมาตร (5%)", items: [
+          ["สุ่มตรวจ", m.sample_checked, "ราย"],
+          ["พบผิดปกติ", m.sample_abnormal, "ราย"],
+          ["ไม่พบผิดปกติ", m.sample_normal, "ราย"]
+        ] },
+      { title: "6 · อ่านมาตร / ติดตามมาตรรายใหญ่", items: [
+          ["อ่านมาตรรายใหญ่", m.bigmeter_read, "เครื่อง"],
+          ["ติดตาม WATCH Center", m.watch_followup, ""]
+        ] },
+      { title: "7 · โครงการเปลี่ยนมาตรตามอายุ", items: [
+          ["เป้าหมาย", m.project_target, "เครื่อง"],
+          ["ดำเนินการแล้ว", m.project_done, "เครื่อง"],
+          ["สถานะ", m.project_status, ""]
+        ] },
+      { title: "9 · ติดตั้งมาตรชั่วคราว / เฉพาะกิจ", items: [
+          ["รายละเอียด", m.temp_desc, ""],
+          ["ปริมาณน้ำ", m.temp_volume, "ลบ.ม."],
+          ["มูลค่าที่เรียกเก็บ", m.temp_value, "บาท"]
+        ] }
+    ];
+  }
+
+  function renderMeterCard(m) {
+    if (!m) return null;
+    var hasAny = Object.keys(m).some(function (k) { return k !== "total" && m[k]; });
+    if (!hasAny) return null;
+
+    var card = el("div", "card card-pad");
+    var head = el("p", "eyebrow", "กิจกรรมตรวจ / เปลี่ยนมาตร");
+    head.style.margin = "0 0 12px";
+    card.appendChild(head);
+
+    var mini = el("div", "mini-stats");
+    mini.innerHTML =
+      "<span>เปลี่ยนมาตรแล้ว: <b class=\"num\">" + fmt(m.changed_count, 0) + "</b> เครื่อง</span>" +
+      "<span>น้ำที่ได้คืน: <b class=\"num\">" + fmt(m.recovered_water, 0) + "</b> ลบ.ม.</span>" +
+      "<span>มูลค่า: <b class=\"num\">" + fmt(m.recovered_value, 0) + "</b> บาท</span>" +
+      "<span>ยอดรวมกิจกรรมตรวจมาตร: <b class=\"num\">" + fmt(m.total, 0) + "</b> เครื่อง/ราย</span>";
+    card.appendChild(mini);
+
+    var topics = meterTopics(m).filter(function (t) {
+      return t.items.some(function (it) { return it[1]; });
+    });
+
+    if (topics.length) {
+      var grid = el("div", "meter-topics-grid");
+      topics.forEach(function (t) {
+        var tc = el("div", "meter-topic-card");
+        var rows = t.items
+          .filter(function (it) { return it[1]; })
+          .map(function (it) {
+            var val = typeof it[1] === "number" ? fmt(it[1], 0) : escapeHtml(it[1]);
+            return '<div class="mt-row"><span>' + escapeHtml(it[0]) + '</span><b>' + val + (it[2] ? " " + it[2] : "") + '</b></div>';
+          }).join("");
+        tc.innerHTML = '<div class="mt-title">' + escapeHtml(t.title) + '</div>' + rows;
+        grid.appendChild(tc);
+      });
+      card.appendChild(grid);
+    }
+
+    return card;
+  }
+
+  function renderDashboard(data) {
+    var root = document.getElementById("viewDashboard");
+    root.innerHTML = "";
+
+    if (!data.areas.length) {
+      var es = el("div", "empty-state card card-pad");
+      es.innerHTML =
+        '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3C12 3 5 11.2 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11.2 12 3 12 3Z"/></svg>' +
+        "<h3>ยังไม่มีข้อมูล</h3><p>กรอกข้อมูลอย่างน้อย 1 พื้นที่ในแท็บ “กรอกข้อมูล” แล้วกดบันทึกเพื่อสร้างแดชบอร์ด</p>";
+      root.appendChild(es);
+      return;
+    }
+
+    var agg = computeAgg(data);
+
+    var head = el("div", "dash-head");
+    head.innerHTML =
+      '<div class="dash-title"><h1>' + escapeHtml(data.meta.branch || "ไม่ระบุสาขา") + '</h1>' +
+      "<p>" + MONTHS[data.meta.month - 1] + " " + data.meta.year + " · " + data.areas.length + " พื้นที่</p></div>";
+    var editBtn = el("button", "iconbtn", "แก้ไขข้อมูล");
+    editBtn.onclick = function () { showView("form"); };
+    head.appendChild(editBtn);
+    root.appendChild(head);
+
+    // KPI row
+    var kpis = el("div", "kpi-grid");
+    kpis.appendChild(kpiTile("จำนวนพื้นที่", data.areas.length, "พื้นที่"));
+    kpis.appendChild(kpiTile("NRW เฉลี่ยก่อน", agg.pctB !== null ? fmt(agg.pctB, 1) : "—", "%"));
+    var deltaKpi = null;
+    if (agg.pctB !== null && agg.pctA !== null) {
+      var d = agg.pctB - agg.pctA;
+      deltaKpi = { cls: d >= 0 ? "good" : "bad", text: (d >= 0 ? "▼ ลดลง " : "▲ เพิ่มขึ้น ") + fmt(Math.abs(d), 1) + " จุด" };
+    }
+    kpis.appendChild(kpiTile("NRW เฉลี่ยหลัง", agg.pctA !== null ? fmt(agg.pctA, 1) : "—", "%", deltaKpi));
+    var mnfDeltaKpi = null;
+    if (agg.mnfB !== null && agg.mnfA !== null) {
+      var dm = agg.mnfB - agg.mnfA;
+      mnfDeltaKpi = { cls: dm >= 0 ? "good" : "bad", text: (dm >= 0 ? "▼ ลดลง " : "▲ เพิ่มขึ้น ") + fmt(Math.abs(dm), 2) };
+    }
+    kpis.appendChild(kpiTile("MNF เฉลี่ยหลัง", agg.mnfA !== null ? fmt(agg.mnfA, 2) : "—", "ลบ.ม./ชม.", mnfDeltaKpi));
+    kpis.appendChild(kpiTile("น้ำสูญเสียลดลง", fmt(agg.lossB - agg.lossA, 0), "ลบ.ม."));
+    var pending = Math.max(0, agg.found - agg.repaired);
+    kpis.appendChild(kpiTile("จุดรั่วค้างซ่อม", pending, "จาก " + agg.found + " จุด", pending > 0 ? { cls: "bad", text: "ต้องติดตาม" } : { cls: "good", text: "ซ่อมครบแล้ว" }));
+    root.appendChild(kpis);
+
+    // Charts — NRW% and MNF shown together as a pair (not a toggle): there's
+    // no screen-space reason to hide one, and it means print always has both.
+    var chartsWrap = el("div", "charts-pair");
+    chartsWrap.appendChild(buildMetricChartCard(data, "nrw"));
+    chartsWrap.appendChild(buildMetricChartCard(data, "mnf"));
+    root.appendChild(chartsWrap);
+
+    // Meter (มาตร) — optional, report-level; only shown if the branch actually filled it in
+    var meterCard = renderMeterCard(data.meter);
+    if (meterCard) root.appendChild(meterCard);
+
+    // Area cards
+    var list = el("div", "area-list");
+    data.areas.forEach(function (a) {
+      var pB = a.before.dist ? ((a.before.dist - a.before.sold) / a.before.dist) * 100 : null;
+      var pA = a.after.dist ? ((a.after.dist - a.after.sold) / a.after.dist) * 100 : null;
+      var stripeCls = "ok";
+      if (a.hasObstacle && a.obstacle) stripeCls = a.obstacle.priority === "สูง" ? "crit" : "warn";
+
+      var card = el("div", "area-dash-card");
+      var stripe = el("div", "stripe " + stripeCls);
+      card.appendChild(stripe);
+
+      var body = el("div", "area-dash-body");
+      var top = el("div", "area-dash-top");
+      top.innerHTML = "<h3>" + escapeHtml(a.name) + "</h3>";
+      if (a.hasObstacle && a.obstacle) {
+        var chip = el("span", "chip " + (a.obstacle.priority === "สูง" ? "crit" : "warn"), (a.obstacle.priority === "สูง" ? "🔴 " : "🟡 ") + "อุปสรรค" + a.obstacle.priority);
+        top.appendChild(chip);
+      }
+      body.appendChild(top);
+
+      var nrwLine = el("div", "nrw-line");
+      var arrowHtml = "";
+      if (pB !== null && pA !== null) {
+        var good = pA <= pB;
+        arrowHtml = '<span class="' + (good ? "arrow-good" : "arrow-bad") + '">' + (good ? "▼" : "▲") + " " + fmt(Math.abs(pB - pA), 1) + " จุด</span>";
+      }
+      nrwLine.innerHTML =
+        '<span>NRW:</span><span class="pct">' + (pB !== null ? fmt(pB, 1) + "%" : "—") + "</span>" +
+        '<span style="color:var(--ink-muted)">→</span>' +
+        '<span class="pct">' + (pA !== null ? fmt(pA, 1) + "%" : "—") + "</span>" + arrowHtml;
+      body.appendChild(nrwLine);
+
+      var mnfB = a.before.mnf, mnfA = a.after.mnf;
+      if (mnfB !== null || mnfA !== null) {
+        var mnfLine = el("div", "nrw-line");
+        var mnfArrowHtml = "";
+        if (mnfB !== null && mnfA !== null) {
+          var mnfGood = mnfA <= mnfB;
+          mnfArrowHtml = '<span class="' + (mnfGood ? "arrow-good" : "arrow-bad") + '">' + (mnfGood ? "▼" : "▲") + " " + fmt(Math.abs(mnfB - mnfA), 2) + "</span>";
+        }
+        mnfLine.innerHTML =
+          '<span>MNF:</span><span class="pct">' + (mnfB !== null ? fmt(mnfB, 2) : "—") + "</span>" +
+          '<span style="color:var(--ink-muted)">→</span>' +
+          '<span class="pct">' + (mnfA !== null ? fmt(mnfA, 2) : "—") + "</span>" +
+          '<span style="color:var(--ink-muted);font-size:11px">ลบ.ม./ชม.</span>' + mnfArrowHtml;
+        body.appendChild(mnfLine);
+      }
+
+      var mini = el("div", "mini-stats");
+      mini.innerHTML =
+        "<span>น้ำสูญเสียหลัง: <b class=\"num\">" + fmt(a.after.dist - a.after.sold, 0) + "</b> ลบ.ม.</span>" +
+        "<span>จุดรั่วพบ: <b class=\"num\">" + a.leaksFound + "</b></span>" +
+        "<span>ซ่อมแล้ว: <b class=\"num\">" + a.leaksRepaired + "</b></span>" +
+        "<span>ค้างซ่อม: <b class=\"num\">" + Math.max(0, a.leaksFound - a.leaksRepaired) + "</b></span>";
+      body.appendChild(mini);
+
+      if (a.stepTests && a.stepTests.length) {
+        var stSection = el("div");
+        stSection.style.marginBottom = "14px";
+        var stTitle = el("p", "eyebrow", "Step Test — สูญเสียคาดการณ์ต่อสเต็ป (ลบ.ม./ชม.)");
+        stTitle.style.margin = "0 0 8px";
+        stSection.appendChild(stTitle);
+
+        var stLegend = el("div", "legend");
+        stLegend.style.marginBottom = "6px";
+        stLegend.innerHTML =
+          '<span class="legend-item"><span class="legend-swatch" style="background:var(--ref-bar)"></span>ไม่มีจุดรั่ว</span>' +
+          '<span class="legend-item"><span class="legend-swatch" style="background:var(--good)"></span>พบ · ซ่อมครบแล้ว</span>' +
+          '<span class="legend-item"><span class="legend-swatch" style="background:var(--critical)"></span>พบ · ค้างซ่อม</span>';
+        stSection.appendChild(stLegend);
+
+        var stScroll = el("div", "chart-scroll");
+        stScroll.appendChild(svgStepChart(a));
+        stSection.appendChild(stScroll);
+
+        var stRows = a.stepTests.map(function (st, i) {
+          var pend = Math.max(0, st.found - st.repaired);
+          return '<tr><td class="num">' + (i + 1) + '</td>' +
+            '<td class="num">' + fmt(st.estLoss, 2) + '</td>' +
+            '<td class="num">' + st.found + '</td>' +
+            '<td class="num">' + st.repaired + '</td>' +
+            '<td class="num" style="color:' + (pend > 0 ? "var(--critical)" : "var(--ink-muted)") + '">' + pend + '</td></tr>';
+        }).join("");
+        var stDetails = el("details", "table-toggle");
+        stDetails.innerHTML =
+          "<summary>แสดงตารางข้อมูล Step Test</summary>" +
+          '<div class="data-table-wrap"><table class="data-table"><thead><tr><th class="num">สเต็ป</th><th class="num">สูญเสียคาดการณ์</th>' +
+          '<th class="num">พบ</th><th class="num">ซ่อมแล้ว</th><th class="num">ค้างซ่อม</th></tr></thead>' +
+          "<tbody>" + stRows + "</tbody></table></div>";
+        stSection.appendChild(stDetails);
+
+        body.appendChild(stSection);
+      }
+
+      var two = el("div", "two-col");
+      function miniList(cls, title, items) {
+        var wrap = el("div");
+        var h = el("div", "mini-block-title " + cls, title);
+        wrap.appendChild(h);
+        if (!items.length) {
+          wrap.appendChild(el("div", "mini-list-item", '<span style="color:var(--ink-muted)">— ไม่มีข้อมูล —</span>'));
+          return wrap;
+        }
+        var listEl = el("div", "mini-list");
+        items.forEach(function (it, i) {
+          var row = el("div", "mini-list-item");
+          row.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t"><div class="title">' + escapeHtml(it.title || "(ไม่มีชื่อหัวข้อ)") + '</div>' +
+            (it.detail ? '<div class="detail">' + escapeHtml(it.detail) + "</div>" : "") + "</span>";
+          listEl.appendChild(row);
+        });
+        wrap.appendChild(listEl);
+        return wrap;
+      }
+      two.appendChild(miniList("d", "Do — ดำเนินการแล้ว", a.pdcaDo));
+      two.appendChild(miniList("a", "Act — แผนถัดไป", a.pdcaAct));
+      body.appendChild(two);
+
+      if (a.hasObstacle && a.obstacle) {
+        var obTitle = el("p", "eyebrow", "🚧 อุปสรรค");
+        obTitle.style.cssText = "margin:0 0 8px;color:var(--critical)";
+        body.appendChild(obTitle);
+
+        var ob = el("div", "obstacle-box");
+        var typeLabel = a.obstacle.type === "อื่น" && a.obstacle.other ? a.obstacle.other : a.obstacle.type;
+        ob.innerHTML =
+          '<div class="ob-head"><span class="chip ' + (a.obstacle.priority === "สูง" ? "crit" : "warn") + '">' + (a.obstacle.priority === "สูง" ? "🔴" : "🟡") + " " + a.obstacle.priority + '</span><span class="ob-type">' + escapeHtml(typeLabel || "ไม่ระบุประเภท") + "</span></div>" +
+          (a.obstacle.detail ? '<div class="ob-block"><div class="ob-label problem">⚠ รายละเอียดอุปสรรค</div><div class="ob-detail">' + escapeHtml(a.obstacle.detail) + "</div></div>" : "") +
+          (a.obstacle.plan ? '<div class="ob-block"><div class="ob-label fix">✓ แนวทางการแก้ไข</div><div class="ob-plan">' + escapeHtml(a.obstacle.plan) + "</div></div>" : "");
+        body.appendChild(ob);
+      }
+
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+    root.appendChild(list);
+  }
+
+  // ---------------------------------------------------------------------
+  // boot
+  // ---------------------------------------------------------------------
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null"); } catch (e) {}
+  if (saved && ((saved.areas && saved.areas.length) || saved.meter)) {
+    hydrate(saved);
+    showView(saved.areas && saved.areas.length ? "dashboard" : "form");
+  } else {
+    addArea();
+    updateMetaLine();
+  }
+})();
+</script>
+
+</body>
+
+</html>
