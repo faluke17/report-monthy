@@ -240,13 +240,13 @@ function RatsRailSummary({ yearBe, month }: { yearBe: number; month: number }) {
   const total = stats.length
   const started = stats.filter((s) => s.read_count > 0)
   const pct = total > 0 ? Math.round((started.length / total) * 100) : 0
-  const top3 = [...stats].sort((a, b) => b.read_count - a.read_count).slice(0, 3)
-  const maxRead = top3[0]?.read_count ?? 1
+  const topReaders = [...stats].sort((a, b) => b.read_count - a.read_count).slice(0, 10)
+  const maxRead = topReaders[0]?.read_count ?? 1
 
   return (
     <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: '16px', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
-        <div style={{ fontSize: 12.5, color: INK, fontWeight: 700 }}>การจดมาตร RATS2</div>
+        <div style={{ fontSize: 12.5, color: INK, fontWeight: 700 }}>W.A.T.C.H ผู้ใช้น้ำรายใหญ่</div>
         <div style={{ fontSize: 10.5, color: INK3 }}>{label}</div>
       </div>
 
@@ -266,9 +266,9 @@ function RatsRailSummary({ yearBe, month }: { yearBe: number; month: number }) {
             <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: 'linear-gradient(90deg, #6B4FA0, #4A5FA5)', transition: 'width .6s ease' }} />
           </div>
 
-          <div style={{ fontSize: 10, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 9 }}>TOP 3 บันทึกมากที่สุด</div>
+          <div style={{ fontSize: 10, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 9 }}>TOP 10 บันทึกมากที่สุด</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {top3.map((s, i) => {
+            {topReaders.map((s, i) => {
               const barPct = maxRead > 0 ? (s.read_count / maxRead) * 100 : 0
               return (
                 <div key={s.ba} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -349,11 +349,11 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
   const watchCount   = branches.filter((b) => groupOf(b.code) === 'watch').length
   const generalCount = branches.filter((b) => groupOf(b.code) === 'general').length
 
-  // สาขาที่แนวโน้มแย่ลงชัดเจน (%สะสมเพิ่มขึ้น) — ไล่จากแย่ลงมากสุด ใช้โชว์เป็น "ต้องจับตา"
+  // สาขาที่แนวโน้มแย่ลงชัดเจน — NRW% เดือนล่าสุดเทียบเดือนเดียวกันปีก่อน (YoY) เพิ่มขึ้น — ไล่จากแย่ลงมากสุด ใช้โชว์เป็น "ต้องจับตา"
   const worsening = branches
     .filter((b) => (snapMap[b.id]?.cum_trend_delta ?? 0) > 0.05)
     .sort((a, b) => (snapMap[b.id]?.cum_trend_delta ?? 0) - (snapMap[a.id]?.cum_trend_delta ?? 0))
-  const topConcerns = worsening.slice(0, 5)
+  const topConcerns = worsening.slice(0, 10)
 
   // เรียง: กลุ่ม (ติดตาม→วิกฤต→เฝ้าระวัง→ทั่วไป) แล้วภายในกลุ่มเรียงแนวโน้มแย่ลงก่อน
   const filteredBranches = branches
@@ -442,7 +442,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
       </div>
       {topConcerns.length === 0 ? (
         <div style={{ padding: '12px 16px', borderRadius: 10, background: '#E7F3EE', border: '1px solid #CDE5DA', fontSize: 12.5, color: '#1E7A5A' }}>
-          ✓ ไม่มีสาขาที่แนวโน้มแย่ลงจากเดือนก่อน
+          ✓ ไม่มีสาขาที่แนวโน้มแย่ลงเทียบปีก่อน (YoY)
         </div>
       ) : (
         <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>

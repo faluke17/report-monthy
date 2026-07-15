@@ -20,6 +20,10 @@ function getCurrentFiscalYear(): number {
   return month >= 10 ? gregorianYear + 543 + 1 : gregorianYear + 543
 }
 
+function historyKey(branchName: string, fiscalYear: number, month: number): string {
+  return `${branchName}|${fiscalYear}|${month}`
+}
+
 export default async function ReportNrwPage({ searchParams }: PageProps) {
   const params = await searchParams
   const fiscalYear = parseInt(params.year ?? '') || getCurrentFiscalYear()
@@ -29,8 +33,8 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
   const session  = await getPwaSession()
   const canEdit  = session?.username === NRW_EDITOR_ID
 
-  // Fetch monthly data and annual targets in parallel
-  const [monthlyRes, targetRes] = await Promise.all([
+  // Fetch monthly data, annual targets, และประวัติ 2 ปีงบ (ปีนี้+ปีก่อน) สำหรับเช็คความผิดปกติเทียบเดือนก่อนหน้า
+  const [monthlyRes, targetRes, historyRes] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from('nrw_branch_monthly')
@@ -43,6 +47,11 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
       .from('nrw_branch_target')
       .select('*')
       .eq('fiscal_year', fiscalYear) as Promise<{ data: NrwBranchTarget[] | null; error: unknown }>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('nrw_branch_monthly')
+      .select('branch_name,fiscal_year,month,water_produced,water_sold,water_free,blow_off')
+      .in('fiscal_year', [fiscalYear, fiscalYear - 1]) as Promise<{ data: Pick<NrwBranchMonthly, 'branch_name' | 'fiscal_year' | 'month' | 'water_produced' | 'water_sold' | 'water_free' | 'blow_off'>[] | null; error: unknown }>,
   ])
 
   const allTargets = targetRes.data ?? []
@@ -66,6 +75,17 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
       target_nrw: targetMap.get(r.branch_name) ?? null,
     }
   })
+
+  // ประวัติอัตราสูญเสียรายเดือน (2 ปีงบ) ให้ฝั่ง client เทียบ "เดือนก่อนหน้า" ตอนแก้ไข/วางข้อมูลใหม่ ไม่ว่าจะแก้เดือนไหนก็หาย้อนหลังได้
+  const historyMap: Record<string, { water_loss: number | null; nrw_rate: number | null }> = {}
+  for (const r of historyRes.data ?? []) {
+    const produced = r.water_produced ?? null
+    const waterLoss = produced != null
+      ? Math.max(0, produced - (r.water_sold ?? 0) - (r.water_free ?? 0) - (r.blow_off ?? 0))
+      : null
+    const nrwRate = waterLoss !== null && produced ? (waterLoss / produced) * 100 : null
+    historyMap[historyKey(r.branch_name, r.fiscal_year, r.month)] = { water_loss: waterLoss, nrw_rate: nrwRate }
+  }
 
   const monthName = getThaiMonthName(month)
 
@@ -110,6 +130,7 @@ export default async function ReportNrwPage({ searchParams }: PageProps) {
         targets={Object.fromEntries(targetMap)}
         districtTarget={districtTarget}
         canEdit={canEdit}
+        historyMap={historyMap}
       />
     </div>
   )

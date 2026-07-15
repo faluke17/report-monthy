@@ -41,7 +41,7 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
     return (
       <div className="glass-card p-5 pt-6 relative overflow-hidden accent-bar-purple">
         <p className="text-[10px] font-bold tracking-[.10em] uppercase mb-1" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>
-          การจดมาตร RATS2
+          W.A.T.C.H ผู้ใช้น้ำรายใหญ่
         </p>
         <p className="text-[15px] font-semibold mt-0.5 mb-4" style={{ color: '#12181F' }}>เดือน {label}</p>
         <p className="text-[13px]" style={{ color: '#4B5563' }}>ยังไม่มีข้อมูลจาก RATS สำหรับเดือนนี้</p>
@@ -55,7 +55,7 @@ export function RatsReadingPanel({ yearBe, month }: RatsReadingPanelProps) {
       <div className="flex items-center justify-between mb-5">
         <div>
           <p className="text-[10px] font-bold tracking-[.10em] uppercase mb-0.5" style={{ color: '#4B5563', fontFamily: 'var(--font-mono)' }}>
-            การจดมาตร RATS2
+            W.A.T.C.H ผู้ใช้น้ำรายใหญ่
           </p>
           <p className="text-[15px] font-semibold" style={{ color: '#12181F' }}>เดือน {label}</p>
         </div>

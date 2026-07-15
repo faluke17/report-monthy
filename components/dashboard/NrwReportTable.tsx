@@ -48,6 +48,44 @@ const INPUT = 'w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 tex
 const LABEL = 'block text-xs font-medium text-black/40 uppercase tracking-wide mb-1'
 const CALC_BOX = 'w-full bg-black/3 border border-dashed border-black/10 rounded-lg px-3 py-2 text-sm font-mono text-black/70'
 
+// ─── เช็คความผิดปกติ — เทียบอัตราสูญเสียเดือนที่กำลังกรอก กับเดือนก่อนหน้า (ปีงบเดียวกัน ข้ามปีงบตอน ต.ค.) ───
+
+const FISCAL_MONTH_ORDER = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+const ANOMALY_RATE_DELTA = 10 // จุด — อัตราสูญเสียเปลี่ยนเกินนี้เทียบเดือนก่อนหน้า ถือว่าน่าสงสัย ต้องยืนยันก่อนบันทึก
+
+interface HistoryEntry { water_loss: number | null; nrw_rate: number | null }
+type HistoryMap = Record<string, HistoryEntry>
+
+function historyKey(branchName: string, fiscalYear: number, month: number): string {
+  return `${branchName}|${fiscalYear}|${month}`
+}
+
+function prevFiscalMonth(fiscalYear: number, month: number): { fiscalYear: number; month: number } {
+  const idx = FISCAL_MONTH_ORDER.indexOf(month)
+  if (idx <= 0) return { fiscalYear: fiscalYear - 1, month: FISCAL_MONTH_ORDER[FISCAL_MONTH_ORDER.length - 1] }
+  return { fiscalYear, month: FISCAL_MONTH_ORDER[idx - 1] }
+}
+
+interface AnomalyCheck {
+  anomalous: boolean
+  prevRate: number | null
+  prevMonth: number
+  prevFiscalYear: number
+}
+
+function checkAnomaly(
+  rate: number | null,
+  branchName: string,
+  fiscalYear: number,
+  month: number,
+  historyMap: HistoryMap,
+): AnomalyCheck {
+  const { fiscalYear: prevFY, month: prevM } = prevFiscalMonth(fiscalYear, month)
+  const prevRate = historyMap[historyKey(branchName, prevFY, prevM)]?.nrw_rate ?? null
+  const anomalous = rate != null && prevRate != null && Math.abs(rate - prevRate) > ANOMALY_RATE_DELTA
+  return { anomalous, prevRate, prevMonth: prevM, prevFiscalYear: prevFY }
+}
+
 // ─── Excel paste parser ───────────────────────────────────────────────────────
 
 interface ParsedRow {
@@ -315,9 +353,10 @@ interface Props {
   targets: Record<string, number | null>
   districtTarget?: number | null
   canEdit: boolean
+  historyMap: HistoryMap
 }
 
-export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarget = null, canEdit }: Props) {
+export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarget = null, canEdit, historyMap }: Props) {
   const [sheet, setSheet] = useState<SheetState | null>(null)
   const [pending, startTransition] = useTransition()
   const [sheetMonth, setSheetMonth] = useState(month)
@@ -327,12 +366,14 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
     water_free: '',
     blow_off: '',
   })
+  const [anomalyAck, setAnomalyAck] = useState(false)
   const [targetModalOpen, setTargetModalOpen] = useState(false)
 
   // Paste from Excel state
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [pasteMonth, setPasteMonth] = useState(month)
+  const [pasteAnomalyAck, setPasteAnomalyAck] = useState(false)
   const [parsedRows, setParsedRows] = useState<ParsedRow[] | null>(null)
   const [manualMap, setManualMap] = useState<Record<string, string>>({})
 
@@ -347,6 +388,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
       water_free:     existing?.water_free?.toString() ?? '',
       blow_off:       existing?.blow_off?.toString() ?? '',
     })
+    setAnomalyAck(false)
     setSheet({ branchName, existing })
   }
 
@@ -361,6 +403,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
     const detected = detectMonthFromText(pasteText)
     if (detected) setPasteMonth(detected)
     setManualMap({})
+    setPasteAnomalyAck(false)
     setParsedRows(result)
   }
 
@@ -435,6 +478,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
     setPasteMonth(month)
     setParsedRows(null)
     setManualMap({})
+    setPasteAnomalyAck(false)
   }
 
   const previewLoss = calcWaterLoss({
@@ -445,6 +489,21 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
   })
   const previewTarget = sheet ? (targets[sheet.branchName] ?? null) : null
   const previewRate = calcNrwRate(previewLoss, parseFloat(form.water_produced) || null)
+  const previewAnomaly = sheet
+    ? checkAnomaly(previewRate, sheet.branchName, fiscalYear, sheetMonth, historyMap)
+    : null
+  const blockSubmit = !!previewAnomaly?.anomalous && !anomalyAck
+
+  // นับความผิดปกติของทุกแถวที่ parse ได้ (ใช้ทั้ง preview grid/table และ gate ปุ่มยืนยัน)
+  const pasteAnomalyCount = (parsedRows ?? []).filter((r, i) => {
+    const key = r.month !== undefined ? r.rawBranch : String(i)
+    const branchName = r.matched ? r.branch_name : (manualMap[key] ?? null)
+    if (!branchName) return false
+    const rate = calcNrwRate(calcWaterLoss(r), r.water_produced)
+    const targetMonth = r.month ?? pasteMonth
+    return checkAnomaly(rate, branchName, fiscalYear, targetMonth, historyMap).anomalous
+  }).length
+  const blockPasteConfirm = pasteAnomalyCount > 0 && !pasteAnomalyAck
 
   function handleSubmit() {
     if (!sheet) return
@@ -613,7 +672,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                 <label className={LABEL}>เดือน</label>
                 <select
                   value={sheetMonth}
-                  onChange={(e) => setSheetMonth(parseInt(e.target.value))}
+                  onChange={(e) => { setSheetMonth(parseInt(e.target.value)); setAnomalyAck(false) }}
                   className={INPUT}
                 >
                   {[10,11,12,1,2,3,4,5,6,7,8,9].map((m) => (
@@ -625,28 +684,28 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                 <label className={LABEL}>น้ำผลิตจ่าย (ลบ.ม.)</label>
                 <input type="number" step="0.01" min="0" placeholder="0.00"
                   value={form.water_produced}
-                  onChange={(e) => setForm((f) => ({ ...f, water_produced: e.target.value }))}
+                  onChange={(e) => { setForm((f) => ({ ...f, water_produced: e.target.value })); setAnomalyAck(false) }}
                   className={INPUT} />
               </div>
               <div>
                 <label className={LABEL}>น้ำจำหน่าย (ลบ.ม.)</label>
                 <input type="number" step="0.01" min="0" placeholder="0.00"
                   value={form.water_sold}
-                  onChange={(e) => setForm((f) => ({ ...f, water_sold: e.target.value }))}
+                  onChange={(e) => { setForm((f) => ({ ...f, water_sold: e.target.value })); setAnomalyAck(false) }}
                   className={INPUT} />
               </div>
               <div>
                 <label className={LABEL}>น้ำจ่ายฟรี (ลบ.ม.)</label>
                 <input type="number" step="0.01" min="0" placeholder="0.00"
                   value={form.water_free}
-                  onChange={(e) => setForm((f) => ({ ...f, water_free: e.target.value }))}
+                  onChange={(e) => { setForm((f) => ({ ...f, water_free: e.target.value })); setAnomalyAck(false) }}
                   className={INPUT} />
               </div>
               <div>
                 <label className={LABEL}>Blow off (ลบ.ม.)</label>
                 <input type="number" step="0.01" min="0" placeholder="0.00"
                   value={form.blow_off}
-                  onChange={(e) => setForm((f) => ({ ...f, blow_off: e.target.value }))}
+                  onChange={(e) => { setForm((f) => ({ ...f, blow_off: e.target.value })); setAnomalyAck(false) }}
                   className={INPUT} />
               </div>
               <div className="pt-2 border-t border-black/10 space-y-2">
@@ -667,6 +726,26 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                   </p>
                 )}
               </div>
+
+              {previewAnomaly?.anomalous && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 space-y-2">
+                  <p className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                    <AlertCircle size={13} className="shrink-0" />
+                    ผิดปกติ — เทียบเดือน{getThaiMonthName(previewAnomaly.prevMonth)}
+                  </p>
+                  <p className="text-xs text-black/50">
+                    เดือนก่อน {previewAnomaly.prevRate !== null ? `${fmtNum(previewAnomaly.prevRate, 2)}%` : '—'}
+                    {' → '}เดือนนี้ {previewRate !== null ? `${fmtNum(previewRate, 2)}%` : '—'}
+                    {' '}(Δ {previewRate !== null && previewAnomaly.prevRate !== null
+                      ? fmtNum(Math.abs(previewRate - previewAnomaly.prevRate), 1)
+                      : '—'} จุด) — ตรวจสอบตัวเลขให้แน่ใจก่อนบันทึก
+                  </p>
+                  <label className="flex items-center gap-2 text-xs text-black/60 cursor-pointer">
+                    <input type="checkbox" checked={anomalyAck} onChange={(e) => setAnomalyAck(e.target.checked)} />
+                    ยืนยันว่าตัวเลขถูกต้อง
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="px-5 py-4 border-t border-black/10 flex gap-2">
@@ -680,7 +759,8 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                 className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-black/5 text-black/60 border border-black/10 hover:bg-black/10 disabled:opacity-50">
                 ยกเลิก
               </button>
-              <button onClick={handleSubmit} disabled={pending}
+              <button onClick={handleSubmit} disabled={pending || blockSubmit}
+                title={blockSubmit ? 'กรุณายืนยันความถูกต้องก่อนบันทึก' : undefined}
                 className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30 disabled:opacity-50">
                 <Save size={13} />
                 {pending ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -737,7 +817,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                     <span className="text-xs text-black/40 shrink-0">บันทึกเดือน:</span>
                     <select
                       value={pasteMonth}
-                      onChange={(e) => setPasteMonth(parseInt(e.target.value))}
+                      onChange={(e) => { setPasteMonth(parseInt(e.target.value)); setPasteAnomalyAck(false) }}
                       className="flex-1 bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                     >
                       {[10,11,12,1,2,3,4,5,6,7,8,9].map((m) => (
@@ -772,6 +852,11 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                     )
                     const matchedCount = uniqueBranches.filter(r => r.matched || !!manualMap[r.rawBranch]).length
                     const unknownCount = uniqueBranches.filter(r => !r.matched && !manualMap[r.rawBranch]).length
+
+                    const cellAnomaly = (row: ParsedRow, branchName: string) => {
+                      const rate = calcNrwRate(calcWaterLoss(row), row.water_produced)
+                      return checkAnomaly(rate, branchName, fiscalYear, row.month!, historyMap)
+                    }
 
                     return (
                       <div className="space-y-3">
@@ -815,7 +900,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                           </span>
                                           <select
                                             value={manualMap[r.rawBranch] ?? ''}
-                                            onChange={(e) => setManualMap(prev => ({ ...prev, [r.rawBranch]: e.target.value }))}
+                                            onChange={(e) => { setManualMap(prev => ({ ...prev, [r.rawBranch]: e.target.value })); setPasteAnomalyAck(false) }}
                                             className="w-full bg-black/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                                           >
                                             <option value="">— ระบุสาขา —</option>
@@ -824,19 +909,40 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                         </div>
                                       )}
                                     </td>
-                                    {months.map(m => (
-                                      <td key={m} className="px-2 py-1.5 text-center">
-                                        {isOk
-                                          ? <span className="text-green-400">✓</span>
-                                          : <span className="text-black/20">—</span>}
-                                      </td>
-                                    ))}
+                                    {months.map(m => {
+                                      if (!isOk) return <td key={m} className="px-2 py-1.5 text-center"><span className="text-black/20">—</span></td>
+                                      const branchName = manualMap[r.rawBranch] ?? r.branch_name
+                                      const cellRow = parsedRows.find(pr => pr.rawBranch === r.rawBranch && pr.month === m)
+                                      const anomaly = cellRow ? cellAnomaly(cellRow, branchName) : null
+                                      return (
+                                        <td key={m} className="px-2 py-1.5 text-center">
+                                          {anomaly?.anomalous ? (
+                                            <span className="text-red-400" title={`เดือนก่อน ${anomaly.prevRate !== null ? fmtNum(anomaly.prevRate, 1) : '—'}%`}>⚠</span>
+                                          ) : (
+                                            <span className="text-green-400">✓</span>
+                                          )}
+                                        </td>
+                                      )
+                                    })}
                                   </tr>
                                 )
                               })}
                             </tbody>
                           </table>
                         </div>
+
+                        {pasteAnomalyCount > 0 && (
+                          <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 space-y-2">
+                            <p className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                              <AlertCircle size={13} className="shrink-0" />
+                              พบ {pasteAnomalyCount} รายการ (สาขา×เดือน) ที่อัตราสูญเสียเปลี่ยนผิดปกติเทียบเดือนก่อนหน้า — ดูสัญลักษณ์ ⚠ ในตาราง
+                            </p>
+                            <label className="flex items-center gap-2 text-xs text-black/60 cursor-pointer">
+                              <input type="checkbox" checked={pasteAnomalyAck} onChange={(e) => setPasteAnomalyAck(e.target.checked)} />
+                              ยืนยันว่าตัวเลขถูกต้อง
+                            </label>
+                          </div>
+                        )}
                       </div>
                     )
                   }
@@ -866,6 +972,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                               <th className="text-right px-3 py-2">จำหน่าย</th>
                               <th className="text-right px-3 py-2">จ่ายฟรี</th>
                               <th className="text-right px-3 py-2">Blow off</th>
+                              <th className="text-right px-3 py-2">อัตราสูญเสีย</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -873,6 +980,9 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                               const key    = String(i)
                               const isManual = !!manualMap[key]
                               const isOk   = r.matched || isManual
+                              const branchName = isManual ? manualMap[key] : r.branch_name
+                              const rate = calcNrwRate(calcWaterLoss(r), r.water_produced)
+                              const anomaly = isOk ? checkAnomaly(rate, branchName, fiscalYear, pasteMonth, historyMap) : null
                               return (
                                 <tr key={i} className="border-b border-black/5">
                                   <td className="px-3 py-1.5 min-w-40">
@@ -889,7 +999,7 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                         </span>
                                         <select
                                           value={manualMap[key] ?? ''}
-                                          onChange={(e) => setManualMap(prev => ({ ...prev, [key]: e.target.value }))}
+                                          onChange={(e) => { setManualMap(prev => ({ ...prev, [key]: e.target.value })); setPasteAnomalyAck(false) }}
                                           className="w-full bg-black/5 border border-amber-500/30 rounded px-1.5 py-1 text-xs text-[#12181F] focus:outline-none focus:border-cyan-500/50"
                                         >
                                           <option value="">— ระบุสาขา —</option>
@@ -902,12 +1012,35 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                                   <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.water_sold)}</td>
                                   <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.water_free)}</td>
                                   <td className="px-3 py-1.5 text-right font-mono text-black/70">{fmtNum(r.blow_off)}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono">
+                                    {anomaly?.anomalous ? (
+                                      <span className="flex items-center justify-end gap-1 text-red-400" title={`เดือนก่อน ${anomaly.prevRate !== null ? fmtNum(anomaly.prevRate, 1) : '—'}% → ${rate !== null ? fmtNum(rate, 1) : '—'}%`}>
+                                        <AlertCircle size={11} className="shrink-0" />
+                                        {rate !== null ? `${fmtNum(rate, 1)}%` : '—'}
+                                      </span>
+                                    ) : (
+                                      <span className="text-black/50">{rate !== null ? `${fmtNum(rate, 1)}%` : '—'}</span>
+                                    )}
+                                  </td>
                                 </tr>
                               )
                             })}
                           </tbody>
                         </table>
                       </div>
+
+                      {pasteAnomalyCount > 0 && (
+                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 space-y-2">
+                          <p className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                            <AlertCircle size={13} className="shrink-0" />
+                            พบ {pasteAnomalyCount} สาขาที่อัตราสูญเสียเปลี่ยนผิดปกติเทียบเดือนก่อนหน้า
+                          </p>
+                          <label className="flex items-center gap-2 text-xs text-black/60 cursor-pointer">
+                            <input type="checkbox" checked={pasteAnomalyAck} onChange={(e) => setPasteAnomalyAck(e.target.checked)} />
+                            ยืนยันว่าตัวเลขถูกต้อง
+                          </label>
+                        </div>
+                      )}
                     </div>
                   )
                 })()}
@@ -933,12 +1066,13 @@ export function NrwReportTable({ rows, fiscalYear, month, targets, districtTarge
                       ? Array.from(new Map(parsedRows.map(r => [r.rawBranch, r])).values())
                           .filter(r => r.matched || !!manualMap[r.rawBranch]).length
                       : parsedRows.filter(r => r.matched).length + Object.keys(manualMap).length
-                    const disabled = pending || matchedBranches === 0
+                    const disabled = pending || matchedBranches === 0 || blockPasteConfirm
                     const label = pending ? 'กำลังบันทึก...'
                       : isMulti ? `บันทึก ${matchedBranches} สาขา × ${months} เดือน`
                       : `บันทึก ${matchedBranches} สาขา`
                     return (
                       <button onClick={handlePasteConfirm} disabled={disabled}
+                        title={blockPasteConfirm ? 'กรุณายืนยันความถูกต้องของตัวเลขที่ผิดปกติก่อนบันทึก' : undefined}
                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:bg-cyan-500/30 disabled:opacity-50">
                         <Save size={13} />
                         {label}
