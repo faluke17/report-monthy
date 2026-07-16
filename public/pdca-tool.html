@@ -353,6 +353,8 @@
   table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
   .area-list { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+  .print-area-table { display: none; }
+  .print-meter-table { display: none; }
   .area-dash-card { display: flex; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; box-shadow: var(--shadow); }
   .stripe { width: 5px; flex: none; }
   .stripe.crit { background: var(--critical); }
@@ -423,14 +425,62 @@
   .copy-status { font-size: 12px; color: var(--good); margin-right: auto; align-self: center; display: none; }
   .copy-status.show { display: inline; }
 
-  @media print {
-    .topbar, .cta-row, .row-btn, #importInput, .modal-overlay { display: none !important; }
-    body { background: #fff; }
-    .card, .area-dash-card { box-shadow: none !important; border-color: #ccc !important; }
-    .view { display: none !important; padding-top: 0; }
-    .view.print-active { display: block !important; }
-    .charts-pair { grid-template-columns: 1fr !important; }
-  }
+  @page { size: A4 landscape; margin: 8mm; }
+
+  /* Applied by JS (body.print-active) right before window.print(), not
+     gated behind @media print — that lets us measure the *actual* compact
+     print layout with plain scrollHeight while still on screen (@media
+     print rules never apply outside real print rendering, so a
+     screen-time measurement against them would be reading the wrong,
+     un-compacted layout) and compute an accurate shrink-to-fit zoom level
+     before the print dialog opens. */
+  body.print-active { background: #fff; font-size: 10px; }
+  body.print-active .topbar,
+  body.print-active .cta-row,
+  body.print-active .row-btn,
+  body.print-active #importInput,
+  body.print-active .modal-overlay,
+  body.print-active details.table-toggle,
+  body.print-active .footnote { display: none !important; }
+  body.print-active .shell { max-width: none; padding: 0; }
+  body.print-active .card,
+  body.print-active .area-dash-card { box-shadow: none !important; border-color: #ccc !important; }
+  body.print-active .card-pad { padding: 10px 14px; }
+  body.print-active .view { display: none !important; padding-top: 0; }
+  body.print-active #viewDashboard { display: block !important; padding-top: 0; }
+  body.print-active .dash-head { margin-bottom: 6px; }
+  /* Force the wide desktop arrangement regardless of the max-width media
+     queries defined near .kpi-grid/.charts-pair above — the print
+     rendering's internal layout viewport does not appear to match the
+     physical @page width, and was silently triggering those mobile
+     breakpoints (stacked charts, 2-column KPIs), which is what was
+     actually inflating the printed content's height far beyond what
+     on-screen measurement showed. */
+  body.print-active .kpi-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 6px; margin-bottom: 6px; }
+  body.print-active .kpi-tile { padding: 8px 10px; }
+  body.print-active .kpi-tile .val { font-size: 16px; }
+  body.print-active .charts-pair { grid-template-columns: 1fr 1fr !important; gap: 8px; margin-top: 6px; }
+  body.print-active .chart-card { padding: 8px 10px 2px; margin-top: 6px; }
+  /* Per-area cards (charts, Do/Act lists, obstacle box each on their own
+     lines) are the tallest thing on the dashboard — swap them for the dense
+     one-row-per-area table below so a report with several areas still fits
+     one page at a legible font size, instead of relying on an aggressive
+     shrink. */
+  body.print-active .area-list { display: none !important; }
+  body.print-active .print-area-table { display: block !important; margin-top: 6px; }
+  body.print-active .print-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+  body.print-active .print-table th,
+  body.print-active .print-table td { border: none; border-bottom: 1px solid #e2e2e2; padding: 5px 8px; text-align: left; vertical-align: top; }
+  body.print-active .print-table thead th { background: #f4f4f4; font-size: 8.5px; text-transform: uppercase; letter-spacing: .02em; border-bottom: 1px solid #ccc; }
+  body.print-active .print-table td.num { white-space: nowrap; }
+  body.print-active .print-table tbody tr:nth-child(even) { background: #fafafa; }
+  body.print-active .print-table tbody tr:last-child td { border-bottom: none; }
+  body.print-active .print-table-2col td:nth-child(1),
+  body.print-active .print-table-2col td:nth-child(3) { width: 15%; font-weight: 700; color: var(--ink-2); }
+  body.print-active .print-table-2col td:nth-child(2),
+  body.print-active .print-table-2col td:nth-child(4) { width: 35%; }
+  body.print-active .meter-topics-grid { display: none !important; }
+  body.print-active .print-meter-table { display: block !important; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -635,6 +685,7 @@
       <div class="segmented" id="exportFormatToggle">
         <button type="button" class="active" data-fmt="csv">CSV (Excel)</button>
         <button type="button" data-fmt="json">JSON (นำเข้าใหม่ได้)</button>
+        <button type="button" data-fmt="pdf">PDF (พิมพ์แนวนอน)</button>
       </div>
     </div>
     <p class="modal-sub" id="exportFilename" style="margin-top:8px">pdca_data.csv</p>
@@ -1358,6 +1409,13 @@
 
   Array.prototype.forEach.call(exportFormatToggle.children, function (btn) {
     btn.addEventListener("click", function () {
+      if (btn.dataset.fmt === "pdf") {
+        // PDF isn't text to render into the box — hand off straight to the
+        // print flow (browser's own print-to-PDF) and get out of the way.
+        exportModal.classList.remove("show");
+        printOnePagePdf();
+        return;
+      }
       exportFormat = btn.dataset.fmt;
       renderExportFormat();
       exportText.focus();
@@ -1435,17 +1493,71 @@
     e.target.value = "";
   });
 
-  document.getElementById("printBtn").addEventListener("click", function () {
+  // Shared by the toolbar "พิมพ์" button and the "PDF" option inside the
+  // ส่งออก modal — there's no PDF-writing library in this single-file tool,
+  // so "export to PDF" means: lay out a one-page landscape print view, then
+  // hand off to the browser's own print-to-PDF (Ctrl+P / print dialog "Save
+  // as PDF"), which needs no dependency and works fully offline.
+  function printOnePagePdf() {
     // window.print() must stay inside the click handler's own call stack —
     // deferring it (setTimeout etc.) can silently drop the user-activation
     // some embedded/sandboxed viewers require to allow the print dialog.
     if (!document.getElementById("viewDashboard").classList.contains("active")) {
       showView("dashboard");
     }
-    document.getElementById("viewDashboard").classList.add("print-active");
+    var dv = document.getElementById("viewDashboard");
+    dv.style.zoom = "";
+    document.body.classList.add("print-active"); // applies the compact print CSS immediately (see stylesheet comment)
+
+    // Shrink-to-fit: report length varies a lot (a few areas vs. many, with
+    // or without obstacles), so a fixed print stylesheet can't guarantee one
+    // page. Measure the now-compacted dashboard against one A4-landscape
+    // page and shrink just enough to fit.
+    //
+    // This uses the `zoom` CSS property, not `transform: scale()` — a
+    // transform is a paint-time-only effect, so Chrome's print pagination
+    // (which runs against the *unscaled* layout) doesn't see it: content
+    // taller than one page still gets split across several pages, each of
+    // which then renders tiny and mostly blank once the transform shrinks
+    // it. `zoom` instead changes the box's actual layout size, so
+    // pagination is computed on the already-shrunk height.
+    // (Widening the box before zooming back down — to fill the full page
+    // width instead of leaving a blank margin — was tried and reverted:
+    // `zoom` correctly shrinks an element's contribution to page-height
+    // pagination, but Chrome's print renderer does not shrink it the same
+    // way against the fixed page *width*, so a widened+zoomed box actually
+    // overflows and gets clipped at the right edge of the page. The real
+    // fix for wasted horizontal space is a denser layout that already fills
+    // the page at zoom 1 — see buildPrintAreaTable / buildPrintMeterTable —
+    // so this is now a plain last-resort shrink, ideally a no-op.)
+    // The theoretical "A4 height minus 8mm margins, at 96dpi" math
+    // (~733px) doesn't quite hold up in practice — measured headlessly
+    // (Chromium print-to-PDF) against real output, the actual usable
+    // content height before a second page gets forced is closer to
+    // ~690px. Root cause not fully pinned down (likely some combination
+    // of the print engine not honoring @page's margin descriptor and/or
+    // an internal DPI assumption that doesn't match 96/in) — and a real
+    // user's own print-dialog margin choice is something this code can
+    // never see or control anyway. So this constant is empirically
+    // calibrated with a safety margin below that measured threshold,
+    // rather than derived from the page's mm dimensions.
+    var PAGE_H_PX = 650;
+    var naturalHeight = dv.scrollHeight;
+    if (naturalHeight > PAGE_H_PX) {
+      dv.style.zoom = String(PAGE_H_PX / naturalHeight);
+    }
+
+    function resetPrintScale() {
+      document.body.classList.remove("print-active");
+      dv.style.zoom = "";
+      window.removeEventListener("afterprint", resetPrintScale);
+    }
+    window.addEventListener("afterprint", resetPrintScale);
     window.print();
-    document.getElementById("viewDashboard").classList.remove("print-active");
-  });
+    setTimeout(resetPrintScale, 5000); // afterprint doesn't fire reliably in every browser
+  }
+
+  document.getElementById("printBtn").addEventListener("click", printOnePagePdf);
 
   // Sample data — lets anyone preview the dashboard without typing anything.
   // Not real branch data; overwrites the current form (with confirmation).
@@ -1876,7 +1988,83 @@
       card.appendChild(grid);
     }
 
+    card.appendChild(buildPrintMeterTable(topics));
     return card;
+  }
+
+  // Print-only alternative to meter-topics-grid: that grid is by far the
+  // tallest single block on the printed dashboard (a card per topic, several
+  // rows each) — one dense table row per topic keeps all the same figures
+  // in a fraction of the height. Hidden on screen; shown only via
+  // body.print-active.
+  function buildPrintMeterTable(topics) {
+    var wrap = el("div", "print-meter-table");
+    function cellText(t) {
+      return t.items
+        .filter(function (it) { return it[1]; })
+        .map(function (it) {
+          var val = typeof it[1] === "number" ? fmt(it[1], 0) : escapeHtml(it[1]);
+          return escapeHtml(it[0]) + " " + val + (it[2] ? " " + it[2] : "");
+        }).join(" · ");
+    }
+    // Titles like "3 · ตรวจมาตรแนวโน้มชำรุด (Dmama/WATCH)" wrap to 2 lines in
+    // a narrow print-table column, giving every other row a different
+    // height and a ragged look — the parenthetical/slash detail is already
+    // implied by the topic number, so drop it just for this compact table.
+    function shortTitle(t) {
+      return t.split(/[/(]/)[0].trim();
+    }
+    // Two topics per row (a plain title+value cell per topic leaves most of
+    // the landscape width empty, since most topics' figures are short) —
+    // pairing them roughly halves the table's height for the same content.
+    var rows = "";
+    for (var i = 0; i < topics.length; i += 2) {
+      var a = topics[i], b = topics[i + 1];
+      rows += "<tr><td>" + escapeHtml(shortTitle(a.title)) + "</td><td>" + cellText(a) + "</td>" +
+        (b ? "<td>" + escapeHtml(shortTitle(b.title)) + "</td><td>" + cellText(b) + "</td>" : "<td></td><td></td>") +
+        "</tr>";
+    }
+    wrap.innerHTML = '<table class="print-table print-table-2col"><tbody>' + rows + "</tbody></table>";
+    return wrap;
+  }
+
+  // Print-only alternative to the per-area cards: one dense table row per
+  // area instead of a full card (charts, Do/Act lists, obstacle box each on
+  // their own lines) — the card layout reads great on screen but is far too
+  // tall to fit several areas on one printed landscape page at a legible
+  // font size. Same field selection as the CSV export (buildCsv), just as
+  // an HTML table. Hidden on screen; shown only via body.print-active.
+  function buildPrintAreaTable(data) {
+    var wrap = el("div", "card card-pad print-area-table");
+    var rows = data.areas.map(function (a) {
+      var pB = metricValue(a, "before", "nrw");
+      var pA = metricValue(a, "after", "nrw");
+      var mB = a.before.mnf, mA = a.after.mnf;
+      var pending = Math.max(0, a.leaksFound - a.leaksRepaired);
+      var ob = a.hasObstacle && a.obstacle ? a.obstacle : null;
+      var obLabel = ob
+        ? (ob.priority === "สูง" ? "🔴 " : "🟡 ") + escapeHtml(ob.type === "อื่น" && ob.other ? ob.other : (ob.type || "ไม่ระบุ"))
+        : "—";
+      var doText = a.pdcaDo.map(function (i) { return i.title; }).filter(Boolean).join(" / ") || "—";
+      var actText = a.pdcaAct.map(function (i) { return i.title; }).filter(Boolean).join(" / ") || "—";
+      return "<tr>" +
+        "<td>" + escapeHtml(a.name) + "</td>" +
+        "<td class=\"num\">" + (pB !== null ? fmt(pB, 1) + "%" : "—") + " → " + (pA !== null ? fmt(pA, 1) + "%" : "—") + "</td>" +
+        "<td class=\"num\">" + (mB != null ? fmt(mB, 2) : "—") + " → " + (mA != null ? fmt(mA, 2) : "—") + "</td>" +
+        "<td class=\"num\">" + fmt(a.after.dist - a.after.sold, 0) + "</td>" +
+        "<td class=\"num\">" + a.leaksFound + " / " + a.leaksRepaired + " / " + pending + "</td>" +
+        "<td>" + obLabel + "</td>" +
+        "<td>" + escapeHtml(doText) + "</td>" +
+        "<td>" + escapeHtml(actText) + "</td>" +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML =
+      '<p class="eyebrow" style="margin:0 0 10px">สรุปรายพื้นที่</p>' +
+      '<table class="print-table"><thead><tr>' +
+      "<th>พื้นที่</th><th>NRW ก่อน→หลัง</th><th>MNF ก่อน→หลัง</th><th>น้ำสูญเสีย (ลบ.ม.)</th>" +
+      "<th>พบ/ซ่อม/ค้าง</th><th>อุปสรรค</th><th>Do</th><th>Act</th>" +
+      "</tr></thead><tbody>" + rows + "</tbody></table>";
+    return wrap;
   }
 
   function renderDashboard(data) {
@@ -2071,6 +2259,7 @@
       list.appendChild(card);
     });
     root.appendChild(list);
+    root.appendChild(buildPrintAreaTable(data));
   }
 
   // ---------------------------------------------------------------------

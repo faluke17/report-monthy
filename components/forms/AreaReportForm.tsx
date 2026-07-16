@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Upload, LayoutDashboard } from 'lucide-react'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import { Branch, WaterNodeOption } from '@/lib/types'
 import { submitAreaReports } from '@/app/actions/area-reports'
 import type { AreaReportInput } from '@/app/actions/area-reports'
 import { getNodeNrwStats, getNodeMnfStats } from '@/app/actions/water-nodes'
 import { WaterNodeSelect } from '@/components/forms/WaterNodeSelect'
+import { parsePdcaImportJson, PdcaImportArea, PdcaImportData } from '@/lib/utils/pdca-import'
+
+const PDCA_IMPORT_HANDOFF_KEY = 'pdca_import_handoff'
 
 const OBSTACLE_TYPES = [
   'MM/DMA Zero Test ไม่ผ่าน',
@@ -114,6 +118,49 @@ function newArea(index: number): AreaSet {
   }
 }
 
+function mapImportedArea(a: PdcaImportArea, index: number): AreaSet {
+  return {
+    key: `import_${Date.now()}_${index}`,
+    expanded: index === 0,
+    area_name: a.name === '(ไม่ระบุชื่อพื้นที่)' ? '' : (a.name || ''),
+    area_code: '',
+    node_id: '',
+    logger_id: null,
+    nrw_data_month: null,
+    nrw_after_data_month: null,
+    manual_input: true,
+    manual_input_after: true,
+    water_dist_before: a.before?.dist ? String(a.before.dist) : '',
+    water_sold_before: a.before?.sold ? String(a.before.sold) : '',
+    mnf_before: a.before?.mnf != null ? String(a.before.mnf) : '',
+    step_tests: a.stepTests && a.stepTests.length
+      ? a.stepTests.map((s, i) => ({
+          step_no: s.step ?? i + 1,
+          estimated_loss: s.estLoss != null ? String(s.estLoss) : '',
+          leaks_found: String(s.found ?? 0),
+          leaks_repaired: String(s.repaired ?? 0),
+        }))
+      : [{ step_no: 1, estimated_loss: '', leaks_found: '0', leaks_repaired: '0' }],
+    water_dist_after: a.after?.dist ? String(a.after.dist) : '',
+    water_sold_after: a.after?.sold ? String(a.after.sold) : '',
+    mnf_after: a.after?.mnf != null ? String(a.after.mnf) : '',
+    pdca_do_items: a.pdcaDo && a.pdcaDo.length ? a.pdcaDo : [{ title: '', detail: '' }],
+    pdca_act_items: a.pdcaAct && a.pdcaAct.length ? a.pdcaAct : [{ title: '', detail: '' }],
+    has_obstacle: !!a.hasObstacle,
+    obstacles: a.hasObstacle && a.obstacle
+      ? [{
+          obstacle_type: a.obstacle.type || '',
+          other_description: a.obstacle.other || '',
+          obstacle_detail: a.obstacle.detail || '',
+          resolution_plan: a.obstacle.plan || '',
+          impact: '',
+          region_support_needed: '',
+          priority: a.obstacle.priority === 'สูง' ? 'สูง' : 'กลาง',
+        }]
+      : [{ obstacle_type: '', other_description: '', obstacle_detail: '', resolution_plan: '', impact: '', region_support_needed: '', priority: 'กลาง' as const }],
+  }
+}
+
 function calcNrw(dist: string, sold: string) {
   const d = parseFloat(dist)
   const s = parseFloat(sold)
@@ -168,6 +215,7 @@ export function AreaReportForm({
   const [nrwStats, setNrwStats] = useState(nrwStatsByNodeId)
   const [mnfStats, setMnfStats] = useState<Record<string, MnfLookup[]>>(mnfStatsByLoggerIdProp)
   const isFirstRender = useRef(true)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return }
@@ -191,6 +239,26 @@ export function AreaReportForm({
       setMnfStats(mnfMap)
     })
   }, [reportYear, reportMonth])
+
+  // Pick up a JSON file handed off from the /pdca/import preview page (user
+  // uploaded there first, then clicked through to fill in this form).
+  useEffect(() => {
+    let raw: string | null = null
+    try {
+      raw = sessionStorage.getItem(PDCA_IMPORT_HANDOFF_KEY)
+      sessionStorage.removeItem(PDCA_IMPORT_HANDOFF_KEY)
+    } catch {
+      return
+    }
+    if (!raw) return
+    const result = parsePdcaImportJson(raw)
+    if (!result.ok) {
+      toast.error(result.error)
+      return
+    }
+    applyImportedData(result.data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function patchArea(key: string, patch: Partial<AreaSet>) {
     setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...patch } : a)))
@@ -376,6 +444,54 @@ export function AreaReportForm({
     )
   }
 
+  function handleImportClick() {
+    importInputRef.current?.click()
+  }
+
+  function applyImportedData(data: PdcaImportData) {
+    const hasExistingData = areas.some(
+      (a) => a.area_name.trim() || a.water_dist_before || a.water_sold_before || a.water_dist_after || a.water_sold_after
+    )
+    if (hasExistingData && !window.confirm('การนำเข้าไฟล์จะแทนที่ข้อมูลที่กรอกอยู่ในฟอร์มนี้ ดำเนินการต่อหรือไม่?')) {
+      return
+    }
+
+    if (data.meta) {
+      if (data.meta.month) setReportMonth(data.meta.month)
+      if (data.meta.year) setReportYear(data.meta.year > 2100 ? data.meta.year - 543 : data.meta.year)
+      if (isAdmin && data.meta.branch) {
+        const branchName = data.meta.branch.trim()
+        const matched = branches.find((b) => b.name_th.trim() === branchName)
+        if (matched) setBranchId(matched.id)
+        else toast.error(`ไม่พบสาขา "${branchName}" ในระบบ กรุณาเลือกสาขาด้วยตนเอง`)
+      }
+    }
+
+    setAreas(data.areas.map(mapImportedArea))
+
+    if (data.meter && Object.keys(data.meter).some((k) => k !== 'total' && data.meter![k])) {
+      toast('ข้อมูลมาตรวัดน้ำในไฟล์นี้ยังไม่รองรับการนำเข้า กรุณาบันทึกด้วยตนเองในโมดูลอื่น')
+    }
+
+    toast.success(`นำเข้า ${data.areas.length} พื้นที่ — กรุณาตรวจสอบข้อมูลก่อนบันทึก`)
+  }
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = parsePdcaImportJson(reader.result as string)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      applyImportedData(result.data)
+    }
+    reader.readAsText(file)
+  }
+
   async function handleSubmit() {
     if (!branchId) { toast.error('กรุณาเลือกสาขา'); return }
     const missing = areas.find((a) => !a.area_name.trim())
@@ -446,9 +562,37 @@ export function AreaReportForm({
         <div className="h-0.5 bg-gradient-to-r from-cyan-500 via-blue-500/60 to-transparent" />
 
         <div className="p-6 space-y-5">
-          <p className="text-[11px] font-bold text-cyan-400/70 uppercase tracking-widest">
-            ข้อมูลทั่วไป
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold text-cyan-400/70 uppercase tracking-widest">
+              ข้อมูลทั่วไป
+            </p>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+            <div className="flex items-center gap-2">
+              <Link
+                href="/pdca/import"
+                title="ดูสรุปข้อมูลไฟล์ .json เป็นแดชบอร์ดก่อน แล้วค่อยนำเข้ามาที่ฟอร์มนี้"
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-black/40 hover:text-[#12181F] border border-black/15 hover:border-black/30 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                <LayoutDashboard size={12} />
+                ดูตัวอย่างแบบแดชบอร์ดก่อน
+              </Link>
+              <button
+                type="button"
+                onClick={handleImportClick}
+                title="นำเข้าไฟล์ .json ที่ส่งออกจากเครื่องมือ PDCA แบบออฟไลน์"
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan-500 hover:text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                <Upload size={12} />
+                นำเข้าไฟล์ (.json)
+              </button>
+            </div>
+          </div>
 
           {isAdmin && (
             <div>

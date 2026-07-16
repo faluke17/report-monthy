@@ -60,8 +60,8 @@ function thaiDateTime(d: Date) {
 
 function trendInfo(delta: number | null): { label: string; color: string } {
   if (delta == null) return { label: 'ไม่มีข้อมูลเทียบ', color: INK3 }
-  if (delta > 0.05) return { label: `▲ แย่ลง ${delta.toFixed(1)} จุด`, color: '#B3392C' }
-  if (delta < -0.05) return { label: `▼ ดีขึ้น ${Math.abs(delta).toFixed(1)} จุด`, color: '#1E7A5A' }
+  if (delta > 0.05) return { label: `▲ แย่ลง ${delta.toFixed(1)}%`, color: '#B3392C' }
+  if (delta < -0.05) return { label: `▼ ดีขึ้น ${Math.abs(delta).toFixed(1)}%`, color: '#1E7A5A' }
   return { label: '▬ คงที่', color: INK3 }
 }
 
