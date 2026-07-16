@@ -11,7 +11,8 @@ import { submitAreaReports } from '@/app/actions/area-reports'
 import type { AreaReportInput } from '@/app/actions/area-reports'
 import { getNodeNrwStats, getNodeMnfStats } from '@/app/actions/water-nodes'
 import { WaterNodeSelect } from '@/components/forms/WaterNodeSelect'
-import { parsePdcaImportJson, PdcaImportArea, PdcaImportData } from '@/lib/utils/pdca-import'
+import { parsePdcaImportJson, matchBranch, PdcaImportArea, PdcaImportData } from '@/lib/utils/pdca-import'
+import { upsertMeterReport, getMeterReport } from '@/app/actions/area-meter'
 
 const PDCA_IMPORT_HANDOFF_KEY = 'pdca_import_handoff'
 
@@ -181,6 +182,75 @@ const CALC_BOX = 'w-full bg-black/3 border border-dashed border-black/10 rounded
 
 type MnfLookup = { report_year: number; report_month: number; avg_mnf: number }
 
+// Report-level (not per-area) meter/mass-checking activity — mirrors the
+// "มาตรวัดน้ำ (ทางเลือก)" section of public/pdca-tool.html. Inputs stay as
+// strings (same controlled-input pattern as the rest of this form); parsed
+// to numbers only on submit.
+interface MeterState {
+  changed_count: string
+  recovered_water: string
+  recovered_value: string
+  meter_size: string
+  cumulative_fy: string
+  zero_checked: string
+  zero_under12: string
+  zero_over12: string
+  zero_dead: string
+  trend_checked: string
+  trend_normal: string
+  trend_broken: string
+  trend_reason: string
+  highlow_reported: string
+  highlow_abnormal: string
+  sample_checked: string
+  sample_abnormal: string
+  sample_normal: string
+  bigmeter_read: string
+  watch_followup: string
+  project_target: string
+  project_done: string
+  project_status: string
+  temp_desc: string
+  temp_volume: string
+  temp_value: string
+}
+
+const EMPTY_METER: MeterState = {
+  changed_count: '', recovered_water: '', recovered_value: '', meter_size: '', cumulative_fy: '',
+  zero_checked: '', zero_under12: '', zero_over12: '', zero_dead: '',
+  trend_checked: '', trend_normal: '', trend_broken: '', trend_reason: '',
+  highlow_reported: '', highlow_abnormal: '',
+  sample_checked: '', sample_abnormal: '', sample_normal: '',
+  bigmeter_read: '', watch_followup: '',
+  project_target: '', project_done: '', project_status: '',
+  temp_desc: '', temp_volume: '', temp_value: '',
+}
+
+function meterHasData(m: MeterState): boolean {
+  return Object.values(m).some((v) => v.trim() !== '')
+}
+
+function MeterField({ label, value, onChange, placeholder, type = 'number' }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  type?: 'number' | 'text'
+}) {
+  return (
+    <div>
+      <label className={LABEL}>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder ?? (type === 'number' ? '0' : '')}
+        className={INPUT}
+      />
+    </div>
+  )
+}
+
 interface Props {
   branches: Branch[]
   userBranchId?: string
@@ -214,8 +284,39 @@ export function AreaReportForm({
   const [submitting, setSubmitting] = useState(false)
   const [nrwStats, setNrwStats] = useState(nrwStatsByNodeId)
   const [mnfStats, setMnfStats] = useState<Record<string, MnfLookup[]>>(mnfStatsByLoggerIdProp)
+  const [meterOn, setMeterOn] = useState(false)
+  const [meter, setMeter] = useState<MeterState>(EMPTY_METER)
   const isFirstRender = useRef(true)
   const importInputRef = useRef<HTMLInputElement>(null)
+
+  function patchMeter(patch: Partial<MeterState>) {
+    setMeter((prev) => ({ ...prev, ...patch }))
+  }
+
+  // Load an existing meter report for this branch/period so re-opening the
+  // form to edit doesn't wipe out what was saved before.
+  useEffect(() => {
+    if (!branchId) return
+    let cancelled = false
+    getMeterReport(branchId, reportYear, reportMonth).then((row) => {
+      if (cancelled) return
+      if (!row) { setMeterOn(false); setMeter(EMPTY_METER); return }
+      const toStr = (v: number | string | null | undefined) => (v === null || v === undefined || v === '' ? '' : String(v))
+      setMeter({
+        changed_count: toStr(row.changed_count), recovered_water: toStr(row.recovered_water),
+        recovered_value: toStr(row.recovered_value), meter_size: toStr(row.meter_size), cumulative_fy: toStr(row.cumulative_fy),
+        zero_checked: toStr(row.zero_checked), zero_under12: toStr(row.zero_under12), zero_over12: toStr(row.zero_over12), zero_dead: toStr(row.zero_dead),
+        trend_checked: toStr(row.trend_checked), trend_normal: toStr(row.trend_normal), trend_broken: toStr(row.trend_broken), trend_reason: toStr(row.trend_reason),
+        highlow_reported: toStr(row.highlow_reported), highlow_abnormal: toStr(row.highlow_abnormal),
+        sample_checked: toStr(row.sample_checked), sample_abnormal: toStr(row.sample_abnormal), sample_normal: toStr(row.sample_normal),
+        bigmeter_read: toStr(row.bigmeter_read), watch_followup: toStr(row.watch_followup),
+        project_target: toStr(row.project_target), project_done: toStr(row.project_done), project_status: toStr(row.project_status),
+        temp_desc: toStr(row.temp_desc), temp_volume: toStr(row.temp_volume), temp_value: toStr(row.temp_value),
+      })
+      setMeterOn(true)
+    })
+    return () => { cancelled = true }
+  }, [branchId, reportYear, reportMonth])
 
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return }
@@ -460,17 +561,32 @@ export function AreaReportForm({
       if (data.meta.month) setReportMonth(data.meta.month)
       if (data.meta.year) setReportYear(data.meta.year > 2100 ? data.meta.year - 543 : data.meta.year)
       if (isAdmin && data.meta.branch) {
-        const branchName = data.meta.branch.trim()
-        const matched = branches.find((b) => b.name_th.trim() === branchName)
+        const matched = matchBranch(branches, data.meta.branch)
         if (matched) setBranchId(matched.id)
-        else toast.error(`ไม่พบสาขา "${branchName}" ในระบบ กรุณาเลือกสาขาด้วยตนเอง`)
+        else toast.error(`ไม่พบสาขา "${data.meta.branch.trim()}" ในระบบ กรุณาเลือกสาขาด้วยตนเอง`)
       }
     }
 
     setAreas(data.areas.map(mapImportedArea))
 
-    if (data.meter && Object.keys(data.meter).some((k) => k !== 'total' && data.meter![k])) {
-      toast('ข้อมูลมาตรวัดน้ำในไฟล์นี้ยังไม่รองรับการนำเข้า กรุณาบันทึกด้วยตนเองในโมดูลอื่น')
+    if (data.meter) {
+      const m = data.meter
+      const toStr = (v: string | number | undefined | null) => (v === undefined || v === null || v === '' ? '' : String(v))
+      const imported: MeterState = {
+        changed_count: toStr(m.changed_count), recovered_water: toStr(m.recovered_water),
+        recovered_value: toStr(m.recovered_value), meter_size: toStr(m.meter_size), cumulative_fy: toStr(m.cumulative_fy),
+        zero_checked: toStr(m.zero_checked), zero_under12: toStr(m.zero_under12), zero_over12: toStr(m.zero_over12), zero_dead: toStr(m.zero_dead),
+        trend_checked: toStr(m.trend_checked), trend_normal: toStr(m.trend_normal), trend_broken: toStr(m.trend_broken), trend_reason: toStr(m.trend_reason),
+        highlow_reported: toStr(m.highlow_reported), highlow_abnormal: toStr(m.highlow_abnormal),
+        sample_checked: toStr(m.sample_checked), sample_abnormal: toStr(m.sample_abnormal), sample_normal: toStr(m.sample_normal),
+        bigmeter_read: toStr(m.bigmeter_read), watch_followup: toStr(m.watch_followup),
+        project_target: toStr(m.project_target), project_done: toStr(m.project_done), project_status: toStr(m.project_status),
+        temp_desc: toStr(m.temp_desc), temp_volume: toStr(m.temp_volume), temp_value: toStr(m.temp_value),
+      }
+      if (meterHasData(imported)) {
+        setMeter(imported)
+        setMeterOn(true)
+      }
     }
 
     toast.success(`นำเข้า ${data.areas.length} พื้นที่ — กรุณาตรวจสอบข้อมูลก่อนบันทึก`)
@@ -547,6 +663,45 @@ export function AreaReportForm({
 
     const result = await submitAreaReports(payload)
     if (result.success) {
+      if (meterOn && meterHasData(meter)) {
+        const int = (s: string) => (s.trim() === '' ? null : parseInt(s) || 0)
+        const num = (s: string) => (s.trim() === '' ? null : parseFloat(s) || 0)
+        const txt = (s: string) => (s.trim() === '' ? null : s.trim())
+        const meterResult = await upsertMeterReport({
+          branch_id: branchId,
+          report_year: reportYear,
+          report_month: reportMonth,
+          changed_count: int(meter.changed_count),
+          recovered_water: num(meter.recovered_water),
+          recovered_value: num(meter.recovered_value),
+          meter_size: txt(meter.meter_size),
+          cumulative_fy: int(meter.cumulative_fy),
+          zero_checked: int(meter.zero_checked),
+          zero_under12: int(meter.zero_under12),
+          zero_over12: int(meter.zero_over12),
+          zero_dead: int(meter.zero_dead),
+          trend_checked: int(meter.trend_checked),
+          trend_normal: int(meter.trend_normal),
+          trend_broken: int(meter.trend_broken),
+          trend_reason: txt(meter.trend_reason),
+          highlow_reported: int(meter.highlow_reported),
+          highlow_abnormal: int(meter.highlow_abnormal),
+          sample_checked: int(meter.sample_checked),
+          sample_abnormal: int(meter.sample_abnormal),
+          sample_normal: int(meter.sample_normal),
+          bigmeter_read: int(meter.bigmeter_read),
+          watch_followup: txt(meter.watch_followup),
+          project_target: int(meter.project_target),
+          project_done: int(meter.project_done),
+          project_status: txt(meter.project_status),
+          temp_desc: txt(meter.temp_desc),
+          temp_volume: num(meter.temp_volume),
+          temp_value: num(meter.temp_value),
+        })
+        if (!meterResult.success) {
+          toast.error(`บันทึกรายงานพื้นที่สำเร็จ แต่บันทึกข้อมูลมาตรไม่สำเร็จ: ${meterResult.error}`)
+        }
+      }
       toast.success('บันทึกรายงานสำเร็จ')
       router.push('/pdca')
     } else {
@@ -554,6 +709,9 @@ export function AreaReportForm({
     }
     setSubmitting(false)
   }
+
+  const meterTotal = (['changed_count', 'zero_checked', 'trend_checked', 'highlow_reported', 'sample_checked', 'bigmeter_read'] as const)
+    .reduce((s, k) => s + (parseInt(meter[k]) || 0), 0)
 
   return (
     <div className="space-y-4">
@@ -563,7 +721,7 @@ export function AreaReportForm({
 
         <div className="p-6 space-y-5">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] font-bold text-cyan-400/70 uppercase tracking-widest">
+            <p className="text-[11px] font-bold text-[#0B6E76] uppercase tracking-widest">
               ข้อมูลทั่วไป
             </p>
             <input
@@ -596,7 +754,7 @@ export function AreaReportForm({
 
           {isAdmin && (
             <div>
-              <label className={LABEL}>สาขา <span className="text-red-400 normal-case">*</span></label>
+              <label className={LABEL}>สาขา <span className="text-[#B3392C] normal-case">*</span></label>
               <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className={SELECT}>
                 <option value="">— เลือกสาขา —</option>
                 {branches.map((b) => (
@@ -636,10 +794,10 @@ export function AreaReportForm({
 
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-            <span className="text-sm text-cyan-300/90">
+            <span className="text-sm text-[#0B6E76] font-medium">
               รายงานประจำเดือน {getThaiMonthName(reportMonth)} {toThaiYear(reportYear)}
               {isAdmin && branchId && (
-                <span className="text-cyan-400/60">
+                <span className="text-[#0B6E76]/75">
                   {' · '}{branches.find((b) => b.id === branchId)?.name_th}
                 </span>
               )}
@@ -660,7 +818,7 @@ export function AreaReportForm({
               className="flex items-center gap-3 p-5 cursor-pointer select-none"
               onClick={() => patchArea(area.key, { expanded: !area.expanded })}
             >
-              <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-full bg-cyan-500/15 text-[#0B6E76] text-xs font-bold flex items-center justify-center shrink-0">
                 {areaIdx + 1}
               </div>
               <span className="flex-1 text-sm font-semibold text-[#12181F] truncate">
@@ -691,7 +849,7 @@ export function AreaReportForm({
 
                 {/* Part 1 ─ พื้นที่ */}
                 <section className="pt-5">
-                  <p className="text-[10px] font-bold text-cyan-400/60 uppercase tracking-widest mb-3">
+                  <p className="text-[10px] font-bold text-[#0B6E76] uppercase tracking-widest mb-3">
                     ส่วนที่ 1 — พื้นที่
                   </p>
                   <WaterNodeSelect
@@ -706,18 +864,18 @@ export function AreaReportForm({
                 {/* Part 2 ─ ก่อนดำเนินการ */}
                 <section>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest">
-                      ส่วนที่ 2 — ก่อนดำเนินการ <span className="normal-case text-amber-400/40">(NRW: ปีก่อน · MNF: {getThaiMonthName(reportMonth === 1 ? 12 : reportMonth - 1)} {toThaiYear(reportMonth === 1 ? reportYear - 1 : reportYear)})</span>
+                    <p className="text-[10px] font-bold text-[#A8721A] uppercase tracking-widest">
+                      ส่วนที่ 2 — ก่อนดำเนินการ <span className="normal-case text-[#A8721A]/75">(NRW: ปีก่อน · MNF: {getThaiMonthName(reportMonth === 1 ? 12 : reportMonth - 1)} {toThaiYear(reportMonth === 1 ? reportYear - 1 : reportYear)})</span>
                     </p>
                     <div className="flex items-center gap-3">
                       {!area.manual_input && area.area_code && (
                         area.nrw_data_month ? (
-                          <span className="text-[10px] text-cyan-400/60">
+                          <span className="text-[10px] text-[#0B6E76]/85">
                             เทียบกับ {getThaiMonthName(area.nrw_data_month.month)}{' '}
                             {toThaiYear(area.nrw_data_month.year)}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-amber-400/70">
+                          <span className="text-[10px] text-[#A8721A]">
                             ไม่มีข้อมูลปีก่อน — กรอกเอง
                           </span>
                         )
@@ -741,7 +899,7 @@ export function AreaReportForm({
                           onChange={(e) => toggleManualInput(area.key, e.target.checked)}
                         />
                         <span className={`text-[10px] font-medium transition-colors ${
-                          area.manual_input ? 'text-amber-400' : 'text-black/30 group-hover:text-black/50'
+                          area.manual_input ? 'text-[#A8721A]' : 'text-black/30 group-hover:text-black/50'
                         }`}>
                           กรอกเอง
                         </span>
@@ -799,7 +957,7 @@ export function AreaReportForm({
                       <label className={LABEL}>อัตราน้ำสูญเสีย (%)</label>
                       <div className={CALC_BOX}>
                         {before ? (
-                          <span className={`num font-semibold ${before.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
+                          <span className={`num font-semibold ${before.pct > 20 ? 'text-[#B3392C]' : 'text-[#1E7A5A]'}`}>
                             {fmt(before.pct)}%
                           </span>
                         ) : (
@@ -813,12 +971,12 @@ export function AreaReportForm({
                 {/* Part 3 ─ Step Test */}
                 <section>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-purple-400/60 uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-[#6B4FA0] uppercase tracking-widest">
                       ส่วนที่ 3 — ผล Step Test
                     </p>
                     <button
                       onClick={() => addStep(area.key)}
-                      className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      className="flex items-center gap-1 text-xs text-[#0B6E76] hover:text-[#0B6E76]/70 transition-colors"
                     >
                       <Plus size={12} />
                       เพิ่มสเต็ป
@@ -867,7 +1025,7 @@ export function AreaReportForm({
                             className={INPUT}
                           />
                           <div className={CALC_BOX}>
-                            <span className={`num text-xs ${pending > 0 ? 'text-amber-400' : 'text-black/40'}`}>
+                            <span className={`num text-xs ${pending > 0 ? 'text-[#A8721A]' : 'text-black/40'}`}>
                               {found > 0 || repaired > 0 ? pending : '—'}
                             </span>
                           </div>
@@ -887,12 +1045,12 @@ export function AreaReportForm({
                 {/* Part 4 ─ หลังดำเนินการ */}
                 <section>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest">
-                      ส่วนที่ 4 — หลังดำเนินการ <span className="normal-case text-green-400/40">(ผลดำเนินการปี {toThaiYear(reportYear)})</span>
+                    <p className="text-[10px] font-bold text-[#1E7A5A] uppercase tracking-widest">
+                      ส่วนที่ 4 — หลังดำเนินการ <span className="normal-case text-[#1E7A5A]/75">(ผลดำเนินการปี {toThaiYear(reportYear)})</span>
                     </p>
                     <div className="flex items-center gap-3">
                       {area.nrw_after_data_month && !area.manual_input_after && (
-                        <span className="text-[10px] text-green-400/60">
+                        <span className="text-[10px] text-[#1E7A5A]">
                           ดึงจาก dmama:{' '}
                           {getThaiMonthName(area.nrw_after_data_month.month)}{' '}
                           {toThaiYear(area.nrw_after_data_month.year)}
@@ -917,7 +1075,7 @@ export function AreaReportForm({
                           onChange={(e) => toggleManualInputAfter(area.key, e.target.checked)}
                         />
                         <span className={`text-[10px] font-medium transition-colors ${
-                          area.manual_input_after ? 'text-amber-400' : 'text-black/30 group-hover:text-black/50'
+                          area.manual_input_after ? 'text-[#A8721A]' : 'text-black/30 group-hover:text-black/50'
                         }`}>
                           กรอกเอง
                         </span>
@@ -975,10 +1133,10 @@ export function AreaReportForm({
                       <label className={LABEL}>อัตราน้ำสูญเสีย (%)</label>
                       <div className={CALC_BOX}>
                         {after ? (
-                          <span className={`num font-semibold ${after.pct > 20 ? 'text-red-400' : 'text-green-400'}`}>
+                          <span className={`num font-semibold ${after.pct > 20 ? 'text-[#B3392C]' : 'text-[#1E7A5A]'}`}>
                             {fmt(after.pct)}%
                             {before && (
-                              <span className={`ml-2 text-xs ${after.pct < before.pct ? 'text-green-400' : 'text-red-400'}`}>
+                              <span className={`ml-2 text-xs ${after.pct < before.pct ? 'text-[#1E7A5A]' : 'text-[#B3392C]'}`}>
                                 ({after.pct < before.pct ? '▼' : '▲'} {fmt(Math.abs(before.pct - after.pct))}%)
                               </span>
                             )}
@@ -993,7 +1151,7 @@ export function AreaReportForm({
 
                 {/* Part 5 ─ Do / Act */}
                 <section className="space-y-5">
-                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold text-[#2B5C86] uppercase tracking-widest">
                     ส่วนที่ 5 — Do / Act
                   </p>
 
@@ -1002,14 +1160,14 @@ export function AreaReportForm({
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-2.5 bg-cyan-500/8 border-b border-cyan-500/15">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-md bg-cyan-500/25 border border-cyan-500/40 flex items-center justify-center text-[11px] font-black text-cyan-300">D</span>
-                        <span className="text-xs font-semibold text-cyan-300">Do — สิ่งที่ดำเนินการ</span>
-                        <span className="text-[10px] text-cyan-400/40">{area.pdca_do_items.length} ข้อ</span>
+                        <span className="w-6 h-6 rounded-md bg-cyan-500/25 border border-cyan-500/40 flex items-center justify-center text-[11px] font-black text-[#0B6E76]">D</span>
+                        <span className="text-xs font-semibold text-[#0B6E76]">Do — สิ่งที่ดำเนินการ</span>
+                        <span className="text-[10px] text-[#0B6E76]/65">{area.pdca_do_items.length} ข้อ</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => addPdcaItem(area.key, 'pdca_do_items')}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan-400 hover:text-cyan-200 hover:bg-cyan-500/20 px-2.5 py-1 rounded-lg transition-all"
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-[#0B6E76] hover:text-[#0B6E76]/75 hover:bg-cyan-500/15 px-2.5 py-1 rounded-lg transition-all"
                       >
                         <Plus size={11} />
                         เพิ่มข้อ
@@ -1020,7 +1178,7 @@ export function AreaReportForm({
                       {area.pdca_do_items.map((item, idx) => (
                         <div key={idx} className="px-4 py-3 space-y-2 group">
                           <div className="flex items-center gap-3">
-                            <span className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-500/35 flex items-center justify-center text-[10px] font-bold text-cyan-400 shrink-0">
+                            <span className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-500/35 flex items-center justify-center text-[10px] font-bold text-[#0B6E76] shrink-0">
                               {idx + 1}
                             </span>
                             <input
@@ -1057,14 +1215,14 @@ export function AreaReportForm({
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-500/8 border-b border-emerald-500/15">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-md bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-center text-[11px] font-black text-emerald-300">A</span>
-                        <span className="text-xs font-semibold text-emerald-300">Act — แผนเดือนถัดไป</span>
-                        <span className="text-[10px] text-emerald-400/40">{area.pdca_act_items.length} ข้อ</span>
+                        <span className="w-6 h-6 rounded-md bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-center text-[11px] font-black text-[#1E7A5A]">A</span>
+                        <span className="text-xs font-semibold text-[#1E7A5A]">Act — แผนเดือนถัดไป</span>
+                        <span className="text-[10px] text-[#1E7A5A]/65">{area.pdca_act_items.length} ข้อ</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => addPdcaItem(area.key, 'pdca_act_items')}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 hover:text-emerald-200 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg transition-all"
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1E7A5A] hover:text-[#1E7A5A]/75 hover:bg-emerald-500/15 px-2.5 py-1 rounded-lg transition-all"
                       >
                         <Plus size={11} />
                         เพิ่มข้อ
@@ -1075,7 +1233,7 @@ export function AreaReportForm({
                       {area.pdca_act_items.map((item, idx) => (
                         <div key={idx} className="px-4 py-3 space-y-2 group">
                           <div className="flex items-center gap-3">
-                            <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/35 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0">
+                            <span className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/35 flex items-center justify-center text-[10px] font-bold text-[#1E7A5A] shrink-0">
                               {idx + 1}
                             </span>
                             <input
@@ -1111,14 +1269,14 @@ export function AreaReportForm({
                 {/* Part 6 ─ อุปสรรค */}
                 <section>
                   <div className="flex items-center gap-3 mb-2">
-                    <p className="text-[10px] font-bold text-orange-400/60 uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-[#B5651D] uppercase tracking-widest">
                       ส่วนที่ 6 — อุปสรรค
                     </p>
                     <button
                       onClick={() => patchArea(area.key, { has_obstacle: !area.has_obstacle })}
                       className={`ml-auto flex items-center gap-2 px-3 py-1 rounded-full text-xs border transition-colors ${
                         area.has_obstacle
-                          ? 'bg-orange-500/20 border-orange-500/40 text-orange-300'
+                          ? 'bg-orange-500/15 border-orange-500/40 text-[#B5651D]'
                           : 'bg-black/5 border-black/15 text-black/40'
                       }`}
                     >
@@ -1136,7 +1294,7 @@ export function AreaReportForm({
                       {area.obstacles.map((obs, oi) => (
                         <div key={oi} className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-orange-400/60 font-bold">อุปสรรคที่ {oi + 1}</span>
+                            <span className="text-xs text-[#B5651D] font-bold">อุปสรรคที่ {oi + 1}</span>
                             {area.obstacles.length > 1 && (
                               <button
                                 onClick={() => removeObstacle(area.key, oi)}
@@ -1172,8 +1330,8 @@ export function AreaReportForm({
                                   className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                                     obs.priority === lvl
                                       ? lvl === 'สูง'
-                                        ? 'bg-red-500/20 border-red-500/60 text-red-300'
-                                        : 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                                        ? 'bg-red-500/20 border-red-500/60 text-[#B3392C]'
+                                        : 'bg-amber-500/20 border-amber-500/60 text-[#A8721A]'
                                       : 'bg-black/5 border-black/15 text-black/40'
                                   }`}
                                 >
@@ -1244,7 +1402,7 @@ export function AreaReportForm({
 
                       <button
                         onClick={() => addObstacle(area.key)}
-                        className="flex items-center gap-1 text-xs text-orange-400/70 hover:text-orange-400 transition-colors"
+                        className="flex items-center gap-1 text-xs text-[#B5651D] hover:text-[#B5651D]/80 transition-colors"
                       >
                         <Plus size={12} />
                         เพิ่มอุปสรรค
@@ -1266,6 +1424,137 @@ export function AreaReportForm({
         <Plus size={14} />
         เพิ่มพื้นที่
       </button>
+
+      {/* ─── Meter (มาตรวัดน้ำ, ทางเลือก) ─── */}
+      <div className="glass-card">
+        <div className="flex items-center justify-between gap-3 p-5">
+          <div>
+            <p className="text-[11px] font-bold text-[#0B6E76] uppercase tracking-widest mb-1">มาตรวัดน้ำ (ทางเลือก)</p>
+            <p className="text-xs text-black/40">กิจกรรมเปลี่ยน/ตรวจสอบมาตรประจำเดือน — ไม่บังคับ กรอกเฉพาะเดือนที่มีข้อมูล</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMeterOn((v) => !v)}
+            className={`shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+              meterOn ? 'bg-cyan-500/10 border-cyan-500/30 text-[#0B6E76]' : 'bg-black/5 border-black/15 text-black/40'
+            }`}
+          >
+            <span className={`w-2.5 h-2.5 rounded-full border-2 ${meterOn ? 'bg-cyan-500 border-cyan-500' : 'border-black/30'}`} />
+            {meterOn ? 'มีข้อมูล' : 'ไม่มีข้อมูล'}
+          </button>
+        </div>
+
+        {meterOn && (
+          <div className="border-t border-black/10 px-5 pb-6 pt-5 space-y-6">
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">1 · เปลี่ยนมาตรชำรุด / มาตรตาย / มาตรแนวโน้มชำรุด</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MeterField label="จำนวนที่เปลี่ยน (เครื่อง)" value={meter.changed_count} onChange={(v) => patchMeter({ changed_count: v })} />
+                <MeterField label="น้ำที่ได้คืน (ลบ.ม.)" value={meter.recovered_water} onChange={(v) => patchMeter({ recovered_water: v })} />
+                <MeterField label="คิดเป็นมูลค่า (บาท)" value={meter.recovered_value} onChange={(v) => patchMeter({ recovered_value: v })} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <MeterField label="ขนาดมาตรที่เปลี่ยน" value={meter.meter_size} onChange={(v) => patchMeter({ meter_size: v })} type="text" placeholder='เช่น 1/2", 3/4"' />
+                <MeterField label="ยอดสะสมรายเดือน (ปีงบฯ)" value={meter.cumulative_fy} onChange={(v) => patchMeter({ cumulative_fy: v })} />
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">2 · ตรวจสอบมาตร 0 คิว (ไม่มีการใช้น้ำ)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MeterField label="จำนวนรายที่ตรวจสอบ" value={meter.zero_checked} onChange={(v) => patchMeter({ zero_checked: v })} />
+                <MeterField label="0 คิว ไม่เกิน 12 เดือน (ราย)" value={meter.zero_under12} onChange={(v) => patchMeter({ zero_under12: v })} />
+                <MeterField label="0 คิว เกิน 12 เดือน (ราย)" value={meter.zero_over12} onChange={(v) => patchMeter({ zero_over12: v })} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <MeterField label="ผลตรวจ พบมาตรตาย (เครื่อง)" value={meter.zero_dead} onChange={(v) => patchMeter({ zero_dead: v })} />
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-1">3 · ตรวจสอบมาตรแนวโน้มชำรุด</p>
+              <p className="text-[11px] text-black/35 mb-2.5">ตรวจจากโปรแกรม Dmama / WATCH Center</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MeterField label="จำนวนรายที่ตรวจ" value={meter.trend_checked} onChange={(v) => patchMeter({ trend_checked: v })} />
+                <MeterField label="ผล มาตรเดินปกติ (ราย)" value={meter.trend_normal} onChange={(v) => patchMeter({ trend_normal: v })} />
+                <MeterField label="ผล พบชำรุด (ราย)" value={meter.trend_broken} onChange={(v) => patchMeter({ trend_broken: v })} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <MeterField label="ระบุสาเหตุ" value={meter.trend_reason} onChange={(v) => patchMeter({ trend_reason: v })} type="text" placeholder="เช่น ใช้น้ำน้อย / ไม่มีผู้อยู่อาศัย" />
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">4 · ตรวจน้ำสูง-ต่ำ ที่พนักงานอ่านมาตรแจ้ง</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <MeterField label="จำนวนรายที่แจ้ง" value={meter.highlow_reported} onChange={(v) => patchMeter({ highlow_reported: v })} />
+                <MeterField label="พบมาตรตาย/ผิดปกติ (ราย)" value={meter.highlow_abnormal} onChange={(v) => patchMeter({ highlow_abnormal: v })} />
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">5 · สุ่มตรวจมาตร (5%)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MeterField label="จำนวนที่สุ่มตรวจ (เครื่อง/ราย)" value={meter.sample_checked} onChange={(v) => patchMeter({ sample_checked: v })} />
+                <MeterField label="พบความผิดปกติ (ราย)" value={meter.sample_abnormal} onChange={(v) => patchMeter({ sample_abnormal: v })} />
+                <MeterField label="ไม่พบความผิดปกติ (ราย)" value={meter.sample_normal} onChange={(v) => patchMeter({ sample_normal: v })} />
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">6 · อ่านมาตร / ติดตามมาตรรายใหญ่</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <MeterField label="จำนวนเครื่องมาตรรายใหญ่ที่อ่าน" value={meter.bigmeter_read} onChange={(v) => patchMeter({ bigmeter_read: v })} />
+                <div>
+                  <label className={LABEL}>ติดตามมาตรรายใหญ่ประจำสัปดาห์ (WATCH Center)</label>
+                  <select value={meter.watch_followup} onChange={(e) => patchMeter({ watch_followup: e.target.value })} className={SELECT}>
+                    <option value="">— เลือก —</option>
+                    <option value="ทำแล้ว">ทำแล้ว</option>
+                    <option value="ยังไม่ทำ">ยังไม่ทำ</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">7 · โครงการเปลี่ยนมาตรตามอายุ (เช่น โครงการ 10 ปี)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MeterField label="เป้าหมายจำนวนเครื่อง" value={meter.project_target} onChange={(v) => patchMeter({ project_target: v })} />
+                <MeterField label="ดำเนินการแล้ว (เครื่อง)" value={meter.project_done} onChange={(v) => patchMeter({ project_done: v })} />
+                <div>
+                  <label className={LABEL}>สถานะ</label>
+                  <select value={meter.project_status} onChange={(e) => patchMeter({ project_status: e.target.value })} className={SELECT}>
+                    <option value="">— เลือก —</option>
+                    <option value="อยู่ระหว่างดำเนินการ">อยู่ระหว่างดำเนินการ</option>
+                    <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-2">8 · รวมยอดตรวจมาตรทั้งหมดในเดือน</p>
+              <div>
+                <label className={LABEL}>ยอดรวมทุกกิจกรรมตรวจมาตร (เครื่อง/ราย) — คำนวณอัตโนมัติ</label>
+                <div className={CALC_BOX}>
+                  <span className="num text-black/80 font-semibold">{meterTotal.toLocaleString('th-TH')}</span>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10.5px] font-bold text-black/50 mb-3">9 · ติดตั้งมาตรชั่วคราว / เฉพาะกิจ (ถ้ามี)</p>
+              <MeterField label="รายละเอียด / วัตถุประสงค์" value={meter.temp_desc} onChange={(v) => patchMeter({ temp_desc: v })} type="text" placeholder="เช่น ติดตั้งมาตรน้ำใช้งานเทศกาล" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <MeterField label="ปริมาณน้ำ (ลบ.ม.)" value={meter.temp_volume} onChange={(v) => patchMeter({ temp_volume: v })} />
+                <MeterField label="มูลค่าที่เรียกเก็บ (บาท)" value={meter.temp_value} onChange={(v) => patchMeter({ temp_value: v })} />
+              </div>
+            </section>
+
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
       <div className="flex gap-3 justify-end pt-1">

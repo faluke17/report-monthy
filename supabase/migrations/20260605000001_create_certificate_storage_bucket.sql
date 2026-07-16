@@ -10,6 +10,7 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Allow service-role (used by API routes) full access — RLS is handled at app layer
+DROP POLICY IF EXISTS "service role full access" ON storage.objects;
 CREATE POLICY "service role full access"
   ON storage.objects
   FOR ALL
@@ -18,6 +19,7 @@ CREATE POLICY "service role full access"
   WITH CHECK (bucket_id = 'project-certificates');
 
 -- Allow public read of certificate files
+DROP POLICY IF EXISTS "public read certificates" ON storage.objects;
 CREATE POLICY "public read certificates"
   ON storage.objects
   FOR SELECT

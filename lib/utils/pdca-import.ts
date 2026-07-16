@@ -59,6 +59,22 @@ export const pdcaImportSchema = z.object({
 export type PdcaImportData = z.infer<typeof pdcaImportSchema>
 export type PdcaImportArea = z.infer<typeof areaSchema>
 
+// The offline tool's branch field is free text (placeholder suggests
+// "กปภ.สาขาขอนแก่น") while `branches.name_th` in the DB stores just the bare
+// name ("ขอนแก่น") — strip the common prefixes before comparing so real
+// branch submissions actually auto-match instead of always showing "not found".
+const BRANCH_PREFIX_RE = /^(กปภ\.?\s*สาขา|กปภ\.?|สาขา)\s*/i
+
+function normalizeBranchName(name: string): string {
+  return name.trim().replace(BRANCH_PREFIX_RE, '').trim()
+}
+
+export function matchBranch<T extends { name_th: string }>(branches: T[], rawName: string): T | undefined {
+  const target = normalizeBranchName(rawName)
+  if (!target) return undefined
+  return branches.find((b) => normalizeBranchName(b.name_th) === target)
+}
+
 export function parsePdcaImportJson(raw: string): { ok: true; data: PdcaImportData } | { ok: false; error: string } {
   let json: unknown
   try {

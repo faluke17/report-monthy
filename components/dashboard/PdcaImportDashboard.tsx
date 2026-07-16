@@ -9,7 +9,7 @@ import { KpiCard } from './KpiCard'
 import { Branch } from '@/lib/types'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import {
-  PdcaImportData, PdcaImportArea, computeAgg, metricValue,
+  PdcaImportData, PdcaImportArea, computeAgg, metricValue, matchBranch,
 } from '@/lib/utils/pdca-import'
 
 interface Props {
@@ -161,8 +161,8 @@ function MeterCard({ meter }: { meter: Record<string, string | number> }) {
           </div>
         ))}
       </div>
-      <p className="text-[11px] text-amber-700/70 mt-3">
-        ⚠ ข้อมูลมาตรวัดน้ำในไฟล์นี้เป็นการแสดงตัวอย่างเท่านั้น ระบบยังไม่รองรับการนำเข้าอัตโนมัติ — บันทึกด้วยตนเองในโมดูลอื่นหากต้องการเก็บลงระบบ
+      <p className="text-[11px] text-black/35 mt-3">
+        ข้อมูลมาตรวัดน้ำนี้เป็นตัวอย่างเท่านั้น — กด &quot;นำเข้าไปกรอกในฟอร์มเพื่อบันทึก&quot; ด้านบนเพื่อนำข้อมูลนี้เข้าฟอร์มและบันทึกลงระบบจริง
       </p>
     </div>
   )
@@ -334,7 +334,7 @@ function AreaCard({ area }: { area: PdcaImportArea }) {
 export function PdcaImportDashboard({ data, branches }: Props) {
   const agg = computeAgg(data)
   const adYear = resolveAdYear(data.meta.year)
-  const matchedBranch = branches.find((b) => b.name_th.trim() === data.meta.branch.trim())
+  const matchedBranch = matchBranch(branches, data.meta.branch)
 
   const nrwDelta = agg.pctB !== null && agg.pctA !== null ? agg.pctB - agg.pctA : null
   const mnfDelta = agg.mnfB !== null && agg.mnfA !== null ? agg.mnfB - agg.mnfA : null

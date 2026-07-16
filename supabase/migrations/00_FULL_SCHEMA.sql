@@ -198,10 +198,14 @@ CREATE TABLE IF NOT EXISTS meetings (
   updated_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE action_items
-  ADD CONSTRAINT fk_action_meeting
-  FOREIGN KEY (meeting_id) REFERENCES meetings(id)
-  NOT VALID;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_action_meeting') THEN
+    ALTER TABLE action_items
+      ADD CONSTRAINT fk_action_meeting
+      FOREIGN KEY (meeting_id) REFERENCES meetings(id)
+      NOT VALID;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS meeting_resolutions (
   id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
