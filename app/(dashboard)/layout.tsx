@@ -88,6 +88,7 @@ export default async function DashboardLayout({
           requirementCount={requirementCount}
           requirementMeetings={requirementMeetings}
           isRegion={isRegion}
+          stats={stats}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 animate-fadein">
           {children}

@@ -10,7 +10,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { OnlineIndicator } from '@/components/layout/OnlineIndicator'
+import { MobileMenu } from '@/components/layout/MobileMenu'
 import type { MeetingWithRequirements } from '@/lib/types'
+import type { SidebarStats } from '@/components/layout/nav-groups'
 
 interface TopbarProps {
   session: PwaSession
@@ -18,6 +20,7 @@ interface TopbarProps {
   requirementCount?: number
   requirementMeetings?: MeetingWithRequirements[]
   isRegion?: boolean
+  stats?: SidebarStats
 }
 
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
@@ -44,6 +47,7 @@ export function Topbar({
   requirementCount = 0,
   requirementMeetings = [],
   isRegion = false,
+  stats,
 }: TopbarProps) {
   const pathname = usePathname()
 
@@ -73,6 +77,7 @@ export function Topbar({
     >
       {/* ── Page title (left) ── */}
       <div className="flex items-center gap-3 min-w-0">
+        <MobileMenu stats={stats} />
         <div className="hidden sm:flex items-center gap-2 text-[10px]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', letterSpacing: '.10em', textTransform: 'uppercase' }}>
           <span>กปภ.เขต 10</span>
           <ChevronRight size={10} style={{ color: '#98A2AF' }} />
