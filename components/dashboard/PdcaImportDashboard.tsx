@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { KpiCard } from './KpiCard'
+import { StepTestChart } from './StepTestChart'
 import { Branch } from '@/lib/types'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import {
@@ -229,10 +230,25 @@ function AreaCard({ area }: { area: PdcaImportArea }) {
 
       {area.stepTests.length > 0 && (
         <div className="mb-4">
-          <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#0B6E76] mb-2">
+          <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#0B6E76] mb-1">
             Step Test — สูญเสียคาดการณ์ (ลบ.ม./ชม.)
           </p>
-          <div className="overflow-x-auto">
+          <div className="flex items-center gap-4 text-[10.5px] text-black/45 mb-1">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#98A2AF' }} />ไม่มีจุดรั่ว</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#1E7A5A' }} />พบ · ซ่อมครบแล้ว</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#B3392C' }} />พบ · ค้างซ่อม</span>
+          </div>
+          <StepTestChart steps={area.stepTests.map((s, i) => ({
+            label: `สเต็ป ${s.step ?? i + 1}`,
+            loss: s.estLoss ?? 0,
+            found: s.found ?? 0,
+            repaired: s.repaired ?? 0,
+          }))} />
+          <details className="mt-1 group">
+            <summary className="text-[11px] font-semibold text-[#0B6E76] cursor-pointer select-none list-none flex items-center gap-1">
+              <span className="group-open:rotate-90 transition-transform">▸</span> แสดงตารางข้อมูล Step Test
+            </summary>
+          <div className="overflow-x-auto mt-2">
             <table className="w-full text-[11.5px]">
               <thead>
                 <tr className="text-[9.5px] uppercase tracking-wide text-black/35">
@@ -259,6 +275,7 @@ function AreaCard({ area }: { area: PdcaImportArea }) {
               </tbody>
             </table>
           </div>
+          </details>
         </div>
       )}
 

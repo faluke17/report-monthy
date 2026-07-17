@@ -74,7 +74,7 @@ export default async function MonthlyPage({
   // Fetch area reports (no branch filter for district view so we can show all cards)
   let query = supabase
     .from('area_monthly_reports')
-    .select('*, branches(name_th, code), step_test_results(step_no, estimated_loss, leaks_found, repair_status), area_obstacles(obstacle_type, obstacle_detail, resolution_plan, impact, region_support_needed, priority_order)')
+    .select('*, branches(name_th, code), step_test_results(step_no, estimated_loss, leaks_found, leaks_repaired, repair_status), area_obstacles(obstacle_type, obstacle_detail, resolution_plan, impact, region_support_needed, priority_order)')
     .eq('report_year', filterYear)
     .eq('report_month', filterMonth)
     .order('created_at', { ascending: false })

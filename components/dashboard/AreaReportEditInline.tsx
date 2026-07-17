@@ -173,7 +173,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-bold text-[#12181F]">{report.area_name}</p>
-          <p className="text-[10px] text-cyan-400/60 mt-0.5">โหมดแก้ไข</p>
+          <p className="text-[10px] text-[#0B6E76] mt-0.5">โหมดแก้ไข</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -201,7 +201,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
 
       {/* ก่อนดำเนินการ */}
       <section>
-        <p className="text-[10px] font-bold text-amber-400/60 uppercase tracking-widest mb-2">ก่อนดำเนินการ</p>
+        <p className="text-[10px] font-bold text-[#A8721A] uppercase tracking-widest mb-2">ก่อนดำเนินการ</p>
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
@@ -221,8 +221,8 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       {/* Step Test */}
       <section>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-bold text-purple-400/60 uppercase tracking-widest">Step Test</p>
-          <button type="button" onClick={addStep} className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+          <p className="text-[10px] font-bold text-[#6B4FA0] uppercase tracking-widest">Step Test</p>
+          <button type="button" onClick={addStep} className="flex items-center gap-1 text-xs text-[#0B6E76] hover:text-[#0B6E76]/80 transition-colors">
             <Plus size={11} /> เพิ่มสเต็ป
           </button>
         </div>
@@ -272,7 +272,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                 type="button"
                 onClick={() => removeStep(i)}
                 disabled={steps.length === 1}
-                className="text-red-400/40 hover:text-red-400 disabled:opacity-20 transition-colors flex items-center justify-center"
+                className="text-[#B3392C]/50 hover:text-[#B3392C] disabled:opacity-20 transition-colors flex items-center justify-center"
               >
                 <Trash2 size={12} />
               </button>
@@ -283,7 +283,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
 
       {/* หลังดำเนินการ */}
       <section>
-        <p className="text-[10px] font-bold text-green-400/60 uppercase tracking-widest mb-2">หลังดำเนินการ</p>
+        <p className="text-[10px] font-bold text-[#1E7A5A] uppercase tracking-widest mb-2">หลังดำเนินการ</p>
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className={LABEL}>น้ำจ่าย (ลบ.ม.)</label>
@@ -318,8 +318,8 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       {/* PDCA Do */}
       <section>
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-5 h-5 rounded-md bg-cyan-500/25 border border-cyan-500/40 flex items-center justify-center text-[10px] font-black text-cyan-300">D</span>
-          <p className="text-[10px] font-bold text-cyan-400/70 uppercase tracking-widest">Do — สิ่งที่ดำเนินการ</p>
+          <span className="w-5 h-5 rounded-md bg-[#0B6E76]/15 border border-[#0B6E76]/40 flex items-center justify-center text-[10px] font-black text-[#0B6E76]">D</span>
+          <p className="text-[10px] font-bold text-[#0B6E76] uppercase tracking-widest">Do — สิ่งที่ดำเนินการ</p>
         </div>
         <textarea
           value={pdcaDo}
@@ -333,8 +333,8 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       {/* PDCA Act */}
       <section>
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-5 h-5 rounded-md bg-emerald-500/25 border border-emerald-500/40 flex items-center justify-center text-[10px] font-black text-emerald-300">A</span>
-          <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest">Act — แผนเดือนถัดไป</p>
+          <span className="w-5 h-5 rounded-md bg-[#1E7A5A]/15 border border-[#1E7A5A]/40 flex items-center justify-center text-[10px] font-black text-[#1E7A5A]">A</span>
+          <p className="text-[10px] font-bold text-[#1E7A5A] uppercase tracking-widest">Act — แผนเดือนถัดไป</p>
         </div>
         <textarea
           value={pdcaAct}
@@ -348,17 +348,17 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
       {/* อุปสรรค */}
       <section>
         <div className="flex items-center gap-3 mb-2">
-          <p className="text-[10px] font-bold text-orange-400/60 uppercase tracking-widest">อุปสรรค</p>
+          <p className="text-[10px] font-bold text-[#B5651D] uppercase tracking-widest">อุปสรรค</p>
           <button
             type="button"
             onClick={() => setHasObstacle((h) => !h)}
             className={`ml-auto flex items-center gap-2 px-3 py-1 rounded-full text-xs border transition-colors ${
               hasObstacle
-                ? 'bg-orange-500/20 border-orange-500/40 text-orange-300'
+                ? 'bg-[#B5651D]/12 border-[#B5651D]/35 text-[#B5651D]'
                 : 'bg-black/5 border-black/15 text-black/40'
             }`}
           >
-            <span className={`w-3 h-3 rounded-full border-2 transition-colors ${hasObstacle ? 'bg-orange-400 border-orange-400' : 'border-black/30'}`} />
+            <span className={`w-3 h-3 rounded-full border-2 transition-colors ${hasObstacle ? 'bg-[#B5651D] border-[#B5651D]' : 'border-black/30'}`} />
             {hasObstacle ? 'มีอุปสรรค' : 'ไม่มีอุปสรรค'}
           </button>
         </div>
@@ -366,10 +366,10 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
         {hasObstacle && (
           <div className="space-y-3">
             {obstacles.map((obs, oi) => (
-              <div key={oi} className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 space-y-2.5">
+              <div key={oi} className="rounded-xl border border-[#B5651D]/20 bg-[#B5651D]/5 p-3 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-orange-400/60 font-bold">อุปสรรคที่ {oi + 1}</span>
-                  <button type="button" onClick={() => removeObstacle(oi)} className="text-red-400/40 hover:text-red-400 transition-colors">
+                  <span className="text-xs text-[#B5651D] font-bold">อุปสรรคที่ {oi + 1}</span>
+                  <button type="button" onClick={() => removeObstacle(oi)} className="text-[#B3392C]/50 hover:text-[#B3392C] transition-colors">
                     <Trash2 size={12} />
                   </button>
                 </div>
@@ -401,8 +401,8 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                       className={`flex-1 py-1 rounded-lg border text-xs font-semibold transition-all ${
                         obs.priority === lvl
                           ? lvl === 1
-                            ? 'bg-red-500/20 border-red-500/60 text-red-300'
-                            : 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                            ? 'bg-[#B3392C]/15 border-[#B3392C]/50 text-[#B3392C]'
+                            : 'bg-[#A8721A]/15 border-[#A8721A]/50 text-[#A8721A]'
                           : 'bg-black/5 border-black/15 text-black/40'
                       }`}
                     >
@@ -424,7 +424,7 @@ export function AreaReportEditInline({ report, onCancel, onSaved }: Props) {
                 </div>
               </div>
             ))}
-            <button type="button" onClick={addObstacle} className="flex items-center gap-1 text-xs text-orange-400/70 hover:text-orange-400 transition-colors">
+            <button type="button" onClick={addObstacle} className="flex items-center gap-1 text-xs text-[#B5651D] hover:text-[#B5651D]/80 transition-colors">
               <Plus size={11} /> เพิ่มอุปสรรค
             </button>
           </div>

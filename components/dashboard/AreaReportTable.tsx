@@ -2,9 +2,14 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, AlertTriangle, Trash2, Pencil } from 'lucide-react'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
+import { ChevronRight, AlertTriangle, Trash2, Pencil, X, Check } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { KpiCard } from './KpiCard'
+import { StepTestChart } from './StepTestChart'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 import { deleteAreaReport } from '@/app/actions/reports'
 import { AreaReportEditInline } from './AreaReportEditInline'
@@ -13,6 +18,7 @@ interface StepTestResult {
   step_no: number
   estimated_loss?: number | null
   leaks_found?: number | null
+  leaks_repaired?: number | null
   repair_status?: string | null
 }
 
@@ -60,12 +66,366 @@ function fmt(n: number | null | undefined, dec = 1) {
 
 function NrwChip({ pct }: { pct: number | null }) {
   if (pct == null) return <span className="text-black/25 text-xs">—</span>
-  const cls = pct <= 20 ? 'text-green-400' : pct <= 25 ? 'text-amber-400' : 'text-red-400'
+  const cls = pct <= 20 ? 'text-[#1E7A5A]' : pct <= 25 ? 'text-[#A8721A]' : 'text-[#B3392C]'
   return <span className={`num text-sm font-bold ${cls}`}>{fmt(pct)}%</span>
 }
 
-// ── Shared Sheet body (used by both AreaReportTable and BranchSummaryGrid) ──
-export function AreaDetailSheetBody({
+// ── Aggregate + chart helpers — mirrors computeAgg()/metricValue() in
+// lib/utils/pdca-import.ts so the "view saved report" popup and the
+// "preview a .json before saving" page (/pdca/import) read identically. ──
+
+function metricValue(r: AreaReport, phase: 'before' | 'after', metric: 'nrw' | 'mnf'): number | null {
+  if (metric === 'mnf') return (phase === 'before' ? r.mnf_before : r.mnf_after) ?? null
+  const dist = phase === 'before' ? r.water_dist_before : r.water_dist_after
+  const sold = phase === 'before' ? r.water_sold_before : r.water_sold_after
+  return dist ? ((dist - (sold ?? 0)) / dist) * 100 : null
+}
+
+interface ReportAgg {
+  pctB: number | null; pctA: number | null
+  lossB: number; lossA: number
+  mnfB: number | null; mnfA: number | null
+  found: number; repaired: number
+}
+
+function computeAgg(reports: AreaReport[]): ReportAgg {
+  let distB = 0, soldB = 0, distA = 0, soldA = 0, found = 0, repaired = 0
+  let mnfBSum = 0, mnfBCount = 0, mnfASum = 0, mnfACount = 0
+
+  for (const r of reports) {
+    distB += r.water_dist_before ?? 0
+    soldB += r.water_sold_before ?? 0
+    distA += r.water_dist_after ?? 0
+    soldA += r.water_sold_after ?? 0
+    repaired += r.leaks_repaired ?? 0
+    found += (r.leaks_repaired ?? 0) + (r.leaks_pending ?? 0)
+    if (r.mnf_before != null) { mnfBSum += r.mnf_before; mnfBCount++ }
+    if (r.mnf_after  != null) { mnfASum += r.mnf_after;  mnfACount++ }
+  }
+
+  return {
+    pctB: distB > 0 ? ((distB - soldB) / distB) * 100 : null,
+    pctA: distA > 0 ? ((distA - soldA) / distA) * 100 : null,
+    lossB: distB - soldB,
+    lossA: distA - soldA,
+    mnfB: mnfBCount ? mnfBSum / mnfBCount : null,
+    mnfA: mnfACount ? mnfASum / mnfACount : null,
+    found, repaired,
+  }
+}
+
+function CustomTooltip({ active, payload, label, unit, decimals }: {
+  active?: boolean
+  payload?: { dataKey: string; value: number }[]
+  label?: string
+  unit: string
+  decimals: number
+}) {
+  if (!active || !payload?.length) return null
+  const before = payload.find((p) => p.dataKey === 'before')?.value
+  const after = payload.find((p) => p.dataKey === 'after')?.value
+  return (
+    <div className="bg-white border border-black/10 rounded-xl px-3.5 py-2.5 text-xs shadow-lg">
+      <p className="font-semibold text-[#12181F] mb-1.5">{label}</p>
+      <p className="text-black/50">ก่อน: <span className="text-black/75 font-medium">{fmt(before, decimals)} {unit}</span></p>
+      <p className="text-black/50">หลัง: <span className="text-[#0B6E76] font-medium">{fmt(after, decimals)} {unit}</span></p>
+    </div>
+  )
+}
+
+function MetricChart({ reports, metric, title }: { reports: AreaReport[]; metric: 'nrw' | 'mnf'; title: string }) {
+  const unit = metric === 'mnf' ? 'ลบ.ม./ชม.' : '%'
+  const decimals = metric === 'mnf' ? 2 : 1
+  const chartData = reports.map((r) => ({
+    name: r.area_name.length > 14 ? r.area_name.slice(0, 13) + '…' : r.area_name,
+    before: metricValue(r, 'before', metric),
+    after: metricValue(r, 'after', metric),
+  }))
+
+  return (
+    <div className="glass-card p-5">
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <p className="page-kicker">{title}</p>
+        <div className="flex items-center gap-4 text-xs text-black/45">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#98A2AF' }} />ก่อน</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#0B6E76' }} />หลัง</span>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={chartData} margin={{ top: 10, right: 8, left: -18, bottom: 4 }} barGap={3}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,.06)" vertical={false} />
+          <XAxis dataKey="name" tick={{ fill: 'rgba(0,0,0,.4)', fontSize: 10.5 }} axisLine={false} tickLine={false} />
+          <YAxis
+            tick={{ fill: 'rgba(0,0,0,.4)', fontSize: 10.5 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v: number) => `${v}${metric === 'mnf' ? '' : '%'}`}
+          />
+          <Tooltip content={<CustomTooltip unit={unit} decimals={decimals} />} cursor={{ fill: 'rgba(0,0,0,.03)' }} />
+          <Bar dataKey="before" fill="#98A2AF" radius={[3, 3, 0, 0]} maxBarSize={26} />
+          <Bar dataKey="after" fill="#0B6E76" radius={[3, 3, 0, 0]} maxBarSize={26} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+/** free-text pdca_do/pdca_act → numbered bullet items, one per non-empty line — matches the pdca-tool Do/Act list look without needing a schema change */
+function toBullets(text?: string | null): string[] {
+  if (!text) return []
+  return text.split('\n').map((l) => l.trim()).filter(Boolean)
+}
+
+function BulletList({ items }: { items: string[] }) {
+  if (!items.length) return <p className="text-[12px] text-black/30">— ไม่มีข้อมูล —</p>
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="flex gap-2 text-[12.5px]">
+          <span className="shrink-0 w-4 h-4 rounded-full bg-black/5 border border-black/10 text-[9px] font-bold flex items-center justify-center text-black/40 mt-0.5">{i + 1}</span>
+          <p className="text-[#12181F]">{it}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── One area — styled like the offline PDCA tool's dashboard area card ──
+function AreaDashCard({
+  report, canEdit, canDelete, onEdit, deletePending, confirming, onConfirmDelete, onCancelDelete, onDelete,
+}: {
+  report: AreaReport
+  canEdit: boolean
+  canDelete?: boolean
+  onEdit: () => void
+  deletePending: boolean
+  confirming: boolean
+  onConfirmDelete: () => void
+  onCancelDelete: () => void
+  onDelete: () => void
+}) {
+  const pB = metricValue(report, 'before', 'nrw')
+  const pA = metricValue(report, 'after', 'nrw')
+  const mB = report.mnf_before ?? null
+  const mA = report.mnf_after ?? null
+  const found = (report.leaks_repaired ?? 0) + (report.leaks_pending ?? 0)
+  const pending = report.leaks_pending ?? 0
+  const lossAfter = (report.water_dist_after ?? 0) - (report.water_sold_after ?? 0)
+
+  const obstacles = report.area_obstacles ?? []
+  const hasHighPriority = obstacles.some((o) => o.priority_order === 1)
+  const stripe = obstacles.length
+    ? (hasHighPriority ? 'accent-bar-red' : 'accent-bar-amber')
+    : 'accent-bar-green'
+
+  const steps = [...(report.step_test_results ?? [])].sort((a, b) => a.step_no - b.step_no)
+
+  return (
+    <div className={`glass-card p-5 ${stripe}`}>
+      <div className="flex items-center gap-2.5 flex-wrap mb-3">
+        <h3 className="text-[15px] font-bold text-[#12181F] flex-1 min-w-0 truncate">{report.area_name}</h3>
+        {obstacles.length > 0 && (
+          <span className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full ${
+            hasHighPriority ? 'bg-[#B3392C]/12 text-[#B3392C]' : 'bg-[#A8721A]/10 text-[#A8721A]'
+          }`}>
+            {hasHighPriority ? '🔴' : '🟡'} อุปสรรค {obstacles.length} รายการ
+          </span>
+        )}
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${
+          report.status === 'submitted'
+            ? 'bg-[#0B6E76]/12 border-[#0B6E76]/30 text-[#0B6E76]'
+            : 'bg-black/5 border-black/15 text-[#4B5563]'
+        }`}>
+          {report.status === 'submitted' ? 'ส่งแล้ว' : report.status}
+        </span>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex items-center gap-1 text-[10px] font-semibold text-black/40 hover:text-[#0B6E76] hover:bg-[#0B6E76]/10 px-2 py-0.5 rounded-lg border border-transparent hover:border-[#0B6E76]/20 transition-all"
+          >
+            <Pencil size={10} />
+            แก้ไข
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap text-sm text-black/50 mb-1.5">
+        <span>NRW:</span>
+        <span className="num font-bold text-[15px] text-[#12181F]">{pB !== null ? `${fmt(pB, 1)}%` : '—'}</span>
+        <span className="text-black/25">→</span>
+        <span className="num font-bold text-[15px] text-[#12181F]">{pA !== null ? `${fmt(pA, 1)}%` : '—'}</span>
+        {pB !== null && pA !== null && (
+          <span className={`num font-bold ${pA <= pB ? 'text-[#1E7A5A]' : 'text-[#B3392C]'}`}>
+            {pA <= pB ? '▼' : '▲'} {fmt(Math.abs(pB - pA), 1)} จุด
+          </span>
+        )}
+      </div>
+
+      {(mB !== null || mA !== null) && (
+        <div className="flex items-center gap-2 flex-wrap text-sm text-black/50 mb-3">
+          <span>MNF:</span>
+          <span className="num font-bold text-[15px] text-[#12181F]">{fmt(mB)}</span>
+          <span className="text-black/25">→</span>
+          <span className="num font-bold text-[15px] text-[#12181F]">{fmt(mA)}</span>
+          <span className="text-[11px] text-black/35">ลบ.ม./ชม.</span>
+          {mB !== null && mA !== null && (
+            <span className={`num font-bold ${mA <= mB ? 'text-[#1E7A5A]' : 'text-[#B3392C]'}`}>
+              {mA <= mB ? '▼' : '▲'} {fmt(Math.abs(mB - mA))}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-black/50 mb-4">
+        <span>น้ำสูญเสียหลัง: <b className="num text-[#12181F]">{fmt(lossAfter, 0)}</b> ลบ.ม.</span>
+        <span>จุดรั่วพบ: <b className="num text-[#12181F]">{found}</b></span>
+        <span>ซ่อมแล้ว: <b className="num text-[#12181F]">{report.leaks_repaired ?? 0}</b></span>
+        <span>ค้างซ่อม: <b className={`num ${pending > 0 ? 'text-[#B3392C]' : 'text-[#12181F]'}`}>{pending}</b></span>
+      </div>
+
+      {steps.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#0B6E76] mb-1">
+            Step Test — สูญเสียคาดการณ์ (ลบ.ม./ชม.)
+          </p>
+          <div className="flex items-center gap-4 text-[10.5px] text-black/45 mb-1">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#98A2AF' }} />ไม่มีจุดรั่ว</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#1E7A5A' }} />พบ · ซ่อมครบแล้ว</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: '#B3392C' }} />พบ · ค้างซ่อม</span>
+          </div>
+          <StepTestChart steps={steps.map((s) => ({
+            label: `สเต็ป ${s.step_no}`,
+            loss: s.estimated_loss ?? 0,
+            found: s.leaks_found ?? 0,
+            repaired: s.leaks_repaired ?? 0,
+          }))} />
+          <details className="mt-1 group">
+            <summary className="text-[11px] font-semibold text-[#0B6E76] cursor-pointer select-none list-none flex items-center gap-1">
+              <span className="group-open:rotate-90 transition-transform">▸</span> แสดงตารางข้อมูล Step Test
+            </summary>
+            <div className="overflow-x-auto mt-2">
+              <table className="w-full text-[11.5px]">
+                <thead>
+                  <tr className="text-[9.5px] uppercase tracking-wide text-black/35">
+                    <th className="text-left font-bold pb-1.5">สเต็ป</th>
+                    <th className="text-right font-bold pb-1.5">สูญเสียคาดการณ์</th>
+                    <th className="text-right font-bold pb-1.5">พบ</th>
+                    <th className="text-right font-bold pb-1.5">ซ่อมแล้ว</th>
+                    <th className="text-right font-bold pb-1.5">ค้างซ่อม</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {steps.map((s) => {
+                    const stepPending = Math.max(0, (s.leaks_found ?? 0) - (s.leaks_repaired ?? 0))
+                    return (
+                      <tr key={s.step_no} className="border-t border-black/6">
+                        <td className="py-1.5 text-black/60">{s.step_no}</td>
+                        <td className="py-1.5 text-right num text-black/70">{fmt(s.estimated_loss, 2)}</td>
+                        <td className="py-1.5 text-right num text-black/70">{s.leaks_found ?? 0}</td>
+                        <td className="py-1.5 text-right num text-black/70">{s.leaks_repaired ?? 0}</td>
+                        <td className={`py-1.5 text-right num font-semibold ${stepPending > 0 ? 'text-[#B3392C]' : 'text-black/30'}`}>{stepPending}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#0B6E76] mb-2">Do — ดำเนินการแล้ว</p>
+          <BulletList items={toBullets(report.pdca_do)} />
+        </div>
+        <div>
+          <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#1E7A5A] mb-2">Act — แผนถัดไป</p>
+          <BulletList items={toBullets(report.pdca_act)} />
+        </div>
+      </div>
+
+      {obstacles.map((obs, i) => (
+        <div key={i} className="mt-4 rounded-xl border border-black/8 bg-black/2 p-4">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full ${
+              obs.priority_order === 1 ? 'bg-[#B3392C]/12 text-[#B3392C]' : 'bg-[#A8721A]/10 text-[#A8721A]'
+            }`}>
+              {obs.priority_order === 1 ? '🔴 สูง' : '🟡 กลาง'}
+            </span>
+            <span className="text-[12.5px] font-bold text-[#12181F]">{obs.obstacle_type || 'ไม่ระบุประเภท'}</span>
+          </div>
+          {obs.obstacle_detail && (
+            <div className="mb-2">
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-[#B3392C] flex items-center gap-1 mb-0.5">
+                <AlertTriangle size={11} /> รายละเอียดอุปสรรค
+              </p>
+              <p className="text-[12.5px] text-black/60">{obs.obstacle_detail}</p>
+            </div>
+          )}
+          {obs.resolution_plan && (
+            <div className="mb-2">
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-[#1E7A5A] flex items-center gap-1 mb-0.5">
+                แนวทางการแก้ไข
+              </p>
+              <p className="text-[12.5px] text-black/60">{obs.resolution_plan}</p>
+            </div>
+          )}
+          {obs.region_support_needed && (
+            <div>
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-[#A8721A] mb-0.5">ต้องการจากเขต</p>
+              <p className="text-[12.5px] text-[#A8721A]">{obs.region_support_needed}</p>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {canDelete && (
+        <div className="pt-4 mt-4 border-t border-black/8">
+          {!confirming ? (
+            <button
+              type="button"
+              onClick={onConfirmDelete}
+              className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-[#B3392C]/20 text-[#B3392C]/80 text-xs font-semibold hover:bg-[#B3392C]/10 hover:border-[#B3392C]/40 transition-colors"
+            >
+              <Trash2 size={12} />
+              ลบพื้นที่นี้
+            </button>
+          ) : (
+            <div className="rounded-lg border border-[#B3392C]/40 bg-[#B3392C]/10 p-3 space-y-2">
+              <p className="text-xs text-[#B3392C] font-semibold">ยืนยันลบ &ldquo;{report.area_name}&rdquo;?</p>
+              <p className="text-[10px] text-black/40">ไม่สามารถกู้คืนได้</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onCancelDelete}
+                  disabled={deletePending}
+                  className="flex-1 py-1.5 rounded-lg bg-black/10 text-black/60 text-xs font-semibold hover:bg-black/15 disabled:opacity-40 transition-colors flex items-center justify-center gap-1"
+                >
+                  <X size={12} /> ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  disabled={deletePending}
+                  className="flex-1 py-1.5 rounded-lg bg-[#B3392C] hover:bg-[#9c2f25] text-[#FFFFFF] text-xs font-bold disabled:opacity-40 transition-colors flex items-center justify-center gap-1"
+                >
+                  <Check size={12} /> {deletePending ? 'กำลังลบ...' : 'ลบเลย'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Shared detail body (used by both AreaReportTable and BranchSummaryGrid) ──
+// Styled like the offline PDCA tool's "แดชบอร์ด" tab: KPI row, before/after
+// bar charts per area, then one dashboard-style card per area.
+export function AreaDetailBody({
   reports,
   canDelete,
 }: {
@@ -81,6 +441,14 @@ export function AreaDetailSheetBody({
   const reportPeriod = reports[0]
     ? `${getThaiMonthName(reports[0].report_month)} ${toThaiYear(reports[0].report_year)}`
     : ''
+
+  const agg = computeAgg(reports)
+  const nrwDelta = agg.pctB !== null && agg.pctA !== null ? agg.pctB - agg.pctA : null
+  const mnfDelta = agg.mnfB !== null && agg.mnfA !== null ? agg.mnfB - agg.mnfA : null
+  const pending = Math.max(0, agg.found - agg.repaired)
+  // Only claim a "loss reduced" figure when there's an actual before-baseline —
+  // otherwise distB defaults to 0 and lossB - lossA prints a huge, misleading negative.
+  const lossReduced = agg.pctB !== null ? agg.lossB - agg.lossA : null
 
   function handleDelete(id: string) {
     startDeleteTransition(async () => {
@@ -99,328 +467,71 @@ export function AreaDetailSheetBody({
     <>
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-black/10 p-5 space-y-1">
-        <SheetTitle className="text-base font-bold text-[#12181F]">
+        <DialogTitle className="text-lg font-bold text-[#12181F]">
           {branchName || 'รายงานพื้นที่'}
-        </SheetTitle>
+        </DialogTitle>
         <p className="text-xs text-black/40">
           {reportPeriod}{reports.length > 0 ? ` · ${reports.length} พื้นที่` : ''}
         </p>
       </div>
 
-      {/* All area reports */}
-      <div className="divide-y divide-black/5">
-        {reports.map((report) => {
-          const obstCount = report.area_obstacles?.length ?? 0
-          const hasHighPriority = report.area_obstacles?.some((o) => o.priority_order === 1)
-          const isConfirmingDelete = confirmDeleteId === report.id
-          const isEditing = editingId === report.id
+      <div className="p-5 space-y-4">
+        {/* KPI row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <KpiCard label="จำนวนพื้นที่" value={reports.length} unit="พื้นที่" accentColor="blue" />
+          <KpiCard label="NRW เฉลี่ยก่อน" value={agg.pctB !== null ? fmt(agg.pctB, 1) : '—'} unit="%" accentColor="sky" />
+          <KpiCard label="NRW เฉลี่ยหลัง" value={agg.pctA !== null ? fmt(agg.pctA, 1) : '—'} unit="%" accentColor="teal" delta={nrwDelta} />
+          <KpiCard label="MNF เฉลี่ยหลัง" value={agg.mnfA !== null ? fmt(agg.mnfA, 2) : '—'} unit="ลบ.ม./ชม." accentColor="cyan" delta={mnfDelta} />
+          <KpiCard label="น้ำสูญเสียลดลง" value={lossReduced !== null ? fmt(lossReduced, 0) : '—'} unit={lossReduced !== null ? 'ลบ.ม.' : undefined} accentColor="purple" />
+          <KpiCard
+            label="จุดรั่วค้างซ่อม"
+            value={pending}
+            sub={`จาก ${agg.found} จุด`}
+            accentColor={pending > 0 ? 'red' : 'green'}
+          />
+        </div>
 
-          if (isEditing) {
+        {/* Charts */}
+        {reports.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <MetricChart reports={reports} metric="nrw" title="อัตราน้ำสูญเสีย (NRW%) ก่อน–หลัง รายพื้นที่" />
+            <MetricChart reports={reports} metric="mnf" title="MNF ก่อน–หลัง รายพื้นที่ (ลบ.ม./ชม.)" />
+          </div>
+        )}
+
+        {/* Area cards */}
+        <div className="space-y-4">
+          {reports.map((report) => {
+            if (editingId === report.id) {
+              return (
+                <div key={report.id} className="glass-card overflow-hidden">
+                  <AreaReportEditInline
+                    report={report}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={() => {
+                      setEditingId(null)
+                      router.refresh()
+                    }}
+                  />
+                </div>
+              )
+            }
             return (
-              <AreaReportEditInline
+              <AreaDashCard
                 key={report.id}
                 report={report}
-                onCancel={() => setEditingId(null)}
-                onSaved={() => {
-                  setEditingId(null)
-                  router.refresh()
-                }}
+                canEdit
+                canDelete={canDelete}
+                onEdit={() => setEditingId(report.id)}
+                deletePending={deletePending}
+                confirming={confirmDeleteId === report.id}
+                onConfirmDelete={() => setConfirmDeleteId(report.id)}
+                onCancelDelete={() => setConfirmDeleteId(null)}
+                onDelete={() => handleDelete(report.id)}
               />
             )
-          }
-
-          return (
-            <div key={report.id} className="p-5 space-y-4">
-              {/* Area title row */}
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-5 rounded-full shrink-0 ${hasHighPriority ? 'bg-red-500' : 'bg-cyan-500/50'}`} />
-                <span className="text-sm font-bold text-[#12181F] flex-1 truncate">{report.area_name}</span>
-                {obstCount > 0 && (
-                  <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-                    hasHighPriority
-                      ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                      : 'bg-orange-500/15 border-orange-500/30 text-orange-300'
-                  }`}>
-                    <AlertTriangle size={8} />
-                    {obstCount}
-                  </span>
-                )}
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${
-                  report.status === 'submitted'
-                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
-                    : 'bg-black/10 border-black/20 text-black/50'
-                }`}>
-                  {report.status === 'submitted' ? 'ส่งแล้ว' : report.status}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(report.id)}
-                  className="flex items-center gap-1 text-[10px] font-semibold text-black/40 hover:text-cyan-400 hover:bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-transparent hover:border-cyan-500/20 transition-all"
-                >
-                  <Pencil size={10} />
-                  แก้ไข
-                </button>
-              </div>
-
-              {/* NRW comparison */}
-              {(report.water_dist_before || report.water_dist_after) && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'ก่อนดำเนินการ', dist: report.water_dist_before, sold: report.water_sold_before },
-                      { label: 'หลังดำเนินการ', dist: report.water_dist_after,  sold: report.water_sold_after },
-                    ].map(({ label, dist, sold }) => {
-                      const pct = nrw(dist, sold)
-                      return (
-                        <div key={label} className="bg-black/5 rounded-xl p-3 space-y-0.5">
-                          <p className="text-[10px] text-black/40">{label}</p>
-                          <p className={`text-lg font-bold num ${
-                            pct == null ? 'text-black/20' : pct <= 20 ? 'text-green-400' : pct <= 25 ? 'text-amber-400' : 'text-red-400'
-                          }`}>
-                            {pct == null ? '—' : fmt(pct) + '%'}
-                          </p>
-                          {dist && (
-                            <p className="text-[10px] text-black/30 num">
-                              {fmt(dist, 0)} / {fmt(sold ?? 0, 0)} ลบ.ม.
-                            </p>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Trend summary — only when both before and after exist */}
-                  {report.water_dist_before && report.water_dist_after && (() => {
-                    const distDelta = (report.water_dist_after ?? 0) - (report.water_dist_before ?? 0)
-                    const soldDelta = (report.water_sold_after ?? 0) - (report.water_sold_before ?? 0)
-                    const nrwBefore = nrw(report.water_dist_before, report.water_sold_before)
-                    const nrwAfter  = nrw(report.water_dist_after,  report.water_sold_after)
-                    const nrwDelta  = nrwBefore != null && nrwAfter != null ? nrwAfter - nrwBefore : null
-
-                    const distGood = distDelta < 0
-                    const soldGood = soldDelta > 0
-                    const nrwGood  = nrwDelta != null && nrwDelta < 0
-
-                    let verdict: { label: string; sub: string; color: string }
-                    if (distGood && soldGood) {
-                      verdict = { label: 'ถูกทาง', sub: 'จ่ายลด + ขายเพิ่ม', color: 'text-green-400 border-green-500/30 bg-green-500/10' }
-                    } else if (nrwGood) {
-                      verdict = { label: 'ถูกทาง', sub: 'NRW ลดลง', color: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10' }
-                    } else if (nrwDelta != null && nrwDelta > 0) {
-                      verdict = { label: 'ต้องปรับปรุง', sub: 'NRW เพิ่มขึ้น', color: 'text-red-400 border-red-500/30 bg-red-500/10' }
-                    } else {
-                      verdict = { label: 'ไม่มีการเปลี่ยนแปลง', sub: '', color: 'text-black/40 border-black/10 bg-black/5' }
-                    }
-
-                    return (
-                      <div className="rounded-xl border border-black/15 bg-black/5 p-4 space-y-3">
-                        {/* Verdict row */}
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold text-black/50">สรุปแนวโน้ม</p>
-                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${verdict.color}`}>
-                            {verdict.label}{verdict.sub ? `  ·  ${verdict.sub}` : ''}
-                          </span>
-                        </div>
-
-                        {/* Metrics row */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className={`rounded-lg p-3 ${distGood ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                            <p className="text-xs text-black/50 mb-1">น้ำจ่าย</p>
-                            <p className={`text-base font-bold num ${distGood ? 'text-green-400' : 'text-red-400'}`}>
-                              {distGood ? '▼' : '▲'} {fmt(Math.abs(distDelta), 0)}
-                              <span className="text-xs font-normal ml-1">ลบ.ม.</span>
-                            </p>
-                            <p className="text-xs text-black/40 num mt-0.5">
-                              {fmt(report.water_dist_before, 0)} → {fmt(report.water_dist_after, 0)}
-                            </p>
-                          </div>
-                          <div className={`rounded-lg p-3 ${soldGood ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                            <p className="text-xs text-black/50 mb-1">น้ำจำหน่าย</p>
-                            <p className={`text-base font-bold num ${soldGood ? 'text-green-400' : 'text-red-400'}`}>
-                              {soldGood ? '▲' : '▼'} {fmt(Math.abs(soldDelta), 0)}
-                              <span className="text-xs font-normal ml-1">ลบ.ม.</span>
-                            </p>
-                            <p className="text-xs text-black/40 num mt-0.5">
-                              {fmt(report.water_sold_before, 0)} → {fmt(report.water_sold_after, 0)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-              )}
-
-              {/* Leak repair summary */}
-              {(report.leaks_repaired != null || report.leaks_pending != null) && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-                    <p className="text-[10px] text-green-400/70 mb-1">ซ่อมแล้ว</p>
-                    <p className="text-xl font-bold text-green-400 num">{report.leaks_repaired ?? 0}</p>
-                    <p className="text-[10px] text-black/25">จุด</p>
-                  </div>
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-center">
-                    <p className="text-[10px] text-yellow-400/70 mb-1">ค้างซ่อม</p>
-                    <p className="text-xl font-bold text-yellow-400 num">{report.leaks_pending ?? 0}</p>
-                    <p className="text-[10px] text-black/25">จุด</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Step Test Results */}
-              {report.step_test_results && report.step_test_results.length > 0 && (() => {
-                const sorted = [...report.step_test_results].sort((a, b) => a.step_no - b.step_no)
-                const totalLoss = sorted.reduce((s, r) => s + (r.estimated_loss ?? 0), 0)
-                const totalLeaks = sorted.reduce((s, r) => s + (r.leaks_found ?? 0), 0)
-                return (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-bold text-purple-400/60 uppercase tracking-widest">
-                        Step Test ({sorted.length} ขั้น)
-                      </p>
-                      <div className="flex items-center gap-3 text-[10px] text-black/40">
-                        <span>รวมสูญเสีย <span className="text-purple-300 font-bold num">{fmt(totalLoss)} m³/hr</span></span>
-                        <span>รวมจุด <span className="text-black/70 font-bold num">{totalLeaks}</span></span>
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-purple-500/15 bg-purple-500/5 overflow-hidden">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-purple-500/15">
-                            <th className="text-left px-3 py-2 text-black/30 font-semibold">ขั้น</th>
-                            <th className="text-right px-3 py-2 text-black/30 font-semibold">สูญเสีย (m³/hr)</th>
-                            <th className="text-right px-3 py-2 text-black/30 font-semibold">จุดรั่ว</th>
-                            <th className="text-left px-3 py-2 text-black/30 font-semibold">สถานะ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-purple-500/10">
-                          {sorted.map((s) => (
-                            <tr key={s.step_no}>
-                              <td className="px-3 py-2 text-black/60 font-bold num">{s.step_no}</td>
-                              <td className="px-3 py-2 text-right text-black/80 num">
-                                {s.estimated_loss != null ? fmt(s.estimated_loss) : '—'}
-                              </td>
-                              <td className="px-3 py-2 text-right text-black/80 num">
-                                {s.leaks_found ?? 0}
-                              </td>
-                              <td className="px-3 py-2">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                                  s.repair_status === 'ซ่อมแล้ว'
-                                    ? 'bg-green-500/20 text-green-300'
-                                    : s.repair_status === 'ซ่อมไม่ได้'
-                                    ? 'bg-red-500/20 text-red-300'
-                                    : 'bg-yellow-500/20 text-yellow-300'
-                                }`}>
-                                  {s.repair_status ?? 'รอซ่อม'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* PDCA Do / Act */}
-              {(report.pdca_do || report.pdca_act) && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest">Do / Act</p>
-                  {report.pdca_do && (
-                    <div>
-                      <p className="text-[10px] text-black/35 mb-0.5">D — สิ่งที่ดำเนินการ</p>
-                      <p className="text-xs text-black/80 leading-relaxed">{report.pdca_do}</p>
-                    </div>
-                  )}
-                  {report.pdca_act && (
-                    <div>
-                      <p className="text-[10px] text-black/35 mb-0.5">A — แผนเดือนถัดไป</p>
-                      <p className="text-xs text-black/80 leading-relaxed">{report.pdca_act}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Obstacles */}
-              {obstCount > 0 && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-orange-400/60 uppercase tracking-widest">
-                    อุปสรรค ({obstCount})
-                  </p>
-                  {report.area_obstacles!.map((obs, i) => (
-                    <div key={i} className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-[#12181F]">{obs.obstacle_type}</span>
-                        <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-                          obs.priority_order === 1
-                            ? 'bg-red-500/20 border-red-500/40 text-red-300'
-                            : 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                        }`}>
-                          {obs.priority_order === 1 ? '🔴 สูง' : '🟡 กลาง'}
-                        </span>
-                      </div>
-                      {obs.obstacle_detail && (
-                        <p className="text-[11px] text-black/60 leading-relaxed">{obs.obstacle_detail}</p>
-                      )}
-                      {obs.resolution_plan && (
-                        <div>
-                          <p className="text-[10px] text-black/35">แนวทางแก้ไข</p>
-                          <p className="text-[11px] text-black/70">{obs.resolution_plan}</p>
-                        </div>
-                      )}
-                      {obs.region_support_needed && (
-                        <div>
-                          <p className="text-[10px] text-black/35">ต้องการจากเขต</p>
-                          <p className="text-[11px] text-amber-300/80">{obs.region_support_needed}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Delete (region only) */}
-              {canDelete && (
-                <div className="pt-1">
-                  {!isConfirmingDelete ? (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteId(report.id)}
-                      className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-red-500/20 text-red-400/70 text-xs font-semibold hover:bg-red-500/10 hover:border-red-500/40 transition-colors"
-                    >
-                      <Trash2 size={12} />
-                      ลบพื้นที่นี้
-                    </button>
-                  ) : (
-                    <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 space-y-2">
-                      <p className="text-xs text-red-300 font-semibold">ยืนยันลบ &ldquo;{report.area_name}&rdquo;?</p>
-                      <p className="text-[10px] text-black/40">ไม่สามารถกู้คืนได้</p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteId(null)}
-                          disabled={deletePending}
-                          className="flex-1 py-1.5 rounded-lg bg-black/10 text-black/60 text-xs font-semibold hover:bg-black/15 disabled:opacity-40 transition-colors"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(report.id)}
-                          disabled={deletePending}
-                          className="flex-1 py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold disabled:opacity-40 transition-colors"
-                        >
-                          {deletePending ? 'กำลังลบ...' : 'ลบเลย'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
+          })}
+        </div>
       </div>
     </>
   )
@@ -469,7 +580,7 @@ export function AreaReportTable({ data, showBranch, canDelete }: Props) {
               onClick={() => setSelectedBranchId(row.branch_id)}
               className="w-full text-left px-4 py-3.5 hover:bg-black/5 transition-colors flex items-center gap-3 group"
             >
-              <div className={`w-1 h-10 rounded-full shrink-0 ${hasHighPriority ? 'bg-red-500' : 'bg-black/10'}`} />
+              <div className={`w-1 h-10 rounded-full shrink-0 ${hasHighPriority ? 'bg-[#B3392C]' : 'bg-black/10'}`} />
 
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -477,8 +588,8 @@ export function AreaReportTable({ data, showBranch, canDelete }: Props) {
                   {obstCount > 0 && (
                     <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       hasHighPriority
-                        ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                        : 'bg-orange-500/15 border-orange-500/30 text-orange-300'
+                        ? 'bg-[#B3392C]/12 border-[#B3392C]/30 text-[#B3392C]'
+                        : 'bg-[#A8721A]/10 border-[#A8721A]/25 text-[#A8721A]'
                     }`}>
                       <AlertTriangle size={9} />
                       {obstCount} อุปสรรค
@@ -497,7 +608,7 @@ export function AreaReportTable({ data, showBranch, canDelete }: Props) {
                   <>
                     <span className="text-black/20 text-xs">→</span>
                     <NrwChip pct={after} />
-                    <span className={`text-[10px] font-bold num ${after < before ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-[10px] font-bold num ${after < before ? 'text-[#1E7A5A]' : 'text-[#B3392C]'}`}>
                       {after < before ? '▼' : '▲'}{fmt(Math.abs(before - after))}%
                     </span>
                   </>
@@ -510,14 +621,11 @@ export function AreaReportTable({ data, showBranch, canDelete }: Props) {
         })}
       </div>
 
-      <Sheet open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-[50vw] bg-[#FFFFFF] border-black/10 overflow-y-auto flex flex-col gap-0 p-0"
-        >
-          <AreaDetailSheetBody reports={branchReports} canDelete={canDelete} />
-        </SheetContent>
-      </Sheet>
+      <Dialog open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>
+        <DialogContent className="w-[95vw] max-w-[1100px] max-h-[90vh] bg-[#FFFFFF] border-[#EFF2F5] overflow-y-auto flex flex-col gap-0 p-0 rounded-2xl">
+          <AreaDetailBody reports={branchReports} canDelete={canDelete} />
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

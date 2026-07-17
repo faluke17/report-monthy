@@ -33,8 +33,13 @@ export function KpiCard({
     ? (invertDelta ? delta >= 0 : delta <= 0)
     : null
 
+  // Long volume figures (e.g. "-134,180") would blow past a narrow KPI
+  // tile at a fixed 40px — shrink the digits to fit instead of overflowing.
+  const valueLen = String(value).length
+  const valueFontSize = valueLen > 10 ? '22px' : valueLen > 7 ? '28px' : '40px'
+
   return (
-    <div className={`glass-card ${a.barClass} p-5`}>
+    <div className={`glass-card ${a.barClass} p-5 overflow-hidden`}>
       {/* Label */}
       <p
         className="text-[10px] font-bold tracking-[.14em] uppercase mb-3"
@@ -44,7 +49,7 @@ export function KpiCard({
       </p>
 
       {/* Value */}
-      <div className="flex items-baseline gap-2 mb-1">
+      <div className="flex items-baseline flex-wrap gap-x-2 mb-1 min-w-0">
         {loading ? (
           <div
             className="h-10 w-32 rounded-xl animate-pulse"
@@ -56,7 +61,7 @@ export function KpiCard({
               className="font-bold leading-none"
               style={{
                 color: a.val,
-                fontSize: '40px',
+                fontSize: valueFontSize,
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '-.02em',
               }}

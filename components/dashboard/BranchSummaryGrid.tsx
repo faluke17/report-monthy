@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
-import { AreaDetailSheetBody, AreaReport } from './AreaReportTable'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { AreaDetailBody, AreaReport } from './AreaReportTable'
 import { Branch } from '@/lib/types'
 
 export interface BranchSummaryItem {
@@ -27,9 +27,9 @@ interface Props {
 
 function nrwColor(v: number | null) {
   if (v == null) return { text: 'text-black/25', strip: 'bg-black/10' }
-  if (v <= 20)   return { text: 'text-green-400', strip: 'bg-green-500' }
-  if (v <= 25)   return { text: 'text-amber-400', strip: 'bg-amber-500' }
-  return           { text: 'text-red-400',   strip: 'bg-red-500'   }
+  if (v <= 20)   return { text: 'text-[#1E7A5A]', strip: 'bg-[#1E7A5A]' }
+  if (v <= 25)   return { text: 'text-[#A8721A]', strip: 'bg-[#A8721A]' }
+  return           { text: 'text-[#B3392C]',   strip: 'bg-[#B3392C]'   }
 }
 
 export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
@@ -52,7 +52,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
   const totalAreas = summaries.reduce((a, s) => a + s.areaCount, 0)
 
   const progressColor =
-    pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'
+    pct >= 80 ? 'bg-[#1E7A5A]' : pct >= 50 ? 'bg-[#A8721A]' : 'bg-[#B3392C]'
 
   // Submitted: worst NRW first
   const sortedSubmitted = [...submitted].sort(
@@ -68,7 +68,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
           {/* ส่งแล้ว */}
           <div className="glass-card-sm p-4 space-y-1">
             <p className="text-xs text-black/40">ส่งแล้ว</p>
-            <p className="text-2xl font-bold text-cyan-400 num">
+            <p className="text-2xl font-bold text-[#0B6E76] num">
               {submitted.length}
               <span className="text-base font-normal text-black/30"> / {total}</span>
             </p>
@@ -78,7 +78,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
           {/* ลด NRW ได้ */}
           <div className="glass-card-sm p-4 space-y-1">
             <p className="text-xs text-black/40">ลด NRW ได้</p>
-            <p className={`text-2xl font-bold num ${nrwReduced > 0 ? 'text-green-400' : 'text-black/25'}`}>
+            <p className={`text-2xl font-bold num ${nrwReduced > 0 ? 'text-[#1E7A5A]' : 'text-black/25'}`}>
               {nrwReduced}
               <span className="text-base font-normal text-black/30"> / {submitted.length}</span>
             </p>
@@ -88,7 +88,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
           {/* อุปสรรคเร่งด่วน */}
           <div className="glass-card-sm p-4 space-y-1">
             <p className="text-xs text-black/40">อุปสรรคเร่งด่วน</p>
-            <p className={`text-2xl font-bold num ${highPrio > 0 ? 'text-red-400' : 'text-black/25'}`}>
+            <p className={`text-2xl font-bold num ${highPrio > 0 ? 'text-[#B3392C]' : 'text-black/25'}`}>
               {highPrio}
             </p>
             <p className="text-xs text-black/30">รายการ</p>
@@ -97,7 +97,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
           {/* พื้นที่รายงาน */}
           <div className="glass-card-sm p-4 space-y-1">
             <p className="text-xs text-black/40">พื้นที่รายงาน</p>
-            <p className="text-2xl font-bold text-teal-400 num">{totalAreas}</p>
+            <p className="text-2xl font-bold text-[#0B6E76] num">{totalAreas}</p>
             <p className="text-xs text-black/30">พื้นที่</p>
           </div>
         </div>
@@ -124,8 +124,8 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
         {notSubmitted.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <AlertTriangle size={14} className="text-orange-400 shrink-0" />
-              <p className="text-sm font-semibold text-orange-400">
+              <AlertTriangle size={14} className="text-[#A8721A] shrink-0" />
+              <p className="text-sm font-semibold text-[#A8721A]">
                 ยังไม่ส่ง ({notSubmitted.length} สาขา)
               </p>
             </div>
@@ -133,9 +133,9 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
               {notSubmitted.map((s) => (
                 <div
                   key={s.branch_id}
-                  className="flex items-center gap-1.5 border border-orange-500/25 bg-orange-500/5 rounded-lg px-3 py-1.5"
+                  className="flex items-center gap-1.5 border border-[#A8721A]/25 bg-[#A8721A]/5 rounded-lg px-3 py-1.5"
                 >
-                  <span className="text-[10px] font-bold text-orange-400/60 num">{s.code}</span>
+                  <span className="text-[10px] font-bold text-[#A8721A] num">{s.code}</span>
                   <span className="text-sm text-black/70">{s.name_th}</span>
                 </div>
               ))}
@@ -158,8 +158,8 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                   <button
                     key={s.branch_id}
                     onClick={() => setSelectedBranchId(s.branch_id)}
-                    className={`glass-card-sm text-left overflow-hidden transition-all hover:border-cyan-500/30 hover:bg-black/5 cursor-pointer w-full
-                      ${hasHighPrio ? 'border-red-500/30' : 'border-black/10'}`}
+                    className={`glass-card-sm text-left overflow-hidden transition-all hover:border-[#0B6E76]/30 hover:bg-black/5 cursor-pointer w-full
+                      ${hasHighPrio ? 'border-[#B3392C]/30' : 'border-black/10'}`}
                   >
                     {/* Colored top strip */}
                     <div className={`h-1 w-full ${strip}`} />
@@ -170,7 +170,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                         <span className="text-[10px] font-bold num bg-black/10 px-1.5 py-0.5 rounded text-black/50 shrink-0">
                           {s.code}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shrink-0">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-[#0B6E76]/12 border-[#0B6E76]/30 text-[#0B6E76] shrink-0">
                           ส่งแล้ว
                         </span>
                       </div>
@@ -191,7 +191,7 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
                         <span className="text-xs text-black/40">{s.areaCount} พื้นที่</span>
                         {s.totalObstacles > 0 && (
                           <span className={`flex items-center gap-1 text-xs font-bold ${
-                            hasHighPrio ? 'text-red-400' : 'text-amber-400'
+                            hasHighPrio ? 'text-[#B3392C]' : 'text-[#A8721A]'
                           }`}>
                             <AlertTriangle size={10} />
                             {hasHighPrio
@@ -209,16 +209,13 @@ export function BranchSummaryGrid({ summaries, allRows, canDelete }: Props) {
         )}
       </div>
 
-      <Sheet open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-[50vw] bg-[#FFFFFF] border-black/10 overflow-y-auto flex flex-col gap-0 p-0"
-        >
+      <Dialog open={!!selectedBranchId} onOpenChange={(o) => !o && setSelectedBranchId(null)}>
+        <DialogContent className="w-[95vw] max-w-[1100px] max-h-[90vh] bg-[#FFFFFF] border-[#EFF2F5] overflow-y-auto flex flex-col gap-0 p-0 rounded-2xl">
           {sheetReports.length > 0 && (
-            <AreaDetailSheetBody reports={sheetReports} canDelete={canDelete} />
+            <AreaDetailBody reports={sheetReports} canDelete={canDelete} />
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
