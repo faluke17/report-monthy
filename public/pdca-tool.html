@@ -366,6 +366,8 @@
   .chip { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
   .chip.crit { background: var(--critical-soft); color: var(--critical); }
   .chip.warn { background: var(--warning-soft); color: var(--warning); }
+  .chip.info { background: var(--accent-soft); color: var(--accent-soft-ink); }
+  .chip.good { background: var(--good-soft); color: var(--good); }
   .nrw-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; flex-wrap: wrap; color: var(--ink-2); }
   .nrw-line .pct { font-weight: 800; font-size: 15px; color: var(--ink); }
   .arrow-good { color: var(--good); font-weight: 800; }
@@ -517,6 +519,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v5.2a2 2 0 01-.4 1.2L5.5 15.6A2 2 0 007 19h10a2 2 0 001.5-3.4L14.4 9.4A2 2 0 0114 8.2V3"/></svg>
         ตัวอย่าง
       </button>
+      <button class="iconbtn" id="clearBtn" title="ล้างข้อมูลที่กรอกไว้ทั้งหมด แล้วเริ่มกรอกใหม่">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg>
+        ล้างข้อมูล
+      </button>
     </div>
   </div>
 </div>
@@ -531,7 +537,7 @@
         <div class="grid-3">
           <div class="field">
             <label>ชื่อสาขา</label>
-            <input type="text" id="metaBranch" placeholder="เช่น กปภ.สาขาขอนแก่น">
+            <select id="metaBranch"><option value="">— เลือกสาขา —</option></select>
           </div>
           <div class="field">
             <label>เดือน</label>
@@ -720,6 +726,13 @@
     "จุดค้างซ่อม", "มาตรผิดปกติ", "ปัญหาแรงดันน้ำไหลอ่อน", "ขาด logger / P3", "อื่น"
   ];
   var MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var BRANCHES = [
+    "นครสวรรค์", "ท่าตะโก", "ลาดยาว", "พยุหะคีรี", "ชัยนาท", "อุทัยธานี",
+    "กำแพงเพชร", "ขาณุวรลักษบุรี", "ตาก", "แม่สอด", "สุโขทัย", "ทุ่งเสลี่ยม",
+    "ศรีสำโรง", "สวรรคโลก", "ศรีสัชนาลัย", "อุตรดิตถ์", "พิษณุโลก", "นครไทย",
+    "พิจิตร", "บางมูลนาก", "ตะพานหิน", "เพชรบูรณ์", "หล่มสัก", "ชนแดน",
+    "หนองไผ่", "วิเชียรบุรี"
+  ];
   var STORE_KEY = "nrw_pdca_offline_v1";
   var uidCounter = 0;
   function uid(p) { uidCounter += 1; return p + "_" + Date.now().toString(36) + "_" + uidCounter; }
@@ -729,7 +742,22 @@
   var metaYearSel = document.getElementById("metaYear");
   var metaBranchInp = document.getElementById("metaBranch");
 
-  // ---- populate month/year selects ----
+  // ---- populate branch/month/year selects ----
+  BRANCHES.forEach(function (b) {
+    var o = document.createElement("option");
+    o.value = b; o.textContent = b;
+    metaBranchInp.appendChild(o);
+  });
+  function setBranchValue(name) {
+    name = name || "";
+    if (name && BRANCHES.indexOf(name) === -1) {
+      // preserve free-typed branch names saved before the dropdown existed
+      var o = document.createElement("option");
+      o.value = name; o.textContent = name;
+      metaBranchInp.insertBefore(o, metaBranchInp.firstChild.nextSibling);
+    }
+    metaBranchInp.value = name;
+  }
   MONTHS.forEach(function (m, i) {
     var o = document.createElement("option");
     o.value = i + 1; o.textContent = m;
@@ -760,6 +788,15 @@
   function fieldNum(label, key) {
     var wrap = el("div", "field");
     wrap.innerHTML = '<label>' + label + '</label><input type="number" step="any" data-key="' + key + '" placeholder="0">';
+    return wrap;
+  }
+
+  function fieldNumTagged(label, key, tag, tagClass) {
+    var wrap = el("div", "field");
+    wrap.innerHTML =
+      '<label style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + label +
+      '<span class="chip ' + tagClass + '">' + tag + '</span></label>' +
+      '<input type="number" step="any" data-key="' + key + '" placeholder="0">';
     return wrap;
   }
 
@@ -954,9 +991,9 @@
     var s2 = el("section");
     s2.innerHTML = '<p class="section-label before">ก่อนดำเนินการ</p>';
     var g2 = el("div", "grid-3");
-    g2.appendChild(fieldNum("น้ำจ่าย (ลบ.ม.)", "beforeDist"));
-    g2.appendChild(fieldNum("น้ำขาย (ลบ.ม.)", "beforeSold"));
-    g2.appendChild(fieldNum("MNF (ลบ.ม./ชม.)", "beforeMnf"));
+    g2.appendChild(fieldNumTagged("น้ำจ่าย (ลบ.ม.)", "beforeDist", "ปีที่แล้ว เดือนเดียวกัน", "warn"));
+    g2.appendChild(fieldNumTagged("น้ำขาย (ลบ.ม.)", "beforeSold", "ปีที่แล้ว เดือนเดียวกัน", "warn"));
+    g2.appendChild(fieldNumTagged("MNF (ลบ.ม./ชม.)", "beforeMnf", "เดือนก่อนหน้าที่รายงาน", "info"));
     s2.appendChild(g2);
     var g2b = el("div", "grid-2", '');
     g2b.style.marginTop = "10px";
@@ -995,9 +1032,9 @@
     var s4 = el("section");
     s4.innerHTML = '<p class="section-label after">หลังดำเนินการ</p>';
     var g4 = el("div", "grid-3");
-    g4.appendChild(fieldNum("น้ำจ่าย (ลบ.ม.)", "afterDist"));
-    g4.appendChild(fieldNum("น้ำขาย (ลบ.ม.)", "afterSold"));
-    g4.appendChild(fieldNum("MNF (ลบ.ม./ชม.)", "afterMnf"));
+    g4.appendChild(fieldNumTagged("น้ำจ่าย (ลบ.ม.)", "afterDist", "เดือนที่รายงาน", "good"));
+    g4.appendChild(fieldNumTagged("น้ำขาย (ลบ.ม.)", "afterSold", "เดือนที่รายงาน", "good"));
+    g4.appendChild(fieldNumTagged("MNF (ลบ.ม./ชม.)", "afterMnf", "เดือนที่รายงาน", "good"));
     s4.appendChild(g4);
     var g4b = el("div", "grid-2");
     g4b.style.marginTop = "10px";
@@ -1085,13 +1122,15 @@
   }
 
   document.getElementById("addAreaBtn").addEventListener("click", function () { addArea(); saveDebounced(); });
-  document.getElementById("resetBtn").addEventListener("click", function () {
+  function clearAllData() {
     showConfirm("ล้างข้อมูลทั้งหมดและเริ่มรายงานใหม่?", function () {
       localStorage.removeItem(STORE_KEY);
       location.reload();
     });
-  });
-  metaBranchInp.addEventListener("input", function () { updateMetaLine(); saveDebounced(); });
+  }
+  document.getElementById("resetBtn").addEventListener("click", clearAllData);
+  document.getElementById("clearBtn").addEventListener("click", clearAllData);
+  metaBranchInp.addEventListener("change", function () { updateMetaLine(); saveDebounced(); });
   metaMonthSel.addEventListener("change", function () { updateMetaLine(); saveDebounced(); });
   metaYearSel.addEventListener("change", function () { updateMetaLine(); saveDebounced(); });
 
@@ -1240,7 +1279,7 @@
   function hydrate(data) {
     areasContainer.innerHTML = "";
     if (data.meta) {
-      metaBranchInp.value = data.meta.branch || "";
+      setBranchValue(data.meta.branch);
       if (data.meta.month) metaMonthSel.value = data.meta.month;
       if (data.meta.year) metaYearSel.value = data.meta.year;
     }
@@ -1563,7 +1602,7 @@
   // Not real branch data; overwrites the current form (with confirmation).
   function demoData() {
     return {
-      meta: { branch: "กปภ.สาขา Claude", month: 6, year: 2569 },
+      meta: { branch: "นครสวรรค์", month: 6, year: 2569 },
       areas: [
         {
           name: "DMA สนามบิน",
