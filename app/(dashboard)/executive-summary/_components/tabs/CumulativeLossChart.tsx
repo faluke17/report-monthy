@@ -1,114 +1,91 @@
 'use client'
 
-import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { CumulativeLossPoint } from '@/app/actions/executive-summary'
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import type { LossSeriesPoint } from '@/app/actions/executive-summary'
 import { C, MONO, fmt, Card, Sec } from './shared'
 
-const MONTH_LABELS = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.']
-
-// ย่อตัวเลขแกน Y ให้สั้นพออยู่ในความกว้างจำกัด (ค่าน้ำสูญเสียมักมีหลักแสน-ล้าน)
+// ย่อตัวเลขแกน Y ให้สั้นพออยู่ในความกว้างจำกัด (ค่าน้ำมักมีหลักแสน-ล้าน)
 function fmtAxis(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000) return `${Math.round(n / 1000)}k`
   return `${Math.round(n)}`
 }
 
-function LegendDot({ color, label, dashed }: { color: string; label: string | number; dashed?: boolean }) {
+const SERIES = [
+  { key: 'water_produced' as const, label: 'น้ำผลิตจ่าย', color: C.blue },
+  { key: 'water_sold' as const,     label: 'น้ำจำหน่าย',   color: C.good },
+  { key: 'water_loss' as const,     label: 'น้ำสูญเสีย',    color: C.crit },
+]
+
+function LegendDot({ color, label }: { color: string; label: string }) {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color, fontFamily: MONO }}>
-      <span style={{ width: 12, height: 0, borderTop: `2px ${dashed ? 'dashed' : 'solid'} ${color}`, display: 'inline-block' }} />
-      ปีงบ {label}
+      <span style={{ width: 12, height: 0, borderTop: `2px solid ${color}`, display: 'inline-block' }} />
+      {label}
     </span>
   )
 }
 
-function ChartTooltip({ active, payload, label, fiscalYearCurr, fiscalYearPrev }: {
+function ChartTooltip({ active, payload, label }: {
   active?: boolean
-  payload?: { dataKey: string; value: number | null }[]
+  payload?: { dataKey: string; value: number | null; color: string }[]
   label?: string
-  fiscalYearCurr: number
-  fiscalYearPrev: number
 }) {
   if (!active || !payload?.length) return null
-  const curr = payload.find((p) => p.dataKey === 'curr')
-  const prev = payload.find((p) => p.dataKey === 'prev')
   return (
     <div style={{ background: C.panel, border: `1px solid ${C.border}`, padding: '8px 10px', fontFamily: MONO, boxShadow: '0 4px 14px rgba(18,24,31,.08)' }}>
       <div style={{ fontSize: 10, color: C.muted, marginBottom: 6 }}>{label}</div>
-      {curr && (
-        <div style={{ fontSize: 11, color: C.good, marginBottom: 2 }}>
-          ปีงบ {fiscalYearCurr}: {curr.value != null ? `${fmt(Math.round(curr.value))} m³/ด.` : '—'}
-        </div>
-      )}
-      {prev && (
-        <div style={{ fontSize: 11, color: C.crit }}>
-          ปีงบ {fiscalYearPrev}: {prev.value != null ? `${fmt(Math.round(prev.value))} m³/ด.` : '—'}
-        </div>
-      )}
+      {SERIES.map(({ key, label: sLabel, color }) => {
+        const p = payload.find((x) => x.dataKey === key)
+        if (!p || p.value == null) return null
+        return (
+          <div key={key} style={{ fontSize: 11, color, marginBottom: 2 }}>
+            {sLabel}: {fmt(Math.round(p.value))} m³
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev }: {
-  fiscalYearCurr: number
-  fiscalYearPrev: number
-  curr: CumulativeLossPoint[]
-  prev: CumulativeLossPoint[]
-}) {
-  const allVals = [...curr, ...prev].map((p) => p.avg_loss).filter((v): v is number => v != null)
+export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
+  const hasData = series.some((p) => p.water_produced != null)
 
-  if (allVals.length === 0) {
+  if (!hasData) {
     return (
       <Card style={{ textAlign: 'center', padding: 50 }}>
-        <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{'// ยังไม่มีข้อมูลเพียงพอสำหรับคำนวณน้ำสูญเสียสะสม'}</div>
+        <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{'// ยังไม่มีข้อมูลน้ำผลิตจ่าย/จำหน่าย/สูญเสีย'}</div>
       </Card>
     )
   }
 
-  const currByIdx = new Map(curr.map((p) => [p.fiscal_month_index, p]))
-  const prevByIdx = new Map(prev.map((p) => [p.fiscal_month_index, p]))
-  const chartData = MONTH_LABELS.map((label, i) => {
-    const idx = i + 1
-    return {
-      month: label,
-      curr: currByIdx.get(idx)?.avg_loss ?? null,
-      prev: prevByIdx.get(idx)?.avg_loss ?? null,
-    }
-  })
+  const startLabel = series[0]?.month_label ?? ''
+  const endLabel = series[series.length - 1]?.month_label ?? ''
+  const last = [...series].reverse().find((p) => p.water_produced != null) ?? null
 
-  const lastCurr = [...curr].reverse().find((p) => p.avg_loss != null) ?? null
-  // เทียบ "เดือนเดียวกัน" กับปีก่อน ไม่ใช่เดือนล่าสุดของปีก่อน — ปีก่อนเป็นปีงบที่จบสมบูรณ์แล้ว (12 เดือน)
-  // ถ้าใช้เดือนล่าสุดของ prev ตรงๆ จะกลายเป็นเทียบสะสม 9 เดือน (ปีนี้) กับสะสม 12 เดือน (ปีก่อน) ซึ่งเทียบกันไม่ได้
-  const lastPrev = lastCurr
-    ? prev.find((p) => p.fiscal_month_index === lastCurr.fiscal_month_index) ?? null
-    : null
+  // เดือนเยอะ (ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน) — โชว์ป้ายแกน X แบบเว้นช่วง กันตัวหนังสือทับกัน
+  const tickInterval = series.length > 24 ? 2 : series.length > 12 ? 1 : 0
 
   return (
     <Card>
       <Sec
-        label={`น้ำสูญเสียสะสมเฉลี่ย — ปีงบ ${fiscalYearCurr} vs ${fiscalYearPrev}`}
+        label={`น้ำผลิตจ่าย/จำหน่าย/สูญเสีย — ${startLabel} ถึง ${endLabel}`}
         right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <LegendDot color={C.good} label={fiscalYearCurr} />
-            <LegendDot color={C.crit} label={fiscalYearPrev} dashed />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            {SERIES.map(({ key, label, color }) => <LegendDot key={key} color={color} label={label} />)}
           </div>
         }
       />
 
-      <ResponsiveContainer width="100%" height={200}>
-        <ComposedChart data={chartData} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
-          <defs>
-            <linearGradient id="lossCurrFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={C.good} stopOpacity={0.32} />
-              <stop offset="100%" stopColor={C.good} stopOpacity={0} />
-            </linearGradient>
-          </defs>
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={series} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
           <CartesianGrid stroke="rgba(11,110,118,0.10)" vertical={false} />
           <XAxis
-            dataKey="month"
+            dataKey="month_label"
             tick={{ fill: C.dim, fontSize: 9, fontFamily: MONO }}
             axisLine={{ stroke: C.border }}
             tickLine={false}
+            interval={tickInterval}
           />
           <YAxis
             tick={{ fill: C.dim, fontSize: 9, fontFamily: MONO }}
@@ -120,50 +97,37 @@ export function CumulativeLossChart({ fiscalYearCurr, fiscalYearPrev, curr, prev
           />
           <Tooltip
             cursor={{ stroke: 'rgba(11,110,118,0.25)', strokeWidth: 1 }}
-            content={<ChartTooltip fiscalYearCurr={fiscalYearCurr} fiscalYearPrev={fiscalYearPrev} />}
+            content={<ChartTooltip />}
           />
-          <Line
-            type="monotone"
-            dataKey="prev"
-            stroke={C.crit}
-            strokeWidth={2}
-            strokeDasharray="5 3"
-            dot={{ r: 2.6, fill: C.crit, strokeWidth: 0 }}
-            activeDot={{ r: 4.5 }}
-            connectNulls
-            isAnimationActive={false}
-          />
-          <Area
-            type="monotone"
-            dataKey="curr"
-            stroke={C.good}
-            strokeWidth={2.6}
-            fill="url(#lossCurrFill)"
-            dot={{ r: 3, fill: C.good, strokeWidth: 0 }}
-            activeDot={{ r: 5 }}
-            connectNulls
-            isAnimationActive={false}
-          />
-        </ComposedChart>
+          {SERIES.map(({ key, color }) => (
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              stroke={color}
+              strokeWidth={2.2}
+              dot={{ r: 2.4, fill: color, strokeWidth: 0 }}
+              activeDot={{ r: 4.5 }}
+              connectNulls
+              isAnimationActive={false}
+            />
+          ))}
+        </LineChart>
       </ResponsiveContainer>
 
       {/* สรุปค่าล่าสุด */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 24px', marginTop: 4, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
-        {[
-          { label: `ล่าสุด ปีงบ ${fiscalYearCurr}`, point: lastCurr, c: C.good },
-          { label: `ช่วงเดียวกัน ปีงบ ${fiscalYearPrev}`, point: lastPrev, c: C.crit },
-        ].map(({ label, point, c }) => (
-          <div key={label}>
-            <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>{label}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: c, fontFamily: MONO }}>
-              {point?.avg_loss != null ? `${fmt(Math.round(point.avg_loss))} m³/ด.` : '—'}
+      {last && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 24px', marginTop: 4, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+          {SERIES.map(({ key, label, color }) => (
+            <div key={key}>
+              <div style={{ fontSize: 9, color: C.dim, fontFamily: MONO, marginBottom: 3 }}>{label} ({last.month_label})</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color, fontFamily: MONO }}>
+                {last[key] != null ? `${fmt(Math.round(last[key] as number))} m³` : '—'}
+              </div>
             </div>
-            {point && (
-              <div style={{ fontSize: 9, color: C.muted, fontFamily: MONO }}>เฉลี่ย {point.months_counted} เดือน (ถึง {point.month_label})</div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   )
 }

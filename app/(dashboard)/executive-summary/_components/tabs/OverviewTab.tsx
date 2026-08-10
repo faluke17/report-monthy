@@ -1,25 +1,20 @@
-import type { BranchExecutiveSummary, CumulativeLossTrend, DmaStatRow, MnfNodeRow } from '@/app/actions/executive-summary'
+import type { BranchExecutiveSummary, LossSeriesPoint, DmaStatRow, MnfNodeRow } from '@/app/actions/executive-summary'
 import { THAI_MONTHS, C, MONO, fmt, Card, Sec, ALERT, PHASES, PHASE_COLOR } from './shared'
 import { CumulativeLossChart } from './CumulativeLossChart'
 
-export function OverviewTab({ pdca, dmaStats, mnfNodes, budget_2569, lossTrend }: {
+export function OverviewTab({ pdca, dmaStats, mnfNodes, budget_2569, lossSeries }: {
   nrw: BranchExecutiveSummary['nrw']
   delta: number | null
   pdca: BranchExecutiveSummary['pdca']
   dmaStats: DmaStatRow[]
   mnfNodes: MnfNodeRow[]
   budget_2569: BranchExecutiveSummary['budget_2569']
-  lossTrend: CumulativeLossTrend
+  lossSeries: LossSeriesPoint[]
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* น้ำสูญเสียสะสมเฉลี่ย — ปีงบปัจจุบัน vs ปีงบก่อนหน้า */}
-      <CumulativeLossChart
-        fiscalYearCurr={lossTrend.fiscal_year_curr}
-        fiscalYearPrev={lossTrend.fiscal_year_prev}
-        curr={lossTrend.curr}
-        prev={lossTrend.prev}
-      />
+      {/* น้ำผลิตจ่าย/จำหน่าย/สูญเสีย รายเดือนต่อเนื่อง ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน */}
+      <CumulativeLossChart series={lossSeries} />
 
       {/* PDCA */}
       {pdca && (pdca.do_text || pdca.act_text) && (

@@ -18,7 +18,7 @@ interface Props {
 export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
   const [tab, setTab] = useState<Tab>('overview')
   const { isMobile } = useBreakpoint()
-  const { branch, nrw, pdca, budget_2569, dmaStats, nodeDmaStats, obstacles, monthly_track, mnfNodes, lossTrend } = data
+  const { branch, nrw, pdca, budget_2569, dmaStats, nodeDmaStats, obstacles, monthly_track, mnfNodes, lossSeries } = data
 
   const color  = nrwColor(nrw.current_pct)
   const [statusLabel, statusColor] = nrwLabel(nrw.current_pct)
@@ -251,7 +251,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
 
           {/* TAB CONTENT */}
           <div style={{ flex: 1, overflowX: 'hidden', overflowY: tab !== 'obstacle' || isMobile ? 'auto' : 'hidden', padding: tab !== 'obstacle' ? (isMobile ? '12px 12px' : '16px 20px') : 0 }}>
-            {tab === 'overview' && <OverviewTab nrw={nrw} delta={delta} pdca={pdca} dmaStats={dmaStats} mnfNodes={mnfNodes} budget_2569={budget_2569} lossTrend={lossTrend} />}
+            {tab === 'overview' && <OverviewTab nrw={nrw} delta={delta} pdca={pdca} dmaStats={dmaStats} mnfNodes={mnfNodes} budget_2569={budget_2569} lossSeries={lossSeries} />}
             {tab === 'dma'      && <DmaTab nodeDmaStats={nodeDmaStats} />}
             {tab === 'obstacle' && <TrackTab monthlyTrack={monthly_track} obstacles={obstacles} />}
             {tab === 'mnf'      && <MnfTab mnfNodes={mnfNodes} />}
