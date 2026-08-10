@@ -85,74 +85,143 @@ function Gauge({ pct, color, height = 8 }: { pct: number | null; color: string; 
   )
 }
 
+// ตัดเลขจุดทศนิยมส่วนเกินออกเวลาแสดงเป้าหมายบนหน้าปัด (39.99 → "39.99", 20 → "20")
+function fmtPct(n: number): string {
+  return (Math.round(n * 100) / 100).toString()
+}
+
 // ── สัญลักษณ์หลักของหน้านี้ — มาตรวัดครึ่งวงกลม (เหมือนหน้าปัดมิเตอร์น้ำ) แสดง NRW% สะสมทั้งเขต ──
-// เป้าหมาย 20% อยู่ตำแหน่ง 12 นาฬิกาพอดี (สเกล 0–40%) ให้เทียบง่ายด้วยตา
+// สเกลคงที่ 0–100% เสมอ (เทียบสาขา/ช่วงเวลาได้ตรงกันทุกครั้ง) ต่างจากเวอร์ชันเดิมที่ยืดสเกลตามเป้าหมาย
+// เป้าหมายจริงของเขต (ตั้งค่าที่หน้า /report-nrw แถว __district__) ถูกปักเป็นขีด + ป้ายกำกับบนหน้าปัดแทน
 // ขนาดคุมด้วย container ที่ห่อ (width:100% + aspect-ratio) ไม่ตรึงพิกเซล เพราะใช้ทั้งใน sidebar แคบและ hero มือถือกว้าง
-// พื้นหลังแบ่งเป็น 3 โซนสีจาง (ดี/เฝ้าระวัง/วิกฤต) ตามเกณฑ์เดียวกับสีสถานะที่ใช้ทั้งหน้า ให้เทียบตำแหน่งค่าปัจจุบันกับเกณฑ์ได้ด้วยตาโดยไม่ต้องอ่านตัวเลข
-function HeroDial({ pct }: { pct: number | null }) {
-  const W = 220, H = 122, CX = 110, CY = 102, R = 82, SW = 18
-  const domain = 40
+// ring นอก (R2) เป็นสเกล 3 โซน (ดี/เฝ้าระวัง/วิกฤต) แยกออกจาก ring ค่าจริง (R) เพื่อให้เห็นทั้งสเกลและค่าปัจจุบันพร้อมกันเสมอ
+function HeroDial({ pct, target = 20 }: { pct: number | null; target?: number }) {
+  const W = 220, H = 138, CX = 110, CY = 104
+  const R = 70, SW = 16
+  const R2 = R + SW / 2 + 10, SW2 = 6
+  const domain = 100 // สเกลตายตัว 0–100% เทียบข้ามเดือน/สาขาได้ตรงกันเสมอ
+  const watchBand = Math.min(target * 0.25, domain - target) // ช่วงเฝ้าระวัง (เหลือง) ต่อจากเป้าไปทางแดง กันล้นสเกลถ้าเป้าสูง
   const circumference = 2 * Math.PI * R
   const halfCirc = circumference / 2
+  const circumference2 = 2 * Math.PI * R2
+  const halfCirc2 = circumference2 / 2
   const value = pct == null ? 0 : Math.max(0, Math.min(domain, pct))
   const valueLen = halfCirc * (value / domain)
-  const color = pct == null ? '#C7CFD7' : pct <= 20 ? '#1E7A5A' : pct <= 25 ? '#A8721A' : '#B3392C'
+  const color = pct == null ? '#C7CFD7' : pct <= target ? '#1E7A5A' : pct <= target + watchBand ? '#A8721A' : '#B3392C'
 
   const ZONES = [
-    { from: 0,  to: 20, color: '#1E7A5A' },
-    { from: 20, to: 25, color: '#A8721A' },
-    { from: 25, to: 40, color: '#B3392C' },
+    { from: 0, to: target, color: '#1E7A5A' },
+    { from: target, to: target + watchBand, color: '#A8721A' },
+    { from: target + watchBand, to: domain, color: '#B3392C' },
   ]
   const dialId = useId()
 
-  // ตำแหน่งปลายเข็ม — angle 180°=9 นาฬิกา (value=0) ไล่ลดลงถึง 0°=3 นาฬิกา (value=domain) ผ่านสุด apex ที่ 90° (12 นาฬิกา)
-  const tipRad = ((180 - (value / domain) * 180) * Math.PI) / 180
-  const tip = { x: CX + R * Math.cos(tipRad), y: CY - R * Math.sin(tipRad) }
+  // angle 180°=9 นาฬิกา (value=0) ไล่ลดลงถึง 0°=3 นาฬิกา (value=domain) ผ่านสุด apex ที่ 90° (12 นาฬิกา)
+  const pointAt = (radius: number, v: number) => {
+    const rad = ((180 - (v / domain) * 180) * Math.PI) / 180
+    return { x: CX + radius * Math.cos(rad), y: CY - radius * Math.sin(rad) }
+  }
+  const tip = pointAt(R, value)
+  const targetTick = pointAt(R2, target)
+  const targetLabelPos = pointAt(R2 + SW2 / 2 + 17, target)
+  // พลิกป้ายเป้าหมายให้อยู่ฝั่งตรงข้ามเข็มเสมอ กันป้ายทับตัวเลขค่าปัจจุบันตรงกลาง เมื่อเป้ากับค่าปัจจุบันอยู่ใกล้กัน
+  const targetLabelAbove = target > value
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', width: '100%', height: 'auto', overflow: 'visible' }} aria-hidden>
       <defs>
         <filter id={`${dialId}-shadow`} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="1" stdDeviation="2.2" floodColor={color} floodOpacity="0.32" />
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2.4" floodColor={color} floodOpacity="0.35" />
         </filter>
+        <filter id={`${dialId}-glow`} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="9" />
+        </filter>
+        <linearGradient id={`${dialId}-fill`} x1="0" y1="0" x2="1" y2="0.15">
+          <stop offset="0%" stopColor={color} stopOpacity={0.55} />
+          <stop offset="100%" stopColor={color} stopOpacity={1} />
+        </linearGradient>
       </defs>
 
-      {pct == null ? (
-        <circle
-          cx={CX} cy={CY} r={R} fill="none" stroke="#EBEEF1" strokeWidth={SW}
-          strokeDasharray={`${halfCirc} ${circumference}`} strokeLinecap="round"
-          transform={`rotate(180 ${CX} ${CY})`}
-        />
-      ) : (
-        ZONES.map(({ from, to, color: zoneColor }) => {
-          const segLen = halfCirc * ((to - from) / domain)
-          const offset = halfCirc * (from / domain)
-          return (
-            <circle
-              key={from}
-              cx={CX} cy={CY} r={R} fill="none" stroke={zoneColor} strokeOpacity={0.13} strokeWidth={SW}
-              strokeLinecap="round"
-              strokeDasharray={`${segLen} ${circumference - segLen}`}
-              strokeDashoffset={-offset}
-              transform={`rotate(180 ${CX} ${CY})`}
-            />
-          )
-        })
+      {/* แสงเรืองจางด้านหลังตามสีสถานะ ให้มาตรวัดดูมีมิติแทนที่จะแบนราบ */}
+      {pct != null && (
+        <circle cx={CX} cy={CY - R * 0.3} r={R * 0.85} fill={color} opacity={0.12} filter={`url(#${dialId}-glow)`} />
       )}
 
-      {/* ขีดเป้าหมาย 20% — ตำแหน่ง apex กึ่งกลางสเกล */}
-      <line x1={CX} y1={CY - R - SW / 2 - 3} x2={CX} y2={CY - R + SW / 2 + 3} stroke="#B9C2CB" strokeWidth={2} />
+      {/* ring นอก — สเกล 3 โซน แสดงตลอดเวลาไม่ว่าค่าปัจจุบันจะเท่าไร */}
+      {ZONES.map(({ from, to, color: zoneColor }) => {
+        const segLen = halfCirc2 * ((to - from) / domain)
+        const offset = halfCirc2 * (from / domain)
+        return (
+          <circle
+            key={from}
+            cx={CX} cy={CY} r={R2} fill="none" stroke={zoneColor} strokeOpacity={0.75} strokeWidth={SW2} strokeLinecap="butt"
+            strokeDasharray={`${segLen} ${circumference2 - segLen}`}
+            strokeDashoffset={-offset}
+            transform={`rotate(180 ${CX} ${CY})`}
+          />
+        )
+      })}
+
+      {/* ขีดสเกล 5 จุด (0/25/50/75/100) บนขอบ ring นอก + ตัวเลขกำกับปลายสอง (0%, 100%) */}
+      {[0, 25, 50, 75, 100].map((v) => {
+        const inner = pointAt(R2 + SW2 / 2 + 2, v)
+        const outer = pointAt(R2 + SW2 / 2 + (v === 0 || v === 100 ? 7 : 5), v)
+        return <line key={v} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="#C7CFD7" strokeWidth={1.3} />
+      })}
+      {[0, 100].map((v) => {
+        const label = pointAt(R2 + SW2 / 2 + 15, v)
+        return (
+          <text key={v} x={label.x} y={label.y} textAnchor="middle" dominantBaseline="middle" fontSize={8.5} fontFamily={MONO} fill="#8896A3">
+            {v}%
+          </text>
+        )
+      })}
+
+      {/* พื้นหลังเทาจาง ring หลัก (track) ก่อนวาดค่าจริงทับ */}
+      <circle
+        cx={CX} cy={CY} r={R} fill="none" stroke="#EBEEF1" strokeWidth={SW}
+        strokeDasharray={`${halfCirc} ${circumference}`} strokeLinecap="round"
+        transform={`rotate(180 ${CX} ${CY})`}
+      />
 
       {pct != null && (
+        <circle
+          cx={CX} cy={CY} r={R} fill="none" stroke={`url(#${dialId}-fill)`} strokeWidth={SW}
+          strokeDasharray={`${valueLen} ${circumference}`} strokeLinecap="round"
+          transform={`rotate(180 ${CX} ${CY})`}
+          filter={`url(#${dialId}-shadow)`}
+          style={{ transition: 'stroke-dasharray .7s ease' }}
+        />
+      )}
+
+      {/* ขีดเป้าหมายของเขต — ปักตรงตำแหน่งจริงบนสเกล 0–100% + ป้ายตัวเลขกำกับ */}
+      <line
+        x1={pointAt(R - SW / 2 - 3, target).x} y1={pointAt(R - SW / 2 - 3, target).y}
+        x2={pointAt(R + SW / 2 + 3, target).x} y2={pointAt(R + SW / 2 + 3, target).y}
+        stroke="#FFFFFF" strokeWidth={2.8} strokeOpacity={0.95}
+      />
+      <line
+        x1={pointAt(R - SW / 2 - 3, target).x} y1={pointAt(R - SW / 2 - 3, target).y}
+        x2={pointAt(R + SW / 2 + 3, target).x} y2={pointAt(R + SW / 2 + 3, target).y}
+        stroke="#4B5563" strokeWidth={1.1}
+      />
+      <circle cx={targetTick.x} cy={targetTick.y} r={2} fill="#4B5563" />
+      <text
+        x={targetLabelPos.x} y={targetLabelPos.y + (targetLabelAbove ? -1 : 8)}
+        textAnchor="middle" dominantBaseline="middle" fontSize={8.5} fontWeight={700} fontFamily={MONO} fill="#4B5563"
+      >
+        เป้า {fmtPct(target)}%
+      </text>
+
+      {/* จุดกระพริบบอกตำแหน่งค่าปัจจุบันบนสเกล — กระพริบตลอดเวลา ยิ่งเข้าโซนวิกฤตยิ่งเด่นขึ้น */}
+      {pct != null && (
         <>
-          <circle
-            cx={CX} cy={CY} r={R} fill="none" stroke={color} strokeWidth={SW}
-            strokeDasharray={`${valueLen} ${circumference}`} strokeLinecap="round"
-            transform={`rotate(180 ${CX} ${CY})`}
-            filter={`url(#${dialId}-shadow)`}
-            style={{ transition: 'stroke-dasharray .7s ease' }}
-          />
-          <circle cx={tip.x} cy={tip.y} r={SW / 2 - 2} fill="#FFFFFF" stroke={color} strokeWidth={3.5} />
+          <circle cx={tip.x} cy={tip.y} r={SW / 2 + 2} fill="none" stroke={color} strokeWidth={2} opacity={0.6}>
+            <animate attributeName="r" values={`${SW / 2 + 1};${SW / 2 + 7};${SW / 2 + 1}`} dur="1.6s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0;0.6" dur="1.6s" repeatCount="indefinite" />
+          </circle>
+          <circle cx={tip.x} cy={tip.y} r={SW / 2 - 1} fill="#FFFFFF" stroke={color} strokeWidth={3.5} />
+          <circle cx={tip.x} cy={tip.y} r={2.6} fill={color} />
         </>
       )}
     </svg>
@@ -446,7 +515,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
     : 'ยังไม่มีข้อมูลเดือนนี้'
   const { label: cumTrendLabel, color: cumTrendColor } = trendInfo(regionSnap.cum_trend_delta)
   const { label: latestTrendLabel } = trendInfo(regionSnap.latest_month_delta)
-  const latestColor = regionSnap.latest_month_pct == null ? INK3 : regionSnap.latest_month_pct <= 20 ? '#1E7A5A' : regionSnap.latest_month_pct <= 25 ? '#A8721A' : '#B3392C'
+  const latestColor = regionSnap.latest_month_pct == null ? INK3 : regionSnap.latest_month_pct <= regionSnap.target ? '#1E7A5A' : regionSnap.latest_month_pct <= regionSnap.target + regionSnap.target * 0.25 ? '#A8721A' : '#B3392C'
   const targetColor = regionSnap.branches_reporting > 0 && regionSnap.branches_on_target === regionSnap.branches_reporting ? '#1E7A5A' : '#0B6E76'
 
   // ── ส่วนที่ใช้ซ้ำได้ทั้งเลย์เอาต์มือถือ (สแต็กเดียว) และเดสก์ท็อป (3 คอลัมน์) ──
@@ -459,7 +528,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
         {!isMobile && (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(120px,1.4fr) 70px 140px', gap: 14, padding: '9px 16px', background: '#FAFBFC', borderBottom: `1px solid ${LINE}` }}>
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>สาขา</span>
-            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>ระดับ NRW% (เป้า 20%)</span>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>ระดับ NRW% (เป้า {regionSnap.target}%)</span>
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>สะสม</span>
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>แนวโน้ม</span>
           </div>
@@ -564,7 +633,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
             <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '20px 18px', marginBottom: gap, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ position: 'relative', width: 200 }}>
-                  <HeroDial pct={regionSnap.cum_pct} />
+                  <HeroDial pct={regionSnap.cum_pct} target={regionSnap.target} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
                     <span style={{ fontSize: 34, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
                       {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}
@@ -605,7 +674,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 76 }}>
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: '16px 14px', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
                 <div style={{ position: 'relative' }}>
-                  <HeroDial pct={regionSnap.cum_pct} />
+                  <HeroDial pct={regionSnap.cum_pct} target={regionSnap.target} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
                     <span style={{ fontSize: 24, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
                       {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}

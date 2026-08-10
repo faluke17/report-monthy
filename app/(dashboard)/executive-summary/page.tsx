@@ -27,6 +27,7 @@ export interface RegionNrwSnap {
   branches_reporting: number
   branches_on_target: number
   branches_total: number
+  target: number                    // เป้าหมาย NRW% ของเขต — ตั้งค่าที่หน้า /report-nrw (แถว __district__) fallback 20
 }
 
 // ปีงบประมาณ กปภ. เริ่ม ต.ค. จบ ก.ย. — ลำดับเดือนตามปีงบ
@@ -97,6 +98,7 @@ function computeRegionSnap(
   prevRows: NrwMonthRow[],
   branchesTotal: number,
   getTarget: (branchName: string) => number,
+  regionTarget: number,
 ): RegionNrwSnap {
   const aggregateByMonth = (rows: NrwMonthRow[]) => {
     const byMonth = new Map<number, { produced: number; sold: number; free: number; blowoff: number }>()
@@ -172,6 +174,7 @@ function computeRegionSnap(
     branches_reporting: branchesReporting,
     branches_on_target: branchesOnTarget,
     branches_total: branchesTotal,
+    target: regionTarget,
   }
 }
 
@@ -236,7 +239,7 @@ export default async function ExecutiveSummaryPage() {
     snapMap[b.id] = { branch_id: b.id, ...trend }
   }
 
-  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length, getTarget)
+  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length, getTarget, districtTarget ?? 20)
 
   return (
     // Cancel dashboard layout padding to fill the whole viewport
