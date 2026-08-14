@@ -1,7 +1,7 @@
 import {
-  BarChart3, ClipboardList, Target, AlertTriangle,
+  ClipboardList, Target, AlertTriangle,
   Calendar, BookOpen, Download,
-  Droplets, ListChecks, FileText, Crosshair, Activity, Building2, Presentation, GitBranch, Network,
+  Droplets, ListChecks, Crosshair, Activity, Building2, Presentation, GitBranch, Network,
 } from 'lucide-react'
 
 export interface SidebarStats {
@@ -23,7 +23,6 @@ export const NAV_GROUPS = [
       { href: '/water-tree',          label: 'ผังจ่ายน้ำ',            icon: GitBranch },
       { href: '/project-progress',    label: 'ความก้าวหน้าโครงการ',  icon: Building2 },
       { href: '/pipeline',            label: 'Pipeline Monitor',      icon: Network },
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/ranking', label: 'Ranking สาขา', icon: BarChart3 }] : []),
     ],
   },
   {
@@ -31,7 +30,6 @@ export const NAV_GROUPS = [
     items: [
       { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
       ...(process.env.NODE_ENV !== 'production' ? [{ href: '/action',  label: 'Action Tracker',  icon: Crosshair }] : []),
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/summary', label: 'Exec. Summary', icon: FileText, badge: 'new' as const }] : []),
     ],
   },
   {

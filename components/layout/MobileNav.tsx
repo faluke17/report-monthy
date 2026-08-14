@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, BarChart3, ClipboardList, Calendar, Target } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Calendar, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const MOBILE_NAV = [
   { href: '/executive-summary', label: 'ภาพรวม',  icon: LayoutDashboard },
-  ...(process.env.NODE_ENV !== 'production' ? [{ href: '/ranking', label: 'อันดับ', icon: BarChart3 }] : []),
   { href: '/pdca',      label: 'PDCA',      icon: ClipboardList },
   { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
   { href: '/plans',     label: 'แผน',      icon: Target },

@@ -24,13 +24,11 @@ interface TopbarProps {
 }
 
 const PAGE_META: Record<string, { kicker: string; title: string }> = {
-  '/ranking':            { kicker: 'Performance',     title: 'Ranking สาขา' },
   '/pdca':               { kicker: 'PDCA Report',     title: 'กรอกผล / PDCA รายพื้นที่' },
   '/plans':              { kicker: 'Plan Tracker',    title: 'แผนลดน้ำสูญเสีย' },
   '/obstacle':           { kicker: 'Issue Tracker',   title: 'Obstacle Tracker' },
   '/action':             { kicker: 'Action Tracker',  title: 'ข้อสั่งการ / Action Items' },
   '/meeting':            { kicker: 'Meeting Hub',     title: 'วาระ / มติ / สั่งการ' },
-  '/summary':            { kicker: 'Executive View',  title: 'Executive Summary' },
   '/executive-summary':  { kicker: 'Executive',       title: 'บทสรุปผู้บริหาร' },
   '/mnf-monitor':        { kicker: 'MNF Monitor',     title: 'ตรวจสอบ MNF EMA' },
   '/report-nrw':         { kicker: 'NRW Report',      title: 'รายงาน NRW รายสาขา' },

@@ -71,7 +71,6 @@ export async function submitMonthlyReport(formData: FormData): Promise<ActionRes
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/')
-  revalidatePath('/ranking')
   revalidatePath('/pdca')
   return { success: true }
 }
