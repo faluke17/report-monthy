@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback, useId } from 'react'
 import type { Branch } from '@/lib/types'
 import type { BranchNrwSnap, RegionNrwSnap } from '../page'
-import type { BranchExecutiveSummary } from '@/app/actions/executive-summary'
+import type { BranchExecutiveSummary, LossSeriesPoint } from '@/app/actions/executive-summary'
 import { getExecutiveBranchSummary } from '@/app/actions/executive-summary'
 import type { MeetingStoryListItem, MeetingStoryDetail } from '@/app/actions/meeting-story'
 import { getMeetingStoryDetail } from '@/app/actions/meeting-story'
 import { BranchSummaryPanel } from './BranchSummaryPanel'
 import { MeetingStoryRail } from './meeting-story/MeetingStoryRail'
 import { MeetingStoryPanel } from './meeting-story/MeetingStoryPanel'
+import { CumulativeLossChart } from './tabs/CumulativeLossChart'
 import { useRealtimeBranchReadStats } from '@/hooks/useRealtimeData'
 import { getBranchByCostcenter } from '@/lib/utils/pwa-branches'
 import { useBreakpoint, RailHeading } from './tabs/shared'
@@ -444,9 +445,10 @@ interface Props {
   snapMap: Record<string, BranchNrwSnap>
   regionSnap: RegionNrwSnap
   meetingStories: MeetingStoryListItem[]
+  regionLossSeries: LossSeriesPoint[]
 }
 
-export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingStories }: Props) {
+export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingStories, regionLossSeries }: Props) {
   const now = useClock()
   const { date, time } = thaiDateTime(now)
   const { isMobile, w } = useBreakpoint()
@@ -687,6 +689,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
 
             <div style={{ marginBottom: gap }}>{meetingStorySection}</div>
             <div style={{ marginBottom: gap }}>{watchSection}</div>
+            <div style={{ marginBottom: gap - 8 }}><CumulativeLossChart series={regionLossSeries} compact /></div>
             <div style={{ marginBottom: gap }}>{listSection}</div>
             <div style={{ marginBottom: gap }}>{ratsSection}</div>
           </>
@@ -729,6 +732,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6 }}>{periodLabel}</p>
 
+              <div style={{ marginTop: 18 }}><CumulativeLossChart series={regionLossSeries} compact /></div>
               <div style={{ marginTop: 18 }}>{listSection}</div>
             </div>
 

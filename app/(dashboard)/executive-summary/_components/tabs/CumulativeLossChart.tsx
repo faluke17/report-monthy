@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { Maximize2, X } from 'lucide-react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { LossSeriesPoint } from '@/app/actions/executive-summary'
 import { C, MONO, SANS, fmt, Card, Sec } from './shared'
@@ -42,12 +44,21 @@ function Num({ children, color }: { children: React.ReactNode; color?: string })
   return <strong style={{ color: color ?? C.bright, fontFamily: MONO, fontWeight: 800 }}>{children}</strong>
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+// active=false: เส้นนั้นถูกซ่อนอยู่ (คลิกซ้ำเพื่อโชว์กลับ) — dim สีลงแทนสีจริงของเส้น
+function LegendDot({ color, label, active = true, onClick }: { color: string; label: string; active?: boolean; onClick?: () => void }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color, fontFamily: MONO }}>
-      <span style={{ width: 12, height: 0, borderTop: `2px solid ${color}`, display: 'inline-block' }} />
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, fontFamily: MONO,
+        color: active ? color : C.dim, background: 'transparent', border: 'none', padding: 0,
+        cursor: onClick ? 'pointer' : 'default', opacity: active ? 1 : 0.6,
+      }}
+    >
+      <span style={{ width: 12, height: 0, borderTop: `2px solid ${active ? color : C.dim}`, display: 'inline-block' }} />
       {label}
-    </span>
+    </button>
   )
 }
 
@@ -73,12 +84,27 @@ function ChartTooltip({ active, payload, label }: {
   )
 }
 
-export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
+// compact: ใช้เมื่อวางเป็นกราฟรองในหน้าอื่น (เช่น เหนือรายชื่อสาขาใน Executive Summary) — ย่อความสูงกราฟ/padding/ตัวอักษร
+// และตัดกล่องสรุปแนวโน้มท้ายการ์ดออก เพราะพื้นที่แคบกว่าตำแหน่งหลัก
+export function CumulativeLossChart({ series, compact = false }: { series: LossSeriesPoint[]; compact?: boolean }) {
+  const [hiddenKeys, setHiddenKeys] = useState<SeriesKey[]>([])
+  const toggleKey = (key: SeriesKey) =>
+    setHiddenKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+
+  // ปุ่ม "ดูเต็ม" เฉพาะเวอร์ชัน compact — เปิด modal แสดงกราฟเวอร์ชันเต็ม (พร้อมกล่องสรุปแนวโน้มที่ compact ตัดออก)
+  const [expanded, setExpanded] = useState(false)
+  useEffect(() => {
+    if (!expanded) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [expanded])
+
   const hasData = series.some((p) => p.water_produced != null)
 
   if (!hasData) {
     return (
-      <Card style={{ textAlign: 'center', padding: 50 }}>
+      <Card style={{ textAlign: 'center', padding: compact ? 24 : 50 }}>
         <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{'// ยังไม่มีข้อมูลน้ำผลิตจ่าย/จำหน่าย/สูญเสีย'}</div>
       </Card>
     )
@@ -138,17 +164,35 @@ export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
   }
 
   return (
-    <Card>
+    <>
+    <Card style={compact ? { padding: '10px 14px' } : undefined}>
       <Sec
         label={`น้ำผลิตจ่าย/จำหน่าย/สูญเสีย — ${startLabel} ถึง ${endLabel}`}
         right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            {SERIES.map(({ key, label, color }) => <LegendDot key={key} color={color} label={label} />)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 10 : 14, flexWrap: 'wrap' }}>
+            {SERIES.map(({ key, label, color }) => (
+              <LegendDot key={key} color={color} label={label} active={!hiddenKeys.includes(key)} onClick={() => toggleKey(key)} />
+            ))}
+            {compact && (
+              <button
+                type="button"
+                onClick={() => setExpanded(true)}
+                aria-label="ขยายดูกราฟแบบเต็ม"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 6,
+                  border: `1px solid ${C.border}`, background: C.panel, color: C.muted,
+                  fontSize: 10, fontFamily: MONO, cursor: 'pointer',
+                }}
+              >
+                <Maximize2 size={11} />
+                ดูเต็ม
+              </button>
+            )}
           </div>
         }
       />
 
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={compact ? 130 : 220}>
         <LineChart data={series} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
           <CartesianGrid stroke="rgba(11,110,118,0.10)" vertical={false} />
           <XAxis
@@ -170,7 +214,7 @@ export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
             cursor={{ stroke: 'rgba(11,110,118,0.25)', strokeWidth: 1 }}
             content={<ChartTooltip />}
           />
-          {SERIES.map(({ key, color }) => (
+          {SERIES.filter(({ key }) => !hiddenKeys.includes(key)).map(({ key, color }) => (
             <Line
               key={key}
               type="monotone"
@@ -187,8 +231,9 @@ export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
       </ResponsiveContainer>
 
       {/* สรุปแนวโน้มแบบประโยคบรรยาย — เทียบต้นช่วงกับท้ายช่วง (เฉลี่ย {take} เดือน) แทนตัวเลขจุดสุดท้ายที่ซ้ำกับปลายเส้นบนกราฟ
-          ห่อเป็นกล่อง callout สีตามทิศทาง (แดง=แย่ลง/เขียว=ดีขึ้น/เทา=คงที่) แยกจากกราฟชัดเจน แทนที่จะเป็นข้อความลอยท้ายการ์ด */}
-      {earlyRatio != null && lateRatio != null && (
+          ห่อเป็นกล่อง callout สีตามทิศทาง (แดง=แย่ลง/เขียว=ดีขึ้น/เทา=คงที่) แยกจากกราฟชัดเจน แทนที่จะเป็นข้อความลอยท้ายการ์ด
+          ตัดออกเมื่อ compact — ใช้เป็นกราฟรองเหนือรายชื่อสาขา พื้นที่แคบ ไม่ต้องมีประโยคบรรยายซ้ำกับกราฟหลักรายสาขา */}
+      {!compact && earlyRatio != null && lateRatio != null && (
         <div style={{
           marginTop: 14, padding: '13px 16px', borderRadius: 10,
           background: ratioWorse ? '#FBEAE8' : ratioBetter ? '#E7F3EE' : C.row,
@@ -212,5 +257,37 @@ export function CumulativeLossChart({ series }: { series: LossSeriesPoint[] }) {
         </div>
       )}
     </Card>
+
+    {/* Modal ดูเต็ม — เฉพาะเวอร์ชัน compact แสดงกราฟ+กล่องสรุปแนวโน้มเต็มรูปแบบซ้อนทับหน้าจอ ปิดด้วยปุ่ม X / คลิกฉากหลัง / กด Esc */}
+    {compact && expanded && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={() => setExpanded(false)}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(18,24,31,0.55)', backdropFilter: 'blur(2px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}
+      >
+        <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 900, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="ปิด"
+              style={{
+                width: 30, height: 30, borderRadius: 8, border: 'none', background: C.panel,
+                boxShadow: '0 2px 8px rgba(18,24,31,.25)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text,
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <CumulativeLossChart series={series} />
+        </div>
+      </div>
+    )}
+    </>
   )
 }
