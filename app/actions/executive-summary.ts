@@ -643,3 +643,40 @@ export async function getExecutiveBranchSummary(
     error: null,
   }
 }
+
+// น้ำผลิตจ่าย/จำหน่าย/สูญเสีย รวมทั้งเขต รายเดือนต่อเนื่อง ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน
+// เหมือน lossSeries ต่อสาขาใน getExecutiveBranchSummary แต่รวมทุกสาขาต่อเดือนก่อนคำนวณ (ไม่กรอง branch_name)
+export async function getRegionLossSeries(): Promise<{ data: LossSeriesPoint[] | null; error: string | null }> {
+  const session = await getPwaSession()
+  if (!session) return { data: null, error: 'ไม่ได้รับอนุญาต' }
+
+  const supabase = await createClient()
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nrwMonthlyRes = await (supabase as any)
+    .from('nrw_branch_monthly')
+    .select('fiscal_year,month,water_produced,water_sold,water_free,blow_off')
+    .gte('fiscal_year', LOSS_SERIES_START_FY)
+
+  const rows = (nrwMonthlyRes.data ?? []) as NrwMonthRow[]
+
+  const aggMap = new Map<string, NrwMonthRow>()
+  for (const r of rows) {
+    if (r.water_produced == null) continue
+    const key = `${r.fiscal_year}-${String(r.month).padStart(2, '0')}`
+    const agg = aggMap.get(key) ?? { fiscal_year: r.fiscal_year, month: r.month, water_produced: 0, water_sold: 0, water_free: 0, blow_off: 0 }
+    agg.water_produced = (agg.water_produced ?? 0) + (r.water_produced ?? 0)
+    agg.water_sold = (agg.water_sold ?? 0) + (r.water_sold ?? 0)
+    agg.water_free = (agg.water_free ?? 0) + (r.water_free ?? 0)
+    agg.blow_off = (agg.blow_off ?? 0) + (r.blow_off ?? 0)
+    aggMap.set(key, agg)
+  }
+
+  const lossSeriesStart = fyToGregorianYear(LOSS_SERIES_START_FY, 10)
+  const lossSeries = buildLossSeries(lossSeriesStart, 10, currentYear, currentMonth, aggMap)
+
+  return { data: lossSeries, error: null }
+}

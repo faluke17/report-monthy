@@ -3,6 +3,7 @@ import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
 import { ExecutiveSummaryClient } from './_components/ExecutiveSummaryClient'
 import { getMeetingStoryList } from '@/app/actions/meeting-story'
+import { getRegionLossSeries } from '@/app/actions/executive-summary'
 import type { Branch } from '@/lib/types'
 
 export const metadata = { title: 'บทสรุปผู้บริหาร | NRW Tracker' }
@@ -188,7 +189,7 @@ export default async function ExecutiveSummaryPage() {
   const currentFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)
   const prevFiscalYear = currentFiscalYear - 1
 
-  const [branchesRes, nrwMonthlyRes, targetRes, meetingStoriesRes] = await Promise.all([
+  const [branchesRes, nrwMonthlyRes, targetRes, meetingStoriesRes, regionLossSeriesRes] = await Promise.all([
     supabase
       .from('branches')
       .select('id,code,name_th,province_th,region,is_active,created_at')
@@ -208,7 +209,8 @@ export default async function ExecutiveSummaryPage() {
       .select('branch_name,target_nrw')
       .eq('fiscal_year', currentFiscalYear),
 
-    getMeetingStoryList(),
+    getMeetingStoryList(1), // เก็บไว้แค่รายการประชุมล่าสุดอันเดียวใน rail หน้านี้
+    getRegionLossSeries(),
   ])
 
   const branches = (branchesRes.data ?? []) as Branch[]
@@ -255,6 +257,7 @@ export default async function ExecutiveSummaryPage() {
         snapMap={snapMap}
         regionSnap={regionSnap}
         meetingStories={meetingStoriesRes.data}
+        regionLossSeries={regionLossSeriesRes.data ?? []}
       />
     </div>
   )
