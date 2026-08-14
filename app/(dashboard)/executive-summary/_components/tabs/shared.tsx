@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 export const THAI_MONTHS = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 export type Tab = 'overview' | 'dma' | 'obstacle' | 'mnf' | 'budget'
@@ -105,6 +106,30 @@ export function Card({ children, style }: { children: React.ReactNode; style?: R
     </div>
   )
 }
+// หัวข้อ section แบบมีไอคอน+สีเด่น — ใช้กับหัวข้อในการ์ด rail ของ Executive Summary
+// (รายงานการประชุม / ต้องจับตาเป็นพิเศษ / รายชื่อสาขา / W.A.T.C.H.) ให้แยกจากเนื้อหาข้างล่างชัดเจนขึ้น
+export function RailHeading({ icon: Icon, label, color, bg, sub, right }: {
+  icon: LucideIcon; label: string; color: string; bg: string; sub?: string; right?: React.ReactNode
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <span style={{
+          width: 24, height: 24, borderRadius: 7, flexShrink: 0, background: bg,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon size={13} color={color} strokeWidth={2.5} />
+        </span>
+        <span style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#12181F', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+          {sub && <div style={{ fontSize: 10, color: '#8896A3', marginTop: 1 }}>{sub}</div>}
+        </span>
+      </div>
+      {right}
+    </div>
+  )
+}
+
 export function Sec({ label, right }: { label: string; right?: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>

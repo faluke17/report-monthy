@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
 import { ExecutiveSummaryClient } from './_components/ExecutiveSummaryClient'
+import { getMeetingStoryList } from '@/app/actions/meeting-story'
 import type { Branch } from '@/lib/types'
 
 export const metadata = { title: 'บทสรุปผู้บริหาร | NRW Tracker' }
@@ -187,7 +188,7 @@ export default async function ExecutiveSummaryPage() {
   const currentFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)
   const prevFiscalYear = currentFiscalYear - 1
 
-  const [branchesRes, nrwMonthlyRes, targetRes] = await Promise.all([
+  const [branchesRes, nrwMonthlyRes, targetRes, meetingStoriesRes] = await Promise.all([
     supabase
       .from('branches')
       .select('id,code,name_th,province_th,region,is_active,created_at')
@@ -206,6 +207,8 @@ export default async function ExecutiveSummaryPage() {
       .from('nrw_branch_target')
       .select('branch_name,target_nrw')
       .eq('fiscal_year', currentFiscalYear),
+
+    getMeetingStoryList(),
   ])
 
   const branches = (branchesRes.data ?? []) as Branch[]
@@ -251,6 +254,7 @@ export default async function ExecutiveSummaryPage() {
         branches={branches}
         snapMap={snapMap}
         regionSnap={regionSnap}
+        meetingStories={meetingStoriesRes.data}
       />
     </div>
   )

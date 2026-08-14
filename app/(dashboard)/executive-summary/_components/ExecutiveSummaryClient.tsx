@@ -5,10 +5,15 @@ import type { Branch } from '@/lib/types'
 import type { BranchNrwSnap, RegionNrwSnap } from '../page'
 import type { BranchExecutiveSummary } from '@/app/actions/executive-summary'
 import { getExecutiveBranchSummary } from '@/app/actions/executive-summary'
+import type { MeetingStoryListItem, MeetingStoryDetail } from '@/app/actions/meeting-story'
+import { getMeetingStoryDetail } from '@/app/actions/meeting-story'
 import { BranchSummaryPanel } from './BranchSummaryPanel'
+import { MeetingStoryRail } from './meeting-story/MeetingStoryRail'
+import { MeetingStoryPanel } from './meeting-story/MeetingStoryPanel'
 import { useRealtimeBranchReadStats } from '@/hooks/useRealtimeData'
 import { getBranchByCostcenter } from '@/lib/utils/pwa-branches'
-import { useBreakpoint } from './tabs/shared'
+import { useBreakpoint, RailHeading } from './tabs/shared'
+import { Gauge as GaugeIcon, AlertTriangle, ListTree } from 'lucide-react'
 
 const MONTH_SHORT = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
@@ -379,10 +384,10 @@ function RatsRailSummary({ yearBe, month }: { yearBe: number; month: number }) {
 
   return (
     <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: '16px', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
-        <div style={{ fontSize: 12.5, color: INK, fontWeight: 700 }}>W.A.T.C.H ผู้ใช้น้ำรายใหญ่</div>
-        <div style={{ fontSize: 10.5, color: INK3 }}>{label}</div>
-      </div>
+      <RailHeading
+        icon={GaugeIcon} label="W.A.T.C.H ผู้ใช้น้ำรายใหญ่" color="#6B4FA0" bg="rgba(107,79,160,.12)"
+        right={<div style={{ fontSize: 10.5, color: INK3, flexShrink: 0 }}>{label}</div>}
+      />
 
       {loading && total === 0 ? (
         <div className="animate-pulse" style={{ height: 96, background: BG, borderRadius: 8 }} />
@@ -438,9 +443,10 @@ interface Props {
   branches: Branch[]
   snapMap: Record<string, BranchNrwSnap>
   regionSnap: RegionNrwSnap
+  meetingStories: MeetingStoryListItem[]
 }
 
-export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props) {
+export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingStories }: Props) {
   const now = useClock()
   const { date, time } = thaiDateTime(now)
   const { isMobile, w } = useBreakpoint()
@@ -456,9 +462,12 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
   const [animKey, setAnimKey]             = useState(0)
   const [sevFilter, setSevFilter]         = useState<SevFilter>('all')
 
+  const [storyPendingId, setStoryPendingId] = useState<string | null>(null)
+  const [storyData, setStoryData]           = useState<MeetingStoryDetail | null>(null)
+
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setLoadedBranch(null); setSummaryData(null) }
+      if (e.key === 'Escape') { setLoadedBranch(null); setSummaryData(null); setStoryData(null) }
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
@@ -475,6 +484,15 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
       setSummaryData(result.data)
       setAnimKey((k) => k + 1)
     }
+  }, [])
+
+  const loadStory = useCallback(async (meetingId: string) => {
+    setStoryPendingId(meetingId)
+    setStoryData(null)
+    const result = await getMeetingStoryDetail(meetingId)
+    setStoryPendingId(null)
+    if (result.data) setStoryData(result.data)
+    else if (result.error) alert(result.error)
   }, [])
 
   const trackCount   = branches.filter((b) => groupOf(b.code) === 'track').length
@@ -521,9 +539,10 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
   // ── ส่วนที่ใช้ซ้ำได้ทั้งเลย์เอาต์มือถือ (สแต็กเดียว) และเดสก์ท็อป (3 คอลัมน์) ──
   const listSection = (
     <div>
-      <div style={{ fontSize: 12.5, color: INK2, fontWeight: 700, marginBottom: 8 }}>
-        รายชื่อสาขาทั้งหมด <span style={{ color: INK3, fontWeight: 500 }}>({filteredBranches.length})</span>
-      </div>
+      <RailHeading
+        icon={ListTree} label="รายชื่อสาขาทั้งหมด" color="#2B5C86" bg="rgba(43,92,134,.12)"
+        right={<div style={{ fontSize: 11.5, color: INK3, fontWeight: 600, flexShrink: 0 }}>{filteredBranches.length} สาขา</div>}
+      />
       <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
         {!isMobile && (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(120px,1.4fr) 70px 140px', gap: 14, padding: '9px 16px', background: '#FAFBFC', borderBottom: `1px solid ${LINE}` }}>
@@ -565,9 +584,10 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
 
   const watchSection = (
     <div>
-      <div style={{ fontSize: 12.5, color: INK2, fontWeight: 700, marginBottom: 8 }}>
-        ต้องจับตาเป็นพิเศษ{topConcerns.length > 0 ? ` (${worsening.length})` : ''}
-      </div>
+      <RailHeading
+        icon={AlertTriangle} label="ต้องจับตาเป็นพิเศษ" color="#B3392C" bg="rgba(179,57,44,.12)"
+        right={topConcerns.length > 0 ? <div style={{ fontSize: 11.5, color: '#B3392C', fontWeight: 700, flexShrink: 0 }}>{worsening.length} สาขา</div> : undefined}
+      />
       {topConcerns.length === 0 ? (
         <div style={{ padding: '12px 16px', borderRadius: 10, background: '#E7F3EE', border: '1px solid #CDE5DA', fontSize: 12.5, color: '#1E7A5A' }}>
           ✓ ไม่มีสาขาที่แนวโน้มแย่ลงเทียบปีก่อน (YoY)
@@ -583,6 +603,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
   )
 
   const ratsSection = <RatsRailSummary yearBe={now.getFullYear() + 543} month={now.getMonth() + 1} />
+  const meetingStorySection = <MeetingStoryRail meetings={meetingStories} pendingId={storyPendingId} onOpen={loadStory} />
 
   const severityFilters = [
     { key: 'all' as SevFilter,     label: 'ทั้งหมด',   count: branches.length, color: INK2 },
@@ -664,6 +685,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
               ))}
             </div>
 
+            <div style={{ marginBottom: gap }}>{meetingStorySection}</div>
             <div style={{ marginBottom: gap }}>{watchSection}</div>
             <div style={{ marginBottom: gap }}>{listSection}</div>
             <div style={{ marginBottom: gap }}>{ratsSection}</div>
@@ -711,6 +733,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {meetingStorySection}
               {watchSection}
               {ratsSection}
             </div>
@@ -723,14 +746,16 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
       </main>
 
       {/* ── Loading overlay ── */}
-      {pendingBranch && (
+      {(pendingBranch || storyPendingId) && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(245,246,248,0.9)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <svg className="animate-spin" width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}>
               <circle cx="12" cy="12" r="10" stroke="#E3E7EC" strokeWidth="3" />
               <path d="M22 12a10 10 0 0 0-10-10" stroke="#0B6E76" strokeWidth="3" strokeLinecap="round" />
             </svg>
-            <div style={{ fontSize: 13, color: INK2 }}>กำลังโหลดข้อมูลสาขา{pendingBranch.name_th}...</div>
+            <div style={{ fontSize: 13, color: INK2 }}>
+              {pendingBranch ? `กำลังโหลดข้อมูลสาขา${pendingBranch.name_th}...` : 'กำลังโหลดรายงานการประชุม...'}
+            </div>
           </div>
         </div>
       )}
@@ -745,6 +770,9 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap }: Props)
           />
         </div>
       )}
+
+      {/* ── Meeting story panel ── */}
+      {storyData && <MeetingStoryPanel data={storyData} onClose={() => setStoryData(null)} />}
     </div>
   )
 }
