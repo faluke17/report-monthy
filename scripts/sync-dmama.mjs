@@ -1,4 +1,5 @@
 // node --env-file=.env.local scripts/sync-dmama.mjs
+// ดึงจากฝั่ง DMAMA: เมนู Reports → [R22] รายงานน้ำสูญเสีย (ตัวเลขสรุปเดือนสำเร็จรูป ไม่มีการหักลบเพิ่มฝั่งเรา)
 import { createClient } from '@supabase/supabase-js'
 
 const DMAMA_API = 'https://dmama.pwa.co.th/api'

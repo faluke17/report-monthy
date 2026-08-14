@@ -139,8 +139,9 @@ function Btn({ children, onClick, color = C.cyan, disabled, danger }: {
 }
 
 // ── Edit Node Modal ───────────────────────────────────────────────────────────
-function EditNodeModal({ node, onClose, onSaved }: {
+function EditNodeModal({ node, allNodes, onClose, onSaved }: {
   node: WaterNode
+  allNodes: WaterNode[]
   onClose: () => void
   onSaved: (updated: Partial<WaterNode>) => void
 }) {
@@ -151,32 +152,46 @@ function EditNodeModal({ node, onClose, onSaved }: {
     self_supply:      node.self_supply ?? false,
     status:           node.status ?? 'จ่าย',
     user_count:       node.user_count !== null ? String(node.user_count) : '',
+    parent_id:        node.parent_id ?? '',
   })
   const [err, setErr] = useState('')
   const [pending, start] = useTransition()
 
   function set(k: string, v: string | boolean) { setForm(f => ({ ...f, [k]: v })) }
 
+  // ตัวเลือก parent: MM/DMA เท่านั้น (จุดที่มีลูกได้) ตัดตัวเองและลูกหลานของตัวเองออกกันวน loop
+  const parentOptions = useMemo(() => {
+    const byParent = new Map<string, string[]>()
+    for (const n of allNodes) {
+      if (!n.parent_id) continue
+      const arr = byParent.get(n.parent_id) ?? []; arr.push(n.id); byParent.set(n.parent_id, arr)
+    }
+    const excluded = new Set<string>([node.id])
+    const stack = [node.id]
+    while (stack.length) {
+      const cur = stack.pop()!
+      for (const childId of byParent.get(cur) ?? []) {
+        if (!excluded.has(childId)) { excluded.add(childId); stack.push(childId) }
+      }
+    }
+    return allNodes.filter(n => (n.node_type === 'MM' || n.node_type === 'DMA') && !excluded.has(n.id))
+  }, [allNodes, node.id])
+
   function handleSave() {
     start(async () => {
       setErr('')
-      const res = await updateWaterNode(node.id, {
+      const payload = {
         name_th:          form.name_th.trim() || null,
         logger_id:        form.logger_id.trim() || null,
         dmama_area_label: form.dmama_area_label.trim() || null,
         self_supply:      form.self_supply,
         status:           form.status as WaterNode['status'],
         user_count:       form.user_count !== '' ? Number(form.user_count) : null,
-      })
+        parent_id:        form.parent_id || null,
+      }
+      const res = await updateWaterNode(node.id, payload)
       if (res.error) { setErr(res.error); return }
-      onSaved({
-        name_th:          form.name_th.trim() || null,
-        logger_id:        form.logger_id.trim() || null,
-        dmama_area_label: form.dmama_area_label.trim() || null,
-        self_supply:      form.self_supply,
-        status:           form.status as WaterNode['status'],
-        user_count:       form.user_count !== '' ? Number(form.user_count) : null,
-      })
+      onSaved(payload)
       onClose()
     })
   }
@@ -217,27 +232,36 @@ function EditNodeModal({ node, onClose, onSaved }: {
         </Field>
       </div>
 
-      {/* self_supply เฉพาะ MM */}
-      {node.node_type === 'MM' && (
-        <div style={{ padding: '12px 14px', border: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.03)', marginBottom: 14 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={form.self_supply}
-              onChange={e => set('self_supply', e.target.checked)}
-              style={{ marginTop: 2, accentColor: C.cyan, cursor: 'pointer' }}
-            />
-            <div>
-              <div style={{ fontSize: 11, color: form.self_supply ? C.cyan : C.text, fontWeight: 600 }}>MM จ่ายน้ำให้ลูกค้าในโซนตัวเองด้วย</div>
-              <div style={{ fontSize: 10, color: C.muted, marginTop: 3, lineHeight: 1.6 }}>
-                {form.self_supply
-                  ? '→ NRW(MM) = outbound(MM) − Σ outbound(DMA ลูก) − จำหน่าย(ลูกค้าตรง)'
-                  : '→ MM เป็นแค่จุดกระจาย คำนวณ NRW เฉพาะ DMA ลูก'}
-              </div>
+      <Field label="Parent Node" hint="ย้ายไปอยู่ใต้ MM/DMA อื่น">
+        <select style={selectStyle} value={form.parent_id} onChange={e => set('parent_id', e.target.value)}>
+          <option value="">— ไม่มี (เป็น root) —</option>
+          {parentOptions.map(p => (
+            <option key={p.id} value={p.id}>{p.node_type} · {p.code} — {p.name_th || 'ไม่มีชื่อ'}</option>
+          ))}
+        </select>
+      </Field>
+
+      {/* self_supply ใช้ได้ทุกชั้น (MM/DMA/SUB/VD) — จุดไหนมีลูกก็หักลบได้ */}
+      <div style={{ padding: '12px 14px', border: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.03)', marginBottom: 14 }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={form.self_supply}
+            onChange={e => set('self_supply', e.target.checked)}
+            style={{ marginTop: 2, accentColor: C.cyan, cursor: 'pointer' }}
+          />
+          <div>
+            <div style={{ fontSize: 11, color: form.self_supply ? C.cyan : C.text, fontWeight: 600 }}>
+              {node.node_type} จ่ายน้ำให้ลูกค้าตรงในโซนตัวเองด้วย (นอกเหนือจากส่งต่อลูก)
             </div>
-          </label>
-        </div>
-      )}
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 3, lineHeight: 1.6 }}>
+              {form.self_supply
+                ? `→ net(${node.code}) = gross(${node.code}) − Σ gross(ลูกโดยตรง) — คำนวณเฉพาะเมื่อมีลูก`
+                : `→ ${node.code} เป็นแค่จุดส่งผ่าน คำนวณ net = gross ตรงๆ`}
+            </div>
+          </div>
+        </label>
+      </div>
 
       {err && <div style={{ fontSize: 11, color: C.crit, fontFamily: MONO, marginBottom: 8 }}>⚠ {err}</div>}
     </Modal>
@@ -369,17 +393,17 @@ function AddNodeModal({ branchId, parentNode, allNodes, onClose, onAdded }: {
         </Field>
       </div>
 
-      {form.node_type === 'MM' && (
-        <div style={{ padding: '10px 14px', border: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.03)', marginBottom: 14 }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.self_supply} onChange={e => set('self_supply', e.target.checked)} style={{ marginTop: 2, accentColor: C.cyan }} />
-            <div>
-              <div style={{ fontSize: 11, color: form.self_supply ? C.cyan : C.text }}>MM จ่ายน้ำให้ลูกค้าในโซนตัวเองด้วย</div>
-              <div style={{ fontSize: 9, color: C.dim, marginTop: 2 }}>ส่งผลต่อสูตรคำนวณ NRW ของ MM node นี้</div>
+      <div style={{ padding: '10px 14px', border: `1px solid ${C.border}`, background: 'rgba(11,110,118,0.03)', marginBottom: 14 }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+          <input type="checkbox" checked={form.self_supply} onChange={e => set('self_supply', e.target.checked)} style={{ marginTop: 2, accentColor: C.cyan }} />
+          <div>
+            <div style={{ fontSize: 11, color: form.self_supply ? C.cyan : C.text }}>
+              {form.node_type} จ่ายน้ำให้ลูกค้าตรงในโซนตัวเองด้วย (นอกเหนือจากส่งต่อลูก)
             </div>
-          </label>
-        </div>
-      )}
+            <div style={{ fontSize: 9, color: C.dim, marginTop: 2 }}>ส่งผลต่อสูตรคำนวณ net ของ node นี้ ไม่ว่าจะเป็นชั้นไหน</div>
+          </div>
+        </label>
+      </div>
 
       {err && <div style={{ fontSize: 11, color: C.crit, fontFamily: MONO, marginBottom: 4 }}>⚠ {err}</div>}
     </Modal>
@@ -422,7 +446,7 @@ function NodeCard({
   const sc   = STATUS_COLOR[node.status ?? ''] ?? C.muted
   const isMM = node.node_type === 'MM'
   const canHaveChild = node.node_type === 'MM' || node.node_type === 'DMA'
-  const hasSubtraction = isMM && !!node.self_supply && (childCount ?? 0) > 0
+  const hasSubtraction = !!node.self_supply && (childCount ?? 0) > 0
 
   return (
     <div
@@ -515,7 +539,7 @@ function NodeCard({
               <FlowRow label="ดึงมา (gross)" value={flow.gross_flow} color={C.cyan} />
               {hasSubtraction ? (
                 <>
-                  <FlowRow label={`− ลูก DMA (${childCount})`} value={childGrossSum} color={C.warn} />
+                  <FlowRow label={`− ลูกโดยตรง (${childCount})`} value={childGrossSum} color={C.warn} />
                   <div style={{ height: 1, background: C.border, margin: '3px 0' }} />
                   <FlowRow label="= สุทธิ (net)" value={flow.net_flow} color={C.good} bold />
                 </>
@@ -550,8 +574,8 @@ function NodeCard({
         </div>
       )}
 
-      {/* self_supply badge for MM */}
-      {node.node_type === 'MM' && node.self_supply && (
+      {/* self_supply badge — ใช้ได้ทุกชั้น */}
+      {node.self_supply && (
         <div style={{ marginTop: 4, fontSize: 8, fontFamily: MONO, color: C.warn, background: `${C.warn}11`, border: `1px solid ${C.warn}33`, padding: '1px 5px', display: 'inline-block' }}>
           SELF SUPPLY
         </div>
@@ -966,6 +990,7 @@ export function WaterTreeClient({
       {editingNode && (
         <EditNodeModal
           node={editingNode}
+          allNodes={branchNodes}
           onClose={closeEdit}
           onSaved={patch => handleNodeSaved(editingNode.id, patch)}
         />

@@ -3,6 +3,10 @@
  *
  * Sync น้ำจ่ายรายวันจาก DMAMA → ทำความสะอาดข้อมูล → คำนวณ NRW ต่อ node
  *
+ * ดึงจากฝั่ง DMAMA: เมนู Reports → [R17] รายงานปริมาณจ่ายน้ำผ่านมาตร-รายเดือน
+ * (endpoint: /report/water_flow_through_meter_monthly — ค่ามิเตอร์ดิบรายวันต่อ logger
+ *  ต่างจาก [R22]/sync ธรรมดา ตรงที่หน้านี้เราหักลบ/คำนวณ NRW เองตามผังต้นไม้ water_nodes)
+ *
  * Body (optional):
  *   { year: 2026, month: 5 }   → เดือนที่ระบุ
  *   {}                          → เดือนก่อนหน้า (default)
@@ -361,6 +365,35 @@ export async function POST(req: NextRequest) {
     return m ? m[1] : code
   }
 
+  // Match distribute_all ดิบของ node หนึ่งจาก R22 — primary: dmama_area_label, fallback: code vs area_name
+  // ⚠ ค่านี้เป็น "ยอดสะสมรวมลูกทุกชั้น" ตามที่ DMAMA รายงาน (R22) ไม่ใช่ยอดขายเฉพาะโซนตัวเอง
+  // (พิสูจน์แล้วจากข้อมูลจริง เช่น พยุหะคีรี DMA-03 รวม=71,420 = DMA-03 เอง + DMA-04(18,556) + DMA-05(4,971))
+  function matchRawDistAll(node: WaterNode): number | null {
+    if (node.dmama_area_label) {
+      const label = node.dmama_area_label.trim()
+      const v = distByLabel.get(label) ?? distByLabel.get(stripTreeChars(label))
+      if (v != null) return v
+    }
+    if (node.dmama_branch_id > 0) {
+      const entries = distByBranch.get(node.dmama_branch_id) ?? []
+      const prefix = codePrefix(node.code)
+      for (const entry of entries) {
+        const n = entry.area_name
+        if (n === node.code || n === prefix || n.startsWith(prefix + ' ') || n.startsWith(prefix + '-')) {
+          return entry.distribute_all
+        }
+      }
+    }
+    return null
+  }
+
+  // Pass แรก: หา rawDistAll ของทุก node ไว้ก่อน (ต้องมีครบก่อนจะหักลูกได้ในลูปถัดไป)
+  const rawDistAllByNode = new Map<string, number>()
+  for (const node of allNodes) {
+    const v = matchRawDistAll(node)
+    if (v != null) rawDistAllByNode.set(node.id, v)
+  }
+
   // ── 8. Compute node_nrw_monthly ───────────────────────────────────────────
   type NrwRow = {
     water_node_id: string
@@ -391,8 +424,11 @@ export async function POST(req: NextRequest) {
     if (gross !== null) {
       dataSource = hasDF ? 'device_fail' : 'dmama_logger'
 
-      if (node.node_type === 'MM' && node.self_supply) {
-        // MM_net = gross - Σ direct child DMA gross flows
+      if (node.self_supply) {
+        // node ใดก็ได้ (MM/DMA/SUB) ที่มีลูกค้าต่อตรงในโซนตัวเอง นอกเหนือจากส่งต่อลูก:
+        // net = gross - Σ gross ของลูกโดยตรง (ใช้ gross ของลูกเสมอ เพราะมิเตอร์ปากทางลูก
+        // วัดน้ำที่ไหลเข้าโซนลูกครบอยู่แล้ว ไม่ว่าโซนลูกจะมีลูกหลานกี่ชั้นก็ตาม — จึง cascade ถูกต้อง
+        // ทุกระดับโดยไม่ต้อง recursive)
         const childIds = childrenOf.get(node.id) ?? []
         const childGrossSum = childIds.reduce(
           (sum, cid) => sum + (grossFlowByNode.get(cid) ?? 0),
@@ -400,27 +436,22 @@ export async function POST(req: NextRequest) {
         )
         netFlow = Math.round((gross - childGrossSum) * 100) / 100
       } else {
-        // DMA / MM without own customers → net = gross
+        // ไม่มีลูกค้าต่อตรง (แค่ทางผ่าน) → net = gross
         netFlow = gross
       }
     }
 
-    // Match distribute_all — primary: dmama_area_label, fallback: node.code vs area_name
-    let distAll: number | null = null
-    if (node.dmama_area_label) {
-      const label = node.dmama_area_label.trim()
-      distAll = distByLabel.get(label) ?? distByLabel.get(stripTreeChars(label)) ?? null
-    }
-    if (distAll === null && node.dmama_branch_id > 0) {
-      const entries = distByBranch.get(node.dmama_branch_id) ?? []
-      const prefix = codePrefix(node.code)
-      for (const entry of entries) {
-        const n = entry.area_name
-        if (n === node.code || n === prefix || n.startsWith(prefix + ' ') || n.startsWith(prefix + '-')) {
-          distAll = entry.distribute_all
-          break
-        }
-      }
+    // distribute_all ของ node นี้เอง (โซนตัวเอง ไม่รวมลูก) — หักลูกโดยตรงออกจากยอดสะสมดิบ
+    // ด้วยเงื่อนไข self_supply เดียวกับ net_flow เป๊ะ (node ไหนไม่มีลูก หรือ self_supply=false → ไม่หัก)
+    const rawDistAll = rawDistAllByNode.get(node.id) ?? null
+    let distAll: number | null = rawDistAll
+    if (rawDistAll !== null && node.self_supply) {
+      const childIds = childrenOf.get(node.id) ?? []
+      const childDistSum = childIds.reduce(
+        (sum, cid) => sum + (rawDistAllByNode.get(cid) ?? 0),
+        0,
+      )
+      distAll = Math.round((rawDistAll - childDistSum) * 100) / 100
     }
 
     let nrwPct: number | null = null

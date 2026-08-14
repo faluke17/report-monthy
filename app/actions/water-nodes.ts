@@ -136,15 +136,36 @@ export async function updateWaterNode(
     self_supply?: boolean
     status?: WaterNode['status']
     user_count?: number | null
+    parent_id?: string | null
   }
 ): Promise<{ error?: string }> {
   const session = await getPwaSession()
   if (!session) return { error: 'Unauthorized' }
 
   const supabase = await createClient()
+
+  // กัน cycle เมื่อเปลี่ยน parent_id — parent ต้องไม่ใช่ตัวเอง และต้องไม่ใช่ลูกหลานของตัวเอง
+  if (data.parent_id) {
+    if (data.parent_id === id) return { error: 'Node ไม่สามารถเป็น parent ของตัวเองได้' }
+    let cursor: string | null = data.parent_id
+    const seen = new Set<string>()
+    while (cursor) {
+      if (cursor === id) return { error: 'ผูก parent แบบนี้จะทำให้เกิด loop ในผัง' }
+      if (seen.has(cursor)) break
+      seen.add(cursor)
+      const ancestorRes = await supabase
+        .from('water_nodes')
+        .select('parent_id')
+        .eq('id', cursor)
+        .single()
+      const row = ancestorRes.data as { parent_id: string | null } | null
+      cursor = row?.parent_id ?? null
+    }
+  }
+
   const { error } = await supabase
     .from('water_nodes')
-    .update({ ...data, updated_at: new Date().toISOString() } as Record<string, unknown>)
+    .update({ ...data } as Record<string, unknown>)
     .eq('id', id)
 
   if (error) return { error: error.message }

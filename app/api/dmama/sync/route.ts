@@ -63,6 +63,8 @@ async function fetchBranchNrw(
 }
 
 // POST /api/dmama/sync
+// ดึงจากฝั่ง DMAMA: หน้า "น้ำสูญเสีย" / เมนู Reports → [R22] รายงานน้ำสูญเสีย
+// (endpoint: /report/non_revenue_water — ตัวเลขสรุปเดือนสำเร็จรูป outbound/distribute_all ต่อพื้นที่ ไม่มีการหักลบเพิ่มฝั่งเรา)
 // Vercel Cron fires on the 16th of each month at 02:00 UTC (09:00 Bangkok)
 // Authorization: Bearer <CRON_SECRET>  OR  x-sync-secret: <DMAMA_SYNC_SECRET>
 export async function POST(req: NextRequest) {
