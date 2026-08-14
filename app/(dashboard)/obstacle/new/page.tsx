@@ -4,6 +4,8 @@ import { ObstacleForm } from '@/components/forms/ObstacleForm'
 import { Branch, Plan, UserProfile } from '@/lib/types'
 import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewObstaclePage() {
   const supabase = await createClient()
   const session = await getPwaSession()

@@ -4,6 +4,8 @@ import { PlanForm } from '@/components/forms/PlanForm'
 import { Branch, UserProfile } from '@/lib/types'
 import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewPlanPage() {
   const supabase = await createClient()
   const session = await getPwaSession()

@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { ReportNewForm } from './_components/ReportNewForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MeetingReportNewPage() {
   const session = await getPwaSession()
   if (!session || session.costcenter) redirect('/meeting')
