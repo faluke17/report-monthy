@@ -1,5 +1,7 @@
 import { SimulationClient } from './_components/SimulationClient'
 
+export const dynamic = 'force-dynamic'
+
 export default function SimulationPage() {
   return (
     <div className="space-y-8 max-w-4xl">

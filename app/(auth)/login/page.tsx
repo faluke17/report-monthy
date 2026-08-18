@@ -15,6 +15,14 @@ const HEAD = {
   reg:   { h: 'ลงทะเบียนครั้งแรก', p: 'สร้างบัญชีพนักงานใหม่ · ต้องได้รับการอนุมัติจากผู้ดูแลระบบ' },
 }
 
+// อ่าน ?returnTo= จาก URL แบบไม่พึ่ง useSearchParams (กัน Suspense boundary requirement ตอน build)
+// validate ว่าต้องขึ้นต้นด้วย '/' เท่านั้น กัน open-redirect ไปโดเมนอื่น
+function getReturnTo(): string {
+  if (typeof window === 'undefined') return '/executive-summary'
+  const raw = new URLSearchParams(window.location.search).get('returnTo')
+  return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/executive-summary'
+}
+
 export default function LoginPage() {
   const [tab, setTab]               = useState<Tab>('login')
   const [mode, setMode]             = useState<Mode>('auth')
@@ -64,7 +72,8 @@ export default function LoginPage() {
           })
         }
         setSuccess(true)
-        setTimeout(() => { window.location.href = '/executive-summary' }, 1400)
+        const returnTo = getReturnTo()
+        setTimeout(() => { window.location.href = returnTo }, 1400)
       }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
@@ -91,7 +100,7 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? 'ลงทะเบียนไม่สำเร็จ') }
-      else { toast.success(`ลงทะเบียนสำเร็จ — ยินดีต้อนรับ ${data.branch_name}`); window.location.href = '/executive-summary' }
+      else { toast.success(`ลงทะเบียนสำเร็จ — ยินดีต้อนรับ ${data.branch_name}`); window.location.href = getReturnTo() }
     } catch { toast.error('ไม่สามารถเชื่อมต่อได้') }
     finally { setLoading(false) }
   }
@@ -503,6 +512,11 @@ export default function LoginPage() {
                 )}
               </>
             )}
+
+            <a href="/executive-summary" className={s.guestLink}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+              ดูข้อมูลสรุปโดยไม่ต้องเข้าสู่ระบบ
+            </a>
 
             <div className={s.notice}>
               <svg className={s.noticeIco} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3l9 17H3z" /><path d="M12 10v5M12 18v.5" /></svg>

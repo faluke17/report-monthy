@@ -27,6 +27,20 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
   const repLabel = nrw.report_month ? `${THAI_MONTHS[nrw.report_month]} ${nrw.report_year != null ? nrw.report_year + 543 : ''}` : '—'
   const redMnf = mnfNodes.filter(n => n.alert_status.startsWith('red')).length
 
+  // สะสมปีงบปัจจุบัน — รวมทุกเดือนที่มีข้อมูลใน lossSeries ของปีงบล่าสุด (ปีงบสุดท้ายในเส้นต่อเนื่อง = ปีงบปัจจุบัน)
+  const cumFy = lossSeries.length ? lossSeries[lossSeries.length - 1].fiscal_year : null
+  const cumPoints = cumFy != null ? lossSeries.filter(p => p.fiscal_year === cumFy) : []
+  const cumMonths = cumPoints.filter(p => p.water_produced != null).length
+  const cumProduced = cumPoints.reduce((s, p) => s + (p.water_produced ?? 0), 0)
+  const cumSold = cumPoints.reduce((s, p) => s + (p.water_sold ?? 0), 0)
+  const cumLoss = cumPoints.reduce((s, p) => s + (p.water_loss ?? 0), 0)
+  const cumPct = cumMonths > 0 && cumProduced > 0 ? (cumLoss / cumProduced) * 100 : null
+  const cumColor = nrwColor(cumPct)
+  // เฉลี่ยสะสมต่อเดือน — หารยอดรวมด้วยจำนวนเดือนที่มีข้อมูลจริง (ไม่ใช่ยอดรวมดิบ) ให้ตัวเลขอยู่สเกลเดียวกับ "ปริมาณน้ำเดือนนี้" ด้านบน
+  const cumProducedAvg = cumMonths > 0 ? cumProduced / cumMonths : 0
+  const cumSoldAvg = cumMonths > 0 ? cumSold / cumMonths : 0
+  const cumLossAvg = cumMonths > 0 ? cumLoss / cumMonths : 0
+
   const tabs: { id: Tab; label: string; count?: number; alert?: boolean }[] = [
     { id: 'overview', label: 'ภาพรวม' },
     { id: 'dma',      label: 'Priority DMA', count: nodeDmaStats.length },
@@ -171,6 +185,40 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
               })}
             </div>
           </div>
+
+          {/* สะสมปีงบ — รวมน้ำจ่าย/จำหน่าย/สูญเสียตั้งแต่ ต.ค. ถึงเดือนล่าสุดที่มีรายงาน + อัตราสูญเสียสะสม */}
+          {cumFy != null && (
+            <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 9 }}>
+                <span style={{ fontSize: 11, color: C.accent, fontFamily: SANS, fontWeight: 700 }}>เฉลี่ยสะสมปีงบ {cumFy} ({cumMonths} ด.)</span>
+                <span style={{ fontSize: 12, fontFamily: MONO, fontWeight: 800, color: cumColor }}>
+                  {'อัตรา '}{cumPct != null ? `${cumPct.toFixed(1)}%` : '—'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 6 }}>
+                {[
+                  { l: 'น้ำจ่าย', v: cumProducedAvg, dot: C.blue },
+                  { l: 'จำหน่าย', v: cumSoldAvg,     dot: C.good },
+                  { l: 'สูญเสีย', v: cumLossAvg,     dot: C.crit },
+                ].map(({ l, v, dot }) => {
+                  const numStr = fmt(v)
+                  const numSize = numStr.length <= 9 ? 11 : numStr.length <= 11 ? 9.5 : 8.5
+                  return (
+                    <div key={l} style={{ padding: '8px 7px', borderRadius: 7, background: C.row, border: `1px solid ${C.border}`, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0, display: 'inline-block' }} />
+                        <span style={{ fontSize: 9.5, color: C.muted, fontFamily: SANS }}>{l}</span>
+                      </div>
+                      <div style={{
+                        fontSize: numSize, fontWeight: 800, color: C.bright, fontFamily: MONO, lineHeight: 1.25, letterSpacing: -0.3,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }} title={numStr}>{numStr}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Operations */}
           <div style={{ padding: '12px 16px', flex: 1 }}>

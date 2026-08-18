@@ -1,5 +1,7 @@
 import { MnfSimulation } from './_components/MnfSimulation'
 
+export const dynamic = 'force-dynamic'
+
 export default function MnfSimulationPage() {
   return (
     <div className="space-y-6 max-w-6xl">

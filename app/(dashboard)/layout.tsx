@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -11,8 +10,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Auth gate อยู่ที่ middleware.ts แล้ว (allowlist /executive-summary, /report-nrw ให้ดูได้โดยไม่ login)
+  // session ที่นี่จึงอาจเป็น null ได้สำหรับ 2 หน้านั้น — logic ด้านล่าง null-safe ผ่าน session?. อยู่แล้ว
   const session = await getPwaSession()
-  if (!session) redirect('/login')
 
   const supabase = await createClient()
   const now = new Date()

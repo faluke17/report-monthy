@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, User, ChevronRight } from 'lucide-react'
+import { LogOut, LogIn, User, ChevronRight } from 'lucide-react'
 import { PwaSession } from '@/lib/pwa-auth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -15,7 +16,7 @@ import type { MeetingWithRequirements } from '@/lib/types'
 import type { SidebarStats } from '@/components/layout/nav-groups'
 
 interface TopbarProps {
-  session: PwaSession
+  session: PwaSession | null
   notifyCount?: number
   requirementCount?: number
   requirementMeetings?: MeetingWithRequirements[]
@@ -56,6 +57,47 @@ export function Topbar({
   async function handleSignOut() {
     await fetch('/api/auth/pwa-logout', { method: 'POST' })
     window.location.href = '/login'
+  }
+
+  // ผู้ชมที่ไม่ได้ login (เฉพาะหน้าที่เปิดสาธารณะ — ดู middleware.ts) — แสดงปุ่มเข้าสู่ระบบแทนเมนูผู้ใช้
+  if (!session) {
+    return (
+      <header
+        className="h-14 md:h-15 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-20"
+        style={{
+          height: '56px',
+          background: 'rgba(245,246,248,.92)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid #E3E7EC',
+        }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <MobileMenu stats={stats} />
+          <div className="hidden sm:flex items-center gap-2 text-[10px]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', letterSpacing: '.10em', textTransform: 'uppercase' }}>
+            <span>กปภ.เขต 10</span>
+            <ChevronRight size={10} style={{ color: '#98A2AF' }} />
+            <span style={{ color: '#0B6E76' }}>{meta.kicker}</span>
+          </div>
+          <div className="hidden sm:block w-px h-4" style={{ background: '#E3E7EC' }} />
+          <p
+            className="text-[15px] md:text-[16px] font-semibold leading-tight truncate"
+            style={{ color: '#12181F' }}
+          >
+            {meta.title}
+          </p>
+        </div>
+
+        <Link
+          href={`/login?returnTo=${encodeURIComponent(pathname)}`}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium shrink-0 transition-all"
+          style={{ background: '#0B6E76', color: '#FFFFFF' }}
+        >
+          <LogIn size={14} />
+          เข้าสู่ระบบ
+        </Link>
+      </header>
+    )
   }
 
   const fullName = `${session.name} ${session.surname}`.trim()

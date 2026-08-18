@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-import { getPwaSession } from '@/lib/pwa-auth'
 import { createClient } from '@/lib/supabase/server'
 import { ExecutiveSummaryClient } from './_components/ExecutiveSummaryClient'
 import { getMeetingStoryList } from '@/app/actions/meeting-story'
@@ -181,9 +179,7 @@ function computeRegionSnap(
 }
 
 export default async function ExecutiveSummaryPage() {
-  const session = await getPwaSession()
-  if (!session) redirect('/login')
-
+  // หน้านี้เปิดดูได้โดยไม่ login (allowlist ใน middleware.ts) — ไม่ต้องพึ่ง session ที่นี่
   const supabase = await createClient()
   const now = new Date()
   const currentFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)

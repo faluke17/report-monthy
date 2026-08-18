@@ -21,6 +21,82 @@ const SERIES = [
 
 type SeriesKey = typeof SERIES[number]['key']
 
+type ViewMode = 'monthly' | 'cumulative'
+const VIEW_OPTS: { key: ViewMode; label: string }[] = [
+  { key: 'monthly', label: 'รายเดือน' },
+  { key: 'cumulative', label: 'เฉลี่ยสะสมปีงบ' },
+]
+
+// แปลงเป็นยอดเฉลี่ยสะสม (running average) รีเซ็ตกลับ 0 ทุกครั้งที่ขึ้นปีงบใหม่ (fiscal_year เปลี่ยน)
+// สะสมแล้วหารด้วยลำดับเดือนในปีงบ — ต.ค.หาร 1, พ.ย.หาร 2, ธ.ค.หาร 3, ... ก.ย.หาร 12
+// เดือนที่ไม่มีข้อมูล (null) ไม่บวกเข้ายอดสะสมและคงเป็น null (เว้นช่องว่างบนกราฟ) แต่ตำแหน่งเดือนยังนับต่อเนื่อง (นับตามลำดับเดือนจริง ไม่ใช่จำนวนเดือนที่มีข้อมูล)
+function toCumulativeSeries(series: LossSeriesPoint[]): LossSeriesPoint[] {
+  const running: Record<SeriesKey, number> = { water_produced: 0, water_sold: 0, water_loss: 0 }
+  let prevFy: number | null = null
+  let pos = 0
+  return series.map((p) => {
+    if (prevFy !== p.fiscal_year) {
+      running.water_produced = 0
+      running.water_sold = 0
+      running.water_loss = 0
+      prevFy = p.fiscal_year
+      pos = 0
+    }
+    pos += 1
+    const next: LossSeriesPoint = { ...p }
+    for (const key of SERIES.map((s) => s.key)) {
+      const v = p[key]
+      if (v != null) {
+        running[key] += v
+        next[key] = running[key] / pos
+      } else {
+        next[key] = null
+      }
+    }
+    return next
+  })
+}
+
+// ปุ่มสลับ รายเดือน / สะสมปีงบ — segmented control เล็กๆ วางคู่กับ legend
+function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode) => void }) {
+  return (
+    <div style={{ display: 'flex', border: `1px solid ${C.border}`, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+      {VIEW_OPTS.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          style={{
+            padding: '3px 9px', fontSize: 10, fontFamily: MONO, fontWeight: 700, border: 'none', cursor: 'pointer',
+            background: mode === o.key ? C.accent : 'transparent',
+            color: mode === o.key ? '#FFFFFF' : C.muted,
+          }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// dropdown เลือกปีงบเดียวที่จะดูยอดสะสม — โผล่เฉพาะโหมดสะสม (ไม่โชว์ทุกปีงบรวดเดียวเพราะเทียบยาก)
+function FySelect({ years, value, onChange }: { years: number[]; value: number; onChange: (fy: number) => void }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      style={{
+        fontSize: 10, fontFamily: MONO, fontWeight: 700, color: C.text, background: C.panel,
+        border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', flexShrink: 0,
+      }}
+    >
+      {years.map((fy) => (
+        <option key={fy} value={fy}>ปีงบ {fy}</option>
+      ))}
+    </select>
+  )
+}
+
 // ค่าเฉลี่ย N เดือนแรก/ท้ายสุดที่มีข้อมูลจริงในช่วงที่แสดง — ใช้เทียบ "ต้นช่วง vs ท้ายช่วง" แทนจุดเดียว
 // กันความผันผวนของเดือนใดเดือนหนึ่ง (ตามที่เห็นในกราฟ) บิดเบือนภาพรวมแนวโน้มทั้งช่วง
 function windowAvg(points: LossSeriesPoint[], key: SeriesKey, take: number, fromStart: boolean): number | null {
@@ -86,10 +162,22 @@ function ChartTooltip({ active, payload, label }: {
 
 // compact: ใช้เมื่อวางเป็นกราฟรองในหน้าอื่น (เช่น เหนือรายชื่อสาขาใน Executive Summary) — ย่อความสูงกราฟ/padding/ตัวอักษร
 // และตัดกล่องสรุปแนวโน้มท้ายการ์ดออก เพราะพื้นที่แคบกว่าตำแหน่งหลัก
-export function CumulativeLossChart({ series, compact = false }: { series: LossSeriesPoint[]; compact?: boolean }) {
+export function CumulativeLossChart({ series, compact = false, initialViewMode = 'monthly', initialFiscalYear }: { series: LossSeriesPoint[]; compact?: boolean; initialViewMode?: ViewMode; initialFiscalYear?: number }) {
   const [hiddenKeys, setHiddenKeys] = useState<SeriesKey[]>([])
   const toggleKey = (key: SeriesKey) =>
     setHiddenKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+
+  // สลับมุมมอง รายเดือน (เส้นต่อเนื่องทุกปีงบ) / สะสมปีงบ (เลือกดูทีละปีงบ ยอดสะสมรีเซ็ต 0 ที่ ต.ค.)
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode)
+
+  // โหมดสะสม: ต้องเลือกปีงบเดียวมาแสดง (โชว์ทุกปีงบรวดเดียวจะเทียบเส้นกันไม่ได้ เพราะแต่ละเส้นยาวไม่เท่ากัน)
+  const fiscalYears = Array.from(new Set(series.map((p) => p.fiscal_year))).sort((a, b) => a - b)
+  const [selectedFy, setSelectedFy] = useState<number | null>(initialFiscalYear ?? null)
+  const activeFy = selectedFy ?? fiscalYears[fiscalYears.length - 1] ?? 0
+  const fySeries = series.filter((p) => p.fiscal_year === activeFy)
+
+  const rangeSeries = viewMode === 'cumulative' ? fySeries : series
+  const series_ = viewMode === 'cumulative' ? toCumulativeSeries(fySeries) : series
 
   // ปุ่ม "ดูเต็ม" เฉพาะเวอร์ชัน compact — เปิด modal แสดงกราฟเวอร์ชันเต็ม (พร้อมกล่องสรุปแนวโน้มที่ compact ตัดออก)
   const [expanded, setExpanded] = useState(false)
@@ -110,11 +198,11 @@ export function CumulativeLossChart({ series, compact = false }: { series: LossS
     )
   }
 
-  const startLabel = series[0]?.month_label ?? ''
-  const endLabel = series[series.length - 1]?.month_label ?? ''
+  const startLabel = rangeSeries[0]?.month_label ?? ''
+  const endLabel = rangeSeries[rangeSeries.length - 1]?.month_label ?? ''
 
-  // เดือนเยอะ (ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน) — โชว์ป้ายแกน X แบบเว้นช่วง กันตัวหนังสือทับกัน
-  const tickInterval = series.length > 24 ? 2 : series.length > 12 ? 1 : 0
+  // เดือนเยอะ (ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน) — โชว์ป้ายแกน X แบบเว้นช่วง กันตัวหนังสือทับกัน — โหมดสะสมมีแค่ปีงบเดียว (≤12 เดือน) ไม่ต้องเว้น
+  const tickInterval = rangeSeries.length > 24 ? 2 : rangeSeries.length > 12 ? 1 : 0
 
   // สรุปแนวโน้มทั้งช่วง — เทียบเฉลี่ยต้นช่วงกับท้ายช่วง (สูงสุด 3 เดือน) แทนตัวเลขจุดสุดท้ายที่ซ้ำกับปลายเส้นบนกราฟ
   const validCount = series.filter((p) => p.water_produced != null).length
@@ -167,9 +255,13 @@ export function CumulativeLossChart({ series, compact = false }: { series: LossS
     <>
     <Card style={compact ? { padding: '10px 14px' } : undefined}>
       <Sec
-        label={`น้ำผลิตจ่าย/จำหน่าย/สูญเสีย — ${startLabel} ถึง ${endLabel}`}
+        label={viewMode === 'cumulative'
+          ? `น้ำผลิตจ่าย/จำหน่าย/สูญเสีย เฉลี่ยสะสมปีงบ ${activeFy} — ${startLabel} ถึง ${endLabel}`
+          : `น้ำผลิตจ่าย/จำหน่าย/สูญเสีย — ${startLabel} ถึง ${endLabel}`}
         right={
           <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 10 : 14, flexWrap: 'wrap' }}>
+            <ViewToggle mode={viewMode} onChange={setViewMode} />
+            {viewMode === 'cumulative' && <FySelect years={fiscalYears} value={activeFy} onChange={setSelectedFy} />}
             {SERIES.map(({ key, label, color }) => (
               <LegendDot key={key} color={color} label={label} active={!hiddenKeys.includes(key)} onClick={() => toggleKey(key)} />
             ))}
@@ -193,7 +285,7 @@ export function CumulativeLossChart({ series, compact = false }: { series: LossS
       />
 
       <ResponsiveContainer width="100%" height={compact ? 130 : 220}>
-        <LineChart data={series} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
+        <LineChart data={series_} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
           <CartesianGrid stroke="rgba(11,110,118,0.10)" vertical={false} />
           <XAxis
             dataKey="month_label"
@@ -284,7 +376,7 @@ export function CumulativeLossChart({ series, compact = false }: { series: LossS
               <X size={16} />
             </button>
           </div>
-          <CumulativeLossChart series={series} />
+          <CumulativeLossChart series={series} initialViewMode={viewMode} initialFiscalYear={activeFy} />
         </div>
       </div>
     )}
