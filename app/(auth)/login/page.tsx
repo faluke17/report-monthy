@@ -513,6 +513,11 @@ export default function LoginPage() {
               </>
             )}
 
+            <a href="/executive-summary" className={s.guestLink}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+              ดูข้อมูลสรุปโดยไม่ต้องเข้าสู่ระบบ
+            </a>
+
             <div className={s.notice}>
               <svg className={s.noticeIco} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 3l9 17H3z" /><path d="M12 10v5M12 18v.5" /></svg>
               <div className={s.noticeTx}><b>การเข้าใช้งานถูกบันทึก</b> — ระบบนี้สงวนสิทธิ์เฉพาะเจ้าหน้าที่ที่ได้รับอนุญาต ผู้ใช้งานไม่พึงประสงค์จะถูกดำเนินคดีตามกฎหมาย</div>
