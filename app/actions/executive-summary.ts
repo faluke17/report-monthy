@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getPwaSession } from '@/lib/pwa-auth'
 import { getDmamabranchId } from '@/lib/utils/pwa-branches'
 import { getThaiMonthName, toThaiYear } from '@/lib/utils/date-th'
 
@@ -230,9 +229,6 @@ function calcLossVolume(row: NrwMonthRow | null): number | null {
 export async function getExecutiveBranchSummary(
   branchId: string
 ): Promise<{ data: BranchExecutiveSummary | null; error: string | null }> {
-  const session = await getPwaSession()
-  if (!session) return { data: null, error: 'ไม่ได้รับอนุญาต' }
-
   const supabase = await createClient()
 
   const now = new Date()
@@ -647,9 +643,6 @@ export async function getExecutiveBranchSummary(
 // น้ำผลิตจ่าย/จำหน่าย/สูญเสีย รวมทั้งเขต รายเดือนต่อเนื่อง ตั้งแต่ปีงบ 2567 ถึงปัจจุบัน
 // เหมือน lossSeries ต่อสาขาใน getExecutiveBranchSummary แต่รวมทุกสาขาต่อเดือนก่อนคำนวณ (ไม่กรอง branch_name)
 export async function getRegionLossSeries(): Promise<{ data: LossSeriesPoint[] | null; error: string | null }> {
-  const session = await getPwaSession()
-  if (!session) return { data: null, error: 'ไม่ได้รับอนุญาต' }
-
   const supabase = await createClient()
   const now = new Date()
   const currentYear = now.getFullYear()

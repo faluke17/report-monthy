@@ -5,7 +5,6 @@
 // ใช้ในหน้า /executive-summary — ไม่ต้องกรอกข้อมูลซ้ำ ดึงจาก meeting_agenda_headers/subitems ที่มีอยู่แล้ว
 
 import { createClient } from '@/lib/supabase/server'
-import { getPwaSession } from '@/lib/pwa-auth'
 import type { Meeting, MeetingAgendaHeader, MeetingAgendaSubItem } from '@/lib/types'
 
 export interface MeetingStoryListItem {
@@ -19,9 +18,6 @@ export interface MeetingStoryListItem {
 
 // รายชื่อการประชุมที่มีรายงาน (มี meeting_agenda_headers แล้ว) เรียงล่าสุดก่อน — ใช้แสดงเป็นรายการให้เลือกเปิดอ่าน
 export async function getMeetingStoryList(limit = 12): Promise<{ data: MeetingStoryListItem[]; error: string | null }> {
-  const session = await getPwaSession()
-  if (!session) return { data: [], error: 'ไม่ได้รับอนุญาต' }
-
   const supabase = await createClient()
 
   const { data: headers, error: headerErr } = await supabase
@@ -53,9 +49,6 @@ export interface MeetingStoryDetail {
 
 // รายละเอียดเต็มของการประชุมหนึ่งครั้ง — สำหรับ render หน้ารายงานแบบเต็ม
 export async function getMeetingStoryDetail(meetingId: string): Promise<{ data: MeetingStoryDetail | null; error: string | null }> {
-  const session = await getPwaSession()
-  if (!session) return { data: null, error: 'ไม่ได้รับอนุญาต' }
-
   const supabase = await createClient()
 
   const [meetingRes, headerRes, subitemsRes, ackRes] = await Promise.all([
