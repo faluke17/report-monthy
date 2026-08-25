@@ -96,8 +96,8 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
                 )}
               </div>
 
-              {/* น้ำจ่าย */}
-              <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{fmt(d.gross_flow)}</div>
+              {/* น้ำจ่าย (net หลังหักลูกที่ self_supply แล้ว — ตกลงกับ user 25 ส.ค. 69 ว่าต้องโชว์ net ไม่ใช่ gross ดิบ) */}
+              <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{fmt(d.net_flow ?? d.gross_flow)}</div>
 
               {/* จำหน่าย */}
               <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{fmt(d.distribute_all)}</div>

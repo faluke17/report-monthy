@@ -441,18 +441,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // distribute_all ของ node นี้เอง (โซนตัวเอง ไม่รวมลูก) — หักลูกโดยตรงออกจากยอดสะสมดิบ
-    // ด้วยเงื่อนไข self_supply เดียวกับ net_flow เป๊ะ (node ไหนไม่มีลูก หรือ self_supply=false → ไม่หัก)
+    // distribute_all ของ node นี้ (ปริมาณน้ำจำหน่ายจาก R22) — เป็นข้อมูลบิลลิ่งต่อโซน
+    // ไม่ cascade ผ่านผังท่อแบบ flow data (R17/net_flow ด้านบน) DMAMA ให้ค่ามาเป็นยอดของโซนนั้นเองอยู่แล้ว
+    // จึง "ไม่หักลูก" เสมอ ไม่ว่า self_supply จะเป็นอะไร (ยืนยันกับ user 25 ส.ค. 69 — ห้ามหักซ้ำฝั่งนี้)
     const rawDistAll = rawDistAllByNode.get(node.id) ?? null
-    let distAll: number | null = rawDistAll
-    if (rawDistAll !== null && node.self_supply) {
-      const childIds = childrenOf.get(node.id) ?? []
-      const childDistSum = childIds.reduce(
-        (sum, cid) => sum + (rawDistAllByNode.get(cid) ?? 0),
-        0,
-      )
-      distAll = Math.round((rawDistAll - childDistSum) * 100) / 100
-    }
+    const distAll: number | null = rawDistAll
 
     let nrwPct: number | null = null
     if (netFlow !== null && netFlow > 0 && distAll !== null) {
