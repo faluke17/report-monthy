@@ -144,6 +144,18 @@
   }
 
   /* ────────────────────────────────────────────
+     CAUTION WIGGLE — badge ⚠ ขยับเบาๆ ให้สะดุดตา (net_formula ใน DmaTab)
+  ──────────────────────────────────────────── */
+  .caution-wiggle {
+    animation: caution-wiggle 1s ease-in-out infinite;
+    transform-origin: center;
+  }
+  @keyframes caution-wiggle {
+    0%, 100% { transform: scale(1)    rotate(-8deg); }
+    50%      { transform: scale(1.22) rotate(8deg); }
+  }
+
+  /* ────────────────────────────────────────────
      TRAFFIC LIGHTS  (high-contrast fills)
   ──────────────────────────────────────────── */
   .tl-green  { background: #E7F3EE; border-color: #1E7A5A55; }

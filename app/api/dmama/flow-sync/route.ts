@@ -294,6 +294,11 @@ export async function POST(req: NextRequest) {
           if (c.raw_value !== null) daysData++
           if (c.flag === 'DEVICE_FAIL') hasDF = true
         }
+        // ไม่มี raw_value เลยสักวันทั้งเดือน (ทุกวัน MISSING) — fillMedian จะ default เป็น 0
+        // ทำให้ gross ออกมา 0 ที่หน้าตาเหมือน "จ่ายจริง 0" ทั้งที่จริงคือมิเตอร์เงียบทั้งเดือน
+        // ต้องติด has_device_fail ไว้ด้วย ไม่งั้น node จะถูกกรองออกจาก Priority DMA เงียบๆ
+        // (ยืนยันกับ user 25 ส.ค. 69 — เจอเคส ทุ่งเสลี่ยม DMA-04 หายจากตารางเพราะจุดนี้)
+        if (daysData === 0) hasDF = true
 
         grossFlowByNode.set(node.id, Math.round(gross * 100) / 100)
         daysDataByNode.set(node.id, daysData)
