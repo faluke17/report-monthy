@@ -109,7 +109,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
             <div style={{ fontSize: 11, color: C.muted, fontFamily: SANS, marginBottom: 8, fontWeight: 600 }}>NRW% เดือนนี้</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 8 }}>
               <span style={{ fontSize: isMobile ? 38 : 56, fontWeight: 800, fontFamily: MONO, color, lineHeight: 1 }}>
-                {nrw.current_pct != null ? nrw.current_pct.toFixed(1) : '—'}
+                {nrw.current_pct != null ? nrw.current_pct.toFixed(2) : '—'}
               </span>
               {nrw.current_pct != null && <span style={{ fontSize: isMobile ? 16 : 20, color, fontFamily: MONO, fontWeight: 400 }}>%</span>}
             </div>
@@ -175,7 +175,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
                     {yy != null ? (
                       <>
                         <div style={{ fontSize: 17, fontWeight: 800, fontFamily: MONO, color, lineHeight: 1, marginBottom: 4 }}>
-                          {yy > 0 ? '+' : ''}{yy.toFixed(1)}%
+                          {yy > 0 ? '+' : ''}{yy.toFixed(2)}%
                         </div>
                         <div style={{ fontSize: 8.5, color, fontFamily: SANS, fontWeight: 700 }}>{arrowLabel}</div>
                       </>
@@ -192,7 +192,7 @@ export function BranchSummaryPanel({ data, animKey, onBack }: Props) {
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 9 }}>
                 <span style={{ fontSize: 11, color: C.accent, fontFamily: SANS, fontWeight: 700 }}>เฉลี่ยสะสมปีงบ {cumFy} ({cumMonths} ด.)</span>
                 <span style={{ fontSize: 12, fontFamily: MONO, fontWeight: 800, color: cumColor }}>
-                  {'อัตรา '}{cumPct != null ? `${cumPct.toFixed(1)}%` : '—'}
+                  {'อัตรา '}{cumPct != null ? `${cumPct.toFixed(2)}%` : '—'}
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 6 }}>

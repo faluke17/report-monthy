@@ -24,7 +24,7 @@ export function MnfTab({ mnfNodes }: { mnfNodes: MnfNodeRow[] }) {
                 <div style={{ fontSize: 10, color: C.muted, fontFamily: MONO }}>{n.record_date}</div>
               </div>
               <div style={{ fontSize: 14, color: C.text, fontFamily: MONO, fontWeight: 600 }}>{n.mnf_flow != null ? n.mnf_flow.toFixed(2) : '—'}</div>
-              <div style={{ fontSize: 14, fontFamily: MONO, fontWeight: 600, color: n.diff_percent > 50 ? C.crit : C.muted }}>{n.diff_percent.toFixed(1)}%</div>
+              <div style={{ fontSize: 14, fontFamily: MONO, fontWeight: 600, color: n.diff_percent > 50 ? C.crit : C.muted }}>{n.diff_percent.toFixed(2)}%</div>
               <div style={{ fontSize: 14, color: C.muted, fontFamily: MONO, fontWeight: 600 }}>{n.consecutive_count || 0}</div>
               <div style={{ fontSize: 12, color: al.color, fontWeight: 700, fontFamily: MONO }}>{al.label}</div>
             </div>

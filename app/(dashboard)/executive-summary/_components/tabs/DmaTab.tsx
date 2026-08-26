@@ -211,7 +211,7 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
 
               {/* NRW% */}
               <div style={{ fontSize: 12, fontWeight: 600, color: nrwC, fontFamily: MONO }}>
-                {d.nrw_pct != null ? `${d.nrw_pct.toFixed(1)}%` : '—'}
+                {d.nrw_pct != null ? `${d.nrw_pct.toFixed(2)}%` : '—'}
               </div>
             </div>
           )

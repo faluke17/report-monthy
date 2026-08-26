@@ -221,7 +221,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
               {/* NRW summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 {[
-                  { l: 'NRW%', v: selected.nrw_pct != null ? `${selected.nrw_pct.toFixed(1)}%` : '—', c: color(selected.nrw_pct) },
+                  { l: 'NRW%', v: selected.nrw_pct != null ? `${selected.nrw_pct.toFixed(2)}%` : '—', c: color(selected.nrw_pct) },
                   { l: 'น้ำจ่าย (m³)', v: selected.water_produced != null ? selected.water_produced.toLocaleString('th-TH') : '—', c: C.accent },
                   { l: 'จำหน่าย (m³)', v: selected.water_sold != null ? selected.water_sold.toLocaleString('th-TH') : '—', c: C.text },
                 ].map(({ l, v, c }) => (
@@ -243,7 +243,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                       <span style={{ fontSize: 11, color: C.accent, fontFamily: MONO, fontWeight: 700 }}>{area.area_name}</span>
                       {delta != null && (
                         <span style={{ fontSize: 10, color: delta < 0 ? C.good : delta > 0 ? C.crit : C.muted, fontFamily: MONO, fontWeight: 700 }}>
-                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(1)}%
+                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '→'} {Math.abs(delta).toFixed(2)}%
                         </span>
                       )}
                     </div>
@@ -254,8 +254,8 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                         {[
                           { l: 'น้ำจ่าย ก่อน',  v: area.water_dist_before,  c: C.text },
                           { l: 'น้ำจ่าย หลัง',  v: area.water_dist_after,   c: C.accent },
-                          { l: 'NRW% ก่อน',      v: nrwB != null ? +nrwB.toFixed(1) : null, c: color(nrwB), suffix: '%' },
-                          { l: 'NRW% หลัง',      v: nrwA != null ? +nrwA.toFixed(1) : null, c: color(nrwA), suffix: '%' },
+                          { l: 'NRW% ก่อน',      v: nrwB != null ? +nrwB.toFixed(2) : null, c: color(nrwB), suffix: '%' },
+                          { l: 'NRW% หลัง',      v: nrwA != null ? +nrwA.toFixed(2) : null, c: color(nrwA), suffix: '%' },
                           { l: 'MNF หลัง',       v: area.mnf_after,          c: C.text },
                         ].map(({ l, v, c, suffix }) => (
                           <div key={l} style={{ padding: '7px 8px', background: C.row, border: `1px solid ${C.border}`, textAlign: 'center', minWidth: 0 }}>
@@ -353,7 +353,7 @@ export function TrackTab({ monthlyTrack, obstacles }: { monthlyTrack: MonthlyTra
                   </div>
                   {/* NRW% */}
                   <div style={{ fontSize: 14, fontWeight: 800, color: nc, fontFamily: MONO, width: 52, textAlign: 'right', flexShrink: 0 }}>
-                    {r.nrw_pct != null ? `${r.nrw_pct.toFixed(1)}%` : '—'}
+                    {r.nrw_pct != null ? `${r.nrw_pct.toFixed(2)}%` : '—'}
                   </div>
                   {/* badges */}
                   <div style={{ display: 'flex', gap: 4, flex: 1, justifyContent: 'flex-end' }}>

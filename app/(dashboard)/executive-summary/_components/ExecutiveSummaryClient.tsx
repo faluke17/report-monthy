@@ -69,8 +69,8 @@ function thaiDateTime(d: Date) {
 
 function trendInfo(delta: number | null): { label: string; color: string } {
   if (delta == null) return { label: 'ไม่มีข้อมูลเทียบ', color: INK3 }
-  if (delta > 0.05) return { label: `▲ แย่ลง ${delta.toFixed(1)}%`, color: '#B3392C' }
-  if (delta < -0.05) return { label: `▼ ดีขึ้น ${Math.abs(delta).toFixed(1)}%`, color: '#1E7A5A' }
+  if (delta > 0.05) return { label: `▲ แย่ลง ${delta.toFixed(2)}%`, color: '#B3392C' }
+  if (delta < -0.05) return { label: `▼ ดีขึ้น ${Math.abs(delta).toFixed(2)}%`, color: '#1E7A5A' }
   return { label: '▬ คงที่', color: INK3 }
 }
 
@@ -245,7 +245,7 @@ function BranchRow({ branch, snap, compact, onClick }: {
 }) {
   const color = GROUP_COLOR[groupOf(branch.code)]
   const { label: trendLabel, color: trendColor } = trendInfo(snap?.cum_trend_delta ?? null)
-  const pctLabel = snap?.cum_pct != null ? snap.cum_pct.toFixed(1) + '%' : '—'
+  const pctLabel = snap?.cum_pct != null ? snap.cum_pct.toFixed(2) + '%' : '—'
 
   if (compact) {
     return (
@@ -620,7 +620,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>สาขา</span>
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700 }}>ระดับ NRW% (เป้า {regionSnap.target}%)</span>
             <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>สะสม</span>
-            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>แนวโน้ม</span>
+            <span style={{ fontSize: 10.5, color: INK3, fontWeight: 700, textAlign: 'right' }}>แนวโน้ม (YoY)</span>
           </div>
         )}
 
@@ -728,23 +728,23 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
                   <HeroDial pct={regionSnap.cum_pct} target={regionSnap.target} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
                     <span style={{ fontSize: 34, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
-                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}
+                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(2) : '—'}
                       <span style={{ fontSize: 14, color: INK3, marginLeft: 2 }}>%</span>
                     </span>
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: INK2, fontWeight: 600 }}>NRW% สะสมปีงบ ({regionSnap.cum_months} ด.)</div>
-                <div style={{ fontSize: 11, color: cumTrendColor, marginTop: 2 }}>{cumTrendLabel}</div>
+                <div style={{ fontSize: 11, color: cumTrendColor, marginTop: 2 }}>{cumTrendLabel} (YoY)</div>
               </div>
 
               <h1 style={{ fontSize: 19, fontWeight: 700, color: worsening.length > 0 ? '#B3392C' : INK, margin: '18px 0 0', lineHeight: 1.35, textAlign: 'center' }}>
-                {worsening.length} สาขามีแนวโน้มแย่ลง
+                {worsening.length} สาขามีแนวโน้มแย่ลง (YoY)
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6, textAlign: 'center' }}>{periodLabel}</p>
               <div style={{ marginTop: 10 }}><PeriodSelector {...periodFilter} /></div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px 28px', marginTop: 16, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
-                <StatChip label="NRW% เดือนล่าสุด" value={regionSnap.latest_month_pct != null ? regionSnap.latest_month_pct.toFixed(1) : '—'} unit="%" color={latestColor} sub={latestTrendLabel} />
+                <StatChip label="NRW% เดือนล่าสุด" value={regionSnap.latest_month_pct != null ? regionSnap.latest_month_pct.toFixed(2) : '—'} unit="%" color={latestColor} sub={`${latestTrendLabel} (YoY)`} />
                 <StatChip label="น้ำจ่ายเดือนนี้" value={regionSnap.latest_month_produced != null ? Math.round(regionSnap.latest_month_produced).toLocaleString('th-TH') : '—'} unit="m³" color="#2B5C86" />
                 <StatChip label="น้ำจำหน่ายเดือนนี้" value={regionSnap.latest_month_sold != null ? Math.round(regionSnap.latest_month_sold).toLocaleString('th-TH') : '—'} unit="m³" color="#1E7A5A" />
                 <StatChip label="สาขาผ่านเป้า" value={`${regionSnap.branches_on_target}`} unit={`/ ${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
@@ -772,13 +772,13 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
                   <HeroDial pct={regionSnap.cum_pct} target={regionSnap.target} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4 }}>
                     <span style={{ fontSize: 24, fontWeight: 800, fontFamily: MONO, color: INK, lineHeight: 1 }}>
-                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(1) : '—'}
+                      {regionSnap.cum_pct != null ? regionSnap.cum_pct.toFixed(2) : '—'}
                       <span style={{ fontSize: 11, color: INK3, marginLeft: 1 }}>%</span>
                     </span>
                   </div>
                 </div>
                 <div style={{ fontSize: 10.5, color: INK2, fontWeight: 600, textAlign: 'center', marginTop: 2 }}>NRW% สะสม {regionSnap.cum_months} ด.</div>
-                <div style={{ fontSize: 10.5, color: cumTrendColor, textAlign: 'center' }}>{cumTrendLabel}</div>
+                <div style={{ fontSize: 10.5, color: cumTrendColor, textAlign: 'center' }}>{cumTrendLabel} (YoY)</div>
               </div>
 
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 10, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
@@ -789,7 +789,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
 
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 10, padding: 14, boxShadow: '0 1px 2px rgba(18,24,31,0.04)' }}>
                 <div style={{ fontSize: 9.5, color: INK3, fontFamily: MONO, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>สรุปเร็ว</div>
-                <QuickRow label="NRW เดือนนี้" value={regionSnap.latest_month_pct != null ? `${regionSnap.latest_month_pct.toFixed(1)}%` : '—'} color={latestColor} />
+                <QuickRow label="NRW เดือนนี้" value={regionSnap.latest_month_pct != null ? `${regionSnap.latest_month_pct.toFixed(2)}%` : '—'} color={latestColor} />
                 <QuickRow label="น้ำจ่ายเดือนนี้" value={fmtLossCompact(regionSnap.latest_month_produced)} color="#2B5C86" />
                 <QuickRow label="น้ำจำหน่ายเดือนนี้" value={fmtLossCompact(regionSnap.latest_month_sold)} color="#1E7A5A" />
                 <QuickRow label="ผ่านเป้า" value={`${regionSnap.branches_on_target}/${regionSnap.branches_reporting || regionSnap.branches_total}`} color={targetColor} />
@@ -798,7 +798,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
 
             <div>
               <h1 style={{ fontSize: 22, fontWeight: 700, color: worsening.length > 0 ? '#B3392C' : INK, margin: 0, lineHeight: 1.35 }}>
-                {worsening.length} สาขามีแนวโน้มแย่ลง
+                {worsening.length} สาขามีแนวโน้มแย่ลง (YoY)
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6 }}>{periodLabel}</p>
               <div style={{ marginTop: 10 }}><PeriodSelector {...periodFilter} align="flex-start" /></div>
