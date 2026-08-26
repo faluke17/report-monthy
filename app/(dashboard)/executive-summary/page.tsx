@@ -37,6 +37,13 @@ function toFiscalYear(gregorianYear: number, month: number): number {
   return month >= 10 ? gregorianYear + 543 + 1 : gregorianYear + 543
 }
 
+// จำกัดลำดับเดือนที่จะไล่สะสม ไม่ให้เลยเดือนที่ผู้ใช้เลือกดูย้อนหลัง (capMonth=null = ไม่จำกัด ไล่จนสุดเดือนล่าสุดที่มีข้อมูลตามปกติ)
+function monthsUpTo(capMonth: number | null): number[] {
+  if (capMonth == null) return FISCAL_MONTH_ORDER
+  const idx = FISCAL_MONTH_ORDER.indexOf(capMonth)
+  return idx === -1 ? FISCAL_MONTH_ORDER : FISCAL_MONTH_ORDER.slice(0, idx + 1)
+}
+
 type NrwMonthRow = {
   branch_name: string
   fiscal_year: number
@@ -49,7 +56,8 @@ type NrwMonthRow = {
 
 // cum_pct: สะสม produced/sold/free/blow_off ตั้งแต่ ต.ค. ถึงเดือนล่าสุดที่มีข้อมูล (หยุดที่เดือนแรกที่ยังไม่มีข้อมูล)
 // cum_trend_delta: เทียบ NRW% เฉพาะเดือนล่าสุด (ไม่สะสม) กับ NRW% เดือนเดียวกันของปีงบก่อนหน้า (YoY)
-function computeCumulativeTrend(currRows: NrwMonthRow[], prevRows: NrwMonthRow[]): Omit<BranchNrwSnap, 'branch_id'> {
+// capMonth: ถ้าผู้ใช้เลือกดูย้อนหลังเป็นเดือนใดเดือนหนึ่ง จะไม่ไล่สะสมเลยเดือนนั้น (null = ไล่จนสุดเดือนล่าสุดที่มีข้อมูลตามปกติ)
+function computeCumulativeTrend(currRows: NrwMonthRow[], prevRows: NrwMonthRow[], capMonth: number | null = null): Omit<BranchNrwSnap, 'branch_id'> {
   const currByMonth = new Map(currRows.map((r) => [r.month, r]))
   const prevByMonth = new Map(prevRows.map((r) => [r.month, r]))
 
@@ -59,7 +67,7 @@ function computeCumulativeTrend(currRows: NrwMonthRow[], prevRows: NrwMonthRow[]
   let latestMonth: number | null = null
   let latestMonthPct: number | null = null
 
-  for (const month of FISCAL_MONTH_ORDER) {
+  for (const month of monthsUpTo(capMonth)) {
     const row = currByMonth.get(month)
     if (!row || row.water_produced == null) break
 
@@ -99,6 +107,7 @@ function computeRegionSnap(
   branchesTotal: number,
   getTarget: (branchName: string) => number,
   regionTarget: number,
+  capMonth: number | null = null,
 ): RegionNrwSnap {
   const aggregateByMonth = (rows: NrwMonthRow[]) => {
     const byMonth = new Map<number, { produced: number; sold: number; free: number; blowoff: number }>()
@@ -125,7 +134,7 @@ function computeRegionSnap(
   let latestMonthProduced: number | null = null
   let latestMonthSold: number | null = null
 
-  for (const month of FISCAL_MONTH_ORDER) {
+  for (const month of monthsUpTo(capMonth)) {
     const agg = byMonth.get(month)
     if (!agg) break
 
@@ -178,11 +187,23 @@ function computeRegionSnap(
   }
 }
 
-export default async function ExecutiveSummaryPage() {
+interface PageProps {
+  searchParams: Promise<{ year?: string; month?: string }>
+}
+
+export default async function ExecutiveSummaryPage({ searchParams }: PageProps) {
   // หน้านี้เปิดดูได้โดยไม่ login (allowlist ใน middleware.ts) — ไม่ต้องพึ่ง session ที่นี่
   const supabase = await createClient()
   const now = new Date()
-  const currentFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)
+  const trueFiscalYear = toFiscalYear(now.getFullYear(), now.getMonth() + 1)
+  const trueMonth = now.getMonth() + 1
+
+  // เดือน/ปีที่เลือกดูย้อนหลัง — ไม่ระบุ = ค่าเริ่มต้น โชว์ปีงบปัจจุบัน + ไล่สะสมจนสุดเดือนล่าสุดที่มีข้อมูล (พฤติกรรมเดิม)
+  const params = await searchParams
+  const parsedYear = parseInt(params.year ?? '')
+  const currentFiscalYear = Number.isFinite(parsedYear) && parsedYear > 0 ? parsedYear : trueFiscalYear
+  const parsedMonth = parseInt(params.month ?? '')
+  const capMonth = FISCAL_MONTH_ORDER.includes(parsedMonth) ? parsedMonth : null
   const prevFiscalYear = currentFiscalYear - 1
 
   const [branchesRes, nrwMonthlyRes, targetRes, meetingStoriesRes, regionLossSeriesRes] = await Promise.all([
@@ -236,11 +257,11 @@ export default async function ExecutiveSummaryPage() {
 
   const snapMap: Record<string, BranchNrwSnap> = {}
   for (const b of branches) {
-    const trend = computeCumulativeTrend(currRowsByBranchName.get(b.name_th) ?? [], prevRowsByBranchName.get(b.name_th) ?? [])
+    const trend = computeCumulativeTrend(currRowsByBranchName.get(b.name_th) ?? [], prevRowsByBranchName.get(b.name_th) ?? [], capMonth)
     snapMap[b.id] = { branch_id: b.id, ...trend }
   }
 
-  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length, getTarget, districtTarget ?? 20)
+  const regionSnap = computeRegionSnap(currYearRows, prevYearRows, branches.length, getTarget, districtTarget ?? 20, capMonth)
 
   return (
     // Cancel dashboard layout padding to fill the whole viewport
@@ -254,6 +275,7 @@ export default async function ExecutiveSummaryPage() {
         regionSnap={regionSnap}
         meetingStories={meetingStoriesRes.data}
         regionLossSeries={regionLossSeriesRes.data ?? []}
+        periodFilter={{ trueFiscalYear, trueMonth, selectedFiscalYear: currentFiscalYear, capMonth }}
       />
     </div>
   )

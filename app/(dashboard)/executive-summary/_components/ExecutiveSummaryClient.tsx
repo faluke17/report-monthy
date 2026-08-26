@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useId } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import type { Branch } from '@/lib/types'
 import type { BranchNrwSnap, RegionNrwSnap } from '../page'
 import type { BranchExecutiveSummary, LossSeriesPoint } from '@/app/actions/executive-summary'
@@ -17,6 +18,8 @@ import { useBreakpoint, RailHeading } from './tabs/shared'
 import { Gauge as GaugeIcon, AlertTriangle, ListTree } from 'lucide-react'
 
 const MONTH_SHORT = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+// ปีงบประมาณ กปภ. เริ่ม ต.ค. จบ ก.ย. — ลำดับเดือนตามปีงบ (เหมือน page.tsx)
+const FISCAL_MONTH_ORDER = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 const SANS = 'var(--font-sans)'
 const MONO = 'var(--font-mono), var(--font-sans)'
@@ -439,6 +442,71 @@ function RatsRailSummary({ yearBe, month }: { yearBe: number; month: number }) {
   )
 }
 
+// ── ตัวเลือกช่วงเวลา — ค่าเริ่มต้นคือ "ล่าสุด" (อัตโนมัติ ไล่จนสุดเดือนล่าสุดที่มีข้อมูล) เลือกปี/เดือนย้อนหลังได้ผ่าน query string ──
+interface PeriodFilter {
+  trueFiscalYear: number   // ปีงบปัจจุบันจริง (ใช้จำกัดไม่ให้เลือกอนาคต)
+  trueMonth: number        // เดือนปฏิทินปัจจุบันจริง
+  selectedFiscalYear: number
+  capMonth: number | null  // null = ล่าสุดอัตโนมัติ
+}
+
+function PeriodSelector({ trueFiscalYear, trueMonth, selectedFiscalYear, capMonth, align = 'center' }: PeriodFilter & { align?: 'center' | 'flex-start' }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const isLatest = capMonth == null && selectedFiscalYear === trueFiscalYear
+
+  function nav(next: { year?: number; month?: number | null }) {
+    const qp = new URLSearchParams(searchParams.toString())
+    if (next.year !== undefined) qp.set('year', String(next.year))
+    if (next.month !== undefined) {
+      if (next.month == null) qp.delete('month')
+      else qp.set('month', String(next.month))
+    }
+    router.push(qp.toString() ? `${pathname}?${qp.toString()}` : pathname)
+  }
+
+  const fiscalYears = [trueFiscalYear - 2, trueFiscalYear - 1, trueFiscalYear]
+  const monthOptions = selectedFiscalYear === trueFiscalYear
+    ? FISCAL_MONTH_ORDER.slice(0, FISCAL_MONTH_ORDER.indexOf(trueMonth) + 1)
+    : FISCAL_MONTH_ORDER
+
+  const selectStyle: React.CSSProperties = {
+    fontSize: 11.5, fontFamily: SANS, color: INK2, fontWeight: 600,
+    background: SURF, border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer',
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: align, gap: 8, flexWrap: 'wrap' }}>
+      <select
+        aria-label="เลือกปีงบ"
+        value={selectedFiscalYear}
+        onChange={(e) => nav({ year: Number(e.target.value), month: null })}
+        style={selectStyle}
+      >
+        {fiscalYears.map((y) => <option key={y} value={y}>ปีงบ {y}</option>)}
+      </select>
+      <select
+        aria-label="เลือกเดือน"
+        value={capMonth ?? ''}
+        onChange={(e) => nav({ month: e.target.value ? Number(e.target.value) : null })}
+        style={selectStyle}
+      >
+        <option value="">ล่าสุด (อัตโนมัติ)</option>
+        {monthOptions.map((m) => <option key={m} value={m}>{MONTH_SHORT[m]}</option>)}
+      </select>
+      {!isLatest && (
+        <button
+          onClick={() => nav({ year: trueFiscalYear, month: null })}
+          style={{ ...selectStyle, cursor: 'pointer', color: '#0B6E76', fontWeight: 700, border: '1px solid #0B6E76' }}
+        >
+          ↺ กลับไปล่าสุด
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────
 interface Props {
   branches: Branch[]
@@ -446,9 +514,10 @@ interface Props {
   regionSnap: RegionNrwSnap
   meetingStories: MeetingStoryListItem[]
   regionLossSeries: LossSeriesPoint[]
+  periodFilter: PeriodFilter
 }
 
-export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingStories, regionLossSeries }: Props) {
+export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingStories, regionLossSeries, periodFilter }: Props) {
   const now = useClock()
   const { date, time } = thaiDateTime(now)
   const { isMobile, w } = useBreakpoint()
@@ -672,6 +741,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
                 {worsening.length} สาขามีแนวโน้มแย่ลง
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6, textAlign: 'center' }}>{periodLabel}</p>
+              <div style={{ marginTop: 10 }}><PeriodSelector {...periodFilter} /></div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px 28px', marginTop: 16, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
                 <StatChip label="NRW% เดือนล่าสุด" value={regionSnap.latest_month_pct != null ? regionSnap.latest_month_pct.toFixed(1) : '—'} unit="%" color={latestColor} sub={latestTrendLabel} />
@@ -731,6 +801,7 @@ export function ExecutiveSummaryClient({ branches, snapMap, regionSnap, meetingS
                 {worsening.length} สาขามีแนวโน้มแย่ลง
               </h1>
               <p style={{ fontSize: 12, color: INK3, marginTop: 6 }}>{periodLabel}</p>
+              <div style={{ marginTop: 10 }}><PeriodSelector {...periodFilter} align="flex-start" /></div>
 
               <div style={{ marginTop: 18 }}><CumulativeLossChart series={regionLossSeries} compact /></div>
               <div style={{ marginTop: 18 }}>{listSection}</div>
