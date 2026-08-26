@@ -4,27 +4,11 @@
   "crons": [
     {
       "path": "/api/dmama/sync",
-      "schedule": "0 2 2 * *"
+      "schedule": "0 6 3 * *"
     },
     {
       "path": "/api/dmama/flow-sync",
-      "schedule": "0 4 2 * *"
-    },
-    {
-      "path": "/api/dmama/sync",
-      "schedule": "0 2 16 * *"
-    },
-    {
-      "path": "/api/dmama/flow-sync",
-      "schedule": "0 4 16 * *"
-    },
-    {
-      "path": "/api/dmama/mnf-sync?mode=daily",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/dmama/mnf-sync?mode=daily",
-      "schedule": "0 7 * * *"
+      "schedule": "0 6 3 * *"
     }
   ],
   "headers": [
