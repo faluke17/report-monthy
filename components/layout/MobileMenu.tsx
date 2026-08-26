@@ -67,7 +67,7 @@ export function MobileMenu({ stats }: MobileMenuProps) {
 
         {/* ── Navigation ── */}
         <nav className="flex-1 py-2 overflow-y-auto">
-          {NAV_GROUPS.map((group) => (
+          {NAV_GROUPS.filter((group) => group.items.length > 0).map((group) => (
             <div key={group.label} className="mb-2">
               <div className="flex items-center gap-2 px-4 mb-1 pt-1">
                 <span
