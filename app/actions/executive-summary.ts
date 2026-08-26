@@ -22,6 +22,22 @@ export interface DmaStatRow {
   water_loss: number
 }
 
+export interface NodeNetFormulaChild {
+  code: string
+  gross_flow: number | null
+  has_device_fail: boolean
+}
+
+export interface NodeNetFormula {
+  // สูตร net ของ node นี้: gross(node) − Σ gross(ลูกโดยตรง) = net(node)
+  // แสดงเมื่อ self_supply=true และมีลูกอย่างน้อย 1 ตัวที่ไม่มีข้อมูล (has_device_fail)
+  // ทำให้เลข net ที่โชว์ยังไม่ใช่ net เต็มที่จริง
+  node_code: string
+  node_gross: number | null
+  children: NodeNetFormulaChild[]
+  net: number | null
+}
+
 export interface NodeNrwRow {
   water_node_id: string
   node_code: string
@@ -38,6 +54,7 @@ export interface NodeNrwRow {
   days_total: number
   has_device_fail: boolean
   data_source: string
+  net_formula: NodeNetFormula | null
 }
 
 export interface MnfNodeRow {
@@ -316,11 +333,12 @@ export async function getExecutiveBranchSummary(
           .limit(20)
       : Promise.resolve({ data: [] }),
 
-    // water_nodes ของสาขานี้ (สำหรับ node_nrw_monthly)
+    // water_nodes ของสาขานี้ (สำหรับ node_nrw_monthly) — parent_id/self_supply ใช้หา
+    // caution ว่า node ที่ควร net (self_supply=true) ยังไม่ net เพราะลูกไม่มีข้อมูล
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from('water_nodes')
-      .select('id,code,name_th,node_type')
+      .select('id,code,name_th,node_type,parent_id,self_supply')
       .eq('branch_id', branchId)
       .eq('is_active', true),
 
@@ -417,10 +435,25 @@ export async function getExecutiveBranchSummary(
     : null
 
   // ── Node NRW stats (จาก node_nrw_monthly pipeline) ──────────────────────────
-  type WaterNodeBasic = { id: string; code: string; name_th: string | null; node_type: string }
+  type WaterNodeBasic = {
+    id: string
+    code: string
+    name_th: string | null
+    node_type: string
+    parent_id: string | null
+    self_supply: boolean
+  }
   const branchNodes = (nodesRes.data ?? []) as WaterNodeBasic[]
   const nodeIdToInfo = new Map(branchNodes.map((n) => [n.id, n]))
   const nodeIds = branchNodes.map((n) => n.id)
+
+  // ลูกโดยตรงของแต่ละ node (ใช้หา caution: self_supply=true แต่ลูกบางตัวไม่มีข้อมูล)
+  const childrenOfNode = new Map<string, WaterNodeBasic[]>()
+  for (const n of branchNodes) {
+    if (!n.parent_id) continue
+    if (!childrenOfNode.has(n.parent_id)) childrenOfNode.set(n.parent_id, [])
+    childrenOfNode.get(n.parent_id)!.push(n)
+  }
 
   let nodeDmaStats: NodeNrwRow[] = []
   if (nodeIds.length > 0) {
@@ -454,14 +487,42 @@ export async function getExecutiveBranchSummary(
       : null
 
     if (latestPeriod) {
-      nodeDmaStats = rawRows
-        .filter((r) => r.report_year === latestPeriod.year && r.report_month === latestPeriod.month)
+      const periodRows = rawRows.filter(
+        (r) => r.report_year === latestPeriod.year && r.report_month === latestPeriod.month,
+      )
+      // has_device_fail / gross_flow ของแต่ละ node ในงวดล่าสุด — ใช้สร้างสูตร net ของลูกแต่ละตัว
+      const failByNodeId = new Map(periodRows.map((r) => [r.water_node_id, r.has_device_fail]))
+      const grossByNodeId = new Map(periodRows.map((r) => [r.water_node_id, r.gross_flow]))
+
+      nodeDmaStats = periodRows
         .map((r) => {
           const node = nodeIdToInfo.get(r.water_node_id)
+          // net_flow=0 มักแปลว่ามิเตอร์เงียบทั้งเดือน (has_device_fail) ไม่ใช่จ่ายจริง 0
+          // ถ้าคำนวณ water_loss จากฐาน 0 จะได้ค่าติดลบหลอกๆ (เช่น 0-5,104=-5,104) — กันไว้เป็น null แทน
           const waterLoss =
-            r.net_flow != null && r.distribute_all != null
+            r.net_flow != null && r.net_flow > 0 && r.distribute_all != null
               ? Math.round((r.net_flow - r.distribute_all) * 100) / 100
               : null
+          // สูตร net: node นี้ตั้ง self_supply=true (ควรหักลูกออกเป็น net) แต่มีลูกบางตัว
+          // ไม่มีข้อมูล (has_device_fail) เลยหักไม่ครบ — ตัวเลข net ที่โชว์จึงยังไม่ใช่ net เต็มที่จริง
+          // เก็บลูกทุกตัว (ไม่ใช่แค่ตัวที่ fail) ไว้ประกอบเป็นสูตรเต็ม เช่น DMA09 − DMA01 − DMA02 = net
+          let netFormula: NodeNetFormula | null = null
+          if (node?.self_supply) {
+            const children = childrenOfNode.get(node.id) ?? []
+            const hasFailedChild = children.some((c) => failByNodeId.get(c.id) === true)
+            if (hasFailedChild) {
+              netFormula = {
+                node_code: node.code,
+                node_gross: r.gross_flow,
+                children: children.map((c) => ({
+                  code: c.code,
+                  gross_flow: grossByNodeId.get(c.id) ?? null,
+                  has_device_fail: failByNodeId.get(c.id) === true,
+                })),
+                net: r.net_flow,
+              }
+            }
+          }
           return {
             water_node_id: r.water_node_id,
             node_code: node?.code ?? '—',
@@ -478,9 +539,12 @@ export async function getExecutiveBranchSummary(
             days_total: r.days_total,
             has_device_fail: r.has_device_fail,
             data_source: r.data_source,
+            net_formula: netFormula,
           } satisfies NodeNrwRow
         })
-        .filter((r) => r.net_flow !== null && r.net_flow > 0)
+        // เดิมกรอง net_flow<=0 ทิ้งหมด — ทำให้ node ที่มิเตอร์เงียบทั้งเดือน (net_flow=0, has_device_fail)
+        // หายไปจากตารางเงียบๆ แทนที่จะโผล่มาเตือน แก้ให้ node ที่ has_device_fail ยังโผล่อยู่เสมอ
+        .filter((r) => (r.net_flow !== null && r.net_flow > 0) || r.has_device_fail)
         .sort((a, b) => {
           // nodes ที่มี water_loss จริงขึ้นก่อน เรียงตาม water_loss
           // nodes ที่ไม่มี distribute_all เรียงตาม net_flow

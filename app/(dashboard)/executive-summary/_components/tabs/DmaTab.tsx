@@ -1,5 +1,106 @@
-import type { NodeNrwRow } from '@/app/actions/executive-summary'
+import { useState } from 'react'
+import type { NodeNetFormula, NodeNrwRow } from '@/app/actions/executive-summary'
 import { C, MONO, fmt, nrwColor, Card, Sec, TYPE_COLOR, useBreakpoint } from './shared'
+
+// การ์ดสูตร net แบบ hover — โชว์สมการจริงของ node นั้น เช่น DMA09 − DMA01 − DMA02 = DMA09(net)
+// พร้อมไฮไลต์ลูกที่ไม่มีข้อมูล (สาเหตุที่ตัวเลขยังไม่ net เต็มที่)
+function NetFormulaBadge({ formula }: { formula: NodeNetFormula }) {
+  const [open, setOpen] = useState(false)
+  const failedCodes = formula.children.filter((c) => c.has_device_fail).map((c) => c.code)
+
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={() => setOpen((o) => !o)}
+    >
+      <span
+        className="caution-wiggle"
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: C.warn,
+          background: `${C.warn}18`,
+          border: `1px solid ${C.warn}55`,
+          borderRadius: '50%',
+          width: 18,
+          height: 18,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'help',
+        }}
+      >
+        ⚠
+      </span>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '150%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 240,
+            background: '#1C2530',
+            border: `1px solid ${C.warn}66`,
+            borderRadius: 6,
+            padding: '10px 12px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            zIndex: 30,
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ fontSize: 10, color: '#E8ECF1', lineHeight: 1.5, marginBottom: 8 }}>
+            ยังไม่ net เต็มที่ — <span style={{ color: C.warn, fontWeight: 700 }}>{failedCodes.join(', ')}</span> ไม่มีข้อมูลเดือนนี้
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'baseline',
+              gap: 4,
+              fontFamily: MONO,
+              fontSize: 11,
+              fontWeight: 700,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 4,
+              padding: '6px 8px',
+            }}
+          >
+            <span style={{ color: '#E8ECF1' }}>{formula.node_code}</span>
+            {formula.children.map((c) => (
+              <span key={c.code} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ color: C.dim }}>−</span>
+                <span style={{ color: c.has_device_fail ? C.warn : '#E8ECF1' }}>
+                  {c.code}
+                  {c.has_device_fail && '⚠'}
+                </span>
+              </span>
+            ))}
+            <span style={{ color: C.dim }}>=</span>
+            <span style={{ color: C.accent }}>{formula.node_code}(net)</span>
+          </div>
+          {/* ลูกศรชี้ลงหาไอคอน */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: `5px solid ${C.warn}66`,
+            }}
+          />
+        </div>
+      )}
+    </span>
+  )
+}
 
 export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
   const { isMobile } = useBreakpoint()
@@ -97,7 +198,10 @@ export function DmaTab({ nodeDmaStats }: { nodeDmaStats: NodeNrwRow[] }) {
               </div>
 
               {/* น้ำจ่าย (net หลังหักลูกที่ self_supply แล้ว — ตกลงกับ user 25 ส.ค. 69 ว่าต้องโชว์ net ไม่ใช่ gross ดิบ) */}
-              <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{fmt(d.net_flow ?? d.gross_flow)}</div>
+              <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO, display: 'flex', alignItems: 'center', gap: 4 }}>
+                {fmt(d.net_flow ?? d.gross_flow)}
+                {d.net_formula && <NetFormulaBadge formula={d.net_formula} />}
+              </div>
 
               {/* จำหน่าย */}
               <div style={{ fontSize: 12, color: C.muted, fontFamily: MONO }}>{fmt(d.distribute_all)}</div>
