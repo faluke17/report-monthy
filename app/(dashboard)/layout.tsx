@@ -4,6 +4,8 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { getMeetingsWithRequirements } from '@/app/actions/meeting-requirements'
+import { getLatestNrwDataPeriod } from '@/app/actions/nrw-area-stats'
+import { getTopWaterSavedBranches } from '@/app/actions/nrw-report'
 
 export default async function DashboardLayout({
   children,
@@ -23,7 +25,7 @@ export default async function DashboardLayout({
   // branch_name-based check (consistent with monthly/page.tsx)
   const isBranchUser = !!session?.branch_name
 
-  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes, requirementMeetings, overdueActionsRes, mnfRedRes] = await Promise.all([
+  const [branchesRes, submittedRes, obstaclesRes, notifRes, meetingsRes, requirementMeetings, overdueActionsRes, mnfRedRes, latestNrwDataPeriod, topWaterSaved] = await Promise.all([
     supabase.from('branches').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('monthly_reports').select('id', { count: 'exact', head: true })
       .eq('report_year', now.getFullYear()).eq('report_month', now.getMonth() + 1),
@@ -47,6 +49,8 @@ export default async function DashboardLayout({
       .not('status', 'in', '("แล้วเสร็จ","ยกเลิก")'),
     (supabase as any).from('mnf_ema_latest').select('logger_id', { count: 'exact', head: true })
       .in('alert_status', ['red_spike', 'red_accumulated']),
+    getLatestNrwDataPeriod(),
+    getTopWaterSavedBranches(3),
   ])
 
   // Count unacknowledged meetings for branch users
@@ -80,7 +84,12 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'transparent' }}>
-      <Sidebar stats={stats} notifyCount={notifyCount + requirementCount} />
+      <Sidebar
+        stats={stats}
+        notifyCount={notifyCount + requirementCount}
+        latestNrwDataPeriod={latestNrwDataPeriod}
+        topWaterSaved={topWaterSaved}
+      />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar
           session={session}

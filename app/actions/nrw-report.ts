@@ -7,6 +7,87 @@ import type { ActionResult } from '@/lib/types'
 
 const NRW_EDITOR_ID = '18074'
 
+// ลำดับเดือนจริงของปีงบไทย: ต.ค.-ธ.ค. ของปีก่อนหน้า แล้วต่อด้วย ม.ค.-ก.ย. ของปีงบนั้น
+const FISCAL_MONTH_ORDER = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+export interface TopWaterSavedBranch {
+  branch_name:  string
+  startLoss:    number
+  endLoss:      number
+  savedVolume:  number // ลบ.ม./เดือน ที่ลดได้ (บวก = ลดลง)
+}
+
+export interface TopWaterSavedResult {
+  branches:    TopWaterSavedBranch[]
+  fiscalYear:  number // พ.ศ.
+  startMonth:  number
+  endMonth:    number
+}
+
+/**
+ * สาขาที่ลด "ปริมาณ" น้ำสูญเสีย (ลบ.ม./เดือน) ได้มากที่สุด เทียบเดือนแรกกับเดือนล่าสุด
+ * ของปีงบล่าสุดที่มีข้อมูลใน nrw_branch_monthly — ใช้แสดงในสกู๊ปข่าว Sidebar
+ */
+export async function getTopWaterSavedBranches(limit = 3): Promise<TopWaterSavedResult | null> {
+  const supabase = await createClient()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: latestRow } = await (supabase as any)
+    .from('nrw_branch_monthly')
+    .select('fiscal_year')
+    .order('fiscal_year', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (!latestRow) return null
+  const fiscalYear = latestRow.fiscal_year as number
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rows } = await (supabase as any)
+    .from('nrw_branch_monthly')
+    .select('branch_name, month, water_produced, water_sold, water_free, blow_off')
+    .eq('fiscal_year', fiscalYear)
+  if (!rows || rows.length === 0) return null
+
+  const presentMonths = new Set<number>(rows.map((r: { month: number }) => r.month))
+  const orderedMonths = FISCAL_MONTH_ORDER.filter((m) => presentMonths.has(m))
+  if (orderedMonths.length < 2) return null
+  const startMonth = orderedMonths[0]
+  const endMonth = orderedMonths[orderedMonths.length - 1]
+
+  interface Row {
+    branch_name: string
+    month: number
+    water_produced: number | null
+    water_sold: number | null
+    water_free: number | null
+    blow_off: number | null
+  }
+
+  const lossAt = (branchName: string, month: number): number | null => {
+    const r = (rows as Row[]).find((x) => x.branch_name === branchName && x.month === month)
+    if (!r || r.water_produced == null) return null
+    return Math.max(0, r.water_produced - (r.water_sold ?? 0) - (r.water_free ?? 0) - (r.blow_off ?? 0))
+  }
+
+  const branchNames = [...new Set((rows as Row[]).map((r) => r.branch_name))]
+  const results: TopWaterSavedBranch[] = []
+  for (const name of branchNames) {
+    const startLoss = lossAt(name, startMonth)
+    const endLoss = lossAt(name, endMonth)
+    if (startLoss === null || endLoss === null) continue
+    results.push({ branch_name: name, startLoss, endLoss, savedVolume: startLoss - endLoss })
+  }
+
+  results.sort((a, b) => b.savedVolume - a.savedVolume)
+
+  return {
+    branches: results.slice(0, limit),
+    fiscalYear,
+    startMonth,
+    endMonth,
+  }
+}
+
 async function requireEditor(): Promise<{ success: false; error: string } | null> {
   const session = await getPwaSession()
   if (!session) return { success: false, error: 'ไม่ได้รับอนุญาต' }

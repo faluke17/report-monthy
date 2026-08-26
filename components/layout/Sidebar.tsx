@@ -6,27 +6,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
 import { NAV_GROUPS, type SidebarStats } from './nav-groups'
+import { SidebarStatsTicker } from './SidebarStatsTicker'
+import type { TopWaterSavedResult } from '@/app/actions/nrw-report'
 
 interface SidebarProps {
-  stats?:       SidebarStats
-  notifyCount?: number
+  stats?:               SidebarStats
+  notifyCount?:         number
+  latestNrwDataPeriod?: { year: number; month: number } | null
+  topWaterSaved?:       TopWaterSavedResult | null
 }
 
-export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) {
+export function Sidebar({ stats: _stats, notifyCount: _notifyCount = 0, latestNrwDataPeriod = null, topWaterSaved = null }: SidebarProps) {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useAppStore()
-
-  const total          = stats?.totalBranches  ?? 26
-  const submitted      = stats?.submitted      ?? 0
-  const pending        = stats?.pending        ?? 0
-  const obstacles      = stats?.openObstacles  ?? 0
-  const overdueActions = stats?.overdueActions ?? 0
-  const mnfRedCount    = stats?.mnfRedCount    ?? 0
-  const pct        = total > 0 ? Math.round((submitted / total) * 100) : 0
-  const arcColor   = pct === 100 ? '#1E7A5A' : pct >= 60 ? '#2B5C86' : pct >= 30 ? '#A8721A' : '#B3392C'
-  const r          = 20
-  const circ       = 2 * Math.PI * r
-  const dash       = (pct / 100) * circ
 
   return (
     <aside
@@ -75,91 +67,9 @@ export function Sidebar({ stats, notifyCount: _notifyCount = 0 }: SidebarProps) 
         )}
       </div>
 
-      {/* ── Stats mini-card ── */}
+      {/* ── สกู๊ปข่าว (news-scoop ticker, หมุนทุก 5 วิ) ── */}
       {!sidebarCollapsed && (
-        <div
-          className="mx-3 my-3 rounded-xl shrink-0 overflow-hidden"
-          style={{
-            background: '#FFFFFF',
-            border: '1px solid #E3E7EC',
-            boxShadow: '0 1px 2px rgba(18,24,31,.04)',
-          }}
-        >
-          {/* Arc + text */}
-          <div className="flex items-center gap-3 px-3 pt-3 pb-2">
-            <div className="relative shrink-0">
-              <svg width="50" height="50" className="-rotate-90">
-                <circle cx="25" cy="25" r={r} fill="none" stroke="#EFF2F5" strokeWidth="3.5" />
-                <circle
-                  cx="25" cy="25" r={r} fill="none"
-                  stroke={arcColor}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeDasharray={`${dash} ${circ}`}
-                  style={{ transition: 'stroke-dasharray .7s ease' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span style={{ color: arcColor, fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                  {pct}%
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-[9px] mb-0.5 uppercase tracking-[.12em]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)' }}>
-                ส่งรายงาน
-              </p>
-              <p style={{ color: '#12181F', fontSize: '15px', fontFamily: 'var(--font-mono)', fontWeight: 700, lineHeight: 1 }}>
-                {submitted}
-                <span style={{ color: '#8896A3', fontSize: '11px', fontWeight: 400 }}> / {total}</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="px-3 pb-2.5">
-            <div className="h-[3px] rounded-full overflow-hidden" style={{ background: '#EFF2F5' }}>
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${pct}%`, background: arcColor }}
-              />
-            </div>
-          </div>
-
-          <div className="h-px mx-3" style={{ background: '#E3E7EC' }} />
-
-          {/* Stats row 1 */}
-          <div className="px-3 pt-2.5 pb-2 grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>ค้าง</p>
-              <p style={{ color: pending > 0 ? '#B3392C' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
-                {pending}
-              </p>
-            </div>
-            <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>อุปสรรค</p>
-              <p style={{ color: obstacles > 0 ? '#A8721A' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
-                {obstacles}
-              </p>
-            </div>
-          </div>
-          <div className="h-px mx-3" style={{ background: '#E3E7EC' }} />
-          {/* Stats row 2 */}
-          <div className="px-3 pt-2 pb-2.5 grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>Action ค้าง</p>
-              <p style={{ color: overdueActions > 0 ? '#B3392C' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
-                {overdueActions}
-              </p>
-            </div>
-            <div>
-              <p className="text-[9px] mb-0.5" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.10em' }}>MNF แดง</p>
-              <p style={{ color: mnfRedCount > 0 ? '#B5651D' : '#1E7A5A', fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, lineHeight: 1 }}>
-                {mnfRedCount}
-              </p>
-            </div>
-          </div>
-        </div>
+        <SidebarStatsTicker latestNrwDataPeriod={latestNrwDataPeriod} topWaterSaved={topWaterSaved} />
       )}
 
       {/* ── Navigation ── */}
