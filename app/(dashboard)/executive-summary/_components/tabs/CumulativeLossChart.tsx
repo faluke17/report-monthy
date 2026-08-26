@@ -111,7 +111,7 @@ function pctChangeOf(early: number | null, late: number | null): number | null {
   return ((late - early) / Math.abs(early)) * 100
 }
 
-function fmtSigned(n: number, dec = 1): string {
+function fmtSigned(n: number, dec = 2): string {
   return `${n > 0 ? '+' : ''}${n.toFixed(dec)}`
 }
 
@@ -339,11 +339,11 @@ export function CumulativeLossChart({ series, compact = false, initialViewMode =
               {ratioWorse ? '▲' : ratioBetter ? '▼' : '▬'}
             </span>
             <span style={{ fontSize: 10.5, color: ratioColor, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', fontFamily: MONO }}>
-              สัดส่วนสูญเสีย{ratioWord ? `${ratioWord} ${Math.abs(ratioChange!).toFixed(1)} จุด` : ''} ตลอดช่วง {startLabel}–{endLabel}
+              สัดส่วนสูญเสีย{ratioWord ? `${ratioWord} ${Math.abs(ratioChange!).toFixed(2)} จุด` : ''} ตลอดช่วง {startLabel}–{endLabel}
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.85, fontFamily: SANS }}>
-            สัดส่วนสูญเสียขยับจาก <Num>{earlyRatio.toFixed(1)}%</Num> เป็น <Num color={ratioColor}>{lateRatio.toFixed(1)}%</Num>
+            สัดส่วนสูญเสียขยับจาก <Num>{earlyRatio.toFixed(2)}%</Num> เป็น <Num color={ratioColor}>{lateRatio.toFixed(2)}%</Num>
             {causeNode && <> ขณะที่{causeNode}</>}
           </p>
         </div>
