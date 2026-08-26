@@ -13,6 +13,8 @@ export interface SidebarStats {
   mnfRedCount:    number
 }
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 export const NAV_GROUPS = [
   {
     label: 'ภาพรวม',
@@ -21,31 +23,31 @@ export const NAV_GROUPS = [
       { href: '/mnf-monitor',         label: 'MNF Monitor',          icon: Activity },
       { href: '/report-nrw',          label: 'Report NRW',           icon: Droplets },
       { href: '/water-tree',          label: 'ผังจ่ายน้ำ',            icon: GitBranch },
-      { href: '/project-progress',    label: 'ความก้าวหน้าโครงการ',  icon: Building2 },
-      { href: '/pipeline',            label: 'Pipeline Monitor',      icon: Network },
+      ...(isDev ? [{ href: '/project-progress', label: 'ความก้าวหน้าโครงการ', icon: Building2 }] : []),
+      ...(isDev ? [{ href: '/pipeline',         label: 'Pipeline Monitor',     icon: Network }] : []),
     ],
   },
   {
     label: 'ประชุม WSC-R',
     items: [
-      { href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true },
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/action',  label: 'Action Tracker',  icon: Crosshair }] : []),
+      ...(isDev ? [{ href: '/meeting', label: 'วาระ / มติ / สั่งการ', icon: Calendar, exact: true }] : []),
+      ...(isDev ? [{ href: '/action',  label: 'Action Tracker',      icon: Crosshair }] : []),
     ],
   },
   {
     label: 'รายงานรายเดือน',
     items: [
-      { href: '/pdca',     label: 'กรอกผล / PDCA',   icon: ClipboardList },
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/five-topics', label: 'รายงาน 5 หัวข้อ', icon: ListChecks }] : []),
-      { href: '/obstacle', label: 'Obstacle Tracker', icon: AlertTriangle },
+      ...(isDev ? [{ href: '/pdca',        label: 'กรอกผล / PDCA',    icon: ClipboardList }] : []),
+      ...(isDev ? [{ href: '/five-topics', label: 'รายงาน 5 หัวข้อ',   icon: ListChecks }] : []),
+      ...(isDev ? [{ href: '/obstacle',    label: 'Obstacle Tracker', icon: AlertTriangle }] : []),
     ],
   },
   {
     label: 'แผนและ KM',
     items: [
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/plans', label: 'แผนลดน้ำสูญเสีย', icon: Target }] : []),
-      { href: '/km',       label: 'KM Best Practice', icon: BookOpen },
-      ...(process.env.NODE_ENV !== 'production' ? [{ href: '/export', label: 'Export ข้อมูล', icon: Download }] : []),
+      ...(isDev ? [{ href: '/plans',  label: 'แผนลดน้ำสูญเสีย',   icon: Target }] : []),
+      ...(isDev ? [{ href: '/km',     label: 'KM Best Practice', icon: BookOpen }] : []),
+      ...(isDev ? [{ href: '/export', label: 'Export ข้อมูล',     icon: Download }] : []),
     ],
   },
 ]

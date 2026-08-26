@@ -2,15 +2,24 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ClipboardList, Calendar, Target } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Calendar, Target, Activity, Droplets, GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const MOBILE_NAV = [
-  { href: '/executive-summary', label: 'ภาพรวม',  icon: LayoutDashboard },
-  { href: '/pdca',      label: 'PDCA',      icon: ClipboardList },
-  { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
-  { href: '/plans',     label: 'แผน',      icon: Target },
-]
+const isDev = process.env.NODE_ENV !== 'production'
+
+const MOBILE_NAV = isDev
+  ? [
+      { href: '/executive-summary', label: 'ภาพรวม',  icon: LayoutDashboard },
+      { href: '/pdca',      label: 'PDCA',      icon: ClipboardList },
+      { href: '/meeting',   label: 'วาระ/มติ', icon: Calendar },
+      { href: '/plans',     label: 'แผน',      icon: Target },
+    ]
+  : [
+      { href: '/executive-summary', label: 'ภาพรวม',     icon: LayoutDashboard },
+      { href: '/mnf-monitor',       label: 'MNF',         icon: Activity },
+      { href: '/report-nrw',        label: 'Report NRW',  icon: Droplets },
+      { href: '/water-tree',        label: 'ผังจ่ายน้ำ',  icon: GitBranch },
+    ]
 
 export function MobileNav() {
   const pathname = usePathname()
