@@ -30,6 +30,19 @@ export async function getNrwAreaStats(
   return (data ?? []) as NrwAreaStat[]
 }
 
+/** เดือน/ปีล่าสุดที่มีข้อมูล NRW ระดับสาขา+DMA จริงในระบบ (sync มาจาก DMAMA) — ใช้แสดงในสกู๊ปข่าว Sidebar */
+export async function getLatestNrwDataPeriod(): Promise<{ year: number; month: number } | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('nrw_area_stats')
+    .select('report_year, report_month')
+    .order('report_year', { ascending: false })
+    .order('report_month', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return data ? { year: data.report_year, month: data.report_month } : null
+}
+
 export async function getLatestNrwAreaStats(dmamabranchId: number): Promise<NrwAreaStat[]> {
   const supabase = await createClient()
   const { data: latest } = await supabase
