@@ -792,3 +792,35 @@ export interface ProjectProgressUpdate {
   created_by: string
   created_at: string
 }
+
+// ============================================================
+// SIM & Data Logger Inventory (หน้า /sims — จำกัดสิทธิ์ดู lib/sim-access.ts)
+// ============================================================
+
+export interface SimInventoryItem {
+  id: string
+  seq: number | null
+  branch_id: string | null
+  branch_label: string    // ชื่อสาขาดิบ เช่น "สาขานครสวรรค์", "-", "งานน้ำสูญเสีย กรจ.10"
+  device_point: string    // จุดติดตั้ง DMA / อุปกรณ์
+  phone_number: string | null
+  serial_no: string | null
+  network: string | null
+  note: string | null
+  created_by: string | null
+  updated_by: string | null
+  created_at: string
+  updated_at: string
+  // joined
+  branches?: Branch | null
+}
+
+export interface SimInventoryFormData {
+  branch_id: string | null
+  branch_label: string
+  device_point: string
+  phone_number: string
+  serial_no: string
+  network: string
+  note?: string
+}
