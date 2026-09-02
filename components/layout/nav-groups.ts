@@ -2,6 +2,7 @@ import {
   ClipboardList, Target, AlertTriangle,
   Calendar, BookOpen, Download,
   Droplets, ListChecks, Crosshair, Activity, Building2, Presentation, GitBranch, Network,
+  Smartphone,
 } from 'lucide-react'
 
 export interface SidebarStats {
@@ -48,6 +49,13 @@ export const NAV_GROUPS = [
       ...(isDev ? [{ href: '/plans',  label: 'แผนลดน้ำสูญเสีย',   icon: Target }] : []),
       ...(isDev ? [{ href: '/km',     label: 'KM Best Practice', icon: BookOpen }] : []),
       ...(isDev ? [{ href: '/export', label: 'Export ข้อมูล',     icon: Download }] : []),
+    ],
+  },
+  {
+    label: 'ระบบ',
+    items: [
+      // จำกัดสิทธิ์เห็นเฉพาะ user ใน lib/sim-access.ts (เช็คใน Sidebar.tsx) ไม่ใช่ทุกคน
+      { href: '/sims', label: 'SIM Inventory', icon: Smartphone, restricted: true },
     ],
   },
 ]
