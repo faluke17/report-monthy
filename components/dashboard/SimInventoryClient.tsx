@@ -291,10 +291,10 @@ export function SimInventoryClient({ items, branches }: { items: SimInventoryIte
               const meta = CATEGORY_META[category]
               return (
                 <div key={category}>
-                  {/* ── หัวข้อประเภทอุปกรณ์ (แสดงตลอด ไม่ต้องกด) ── */}
+                  {/* ── หัวข้อประเภทอุปกรณ์ (แสดงตลอด ไม่ต้องกด) — พื้นหลังทึบกัน content ที่เลื่อนผ่านทับกับ sticky header ── */}
                   <div
-                    className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 border-y"
-                    style={{ background: `${meta.color}0D`, borderColor: `${meta.color}25` }}
+                    className="sticky top-0 z-10 flex items-center gap-2 px-4 py-2 border-y shadow-sm"
+                    style={{ background: '#FFFFFF', borderColor: `${meta.color}30` }}
                   >
                     <meta.Icon size={13} style={{ color: meta.color }} />
                     <span className="text-xs font-bold" style={{ color: meta.color }}>{meta.label}</span>
