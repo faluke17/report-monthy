@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getSimInventory } from '@/app/actions/sim-inventory'
 import { SimInventoryClient } from '@/components/dashboard/SimInventoryClient'
 import { Branch } from '@/lib/types'
+import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
 import { ShieldAlert } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -26,8 +27,11 @@ export default async function SimsPage() {
   const supabase = await createClient()
   const [items, branchesRes] = await Promise.all([
     getSimInventory(),
-    supabase.from('branches').select('*').eq('is_active', true).order('name_th'),
+    supabase.from('branches').select('*').eq('is_active', true),
   ])
+
+  // เรียงสาขาตามลำดับภูมิภาคจริง (นครสวรรค์ → วิเชียรบุรี) แทน a-z
+  const branches = sortByPwaBranches((branchesRes.data ?? []) as Branch[])
 
   return (
     <div className="space-y-5">
@@ -37,7 +41,7 @@ export default async function SimsPage() {
           บันทึกว่า SIM แต่ละเบอร์อยู่ในอุปกรณ์ตัวไหน แยกตามสาขาและจุดติดตั้ง
         </p>
       </div>
-      <SimInventoryClient items={items} branches={(branchesRes.data ?? []) as Branch[]} />
+      <SimInventoryClient items={items} branches={branches} />
     </div>
   )
 }
