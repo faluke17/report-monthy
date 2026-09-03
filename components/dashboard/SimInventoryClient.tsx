@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Plus, Search, Pencil, Trash2, Smartphone, X, Router, RadioTower, Gauge, CircleSlash } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Smartphone, X, Router, RadioTower, Gauge, CircleSlash, ChevronDown } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Branch, SimDevicePoint, SimInventoryFormData, SimInventoryItem } from '@/lib/types'
 import { createSim, updateSim, deleteSim } from '@/app/actions/sim-inventory'
@@ -48,6 +48,54 @@ function branchDisplayLabel(item: Pick<SimInventoryItem, 'branch_label' | 'branc
 // ── group key: branch.id ถ้ามี ไม่งั้นใช้ label ดิบ (สำหรับ "-" / งานน้ำสูญเสีย กรจ.10) ──
 function groupKeyOf(item: Pick<SimInventoryItem, 'branch_id' | 'branch_label'>) {
   return item.branch_id ?? `label:${item.branch_label}`
+}
+
+// ── ช่อง "จุดติดตั้ง / อุปกรณ์": dropdown ที่พิมพ์แทรกได้ ─────────────────────────
+// ทำเป็น component เอง (ไม่ใช้ <input list> + <datalist> ของเบราว์เซอร์) เพราะ datalist
+// แต่งสไตล์ให้แถวแต่ละแถวเอง (เช่น hover นูนขึ้น) ไม่ได้เลยในทุกเบราว์เซอร์
+function DevicePointCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false)
+  const filtered = useMemo(() => {
+    const q = value.trim().toLowerCase()
+    return q ? options.filter((o) => o.toLowerCase().includes(q)) : options
+  }, [options, value])
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)} // delay กันปิดก่อน onClick ของตัวเลือกจะทำงาน
+        placeholder="เลือกจากรายการ หรือพิมพ์จุดติดตั้งใหม่ เช่น MM-04-หนองกระโดน, DMA-07-..."
+        className="w-full bg-black/5 border border-black/15 rounded-lg pl-3 pr-8 py-2 text-sm text-[#12181F] placeholder:text-[#8896A3] focus:outline-none focus:border-cyan-500/60"
+      />
+      <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8896A3] pointer-events-none" />
+      {open && (
+        <div className="absolute z-20 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-lg border border-black/10 bg-white shadow-lg p-1">
+          {filtered.length === 0 ? (
+            <p className="px-2.5 py-2 text-xs text-[#8896A3]">
+              {options.length === 0
+                ? 'สาขานี้ยังไม่มีจุดติดตั้งในรายการ พิมพ์เพื่อเพิ่มใหม่ได้เลย'
+                : 'ไม่พบจุดที่ตรงกัน — พิมพ์ต่อเพื่อเพิ่มเป็นจุดใหม่'}
+            </p>
+          ) : (
+            filtered.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()} // กัน input เสีย focus ก่อนที่ onClick จะยิง
+                onClick={() => { onChange(opt); setOpen(false) }}
+                className="w-full text-left px-2.5 py-2 rounded-md text-sm text-[#12181F] transition-all duration-150 hover:bg-cyan-50 hover:shadow-md hover:-translate-y-px"
+              >
+                {opt}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const emptyForm: SimInventoryFormData = {
@@ -419,16 +467,11 @@ export function SimInventoryClient({
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[#4B5563]">จุดติดตั้ง / อุปกรณ์</label>
-              <input
+              <DevicePointCombobox
                 value={form.device_point}
-                onChange={(e) => setForm((f) => ({ ...f, device_point: e.target.value }))}
-                list="device-point-options"
-                placeholder="เลือกจากรายการ หรือพิมพ์จุดติดตั้งใหม่ เช่น MM-04-หนองกระโดน, DMA-07-..."
-                className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-[#8896A3] focus:outline-none focus:border-cyan-500/60"
+                onChange={(v) => setForm((f) => ({ ...f, device_point: v }))}
+                options={devicePointOptions}
               />
-              <datalist id="device-point-options">
-                {devicePointOptions.map((p) => <option key={p} value={p} />)}
-              </datalist>
               <p className="text-[11px] text-[#8896A3]">
                 {devicePointOptions.length > 0
                   ? `มีให้เลือก ${devicePointOptions.length} จุดของสาขานี้ — พิมพ์จุดใหม่ได้ถ้าไม่มีในรายการ ครั้งถัดไปจะขึ้นเป็นตัวเลือกให้เอง`
