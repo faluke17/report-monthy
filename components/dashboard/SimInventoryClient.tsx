@@ -55,17 +55,21 @@ function groupKeyOf(item: Pick<SimInventoryItem, 'branch_id' | 'branch_label'>) 
 // แต่งสไตล์ให้แถวแต่ละแถวเอง (เช่น hover นูนขึ้น) ไม่ได้เลยในทุกเบราว์เซอร์
 function DevicePointCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
   const [open, setOpen] = useState(false)
+  // query แยกจาก value ตั้งใจ: ตอนแก้ไขข้อมูลเดิม ช่องนี้มีค่าอยู่แล้ว (เช่น "MM-01-...")
+  // ถ้ากรองด้วย value ตรงๆ พอเปิด dropdown ครั้งแรกจะเจอแค่ตัวเอง (กรองจนเหลือตัวเดียว) —
+  // เลยแยก query ไว้กรองเฉพาะตอนพิมพ์จริง ส่วนตอน focus ครั้งแรกให้โชว์ตัวเลือกทั้งหมดของสาขาก่อน
+  const [query, setQuery] = useState('')
   const filtered = useMemo(() => {
-    const q = value.trim().toLowerCase()
+    const q = query.trim().toLowerCase()
     return q ? options.filter((o) => o.toLowerCase().includes(q)) : options
-  }, [options, value])
+  }, [options, query])
 
   return (
     <div className="relative">
       <input
         value={value}
-        onChange={(e) => { onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
+        onChange={(e) => { onChange(e.target.value); setQuery(e.target.value); setOpen(true) }}
+        onFocus={() => { setQuery(''); setOpen(true) }}
         onBlur={() => setTimeout(() => setOpen(false), 120)} // delay กันปิดก่อน onClick ของตัวเลือกจะทำงาน
         placeholder="เลือกจากรายการ หรือพิมพ์จุดติดตั้งใหม่ เช่น MM-04-หนองกระโดน, DMA-07-..."
         className="w-full bg-black/5 border border-black/15 rounded-lg pl-3 pr-8 py-2 text-sm text-[#12181F] placeholder:text-[#8896A3] focus:outline-none focus:border-cyan-500/60"
