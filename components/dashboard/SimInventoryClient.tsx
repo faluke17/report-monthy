@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, Pencil, Trash2, Smartphone, X, Router, RadioTower, Gauge, CircleSlash } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { Branch, SimInventoryFormData, SimInventoryItem } from '@/lib/types'
+import { Branch, SimDevicePoint, SimInventoryFormData, SimInventoryItem } from '@/lib/types'
 import { createSim, updateSim, deleteSim } from '@/app/actions/sim-inventory'
 
 // ── special (non-branch) group labels ที่มาจากไฟล์ต้นฉบับ ─────────────────────
@@ -60,7 +60,15 @@ const emptyForm: SimInventoryFormData = {
   note: '',
 }
 
-export function SimInventoryClient({ items, branches }: { items: SimInventoryItem[]; branches: Branch[] }) {
+export function SimInventoryClient({
+  items,
+  branches,
+  devicePoints,
+}: {
+  items: SimInventoryItem[]
+  branches: Branch[]
+  devicePoints: SimDevicePoint[]
+}) {
   const [search, setSearch] = useState('')
   const [branchFilter, setBranchFilter] = useState<string | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<DeviceCategory | null>(null)
@@ -82,6 +90,19 @@ export function SimInventoryClient({ items, branches }: { items: SimInventoryIte
     if (counts.has(unassignedKey)) chips.push({ key: unassignedKey, label: 'ไม่ระบุสาขา', count: counts.get(unassignedKey)! })
     return chips
   }, [items, branches])
+
+  // ── จุดติดตั้งที่รู้จักแล้ว แยกตามสาขา (branch_id หรือ label: สำหรับกลุ่มพิเศษ) — ใช้เป็น dropdown ในฟอร์ม ──
+  const devicePointsByBranch = useMemo(() => {
+    const map = new Map<string, string[]>()
+    devicePoints.forEach((d) => {
+      const key = d.branch_id ?? `label:${d.branch_label}`
+      const list = map.get(key) ?? []
+      list.push(d.device_point)
+      map.set(key, list)
+    })
+    map.forEach((list) => list.sort((a, b) => a.localeCompare(b, 'th')))
+    return map
+  }, [devicePoints])
 
   // ── ขอบเขตตามสาขาที่เลือก (ยังไม่กรอง category/search) — ใช้นับ badge บนชิพหมวด ──
   const branchScoped = useMemo(
@@ -164,6 +185,8 @@ export function SimInventoryClient({ items, branches }: { items: SimInventoryIte
 
   // branch select ในฟอร์ม: ใช้ค่าพิเศษ "NONE:<label>" แทนแถวที่ไม่ผูกกับสาขาจริง
   const branchSelectValue = form.branch_id ?? `NONE:${form.branch_label || UNASSIGNED_LABEL}`
+  // จุดติดตั้งที่เป็นตัวเลือกให้สาขาที่เลือกอยู่ในฟอร์มตอนนี้ (key เดียวกับ devicePointsByBranch/groupKeyOf)
+  const devicePointOptions = devicePointsByBranch.get(form.branch_id ?? `label:${form.branch_label || UNASSIGNED_LABEL}`) ?? []
   function handleBranchSelect(value: string) {
     if (value.startsWith('NONE:')) {
       setForm((f) => ({ ...f, branch_id: null, branch_label: value.slice(5) }))
@@ -399,10 +422,19 @@ export function SimInventoryClient({ items, branches }: { items: SimInventoryIte
               <input
                 value={form.device_point}
                 onChange={(e) => setForm((f) => ({ ...f, device_point: e.target.value }))}
-                placeholder="เช่น MM-04-หนองกระโดน, DMA-07-..., P3-2-DMA-16-..., ไม่ได้ใช้งาน"
+                list="device-point-options"
+                placeholder="เลือกจากรายการ หรือพิมพ์จุดติดตั้งใหม่ เช่น MM-04-หนองกระโดน, DMA-07-..."
                 className="w-full bg-black/5 border border-black/15 rounded-lg px-3 py-2 text-sm text-[#12181F] placeholder:text-[#8896A3] focus:outline-none focus:border-cyan-500/60"
               />
-              <p className="text-[11px] text-[#8896A3]">ขึ้นต้นด้วย MM / DMA / P3 ระบบจะจัดหมวดให้อัตโนมัติ นอกนั้นเข้าหมวด &quot;อื่นๆ&quot;</p>
+              <datalist id="device-point-options">
+                {devicePointOptions.map((p) => <option key={p} value={p} />)}
+              </datalist>
+              <p className="text-[11px] text-[#8896A3]">
+                {devicePointOptions.length > 0
+                  ? `มีให้เลือก ${devicePointOptions.length} จุดของสาขานี้ — พิมพ์จุดใหม่ได้ถ้าไม่มีในรายการ ครั้งถัดไปจะขึ้นเป็นตัวเลือกให้เอง`
+                  : 'สาขานี้ยังไม่มีจุดติดตั้งในรายการ พิมพ์เพิ่มได้เลย — ครั้งถัดไปจะขึ้นเป็นตัวเลือกให้เอง'}
+                {' '}ขึ้นต้นด้วย MM / DMA / P3 ระบบจะจัดหมวดให้อัตโนมัติ นอกนั้นเข้าหมวด &quot;อื่นๆ&quot;
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
