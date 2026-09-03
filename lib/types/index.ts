@@ -824,3 +824,11 @@ export interface SimInventoryFormData {
   network: string
   note?: string
 }
+
+// จุดติดตั้งอุปกรณ์ (DMA/MM/P3) ที่รู้จักแล้วของแต่ละสาขา — ใช้เป็นตัวเลือก dropdown
+// ในฟอร์มเพิ่ม/แก้ไข SIM (ดู sim_device_points table)
+export interface SimDevicePoint {
+  branch_id: string | null
+  branch_label: string
+  device_point: string
+}

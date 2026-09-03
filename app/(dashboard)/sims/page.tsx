@@ -1,7 +1,7 @@
 import { getPwaSession } from '@/lib/pwa-auth'
 import { isSimAllowedUser } from '@/lib/sim-access'
 import { createClient } from '@/lib/supabase/server'
-import { getSimInventory } from '@/app/actions/sim-inventory'
+import { getDevicePoints, getSimInventory } from '@/app/actions/sim-inventory'
 import { SimInventoryClient } from '@/components/dashboard/SimInventoryClient'
 import { Branch } from '@/lib/types'
 import { sortByPwaBranches } from '@/lib/utils/pwa-branches'
@@ -25,8 +25,9 @@ export default async function SimsPage() {
   }
 
   const supabase = await createClient()
-  const [items, branchesRes] = await Promise.all([
+  const [items, devicePoints, branchesRes] = await Promise.all([
     getSimInventory(),
+    getDevicePoints(),
     supabase.from('branches').select('*').eq('is_active', true),
   ])
 
@@ -41,7 +42,7 @@ export default async function SimsPage() {
           บันทึกว่า SIM แต่ละเบอร์อยู่ในอุปกรณ์ตัวไหน แยกตามสาขาและจุดติดตั้ง
         </p>
       </div>
-      <SimInventoryClient items={items} branches={branches} />
+      <SimInventoryClient items={items} branches={branches} devicePoints={devicePoints} />
     </div>
   )
 }
