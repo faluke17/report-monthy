@@ -8,14 +8,17 @@ import {
   Sheet, SheetContent, SheetTrigger, SheetTitle,
 } from '@/components/ui/sheet'
 import { NAV_GROUPS, type SidebarStats } from './nav-groups'
+import { isSimAllowedUser } from '@/lib/sim-access'
 
 interface MobileMenuProps {
   stats?: SidebarStats
+  username?: string | null
 }
 
-export function MobileMenu({ stats }: MobileMenuProps) {
+export function MobileMenu({ stats, username = null }: MobileMenuProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const simAllowed = isSimAllowedUser(username)
 
   const total     = stats?.totalBranches ?? 26
   const submitted = stats?.submitted     ?? 0
@@ -67,7 +70,13 @@ export function MobileMenu({ stats }: MobileMenuProps) {
 
         {/* ── Navigation ── */}
         <nav className="flex-1 py-2 overflow-y-auto">
-          {NAV_GROUPS.filter((group) => group.items.length > 0).map((group) => (
+          {NAV_GROUPS
+            .map((group) => ({
+              ...group,
+              items: group.items.filter((item) => !('restricted' in item && item.restricted) || simAllowed),
+            }))
+            .filter((group) => group.items.length > 0)
+            .map((group) => (
             <div key={group.label} className="mb-2">
               <div className="flex items-center gap-2 px-4 mb-1 pt-1">
                 <span

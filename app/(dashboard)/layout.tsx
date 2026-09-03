@@ -89,6 +89,7 @@ export default async function DashboardLayout({
         notifyCount={notifyCount + requirementCount}
         latestNrwDataPeriod={latestNrwDataPeriod}
         topWaterSaved={topWaterSaved}
+        username={session?.username}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar

@@ -38,6 +38,7 @@ const PAGE_META: Record<string, { kicker: string; title: string }> = {
   '/km':                 { kicker: 'Knowledge Mgmt',  title: 'KM Best Practice' },
   '/export':             { kicker: 'Data Export',     title: 'ส่งออกรายงาน' },
   '/notify':             { kicker: 'Notification',    title: 'การแจ้งเตือน' },
+  '/sims':               { kicker: 'SIM Inventory',   title: 'SIM & Data Logger Inventory' },
 }
 
 export function Topbar({
@@ -117,7 +118,7 @@ export function Topbar({
     >
       {/* ── Page title (left) ── */}
       <div className="flex items-center gap-3 min-w-0">
-        <MobileMenu stats={stats} />
+        <MobileMenu stats={stats} username={session.username} />
         <div className="hidden sm:flex items-center gap-2 text-[10px]" style={{ color: '#98A2AF', fontFamily: 'var(--font-mono)', letterSpacing: '.10em', textTransform: 'uppercase' }}>
           <span>กปภ.เขต 10</span>
           <ChevronRight size={10} style={{ color: '#98A2AF' }} />

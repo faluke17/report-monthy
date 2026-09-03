@@ -8,17 +8,20 @@ import { useAppStore } from '@/store/useAppStore'
 import { NAV_GROUPS, type SidebarStats } from './nav-groups'
 import { SidebarStatsTicker } from './SidebarStatsTicker'
 import type { TopWaterSavedResult } from '@/app/actions/nrw-report'
+import { isSimAllowedUser } from '@/lib/sim-access'
 
 interface SidebarProps {
   stats?:               SidebarStats
   notifyCount?:         number
   latestNrwDataPeriod?: { year: number; month: number } | null
   topWaterSaved?:       TopWaterSavedResult | null
+  username?:            string | null
 }
 
-export function Sidebar({ stats: _stats, notifyCount: _notifyCount = 0, latestNrwDataPeriod = null, topWaterSaved = null }: SidebarProps) {
+export function Sidebar({ stats: _stats, notifyCount: _notifyCount = 0, latestNrwDataPeriod = null, topWaterSaved = null, username = null }: SidebarProps) {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useAppStore()
+  const simAllowed = isSimAllowedUser(username)
 
   return (
     <aside
@@ -74,7 +77,14 @@ export function Sidebar({ stats: _stats, notifyCount: _notifyCount = 0, latestNr
 
       {/* ── Navigation ── */}
       <nav className="flex-1 py-2 overflow-y-auto">
-        {NAV_GROUPS.filter((group) => group.items.length > 0).map((group) => (
+        {NAV_GROUPS
+          .map((group) => ({
+            ...group,
+            // 'restricted' items (เช่น SIM Inventory) เห็นได้เฉพาะ user ใน lib/sim-access.ts
+            items: group.items.filter((item) => !('restricted' in item && item.restricted) || simAllowed),
+          }))
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
           <div key={group.label} className="mb-2">
             {!sidebarCollapsed && (
               <div className="flex items-center gap-2 px-4 mb-1 pt-1">
