@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getPwaSession } from '@/lib/pwa-auth'
 import { isSimAllowedUser } from '@/lib/sim-access'
-import { ActionResult, SimInventoryFormData, SimInventoryItem } from '@/lib/types'
+import { ActionResult, SimDevicePoint, SimInventoryFormData, SimInventoryItem } from '@/lib/types'
 
 async function requireSimAccess() {
   const session = await getPwaSession()
@@ -12,6 +12,26 @@ async function requireSimAccess() {
     return { session: null, error: 'ไม่มีสิทธิ์เข้าถึงข้อมูลนี้' as const }
   }
   return { session, error: null }
+}
+
+// เติมจุดติดตั้งที่ผู้ใช้พิมพ์เข้าไปใหม่ (ยังไม่มีใน catalog) เข้า sim_device_points
+// เพื่อให้ขึ้นเป็นตัวเลือก dropdown ในครั้งถัดไป — best-effort เท่านั้น ไม่ทำให้ createSim/updateSim ล้มเหลว
+async function ensureDevicePoint(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  branchId: string | null,
+  branchLabel: string,
+  devicePoint: string,
+  username: string,
+) {
+  const point = devicePoint.trim()
+  if (!point) return
+  const { error } = await supabase
+    .from('sim_device_points')
+    .upsert(
+      { branch_id: branchId, branch_label: branchLabel, device_point: point, source: 'custom', created_by: username },
+      { onConflict: 'branch_label,device_point', ignoreDuplicates: true },
+    )
+  if (error) console.error('[ensureDevicePoint]', error.message)
 }
 
 export async function getSimInventory(): Promise<SimInventoryItem[]> {
@@ -31,6 +51,24 @@ export async function getSimInventory(): Promise<SimInventoryItem[]> {
     return []
   }
   return (data ?? []) as SimInventoryItem[]
+}
+
+// รายการจุดติดตั้งอุปกรณ์ที่รู้จักแล้วของแต่ละสาขา — ใช้เป็นตัวเลือก dropdown ในฟอร์มเพิ่ม/แก้ไข SIM
+export async function getDevicePoints(): Promise<SimDevicePoint[]> {
+  const { session } = await requireSimAccess()
+  if (!session) return []
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('sim_device_points')
+    .select('branch_id, branch_label, device_point')
+    .order('device_point', { ascending: true })
+
+  if (error) {
+    console.error('[getDevicePoints]', error.message)
+    return []
+  }
+  return (data ?? []) as SimDevicePoint[]
 }
 
 export async function createSim(formData: SimInventoryFormData): Promise<ActionResult<{ id: string }>> {
@@ -59,6 +97,8 @@ export async function createSim(formData: SimInventoryFormData): Promise<ActionR
     .single()
 
   if (error) return { success: false, error: error.message }
+
+  await ensureDevicePoint(supabase, formData.branch_id || null, formData.branch_label, formData.device_point, session.username)
 
   revalidatePath('/sims')
   return { success: true, data: { id: data.id } }
@@ -89,6 +129,8 @@ export async function updateSim(id: string, formData: SimInventoryFormData): Pro
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
+
+  await ensureDevicePoint(supabase, formData.branch_id || null, formData.branch_label, formData.device_point, session.username)
 
   revalidatePath('/sims')
   return { success: true }
