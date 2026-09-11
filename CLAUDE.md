@@ -598,11 +598,16 @@ Vercel Deploy (--prod)
   "path": "/api/dmama/sync",
   "schedule": "0 2 16 * *"    ← ทุกวันที่ 16 เวลา 02:00 UTC (09:00 Bangkok)
 }
-{
-  "path": "/api/dmama/realtime-report",
-  "schedule": "0 18 * * *"    ← ทุกวัน เวลา 18:00 UTC (01:00 Bangkok)
-}
 ```
+
+> ⚠️ Vercel **Hobby plan** จำกัด Cron Job ไว้ **2 งานต่อโปรเจกต์** (ใช้เต็มแล้วด้วย `sync` + `flow-sync`)
+> งาน cron อื่นที่เพิ่มทีหลัง (เช่น `realtime-report`) จึงสั่งผ่าน **GitHub Actions scheduled workflow** แทน
+
+### GitHub Actions Scheduled Workflow
+
+`.github/workflows/dmama-realtime-report.yml` — ยิง `POST /api/dmama/realtime-report` ทุกวัน 18:00 UTC (01:00 Bangkok)
+ผ่าน `curl` + header `x-sync-secret: ${{ secrets.DMAMA_SYNC_SECRET }}` (ต้องตั้ง repo secret `DMAMA_SYNC_SECRET`
+ให้ตรงกับค่าใน Vercel env ก่อน — Settings → Secrets and variables → Actions)
 
 ### Security Headers
 
