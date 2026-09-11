@@ -33,6 +33,7 @@ async function dmamaLogin(): Promise<string> {
 }
 
 type RealtimeNode = {
+  id: number
   name: string
   code: string
   value?: {
@@ -43,16 +44,30 @@ type RealtimeNode = {
     flowacc?: { value: number | string | null }
     datetime?: { value: string | null }
   }
+  // จุดติดตั้งย่อย (P3 devices, sub-DMA ฯลฯ) ซ้อนอยู่ในนี้ ไม่ใช่ top-level array —
+  // ต้องไล่ลงไปแบบ recursive ไม่งั้นข้อมูลหายไปเยอะ (เจอจริงจาก user report)
+  linked_loggers?: RealtimeNode[]
 }
 
+// realtime_grid?page=N ดูเหมือนไม่ได้ paginate จริง (ทดสอบแล้ว page 1/2 คืนค่าเดิม) แต่กันไว้เผื่อ
+// สาขาที่มีจุดติดตั้งเยอะในอนาคต — วนดึงจนกว่าจะว่างหรือ id ตัวแรกซ้ำกับหน้าก่อน
 async function fetchBranchRealtime(token: string, branchId: number): Promise<RealtimeNode[]> {
-  const res = await fetch(
-    `${DMAMA_API}/dashboard/realtime_grid?page=1&branch=${branchId}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const data = await res.json()
-  return (data.data ?? []) as RealtimeNode[]
+  const all: RealtimeNode[] = []
+  let prevFirstId: number | undefined
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetch(
+      `${DMAMA_API}/dashboard/realtime_grid?page=${page}&branch=${branchId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    const items = (data.data ?? []) as RealtimeNode[]
+    if (items.length === 0) break
+    if (page > 1 && items[0]?.id === prevFirstId) break // API ไม่ paginate จริง หยุดกันวนซ้ำ
+    all.push(...items)
+    prevFirstId = items[0]?.id
+  }
+  return all
 }
 
 type ReportRow = {
@@ -66,6 +81,24 @@ type ReportRow = {
   วันเวลาอัพเดท: string | null
 }
 
+function flattenNodes(nodes: RealtimeNode[], branchName: string, rows: ReportRow[]): void {
+  for (const node of nodes) {
+    rows.push({
+      สาขา: branchName,
+      จุดติดตั้ง: node.name,
+      'ผชน. (ราย)': node.value?.customer?.value ?? null,
+      'P in (bar)': node.value?.p1in?.value ?? null,
+      'Flow (m³/hr)': node.value?.flow?.value ?? null,
+      'P out (bar)': node.value?.pressure?.value ?? null,
+      'Totalizer (m³)': node.value?.flowacc?.value ?? null,
+      วันเวลาอัพเดท: node.value?.datetime?.value ?? null,
+    })
+    if (node.linked_loggers?.length) {
+      flattenNodes(node.linked_loggers, branchName, rows)
+    }
+  }
+}
+
 async function buildReportRows(token: string): Promise<{ rows: ReportRow[]; failedBranches: string[] }> {
   const rows: ReportRow[] = []
   const failedBranches: string[] = []
@@ -73,18 +106,7 @@ async function buildReportRows(token: string): Promise<{ rows: ReportRow[]; fail
   for (const branch of PWA_BRANCHES) {
     try {
       const nodes = await withRetry(() => fetchBranchRealtime(token, branch.dmama_branch_id))
-      for (const node of nodes) {
-        rows.push({
-          สาขา: branch.name_th,
-          จุดติดตั้ง: node.name,
-          'ผชน. (ราย)': node.value?.customer?.value ?? null,
-          'P in (bar)': node.value?.p1in?.value ?? null,
-          'Flow (m³/hr)': node.value?.flow?.value ?? null,
-          'P out (bar)': node.value?.pressure?.value ?? null,
-          'Totalizer (m³)': node.value?.flowacc?.value ?? null,
-          วันเวลาอัพเดท: node.value?.datetime?.value ?? null,
-        })
-      }
+      flattenNodes(nodes, branch.name_th, rows)
     } catch {
       failedBranches.push(branch.name_th)
     }
