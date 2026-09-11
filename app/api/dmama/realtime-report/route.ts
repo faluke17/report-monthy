@@ -129,11 +129,12 @@ async function sendToTelegram(buffer: Buffer, filename: string, caption: string)
 // GET/POST /api/dmama/realtime-report
 // ดึงข้อมูลหน้า "Realtime" ของ DMAMA (endpoint: /dashboard/realtime_grid) ทั้ง 26 สาขา
 // รวมเป็นไฟล์ Excel เดียว แล้วส่งเข้า Telegram
-// Vercel Cron fires daily at 18:00 UTC (01:00 Bangkok) — GET request with Authorization: Bearer <CRON_SECRET>
-// Manual trigger: POST with header x-sync-secret: <DMAMA_SYNC_SECRET>
+// เรียกทุกวัน 18:00 UTC (01:00 Bangkok) ผ่าน GitHub Actions scheduled workflow
+// (.github/workflows/dmama-realtime-report.yml) — POST + header x-sync-secret: <REALTIME_REPORT_SECRET>
+// (secret แยกจาก DMAMA_SYNC_SECRET เดิม เพื่อไม่ปนกับ route sync อื่น)
 async function handler(req: NextRequest): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET
-  const syncSecret = process.env.DMAMA_SYNC_SECRET
+  const syncSecret = process.env.REALTIME_REPORT_SECRET
   const authHeader = req.headers.get('authorization')
   const syncHeader = req.headers.get('x-sync-secret')
 

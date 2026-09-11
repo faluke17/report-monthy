@@ -453,12 +453,13 @@ PLN-NRT-001  (Plans)
 | POST | `/api/dmama/sync` | Sync NRW area stats จาก DMAMA API → `nrw_area_stats` |
 | POST | `/api/dmama/mnf-sync` | Sync MNF daily จาก DMAMA API → `mnf_daily` |
 | POST | `/api/dmama/mnf-ema` | Compute EMA สำหรับช่วงวันที่ → `mnf_ema_daily` |
-| GET/POST | `/api/dmama/realtime-report` | ดึงหน้า Realtime DMAMA (`/dashboard/realtime_grid`) ทั้ง 26 สาขา → รวม Excel → ส่ง Telegram (Cron ตี 1 ทุกวัน) |
+| GET/POST | `/api/dmama/realtime-report` | ดึงหน้า Realtime DMAMA (`/dashboard/realtime_grid`) ทั้ง 26 สาขา → รวม Excel → ส่ง Telegram (ตี 1 ทุกวัน ผ่าน `REALTIME_REPORT_SECRET`) |
 
 **Auth headers:**
 ```
 Authorization: Bearer <CRON_SECRET>    (Vercel Cron)
-x-sync-secret: <DMAMA_SYNC_SECRET>     (manual trigger)
+x-sync-secret: <DMAMA_SYNC_SECRET>     (manual trigger — sync/mnf-sync/mnf-ema)
+x-sync-secret: <REALTIME_REPORT_SECRET> (manual trigger — realtime-report เท่านั้น)
 ```
 
 ### Utility
@@ -499,6 +500,7 @@ DMAMA_SYNC_SECRET=
 ```
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
+REALTIME_REPORT_SECRET=
 ```
 
 ### Supabase
@@ -606,8 +608,8 @@ Vercel Deploy (--prod)
 ### GitHub Actions Scheduled Workflow
 
 `.github/workflows/dmama-realtime-report.yml` — ยิง `POST /api/dmama/realtime-report` ทุกวัน 18:00 UTC (01:00 Bangkok)
-ผ่าน `curl` + header `x-sync-secret: ${{ secrets.DMAMA_SYNC_SECRET }}` (ต้องตั้ง repo secret `DMAMA_SYNC_SECRET`
-ให้ตรงกับค่าใน Vercel env ก่อน — Settings → Secrets and variables → Actions)
+ผ่าน `curl` + header `x-sync-secret: ${{ secrets.REALTIME_REPORT_SECRET }}` (secret แยกเฉพาะ route นี้ ไม่ปนกับ
+`DMAMA_SYNC_SECRET` เดิม — ต้องตั้งค่าเดียวกันทั้งใน Vercel env และ GitHub repo secret)
 
 ### Security Headers
 
