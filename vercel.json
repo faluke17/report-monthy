@@ -9,6 +9,10 @@
     {
       "path": "/api/dmama/flow-sync",
       "schedule": "0 6 3 * *"
+    },
+    {
+      "path": "/api/dmama/realtime-report",
+      "schedule": "0 18 * * *"
     }
   ],
   "headers": [
