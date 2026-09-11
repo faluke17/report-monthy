@@ -15,7 +15,7 @@ jobs:
         run: |
           status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
             -X POST "https://report-monthy.vercel.app/api/dmama/realtime-report" \
-            -H "x-sync-secret: ${{ secrets.DMAMA_SYNC_SECRET }}")
+            -H "x-sync-secret: ${{ secrets.REALTIME_REPORT_SECRET }}")
           echo "HTTP status: $status"
           cat /tmp/response.json
           if [ "$status" -ge 400 ]; then
