@@ -125,7 +125,8 @@ report-monthy/
 │   │   ├── dmama/
 │   │   │   ├── sync/            # POST: sync NRW จาก DMAMA API (Cron วันที่ 16)
 │   │   │   ├── mnf-sync/        # POST: sync MNF daily จาก DMAMA API
-│   │   │   └── mnf-ema/         # POST: คำนวณ EMA สำหรับช่วงวันที่กำหนด
+│   │   │   ├── mnf-ema/         # POST: คำนวณ EMA สำหรับช่วงวันที่กำหนด
+│   │   │   └── realtime-report/ # GET/POST: ดึงหน้า Realtime DMAMA ทั้ง 26 สาขา → Excel → ส่ง Telegram (Cron ตี 1 ทุกวัน)
 │   │   ├── export/              # GET: export PDF/Excel
 │   │   ├── nrw/calc/            # GET: คำนวณ NRW% และ MNF Factor
 │   │   └── rats/
@@ -452,6 +453,7 @@ PLN-NRT-001  (Plans)
 | POST | `/api/dmama/sync` | Sync NRW area stats จาก DMAMA API → `nrw_area_stats` |
 | POST | `/api/dmama/mnf-sync` | Sync MNF daily จาก DMAMA API → `mnf_daily` |
 | POST | `/api/dmama/mnf-ema` | Compute EMA สำหรับช่วงวันที่ → `mnf_ema_daily` |
+| GET/POST | `/api/dmama/realtime-report` | ดึงหน้า Realtime DMAMA (`/dashboard/realtime_grid`) ทั้ง 26 สาขา → รวม Excel → ส่ง Telegram (Cron ตี 1 ทุกวัน) |
 
 **Auth headers:**
 ```
@@ -476,6 +478,7 @@ x-sync-secret: <DMAMA_SYNC_SECRET>     (manual trigger)
 - Login ด้วย `DMAMA_USERNAME` / `DMAMA_PASSWORD`
 - ดึงข้อมูล NRW รายพื้นที่ (`/report/non_revenue_water`)
 - ดึง MNF รายวัน (mnf-sync route)
+- ดึงหน้า Realtime (`/dashboard/realtime_grid`) — จุดติดตั้ง DMA แต่ละสาขา (Flow/Totalizer/P in/P out/วันเวลาอัพเดท)
 - Cron: ทุกวันที่ 16 เวลา 09:00 น. (Bangkok)
 
 **Environment:**
@@ -485,6 +488,17 @@ DMAMA_PASSWORD=
 DMAMA_SECTOR_ID=1
 DMAMA_DISTRICT_ID=10
 DMAMA_SYNC_SECRET=
+```
+
+### Telegram Bot (แจ้งเตือนรายงาน)
+
+- ใช้โดย `/api/dmama/realtime-report` — ส่งไฟล์ Excel รายงาน Realtime DMAMA ทุกวันตี 1 (Bangkok) ผ่าน Telegram Bot API (`sendDocument`)
+- สร้าง bot ผ่าน `@BotFather` ใน Telegram, หา chat_id ผ่าน `getUpdates` หลังส่งข้อความหาบอทอย่างน้อย 1 ครั้ง
+
+**Environment:**
+```
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 ```
 
 ### Supabase
@@ -585,6 +599,15 @@ Vercel Deploy (--prod)
   "schedule": "0 2 16 * *"    ← ทุกวันที่ 16 เวลา 02:00 UTC (09:00 Bangkok)
 }
 ```
+
+> ⚠️ Vercel **Hobby plan** จำกัด Cron Job ไว้ **2 งานต่อโปรเจกต์** (ใช้เต็มแล้วด้วย `sync` + `flow-sync`)
+> งาน cron อื่นที่เพิ่มทีหลัง (เช่น `realtime-report`) จึงสั่งผ่าน **GitHub Actions scheduled workflow** แทน
+
+### GitHub Actions Scheduled Workflow
+
+`.github/workflows/dmama-realtime-report.yml` — ยิง `POST /api/dmama/realtime-report` ทุกวัน 18:00 UTC (01:00 Bangkok)
+ผ่าน `curl` + header `x-sync-secret: ${{ secrets.DMAMA_SYNC_SECRET }}` (ต้องตั้ง repo secret `DMAMA_SYNC_SECRET`
+ให้ตรงกับค่าใน Vercel env ก่อน — Settings → Secrets and variables → Actions)
 
 ### Security Headers
 

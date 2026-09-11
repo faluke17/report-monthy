@@ -1,0 +1,24 @@
+name: DMAMA Realtime Report → Telegram
+
+on:
+  schedule:
+    # 18:00 UTC = 01:00 Bangkok, ทุกวัน
+    - cron: '0 18 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    name: Trigger realtime-report endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/dmama/realtime-report
+        run: |
+          status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -X POST "https://report-monthy.vercel.app/api/dmama/realtime-report" \
+            -H "x-sync-secret: ${{ secrets.DMAMA_SYNC_SECRET }}")
+          echo "HTTP status: $status"
+          cat /tmp/response.json
+          if [ "$status" -ge 400 ]; then
+            echo "::error::realtime-report failed with status $status"
+            exit 1
+          fi
